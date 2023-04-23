@@ -1,6 +1,6 @@
-from utils import get_sparse_ket_from_fock, convert_hamiltonian, group_hamiltonian, get_exact_state_evaluation
+from utils import get_sparse_ket_from_fock, convert_hamiltonian, group_hamiltonian
 from gradient.exact import prepare_adapt_state
-from energy.simulation.tools import measureExpectation
+from energy.simulation.tools import measureExpectation, get_exact_state_evaluation
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import numpy as np
@@ -38,14 +38,13 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
     # Obtain the experimental expectation value for each Pauli string by
     # calling the measureExpectation function, and perform the necessary weighed
     # sum to obtain the energy expectation value
-
     commutator = 0
-    for mainString in groupedCommutator:
-        expectation_value = measureExpectation(mainString,
-                                              groupedCommutator[mainString],
-                                              shots,
-                                              statePreparationGates,
-                                              qubits)
+    for main_string, sub_hamiltonian in groupedCommutator.items():
+        expectation_value = measureExpectation(main_string,
+                                               sub_hamiltonian,
+                                               shots,
+                                               statePreparationGates,
+                                               qubits)
         commutator += expectation_value
 
     assert commutator.imag < 1e-5
@@ -115,17 +114,9 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
                                                            qubits,
                                                            shots=shots))
         else:
-            circuit = cirq.Circuit(gate_hf_state)
-            s = cirq.Simulator()
-
-            # Access the exact final state vector
-            results = s.simulate(circuit)
-            final_state = results.final_state_vector
-
             # Calculate the exact energy in this state
             commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
-
-            sampled_gradient = np.abs(get_exact_state_evaluation(final_state, commutator_hamiltonian).real)
+            sampled_gradient = np.abs(get_exact_state_evaluation(commutator_hamiltonian, gate_hf_state).real)
             print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
 
         error = np.abs(sampled_gradient - calculated_gradient)

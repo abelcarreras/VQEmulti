@@ -226,37 +226,3 @@ def convert_hamiltonian(openfermion_hamiltonian):
         formatted_hamiltonian["".join(operators)] = coefficient
 
     return formatted_hamiltonian
-
-
-def get_exact_state_evaluation(state_vector, qubit_hamiltonian):
-    '''
-    Calculates the exact energy in a specific state.
-
-    Arguments:
-      state_vector (np.ndarray): the state in which to obtain the
-        expectation value.
-      qubit_hamiltonian (dict): the Hamiltonian of the system.
-
-    Returns:
-      exact_evaluation (float): the expectation value in the state given the hamiltonian.
-    '''
-
-    formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-
-    exact_evaluation = 0
-
-    # Obtain the theoretical expectation value for each Pauli string in the
-    # Hamiltonian by matrix multiplication, and perform the necessary weighed
-    # sum to obtain the energy expectation value.
-    for pauli_string in formatted_hamiltonian:
-        ket = np.array(state_vector, dtype=complex)
-        bra = np.conj(ket)
-
-        pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-        expectation_value = np.real(np.dot(bra, pauli_ket))
-
-        exact_evaluation += formatted_hamiltonian[pauli_string] * expectation_value
-
-    return exact_evaluation.real
-
-

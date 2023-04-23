@@ -1,12 +1,12 @@
-from utils import convert_hamiltonian, get_exact_state_evaluation
-from energy.simulation.tools import trotterizeOperator, group_hamiltonian, measureExpectation
+from utils import convert_hamiltonian, group_hamiltonian
+from energy.simulation.tools import trotterizeOperator, measureExpectation, get_exact_state_evaluation
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import cirq
 import scipy
 
 
-def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates, qubits):
+def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
     '''
     Obtains the expectation value in a state by sampling (using the CIRQ
     simulator).
@@ -22,21 +22,28 @@ def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates, qubits):
       energy (float): the energy (with sampling noise).
     '''
 
+    qubitNumber = count_qubits(qubitHamiltonian)
+    qubits = cirq.LineQubit.range(qubitNumber)
+
+    print(qubitHamiltonian)
     formattedHamiltonian = convert_hamiltonian(qubitHamiltonian)
+    print(formattedHamiltonian)
     groupedHamiltonian = group_hamiltonian(formattedHamiltonian)
+    for group in groupedHamiltonian:
+        print(group, groupedHamiltonian[group])
 
     # Obtain the experimental expectation value for each Pauli string by
     # calling the measureExpectation function, and perform the necessary weighed
     # sum to obtain the energy expectation value
 
     energy = 0
-    for mainString in groupedHamiltonian:
-        expectationValue = measureExpectation(mainString,
-                                              groupedHamiltonian[mainString],
-                                              shots,
-                                              statePreparationGates,
-                                              qubits)
-        energy += expectationValue
+    for main_string, sub_hamiltonian in groupedHamiltonian.items():
+        expectation_value = measureExpectation(main_string,
+                                               sub_hamiltonian,
+                                               shots,
+                                               statePreparationGates,
+                                               qubits)
+        energy += expectation_value
 
     assert energy.imag < 1e-5
 
@@ -78,21 +85,26 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
     # Count the number of qubits the Hamiltonian acts on
     qubitNumber = count_qubits(qubitHamiltonian)
 
-    # Initialize qubits
-    qubits = cirq.LineQubit.range(qubitNumber)
+    def build_reference_gates(hf_reference_fock, qubitNumber):
+        # Initialize qubits
+        qubits = cirq.LineQubit.range(qubitNumber)
 
-    # Create the gates for preparing the Hartree Fock ground state, that serves
-    # as a reference state the ansatz will act on
-    hf_reference_Gates = [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+        # Create the gates for preparing the Hartree Fock ground state, that serves
+        # as a reference state the ansatz will act on
+        return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-    # If the trotter flag is set, trotterize the operators into a CIRQ circuit
-    if trotter:
+    def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps):
+
+        # If the trotter flag is set, trotterize the operators into a CIRQ circuit
+        #if trotter:
 
         # Initialize the ansatz gate list
         trotterAnsatz = []
 
+        qubits = cirq.LineQubit.range(qubitNumber)
+
         # Go through the operators in the ansatz
-        for (coefficient, fermionOperator) in zip(coefficients, ansatz):
+        for coefficient, fermionOperator in zip(coefficients, ansatz):
             # Get the trotterized circuit for applying e**(operator*coefficient)
             operatorTrotterCircuit = trotterizeOperator(1j * fermionOperator,
                                                         qubits,
@@ -104,22 +116,23 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
 
         # Initialize the state preparation gates with the reference state preparation
         # gates
-        statePreparationGates = hf_reference_Gates.copy()
+        hf_reference_gates = build_reference_gates(hf_reference_fock, qubitNumber)
+        statePreparationGates = hf_reference_gates
 
         # Append the trotterized ansatz
         statePreparationGates.append(trotterAnsatz)
+        return statePreparationGates
 
-    # If the trotter flag isn't set, use matrix exponentiation to get the exact
-    # matrix representing the action of the ansatz, and apply it directly on the
-    # qubits
-    else:
+    def get_preparation_gates(coefficients, ansatz):
+
+        qubits = cirq.LineQubit.range(qubitNumber)
 
         # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
         identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-        matrix = identity
 
         # Multiply the ansatz matrix by identity as many times as necessary to get
         # the correct dimension
+        matrix = identity
         for _ in range(qubitNumber - 1):
             matrix = scipy.sparse.kron(identity, matrix, 'csc')
 
@@ -136,27 +149,28 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
 
         # Initialize the state preparation gates with the Hartree Fock preparation
         # circuit
-        statePreparationGates = hf_reference_Gates.copy()
+        statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
 
         # Append the ansatz directly as a matrix
         statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
 
+        return statePreparationGates
+
+
+    # If the trotter flag isn't set, use matrix exponentiation to get the exact
+    # matrix representing the action of the ansatz, and apply it directly on the
+    if trotter:
+        statePreparationGates = get_preparation_gates_trotter(coefficients, ansatz, trotter_steps)
+    else:
+        statePreparationGates = get_preparation_gates(coefficients, ansatz)
+
     if sample:
         # Obtain the energy expectation value by sampling from the circuit using
         # the CIRQ simulator
-        energy = get_sampled_energy(qubitHamiltonian, shots, statePreparationGates, qubits)
+        energy = get_sampled_energy(qubitHamiltonian, shots, statePreparationGates)
     else:
-        # Obtain the exact energy expectation value using matrix algebra
-
-        circuit = cirq.Circuit(statePreparationGates)
-        s = cirq.Simulator()
-
-        # Access the exact final state vector
-        results = s.simulate(circuit)
-        finalState = results.final_state_vector
-
         # Calculate the exact energy in this state
-        energy = get_exact_state_evaluation(finalState, qubitHamiltonian)
+        energy = get_exact_state_evaluation(qubitHamiltonian, statePreparationGates)
         # print('Exact energy ener (no sample): ', energy)
 
     return energy

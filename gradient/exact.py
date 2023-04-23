@@ -75,10 +75,9 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
                                        n_qubits)
 
     # Calculate and print gradients
-    print("Non-Zero Gradients (calculated, tolerance E-5):")
+    print("Non-Zero Gradients (calculated)")
     gradient_vector = []
     for i, operator in enumerate(pool):
-
         sparse_operator = get_sparse_operator(operator, n_qubits)
         gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
 

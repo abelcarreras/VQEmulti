@@ -7,7 +7,7 @@ import numpy as np
 import scipy
 
 
-def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates, qubitNumber, shots=1000):
+def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates, n_qubits, shots=1000):
     """
     Given an operator A, samples (using the CIRQ simulator) the gradient of the
     energy with respect to the coefficient c of the operator exp(c * A), at c = 0,
@@ -42,7 +42,7 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
                                                sub_hamiltonian,
                                                shots,
                                                statePreparationGates,
-                                               qubitNumber)
+                                               n_qubits)
         commutator += expectation_value
 
     assert commutator.imag < 1e-5
@@ -98,7 +98,7 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
         print("Exact gradient: {:.6f}".format(calculated_gradient))
 
         # Prepare state from HF reference and total operator matrix
-        state_preparation_gates = build_gradient_ansatz(hf_reference_fock, total_op_matrix, n_qubits)
+        state_preparation_gates = build_gradient_ansatz(hf_reference_fock, total_op_matrix)
 
         if sample:
             sampled_gradient = np.abs(get_sampled_gradient(operator,

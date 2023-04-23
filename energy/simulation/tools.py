@@ -143,70 +143,6 @@ def trotterizeOperator(operator, qubits, time, steps):
     return trotterGates
 
 
-#not used
-def measureString(pauliString, repetitions, statePreparationGates, qubits):
-    '''
-    Measures the expectation value of a Pauli string using the CIRQ simulator
-    (simulating sampling).
-
-    Arguments:
-      pauliString (str): the Pauli string to be measured.
-      repetitions (int): the number of circuit repetitions to be used.
-      statePreparationGates (list): the list of CIRQ gates that prepare the
-        state in which to obtain the expectation value.
-
-    Returns:
-      expecationValue (float): the expectation value of pauliString, with
-        sampling noise.
-    '''
-
-    # Initialize circuit.
-    circuit = cirq.Circuit(statePreparationGates)
-
-    # Optimize circuit.
-    cirq.optimizers.EjectZ().optimize_circuit(circuit)
-    cirq.optimizers.DropNegligible().optimize_circuit(circuit)
-
-    # Append necessary rotations and measurements for each qubit.
-    for i in range(len(qubits)):
-        op = pauliString[i]
-
-        # Rotate qubit i to the X basis if that's the desired measurement.
-        if (op == "X"):
-            circuit.append(cirq.H(qubits[i]))
-
-        # Rotate qubit i to the Y basis if that's the desired measurement.
-        if (op == "Y"):
-            circuit.append(cirq.rx(np.pi / 2).on(qubits[i]))
-
-        # Measure qubit i in the computational basis, unless operator is I.
-        if (op != "I"):
-            circuit.append(cirq.measure(qubits[i], key=str(i)))
-
-    # Sample the desired number of repetitions from the circuit, unless
-    # there are no measurements (identity term).
-    if (pauliString != "I" * len(qubits)):
-        s = cirq.Simulator()
-        results = s.run(circuit, repetitions=repetitions)
-    # print(circuit)
-
-    # Calculate the expectation value of the Pauli string by averaging over
-    # all the repetitions.
-
-    total = 0
-
-    for j in range(repetitions):
-        meas = 1
-        for i in range(len(qubits)):
-            if (pauliString[i] != "I"):
-                meas = meas * (1 - 2 * results.data[str(i)][j])
-        total += meas
-
-    expectationValue = total / repetitions
-
-    return expectationValue
-
-
 def measureExpectation(mainString, subHamiltonian, shots, statePreparationGates, qubits):
     """
     Measures the expectation value of a subHamiltonian using the CIRQ simulator
@@ -267,9 +203,6 @@ def measureExpectation(mainString, subHamiltonian, shots, statePreparationGates,
     if mainString != "I" * n_qubits:
         s = cirq.Simulator()
         results = s.run(circuit, repetitions=shots)
-
-    #print(circuit)
-    #print(results)
 
     # For each substring, initialize the sum of all measurements as zero
     total = {}

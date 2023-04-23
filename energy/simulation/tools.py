@@ -296,12 +296,27 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
 
 
 def build_reference_gates(hf_reference_fock, qubitNumber):
+
     # Initialize qubits
     qubits = cirq.LineQubit.range(qubitNumber)
 
     # Create the gates for preparing the Hartree Fock ground state, that serves
     # as a reference state the ansatz will act on
     return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+
+
+def build_gradient_ansatz(hf_reference_fock, matrix, n_qubits):
+
+    # Initialize qubits
+    qubits = cirq.LineQubit.range(n_qubits)
+
+    # Initialize the state preparation gates with the Hartree Fock preparation
+    statePreparationGates = [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+
+    # Append the ansatz directly as a matrix
+    statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
+
+    return statePreparationGates
 
 
 def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock, qubitNumber):
@@ -327,8 +342,7 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
 
     # Initialize the state preparation gates with the reference state preparation
     # gates
-    hf_reference_gates = build_reference_gates(hf_reference_fock, qubitNumber)
-    statePreparationGates = hf_reference_gates
+    statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
 
     # Append the trotterized ansatz
     statePreparationGates.append(trotterAnsatz)
@@ -336,8 +350,6 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
-
-    qubits = cirq.LineQubit.range(qubitNumber)
 
     # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
     identity = scipy.sparse.identity(2, format='csc', dtype=complex)
@@ -359,11 +371,9 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
         # Multiply previous matrix by this operator
         matrix = scipy.sparse.linalg.expm(operatorMatrix) * matrix
 
-    # Initialize the state preparation gates with the Hartree Fock preparation
-    # circuit
-    statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
-
-    # Append the ansatz directly as a matrix
-    statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
+    # Prepare ansatz directly as a matrix f
+    statePreparationGates = build_gradient_ansatz(hf_reference_fock, matrix, qubitNumber)
 
     return statePreparationGates
+
+

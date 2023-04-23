@@ -112,7 +112,7 @@ def trotterStep(operator, qubits, time):
     return trotterGates
 
 
-def trotterizeOperator(operator, qubits, time, steps):
+def trotterizeOperator(operator, qubitNumber, time, steps):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator', with the given
@@ -133,6 +133,8 @@ def trotterizeOperator(operator, qubits, time, steps):
       trotterGates (cirq.OP_TREE): the list of CIRQ gates that apply the
         trotterized operator
     """
+
+    qubits = cirq.LineQubit.range(qubitNumber)
 
     # Divide time into steps and apply the evolution operator the necessary
     # number of times
@@ -319,37 +321,40 @@ def build_gradient_ansatz(hf_reference_fock, matrix, n_qubits):
     return statePreparationGates
 
 
-def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock, qubitNumber):
-
-    # If the trotter flag is set, trotterize the operators into a CIRQ circuit
-    #if trotter:
+def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock, n_qubits):
+    """
+    trotterize the operators into a CIRQ circuit
+    
+    :param coefficients: 
+    :param ansatz: 
+    :param trotter_steps: 
+    :param hf_reference_fock: 
+    :param n_qubits: 
+    :return: gates list
+    """
 
     # Initialize the ansatz gate list
-    trotterAnsatz = []
-
-    qubits = cirq.LineQubit.range(qubitNumber)
-
+    trotter_ansatz = []
     # Go through the operators in the ansatz
     for coefficient, fermionOperator in zip(coefficients, ansatz):
         # Get the trotterized circuit for applying e**(operator*coefficient)
-        operatorTrotterCircuit = trotterizeOperator(1j * fermionOperator,
-                                                    qubits,
-                                                    coefficient,
-                                                    trotter_steps)
+        operator_trotter_circuit = trotterizeOperator(1j * fermionOperator,
+                                                      n_qubits,
+                                                      coefficient,
+                                                      trotter_steps)
 
         # Add the gates corresponding to this operator to the ansatz gate list
-        trotterAnsatz += operatorTrotterCircuit
+        trotter_ansatz += operator_trotter_circuit
 
-    # Initialize the state preparation gates with the reference state preparation
-    # gates
-    statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
+    # Initialize the state preparation gates with the reference state preparation gates
+    state_preparation_gates = build_reference_gates(hf_reference_fock, n_qubits)
 
     # Append the trotterized ansatz
-    statePreparationGates.append(trotterAnsatz)
-    return statePreparationGates
+    state_preparation_gates.append(trotter_ansatz)
+    return state_preparation_gates
 
 
-def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
+def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):
 
     # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
     identity = scipy.sparse.identity(2, format='csc', dtype=complex)
@@ -357,7 +362,7 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
     # Multiply the ansatz matrix by identity as many times as necessary to get
     # the correct dimension
     matrix = identity
-    for _ in range(qubitNumber - 1):
+    for _ in range(n_qubits - 1):
         matrix = scipy.sparse.kron(identity, matrix, 'csc')
 
     # Multiply the identity matrix by the matrix form of each operator in the
@@ -366,14 +371,14 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
         # Get corresponding the sparse operator, with the correct dimension
         # (forcing n_qubits = qubitNumber, even if this operator acts on less
         # qubits)
-        operatorMatrix = get_sparse_operator(coefficient * operator, qubitNumber)
+        operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
 
         # Multiply previous matrix by this operator
-        matrix = scipy.sparse.linalg.expm(operatorMatrix) * matrix
+        matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
 
     # Prepare ansatz directly as a matrix f
-    statePreparationGates = build_gradient_ansatz(hf_reference_fock, matrix, qubitNumber)
+    state_preparation_gates = build_gradient_ansatz(hf_reference_fock, matrix, n_qubits)
 
-    return statePreparationGates
+    return state_preparation_gates
 
 

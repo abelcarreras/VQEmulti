@@ -30,6 +30,8 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
         is an estimate of the value of the gradient.
     """
 
+    qubitNumber = count_qubits(qubitHamiltonian)
+
     # < state| [H, A] |state>
     commutator_hamiltonian = qubitHamiltonian * qubitOperator - qubitOperator * qubitHamiltonian
     formattedCommutator = convert_hamiltonian(commutator_hamiltonian)
@@ -44,7 +46,7 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
                                                sub_hamiltonian,
                                                shots,
                                                statePreparationGates,
-                                               qubits)
+                                               qubitNumber)
         commutator += expectation_value
 
     assert commutator.imag < 1e-5

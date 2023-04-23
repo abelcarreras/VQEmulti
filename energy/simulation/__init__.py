@@ -1,9 +1,7 @@
 from utils import convert_hamiltonian, group_hamiltonian
-from energy.simulation.tools import trotterizeOperator, measureExpectation, get_exact_state_evaluation
 from openfermion.utils import count_qubits
-from openfermion import get_sparse_operator
-import cirq
-import scipy
+from energy.simulation.tools import get_preparation_gates_trotter, get_preparation_gates
+from energy.simulation.tools import trotterizeOperator, measureExpectation, get_exact_state_evaluation
 
 
 def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
@@ -23,14 +21,13 @@ def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
     '''
 
     qubitNumber = count_qubits(qubitHamiltonian)
-    qubits = cirq.LineQubit.range(qubitNumber)
 
-    print(qubitHamiltonian)
+    # print(qubitHamiltonian)
     formattedHamiltonian = convert_hamiltonian(qubitHamiltonian)
-    print(formattedHamiltonian)
+    # print(formattedHamiltonian)
     groupedHamiltonian = group_hamiltonian(formattedHamiltonian)
-    for group in groupedHamiltonian:
-        print(group, groupedHamiltonian[group])
+    # for group in groupedHamiltonian:
+    #    print(group, groupedHamiltonian[group])
 
     # Obtain the experimental expectation value for each Pauli string by
     # calling the measureExpectation function, and perform the necessary weighed
@@ -42,7 +39,7 @@ def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
                                                sub_hamiltonian,
                                                shots,
                                                statePreparationGates,
-                                               qubits)
+                                               qubitNumber)
         energy += expectation_value
 
     assert energy.imag < 1e-5
@@ -85,84 +82,19 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
     # Count the number of qubits the Hamiltonian acts on
     qubitNumber = count_qubits(qubitHamiltonian)
 
-    def build_reference_gates(hf_reference_fock, qubitNumber):
-        # Initialize qubits
-        qubits = cirq.LineQubit.range(qubitNumber)
-
-        # Create the gates for preparing the Hartree Fock ground state, that serves
-        # as a reference state the ansatz will act on
-        return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
-
-    def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps):
-
-        # If the trotter flag is set, trotterize the operators into a CIRQ circuit
-        #if trotter:
-
-        # Initialize the ansatz gate list
-        trotterAnsatz = []
-
-        qubits = cirq.LineQubit.range(qubitNumber)
-
-        # Go through the operators in the ansatz
-        for coefficient, fermionOperator in zip(coefficients, ansatz):
-            # Get the trotterized circuit for applying e**(operator*coefficient)
-            operatorTrotterCircuit = trotterizeOperator(1j * fermionOperator,
-                                                        qubits,
-                                                        coefficient,
-                                                        trotter_steps)
-
-            # Add the gates corresponding to this operator to the ansatz gate list
-            trotterAnsatz += operatorTrotterCircuit
-
-        # Initialize the state preparation gates with the reference state preparation
-        # gates
-        hf_reference_gates = build_reference_gates(hf_reference_fock, qubitNumber)
-        statePreparationGates = hf_reference_gates
-
-        # Append the trotterized ansatz
-        statePreparationGates.append(trotterAnsatz)
-        return statePreparationGates
-
-    def get_preparation_gates(coefficients, ansatz):
-
-        qubits = cirq.LineQubit.range(qubitNumber)
-
-        # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
-        identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-
-        # Multiply the ansatz matrix by identity as many times as necessary to get
-        # the correct dimension
-        matrix = identity
-        for _ in range(qubitNumber - 1):
-            matrix = scipy.sparse.kron(identity, matrix, 'csc')
-
-        # Multiply the identity matrix by the matrix form of each operator in the
-        # ansatz, to obtain the matrix representing the action of the complete ansatz
-        for (coefficient, operator) in zip(coefficients, ansatz):
-            # Get corresponding the sparse operator, with the correct dimension
-            # (forcing n_qubits = qubitNumber, even if this operator acts on less
-            # qubits)
-            operatorMatrix = get_sparse_operator(coefficient * operator, qubitNumber)
-
-            # Multiply previous matrix by this operator
-            matrix = scipy.sparse.linalg.expm(operatorMatrix) * matrix
-
-        # Initialize the state preparation gates with the Hartree Fock preparation
-        # circuit
-        statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
-
-        # Append the ansatz directly as a matrix
-        statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
-
-        return statePreparationGates
-
-
     # If the trotter flag isn't set, use matrix exponentiation to get the exact
     # matrix representing the action of the ansatz, and apply it directly on the
     if trotter:
-        statePreparationGates = get_preparation_gates_trotter(coefficients, ansatz, trotter_steps)
+        statePreparationGates = get_preparation_gates_trotter(coefficients,
+                                                              ansatz,
+                                                              trotter_steps,
+                                                              hf_reference_fock,
+                                                              qubitNumber)
     else:
-        statePreparationGates = get_preparation_gates(coefficients, ansatz)
+        statePreparationGates = get_preparation_gates(coefficients,
+                                                      ansatz,
+                                                      hf_reference_fock,
+                                                      qubitNumber)
 
     if sample:
         # Obtain the energy expectation value by sampling from the circuit using

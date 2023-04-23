@@ -1,8 +1,9 @@
 from utils import convert_hamiltonian, string_to_matrix
 from openfermion.transforms import jordan_wigner, get_fermion_operator
 from openfermion.utils import count_qubits
-from openfermion import InteractionOperator, FermionOperator
+from openfermion import InteractionOperator, FermionOperator, get_sparse_operator
 import numpy as np
+import scipy
 import cirq
 
 
@@ -133,7 +134,6 @@ def trotterizeOperator(operator, qubits, time, steps):
         trotterized operator
     """
 
-
     # Divide time into steps and apply the evolution operator the necessary
     # number of times
     trotterGates = []
@@ -143,7 +143,7 @@ def trotterizeOperator(operator, qubits, time, steps):
     return trotterGates
 
 
-def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGates, qubits):
+def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGates, n_qubits):
     """
     Measures the expectation value of a subHamiltonian using the CIRQ simulator
     (simulating sampling). By construction, all the expectation values of the
@@ -165,6 +165,7 @@ def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGate
         subHamiltonian, with sampling noise.
     """
 
+
     # Initialize circuit.
     circuit = cirq.Circuit()
 
@@ -179,7 +180,8 @@ def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGate
     circuit = cirq.eject_z(circuit)
     circuit = cirq.drop_negligible_operations(circuit)
 
-    n_qubits = len(qubits)
+    # define qubits
+    qubits = cirq.LineQubit.range(n_qubits)
 
     # parse string
     # Append necessary rotations and measurements for each qubit.
@@ -293,3 +295,75 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
     return exact_evaluation.real
 
 
+def build_reference_gates(hf_reference_fock, qubitNumber):
+    # Initialize qubits
+    qubits = cirq.LineQubit.range(qubitNumber)
+
+    # Create the gates for preparing the Hartree Fock ground state, that serves
+    # as a reference state the ansatz will act on
+    return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+
+
+def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock, qubitNumber):
+
+    # If the trotter flag is set, trotterize the operators into a CIRQ circuit
+    #if trotter:
+
+    # Initialize the ansatz gate list
+    trotterAnsatz = []
+
+    qubits = cirq.LineQubit.range(qubitNumber)
+
+    # Go through the operators in the ansatz
+    for coefficient, fermionOperator in zip(coefficients, ansatz):
+        # Get the trotterized circuit for applying e**(operator*coefficient)
+        operatorTrotterCircuit = trotterizeOperator(1j * fermionOperator,
+                                                    qubits,
+                                                    coefficient,
+                                                    trotter_steps)
+
+        # Add the gates corresponding to this operator to the ansatz gate list
+        trotterAnsatz += operatorTrotterCircuit
+
+    # Initialize the state preparation gates with the reference state preparation
+    # gates
+    hf_reference_gates = build_reference_gates(hf_reference_fock, qubitNumber)
+    statePreparationGates = hf_reference_gates
+
+    # Append the trotterized ansatz
+    statePreparationGates.append(trotterAnsatz)
+    return statePreparationGates
+
+
+def get_preparation_gates(coefficients, ansatz, hf_reference_fock, qubitNumber):
+
+    qubits = cirq.LineQubit.range(qubitNumber)
+
+    # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
+    identity = scipy.sparse.identity(2, format='csc', dtype=complex)
+
+    # Multiply the ansatz matrix by identity as many times as necessary to get
+    # the correct dimension
+    matrix = identity
+    for _ in range(qubitNumber - 1):
+        matrix = scipy.sparse.kron(identity, matrix, 'csc')
+
+    # Multiply the identity matrix by the matrix form of each operator in the
+    # ansatz, to obtain the matrix representing the action of the complete ansatz
+    for (coefficient, operator) in zip(coefficients, ansatz):
+        # Get corresponding the sparse operator, with the correct dimension
+        # (forcing n_qubits = qubitNumber, even if this operator acts on less
+        # qubits)
+        operatorMatrix = get_sparse_operator(coefficient * operator, qubitNumber)
+
+        # Multiply previous matrix by this operator
+        matrix = scipy.sparse.linalg.expm(operatorMatrix) * matrix
+
+    # Initialize the state preparation gates with the Hartree Fock preparation
+    # circuit
+    statePreparationGates = build_reference_gates(hf_reference_fock, qubitNumber)
+
+    # Append the ansatz directly as a matrix
+    statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
+
+    return statePreparationGates

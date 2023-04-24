@@ -384,3 +384,7 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):
     return state_preparation_gates
 
 
+def get_circuit_depth(state_preparation_gates):
+    circuit = cirq.Circuit(state_preparation_gates)
+    return len(cirq.Circuit(circuit.all_operations()))
+

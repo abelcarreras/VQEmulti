@@ -80,7 +80,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
     # groupedHamiltonian = groupHamiltonian(formattedHamiltonian)
 
     # Count the number of qubits the Hamiltonian acts on
-    qubitNumber = count_qubits(qubitHamiltonian)
+    n_qubits = count_qubits(qubitHamiltonian)
 
     # If the trotter flag isn't set, use matrix exponentiation to get the exact
     # matrix representing the action of the ansatz, and apply it directly on the
@@ -89,12 +89,17 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubitHamiltonia
                                                               ansatz,
                                                               trotter_steps,
                                                               hf_reference_fock,
-                                                              qubitNumber)
+                                                              n_qubits)
     else:
         statePreparationGates = get_preparation_gates(coefficients,
                                                       ansatz,
                                                       hf_reference_fock,
-                                                      qubitNumber)
+                                                      n_qubits)
+
+
+    # from energy.simulation.tools import get_circuit_depth
+    # circuit_depth = get_circuit_depth(statePreparationGates)
+    # print('circuit_depth', circuit_depth)
 
     if sample:
         # Obtain the energy expectation value by sampling from the circuit using

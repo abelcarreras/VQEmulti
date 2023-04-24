@@ -6,7 +6,7 @@ from adapt_vqe import adaptVQE
 from analysis import get_info
 import matplotlib.pyplot as plt
 import numpy as np
-
+from utils import generate_reduced_hamiltonian
 
 vqe_energies = []
 energies_fullci = []
@@ -30,9 +30,10 @@ for d in np.linspace(0.3, 3, 20):
     molecule = run_pyscf(h2_molecule, run_fci=True)
 
     # get properties from classical SCF calculation
-    hamiltonian = molecule.get_molecular_hamiltonian()
     n_electrons = 2  # molecule.n_electrons
     n_orbitals = 2  # molecule.n_orbitals
+    hamiltonian = molecule.get_molecular_hamiltonian()
+    generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
     # Choose specific pool of operators for adapt-VQE
     pool = get_pool_singlet_sd(electronNumber=n_electrons,
@@ -69,7 +70,22 @@ for d in np.linspace(0.3, 3, 20):
     vqe_energies.append(result["energy"])
     energies_fullci.append(molecule.fci_energy)
 
+plt.title('Absolute energies')
+plt.xlabel('Interatomic distance [Angs]')
+plt.ylabel('Energy [H]')
+
 plt.plot(np.linspace(0.3, 3, 20), vqe_energies, label='adaptVQE')
 plt.plot(np.linspace(0.3, 3, 20), energies_fullci, label='FullCI')
 plt.legend()
+
+plt.figure()
+plt.title('Difference between fullCI')
+plt.xlabel('Interatomic distance [Angs]')
+plt.ylabel('Energy [H]')
+plt.yscale('log')
+
+diff_fullci = np.subtract(vqe_energies, energies_fullci)
+plt.plot(np.linspace(0.3, 3, 20), diff_fullci, label='adaptVQE')
+plt.legend()
+
 plt.show()

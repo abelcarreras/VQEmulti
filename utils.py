@@ -1,4 +1,5 @@
 from openfermion.utils import count_qubits
+from openfermion.ops.representations import InteractionOperator
 import numpy as np
 import scipy
 
@@ -226,3 +227,20 @@ def convert_hamiltonian(openfermion_hamiltonian):
         formatted_hamiltonian["".join(operators)] = coefficient
 
     return formatted_hamiltonian
+
+
+def generate_reduced_hamiltonian(hamiltonian, n_orbitals):
+    """
+    get truncated hamiltonian given a number of orbitals
+
+    :param hamiltonian: fermionic hamiltonian
+    :param n_orbitals: number of orbitals to keep
+    :return: truncated hamiltonian
+    """
+
+    n_spin_orbitals = n_orbitals * 2
+
+    reduced_one = hamiltonian.one_body_tensor[:n_spin_orbitals, :n_spin_orbitals]
+    reduced_two = hamiltonian.two_body_tensor[:n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals]
+
+    return InteractionOperator(hamiltonian.constant, reduced_one, reduced_two)

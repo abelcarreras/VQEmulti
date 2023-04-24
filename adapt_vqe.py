@@ -115,6 +115,7 @@ if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
     from pool_definitions import get_pool_singlet_sd
+    from utils import generate_reduced_hamiltonian
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
@@ -127,9 +128,16 @@ if __name__ == '__main__':
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
     # get properties from classical SCF calculation
-    hamiltonian = molecule.get_molecular_hamiltonian()
     n_electrons = molecule.n_electrons
-    n_orbitals = 2 # molecule.n_orbitals
+    n_orbitals = 2  # molecule.n_orbitals
+
+    hamiltonian = molecule.get_molecular_hamiltonian()
+    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
+
+    # print data
+    print('n_electrons: ', n_electrons)
+    print('n_orbitals: ', n_orbitals)
+    print('n_qubits:', hamiltonian.n_qubits)
 
     # Choose specific pool of operators for adapt-VQE
     operators_pool = get_pool_singlet_sd(electronNumber=n_electrons,
@@ -142,7 +150,7 @@ if __name__ == '__main__':
                                   hamiltonian,     # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
-                                  exact_energy=True,
+                                  exact_energy=False,
                                   exact_gradient=True,
                                   trotter=False,
                                   sample=False,

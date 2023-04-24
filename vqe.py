@@ -39,7 +39,6 @@ def vqe(hamiltonian,
     # initial guess
     n_terms = len(qubit_ansatz.terms)
     coefficients = np.ones(n_terms)
-    print('Initial coefficients guess:\n', coefficients)
 
     # Optimize the results from analytical calculation
     if exact_energy:
@@ -69,11 +68,12 @@ if __name__ == '__main__':
 
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
+    from utils import generate_reduced_hamiltonian
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
-                                # basis='3-21g',
-                                basis='sto-3g',
+                                basis='3-21g',
+                                # basis='sto-3g',
                                 multiplicity=1,
                                 charge=0,
                                 description='H2')
@@ -82,9 +82,11 @@ if __name__ == '__main__':
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
     # get properties from classical SCF calculation
-    hamiltonian = molecule.get_molecular_hamiltonian()
     n_electrons = molecule.n_electrons
-    n_orbitals = molecule.n_orbitals
+    n_orbitals = 2 # molecule.n_orbitals
+
+    hamiltonian = molecule.get_molecular_hamiltonian()
+    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
@@ -104,15 +106,16 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     print('Initialize VQE')
-    results = vqe(hamiltonian,  # fermionic hamiltonian
-                  uccsd_ansatz,  # fermionic ansatz
-                  hf_reference_fock,
-                  exact_energy=True,
-                  shots=1000,
-                  sample=True)
+    result = vqe(hamiltonian,  # fermionic hamiltonian
+                 uccsd_ansatz,  # fermionic ansatz
+                 hf_reference_fock,
+                 exact_energy=False,
+                 shots=1000,
+                 sample=False)
 
-    print('Energy VQE: {:.8f}'.format(results['energy']))
+    print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
-    print('Coefficients:\n', results['coefficients'])
+    print('Num operators: ', len(result['coefficients']))
+    print('Coefficients:\n', result['coefficients'])

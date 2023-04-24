@@ -7,6 +7,7 @@ import scipy
 
 def vqe(hamiltonian,
         ansatz,
+        amplitudes,
         hf_reference_fock,
         exact_energy=False,
         trotter=False,
@@ -17,7 +18,7 @@ def vqe(hamiltonian,
     Runs the VQE algorithm to find the ground state of a molecule
 
     Arguments:
-      packed_amplitudes (list): the amplitudes that specify the starting
+      amplitudes (list, np.array): the amplitudes that specify the starting
         parameters of the UCCSD circuit
       molecule (openfermion.MolecularData): the molecule in consideration
       shots (int): the number of circuit repetitions to be used in the
@@ -38,7 +39,7 @@ def vqe(hamiltonian,
     # Optimize the results from analytical calculation
     if exact_energy:
         results = scipy.optimize.minimize(exact_vqe_energy,
-                                          packed_amplitudes,
+                                          amplitudes,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian),
                                           method="COBYLA",
                                           options={'rhobeg': 0.1, 'disp': True},
@@ -47,7 +48,7 @@ def vqe(hamiltonian,
     # Optimize the results from the CIRQ simulation
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
-                                          packed_amplitudes,
+                                          amplitudes,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
                                            shots, trotter, trotter_steps, sample),
                                           method="COBYLA",
@@ -85,13 +86,13 @@ if __name__ == '__main__':
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Prepare UCCSD ansatz
-    packed_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
-                                                                        molecule.ccsd_double_amps,
-                                                                        n_orbitals*2,
-                                                                        n_electrons)
+    uccsd_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
+                                                                       molecule.ccsd_double_amps,
+                                                                       n_orbitals*2,
+                                                                       n_electrons)
 
-    uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
-                                                       n_orbitals * 2,
+    uccsd_ansatz = openfermion.uccsd_singlet_generator(uccsd_amplitudes,
+                                                       n_orbitals*2,
                                                        n_electrons)
 
     print('UCCSD operators:\n', uccsd_ansatz)
@@ -100,10 +101,11 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     print('Initialize VQE')
-    results = vqe(hamiltonian,   # fermionic hamiltonian
+    results = vqe(hamiltonian,  # fermionic hamiltonian
                   uccsd_ansatz,  # fermionic ansatz
+                  uccsd_amplitudes*2,
                   hf_reference_fock,
-                  exact_energy=False,
+                  exact_energy=True,
                   shots=10000,
                   sample=True)
 

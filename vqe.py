@@ -1,13 +1,13 @@
 from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
+import numpy as np
 import openfermion
 import scipy
 
 
 def vqe(hamiltonian,
         ansatz,
-        amplitudes,
         hf_reference_fock,
         exact_energy=False,
         trotter=False,
@@ -36,10 +36,15 @@ def vqe(hamiltonian,
     # transform to qubit ansatz using JW transformation
     qubit_ansatz = jordan_wigner(ansatz)
 
+    # initial guess
+    n_terms = len(qubit_ansatz.terms)
+    coefficients = np.ones(n_terms)
+    print('Initial coefficients guess:\n', coefficients)
+
     # Optimize the results from analytical calculation
     if exact_energy:
         results = scipy.optimize.minimize(exact_vqe_energy,
-                                          amplitudes,
+                                          coefficients,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian),
                                           method="COBYLA",
                                           options={'rhobeg': 0.1, 'disp': True},
@@ -48,7 +53,7 @@ def vqe(hamiltonian,
     # Optimize the results from the CIRQ simulation
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
-                                          amplitudes,
+                                          coefficients,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
                                            shots, trotter, trotter_steps, sample),
                                           method="COBYLA",
@@ -86,16 +91,14 @@ if __name__ == '__main__':
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Prepare UCCSD ansatz
-    uccsd_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
-                                                                       molecule.ccsd_double_amps,
-                                                                       n_orbitals*2,
-                                                                       n_electrons)
+    packed_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
+                                                                        molecule.ccsd_double_amps,
+                                                                        n_orbitals * 2,
+                                                                        n_electrons)
 
-    uccsd_ansatz = openfermion.uccsd_singlet_generator(uccsd_amplitudes,
-                                                       n_orbitals*2,
+    uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
+                                                       n_orbitals * 2,
                                                        n_electrons)
-
-    print('UCCSD operators:\n', uccsd_ansatz)
 
     # Get reference Hartree Fock state
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -103,14 +106,13 @@ if __name__ == '__main__':
     print('Initialize VQE')
     results = vqe(hamiltonian,  # fermionic hamiltonian
                   uccsd_ansatz,  # fermionic ansatz
-                  uccsd_amplitudes,
                   hf_reference_fock,
                   exact_energy=True,
-                  shots=10000,
+                  shots=1000,
                   sample=True)
 
     print('Energy VQE: {:.8f}'.format(results['energy']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
-    print('Coefficients: ', results['coefficients'])
+    print('Coefficients:\n', results['coefficients'])

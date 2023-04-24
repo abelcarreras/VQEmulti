@@ -36,17 +36,17 @@ def get_info(molecule, check_HF_data=False):
     print('Molecule description {}\n'.format(molecule.description))
     print('HF energy', molecule.hf_energy)
 
-    electronNumber = molecule.n_electrons
-    orbitalNumber = molecule.n_orbitals
-    qubitNumber = molecule.n_qubits
+    n_electron = molecule.n_electrons
+    n_orbitals = molecule.n_orbitals
+    n_qubits = molecule.n_qubits
 
-    print('orbitalNumber: ', orbitalNumber)
-    print('qubitNumber: ', qubitNumber)
-    print('electronNumber: ', electronNumber)
+    print('n_orbitals: ', n_orbitals)
+    print('n_qubits: ', n_qubits)
+    print('n_electron: ', n_electron)
 
     # binary numbers encode fock space
-    jw_hf_state = jw_hartree_fock_state(electronNumber, qubitNumber)
-    print("JW HF reference")
+    jw_hf_state = jw_hartree_fock_state(n_electron, n_qubits)
+    print("HF reference vector (JW transformation)")
     print(jw_hf_state)
 
     # get fermionic hamiltonian
@@ -70,13 +70,13 @@ def get_info(molecule, check_HF_data=False):
         density_matrix = 2*np.outer(coeff.T[0], coeff.T[0])
         dm_mo = coeff.T @ s @ density_matrix @ s @ coeff
 
-        print('density (MO)')
+        print('density matrix (MO)')
         print(dm_mo)
-        J, K = compute_JK(dm_mo, h2molecule.two_body_integrals)
 
-        print('J (MO)')
+        J, K = compute_JK(dm_mo, h2molecule.two_body_integrals)
+        print('J matrix (MO)')
         print(J)
-        print('K (MO)')
+        print('K matrix (MO)')
         print(K)
 
         coulomb_energy = np.sum(dm_mo * J/2)
@@ -102,9 +102,8 @@ if __name__ == '__main__':
     charge = 0
     h2molecule = MolecularData(geometry, basis, multiplicity, charge, description='H2')
 
-
     # run classical calculation
     h2molecule = run_pyscf(h2molecule, run_fci=True, run_ccsd=True)
-    print(h2molecule.orbital_energies)
+    get_info(h2molecule, check_HF_data=True)
 
-    print('HF energy', h2molecule.hf_energy)
+    print('Total HF energy', h2molecule.hf_energy)

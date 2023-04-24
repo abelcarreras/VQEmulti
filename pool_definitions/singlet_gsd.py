@@ -4,7 +4,7 @@ from openfermion.transforms import normal_ordered
 import numpy as np
 
 
-def get_singlet_gsd(electronNumber, orbitalNumber):
+def get_pool_singlet_gsd(orbitalNumber):
     singlet_gsd = []
 
     for p in range(0,orbitalNumber):

@@ -6,7 +6,7 @@ import numpy as np
 
 # start singlet_SQ
 
-def get_singlet_sd(electronNumber, orbitalNumber):
+def get_pool_singlet_sd(electronNumber, orbitalNumber):
     singlet_sd = []
 
     n_occ = int(np.ceil(electronNumber / 2))

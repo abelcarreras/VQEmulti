@@ -3,7 +3,7 @@ from openfermion import FermionOperator
 import openfermion
 
 
-def get_spin_complement_gsd(electronNumber, orbitalNumber):
+def get_pool_spin_complement_gsd(orbitalNumber):
     spin_complement_gsd = []
     for p in range(0,orbitalNumber):
         pa = 2*p
@@ -22,7 +22,6 @@ def get_spin_complement_gsd(electronNumber, orbitalNumber):
 
             if termA.many_body_order() > 0:
                 spin_complement_gsd.append(termA)
-
 
     pq = -1
     for p in range(0,orbitalNumber):

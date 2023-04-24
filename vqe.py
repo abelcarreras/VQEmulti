@@ -6,12 +6,12 @@ import scipy
 
 
 def vqe(hamiltonian,
-        uccsd_operator,
+        ansatz,
         hf_reference_fock,
-        exact_energy=True,
-        trotter=True,
+        exact_energy=False,
+        trotter=False,
         trotter_steps=1,
-        sample=True,
+        sample=False,
         shots=1000):
     '''
     Runs the VQE algorithm to find the ground state of a molecule
@@ -29,18 +29,17 @@ def vqe(hamiltonian,
         the result will be free of sampling noise
     '''
 
-    # get JW hamiltonian
+    # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
-    # get JW UCCSD operator
-    qubit_operator = jordan_wigner(uccsd_operator)
-
+    # transform to qubit ansatz using JW transformation
+    qubit_ansatz = jordan_wigner(ansatz)
 
     # Optimize the results from analytical calculation
     if exact_energy:
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           packed_amplitudes,
-                                          (qubit_operator, hf_reference_fock, qubit_hamiltonian),
+                                          (qubit_ansatz, hf_reference_fock, qubit_hamiltonian),
                                           method="COBYLA",
                                           options={'rhobeg': 0.1, 'disp': True},
                                           )
@@ -49,7 +48,7 @@ def vqe(hamiltonian,
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           packed_amplitudes,
-                                          (qubit_operator, hf_reference_fock, qubit_hamiltonian,
+                                          (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
                                            shots, trotter, trotter_steps, sample),
                                           method="COBYLA",
                                           options={# 'rhobeg': 0.01,
@@ -85,24 +84,24 @@ if __name__ == '__main__':
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
-    # Prepare UCCSD operator
+    # Prepare UCCSD ansatz
     packed_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
                                                                         molecule.ccsd_double_amps,
                                                                         n_orbitals*2,
                                                                         n_electrons)
 
-    uccsd_operator = openfermion.uccsd_singlet_generator(packed_amplitudes,
-                                                         n_orbitals*2,
-                                                         n_electrons)
+    uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
+                                                       n_orbitals * 2,
+                                                       n_electrons)
 
-    print('UCCSD fermion operators:\n', uccsd_operator)
+    print('UCCSD operators:\n', uccsd_ansatz)
 
     # Get reference Hartree Fock state
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     print('Initialize VQE')
-    results = vqe(hamiltonian,  # fermionic hamiltonian
-                  uccsd_operator,
+    results = vqe(hamiltonian,   # fermionic hamiltonian
+                  uccsd_ansatz,  # fermionic ansatz
                   hf_reference_fock,
                   exact_energy=False,
                   shots=10000,

@@ -1,7 +1,7 @@
 from utils import get_hf_reference_in_fock_space
+from pool_definitions import get_pool_singlet_sd
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool_definitions import generate_jw_operator_pool
 from adapt_vqe import adaptVQE
 from analysis import get_info
 import matplotlib.pyplot as plt
@@ -35,14 +35,14 @@ for d in np.linspace(0.3, 3, 20):
     n_orbitals = 2  # molecule.n_orbitals
 
     # Choose specific pool of operators for adapt-VQE
-    qubitPool = generate_jw_operator_pool(n_electrons, n_orbitals, 'singlet_sd')
-    print("Pool Size:", len(qubitPool))
+    pool = get_pool_singlet_sd(electronNumber=n_electrons,
+                               orbitalNumber=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     # run adaptVQE
-    result, iterations = adaptVQE(qubitPool,
+    result, iterations = adaptVQE(pool,
                                   hamiltonian,
                                   hf_reference_fock,
                                   threshold=0.1, # in Hartree

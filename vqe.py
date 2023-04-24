@@ -103,7 +103,7 @@ if __name__ == '__main__':
     print('Initialize VQE')
     results = vqe(hamiltonian,  # fermionic hamiltonian
                   uccsd_ansatz,  # fermionic ansatz
-                  uccsd_amplitudes*2,
+                  uccsd_amplitudes,
                   hf_reference_fock,
                   exact_energy=True,
                   shots=10000,

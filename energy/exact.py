@@ -5,7 +5,7 @@ from utils import get_sparse_ket_from_fock
 from openfermion.utils import count_qubits
 
 
-def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubitHamiltonian):
+def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubit_hamiltonian):
     '''
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
@@ -17,23 +17,24 @@ def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubitHamiltonia
         the list of ansatz operators (fermionic ladder operators, pre
         exponentiation). The index of the operators in the list should be in
         accordance with the index of the respective coefficients in coefVect.
-      referenceState (numpy.ndarray): the state vector representing the state
+      hf_reference_fock ([int]): the state vector representing the state
         prior to the application of the ansatz (e.g. the Hartree Fock ground
         state).
-      sparseHamiltonian (scipy.sparse.csc_matrix): the hamiltonian of the system,
-        as a sparse matrix.
+      qubit_hamiltonian (openfermion qubit): the hamiltonian of the system,
+        as a qbits.
 
       Returns:
         energy (float): the expectation value of the Hamiltonian in the state
           prepared by applying the ansatz to the reference state.
     '''
 
-    sparseHamiltonian = get_sparse_operator(qubitHamiltonian)
+    # Transform Hamiltonian to matrix representation (JW transformation)
+    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
 
-    # Find the number of qubits of the system (2**qubitNumber = dimension)
-    qubitNumber = count_qubits(qubitHamiltonian)
+    # Find the number of qubits of the system (2**n_qubit = dimension)
+    n_qubit = count_qubits(qubit_hamiltonian)
 
-    # Transform reference vector into a Compressed Sparse Column matrix
+    # Transform reference vector into a Compressed Sparse Column matrix (JW transformation)
     ket = get_sparse_ket_from_fock(hf_reference_fock)
 
     # Apply e ** (coefficient * operator) to the state (ket) for each operator in
@@ -42,22 +43,20 @@ def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubitHamiltonia
         # Multiply the operator by the respective coefficient
         operator = coefficient * operator
 
-        # Get the sparse matrix representing the operator. The dimension should be
-        # that of the FULL Hilbert space, even if the operator only acts on part.
-        sparseOperator = get_sparse_operator(operator, qubitNumber)
+        # Get the operator matrix representation of the operator (JW)
+        sparse_operator = get_sparse_operator(operator, n_qubit)
 
         # Exponentiate the operator and update ket to represent the state after
         # this operator has been applied
-        expOperator = scipy.sparse.linalg.expm(sparseOperator)
+        exp_operator = scipy.sparse.linalg.expm(sparse_operator)
 
         # print('ket shape', ket.shape)
-        # print('operator shape', expOperator.shape)
-
-        ket = expOperator * ket
+        # print('operator shape', exp_operator.shape)
+        ket = exp_operator * ket
 
     # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
     bra = ket.transpose().conj()
-    energy = np.sum(bra * sparseHamiltonian * ket).real
+    energy = np.sum(bra * sparse_hamiltonian * ket).real
 
     return energy
 

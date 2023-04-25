@@ -5,7 +5,7 @@ import scipy
 import cirq
 
 
-def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGates, n_qubits):
+def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
     """
     Measures the expectation value of a subHamiltonian using the CIRQ simulator
     (simulating sampling). By construction, all the expectation values of the
@@ -18,7 +18,7 @@ def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGate
         representing substrings of the main one, and whose values are the
         respective coefficients.
       shots (int): the number of repetitions to be performed, the
-      statePreparationGates (list): the list of CIRQ gates that prepare (from
+      state_preparation_gates (list): the list of CIRQ gates that prepare (from
         |0..0>) the state in which to obtain the expectation value.
       qubits (list): list of cirq.LineQubit to apply the gates on
 
@@ -33,7 +33,7 @@ def measureExpectation(main_string, sub_hamiltonian, shots, statePreparationGate
 
     # Append to the circuit the gates that prepare the state corresponding to
     # the received parameters.
-    circuit.append(statePreparationGates)
+    circuit.append(state_preparation_gates)
 
     # cirq.optimizers.EjectZ().optimize_circuit(circuit)
     # cirq.optimizers.DropNegligible().optimize_circuit(circuit)

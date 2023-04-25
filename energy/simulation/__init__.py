@@ -1,6 +1,6 @@
 from utils import convert_hamiltonian, group_hamiltonian
 from openfermion.utils import count_qubits
-from energy.simulation.tools import measureExpectation, get_exact_state_evaluation, get_preparation_gates
+from energy.simulation.tools import measure_expectation, get_exact_state_evaluation, get_preparation_gates
 from energy.simulation.trotter import get_preparation_gates_trotter, trotterizeOperator
 
 
@@ -35,11 +35,11 @@ def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
 
     energy = 0
     for main_string, sub_hamiltonian in groupedHamiltonian.items():
-        expectation_value = measureExpectation(main_string,
-                                               sub_hamiltonian,
-                                               shots,
-                                               statePreparationGates,
-                                               qubitNumber)
+        expectation_value = measure_expectation(main_string,
+                                                sub_hamiltonian,
+                                                shots,
+                                                statePreparationGates,
+                                                qubitNumber)
         energy += expectation_value
 
     assert energy.imag < 1e-5

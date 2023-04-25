@@ -1,6 +1,6 @@
 from utils import get_sparse_ket_from_fock, convert_hamiltonian, group_hamiltonian
 from gradient.exact import prepare_adapt_state
-from energy.simulation.tools import measureExpectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation.tools import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import numpy as np
@@ -39,11 +39,11 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
     # sum to obtain the energy expectation value
     commutator = 0
     for main_string, sub_hamiltonian in groupedCommutator.items():
-        expectation_value = measureExpectation(main_string,
-                                               sub_hamiltonian,
-                                               shots,
-                                               statePreparationGates,
-                                               n_qubits)
+        expectation_value = measure_expectation(main_string,
+                                                sub_hamiltonian,
+                                                shots,
+                                                statePreparationGates,
+                                                n_qubits)
         commutator += expectation_value
 
     assert commutator.imag < 1e-5

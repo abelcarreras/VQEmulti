@@ -27,7 +27,6 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
         subHamiltonian, with sampling noise.
     """
 
-
     # Initialize circuit.
     circuit = cirq.Circuit()
 
@@ -71,9 +70,9 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
         raise Exception('Nothing to run')
 
     # For each substring, initialize the sum of all measurements as zero
-    total = {}
+    measurements = {}
     for sub_string in sub_hamiltonian:
-        total[sub_string] = 0
+        measurements[sub_string] = 0
 
     # Calculate the expectation value of each Pauli string by averaging over
     # all the repetitions
@@ -101,19 +100,19 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
 
         # Add this measurement to the total, for each string
         for sub_string in sub_hamiltonian:
-            total[sub_string] += meas[sub_string]
+            measurements[sub_string] += meas[sub_string]
 
     # Calculate the expectation value of the subHamiltonian, by multiplying
     # the expectation value of each substring by the respective coefficient
     total_expectation_value = 0
-    for sub_string in sub_hamiltonian:
+    for sub_string, coefficient in sub_hamiltonian.items():
         # Get the expectation value of this substring by taking the average
         # over all the repetitions
-        expectation_value = total[sub_string] / shots
+        expectation_value = measurements[sub_string] / shots
 
-        # Add this value to the total expectation value, weighed by its
+        # Add this value to the measurements expectation value, weighed by its
         # coefficient
-        total_expectation_value += expectation_value * sub_hamiltonian[sub_string]
+        total_expectation_value += expectation_value * coefficient
 
     return total_expectation_value
 

@@ -1,6 +1,6 @@
 from utils import get_sparse_ket_from_fock, convert_hamiltonian, group_hamiltonian
 from gradient.exact import prepare_adapt_state
-from energy.simulation.tools import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import numpy as np

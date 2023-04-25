@@ -1,7 +1,7 @@
 from openfermion.transforms import jordan_wigner, get_fermion_operator
 from openfermion.utils import count_qubits
 from openfermion import InteractionOperator, FermionOperator
-from energy.simulation.tools import build_reference_gates
+from energy.simulation.tools_cirq import build_reference_gates
 import numpy as np
 import cirq
 

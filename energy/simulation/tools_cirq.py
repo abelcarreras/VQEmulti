@@ -34,9 +34,6 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
     # the received parameters.
     circuit.append(state_preparation_gates)
 
-    # cirq.optimizers.EjectZ().optimize_circuit(circuit)
-    # cirq.optimizers.DropNegligible().optimize_circuit(circuit)
-
     # optimize circuit
     circuit = cirq.eject_z(circuit)
     circuit = cirq.drop_negligible_operations(circuit)
@@ -64,8 +61,8 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
     # Sample the desired number of repetitions from the circuit, unless
     # there are no measurements (identity term).
     if main_string != "I" * n_qubits:
-        s = cirq.Simulator()
-        results = s.run(circuit, repetitions=shots)
+        simulation = cirq.Simulator()
+        results = simulation.run(circuit, repetitions=shots)
     else:
         raise Exception('Nothing to run')
 
@@ -74,33 +71,15 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
     for sub_string in sub_hamiltonian:
         measurements[sub_string] = 0
 
-    # Calculate the expectation value of each Pauli string by averaging over
-    # all the repetitions
-    for j in range(shots):
-        meas = {}
-
-        # Initialize the measurement in repetition j for all substrings
+    indices = np.array(results.data.T.index, dtype=int)
+    for vector in results.data.values:
         for sub_string in sub_hamiltonian:
-            meas[sub_string] = 1
+            prod_function = 1
+            for i, v in zip(indices, vector):
+                if main_string[i] != "I":
+                    prod_function *= int(1 - 2 * v) ** int(sub_string[i])
 
-        # Go through the measurements on all the qubits
-        for i in range(n_qubits):
-
-            if main_string[i] != "I":
-                # There's a measurement associated with this qubit
-
-                # Use this single qubit measurement for the calculation of the
-                # measurement of each full substring in this repetition. If the
-                # substring has a "0" in the position corresponding to this
-                # qubit, the operator associated is I, and the measurement
-                # is ignored (raised to the power of 0)
-                for sub_string in sub_hamiltonian:
-                    #print(results.data[str(i)][j], (1 - 2 * results.data[str(i)][j]), sub_string[i])
-                    meas[sub_string] = meas[sub_string] * ((1 - 2 * results.data[str(i)][j]) ** int(sub_string[i]))
-
-        # Add this measurement to the total, for each string
-        for sub_string in sub_hamiltonian:
-            measurements[sub_string] += meas[sub_string]
+            measurements[sub_string] += prod_function
 
     # Calculate the expectation value of the subHamiltonian, by multiplying
     # the expectation value of each substring by the respective coefficient
@@ -118,7 +97,7 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
 
 
 def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
-    '''
+    """
     Calculates the exact energy in a specific state using matrix algebra
 
     Arguments:
@@ -128,13 +107,12 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
 
     Returns:
       exact_evaluation (float): the expectation value in the state given the hamiltonian.
-    '''
-
+    """
     circuit = cirq.Circuit(state_preparation_gates)
-    s = cirq.Simulator()
+    simulation = cirq.Simulator()
 
     # Access the exact final state vector
-    results = s.simulate(circuit)
+    results = simulation.simulate(circuit)
     state_vector = results.final_state_vector
 
     formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
@@ -174,12 +152,12 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
     qubits = cirq.LineQubit.range(n_qubits)
 
     # Initialize the state preparation gates with the Hartree Fock preparation
-    statePreparationGates = [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+    state_preparation_gates = [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
     # Append the ansatz directly as a matrix
-    statePreparationGates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
+    state_preparation_gates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
 
-    return statePreparationGates
+    return state_preparation_gates
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):

@@ -1,6 +1,9 @@
 from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
+from openfermion import QubitOperator
+from openfermion import reverse_jordan_wigner
+
 import numpy as np
 import openfermion
 import scipy
@@ -25,7 +28,7 @@ def vqe(hamiltonian,
     :param trotter_steps: number of trotter steps (only used if trotter=True)
     :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
     :param shots: number of samples to perform in the simulation
-    :return:
+    :return: results dictionary
     """
 
     # transform to qubit hamiltonian using JW transformation
@@ -58,8 +61,21 @@ def vqe(hamiltonian,
                                                    'disp': True},
                                           )
 
+    # generate operators list adn global coefficients
+    operators_list = []
+    global_coefficients = []
+    for coefficient, op in zip(results.x, qubit_ansatz.terms):
+        operators_list.append(1j*QubitOperator(op))
+        global_coefficients.append(coefficient * np.real(qubit_ansatz.terms[op]/1j))
+
+    # generated updated ansatz (in Qubits)
+    optimized_ansatz_qubit = QubitOperator()
+    for coefficient, op in zip(global_coefficients, operators_list):
+        optimized_ansatz_qubit += coefficient * op
+
     return {'energy': results.fun,
-            'coefficients': results.x}
+            'coefficients': global_coefficients,
+            'operators': operators_list}
 
 
 if __name__ == '__main__':
@@ -104,10 +120,10 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     print('Initialize VQE')
-    result = vqe(hamiltonian,  # fermionic hamiltonian
-                 uccsd_ansatz,  # fermionic ansatz
+    result = vqe(hamiltonian,
+                 uccsd_ansatz,
                  hf_reference_fock,
-                 exact_energy=False,
+                 exact_energy=True,
                  trotter=False,
                  trotter_steps=2,
                  shots=1000,
@@ -117,5 +133,6 @@ if __name__ == '__main__':
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
-    print('Num operators: ', len(result['coefficients']))
+    print('Num operators: ', len(result['operators']))
+    print('Operators:\n', result['operators'])
     print('Coefficients:\n', result['coefficients'])

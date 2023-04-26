@@ -32,7 +32,7 @@ def adaptVQE(operators_pool,
     :param trotter_steps: number of trotter steps (only used if trotter=True)
     :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
     :param shots: number of samples to perform in the simulation
-    :return:
+    :return: results dictionary
     """
 
     # Initialize data structures

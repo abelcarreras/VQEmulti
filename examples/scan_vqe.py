@@ -50,7 +50,7 @@ for d in np.linspace(0.3, 3, n_points):
                  hf_reference_fock,
                  exact_energy=True,
                  shots=1000,
-                 sample=True)
+                 test_only=True)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))

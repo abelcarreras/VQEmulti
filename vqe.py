@@ -12,23 +12,21 @@ def vqe(hamiltonian,
         exact_energy=False,
         trotter=False,
         trotter_steps=1,
-        sample=False,
+        test_only=False,
         shots=1000):
-    '''
-    Runs the VQE algorithm to find the ground state of a molecule
+    """
+    Perform a VQE calculation
 
-    Arguments:
-      amplitudes (list, np.array): the amplitudes that specify the starting
-        parameters of the UCCSD circuit
-      molecule (openfermion.MolecularData): the molecule in consideration
-      shots (int): the number of circuit repetitions to be used in the
-        expectation estimation
-      optolerance (float,float): values of fatol and xatol that define the
-        accepted tolerance for convergence in the optimization
-      simulate (bool): if False, the circuit will not be trotterized
-      sample (bool): if False, the full state vector will be simulated and
-        the result will be free of sampling noise
-    '''
+    :param hamiltonian: hamiltonian in fermionic operators
+    :param ansatz: ansatz to optimize in fermionic operators)
+    :param hf_reference_fock: HF reference in Fock space vector (occupations)
+    :param exact_energy: Set True to compute energy analyticaly, set False to simulate
+    :param trotter: Trotterize ansatz operators
+    :param trotter_steps: number of trotter steps (only used if trotter=True)
+    :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+    :param shots: number of samples to perform in the simulation
+    :return:
+    """
 
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
@@ -54,7 +52,7 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
-                                           shots, trotter, trotter_steps, sample),
+                                           shots, trotter, trotter_steps, test_only),
                                           method="COBYLA",
                                           options={# 'rhobeg': 0.01,
                                                    'disp': True},
@@ -110,8 +108,10 @@ if __name__ == '__main__':
                  uccsd_ansatz,  # fermionic ansatz
                  hf_reference_fock,
                  exact_energy=False,
+                 trotter=False,
+                 trotter_steps=2,
                  shots=1000,
-                 sample=False)
+                 test_only=False)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))

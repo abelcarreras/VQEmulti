@@ -7,17 +7,33 @@ import numpy as np
 import scipy
 
 
-def adaptVQE(operators_pool,  # fermionic operators
-             hamiltonian,     # fermionic hamiltonian
-             hf_reference_fock,  # used to determine reference HF
+def adaptVQE(operators_pool,
+             hamiltonian,
+             hf_reference_fock,
              max_iterations=50,
              threshold=0.1,
              exact_energy=True,
              exact_gradient=True,
-             trotter=True,
-             trotter_steps=1,
-             sample=True,
+             trotter=False,
+             trotter_steps=2,
+             test_only=False,
              shots=1000):
+    """
+    Perform a adapt VQE calculation
+
+    :param operators_pool: fermionic operators pool
+    :param hamiltonian: hamiltonian in fermionic operators
+    :param hf_reference_fock: HF reference in Fock space vector (occupations)
+    :param max_iterations: max adaptVQE iterations
+    :param threshold: convergence threshold (in Hartree)
+    :param exact_energy: Set True to compute energy analyticaly, set False to simulate
+    :param exact_gradient: Set True to compute gradients analyticaly, set False to simulate
+    :param trotter: Trotterize ansatz operators
+    :param trotter_steps: number of trotter steps (only used if trotter=True)
+    :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+    :param shots: number of samples to perform in the simulation
+    :return:
+    """
 
     # Initialize data structures
     iterations = {"energies": [], "norms": []}
@@ -53,7 +69,7 @@ def adaptVQE(operators_pool,  # fermionic operators
                                                 coefficients,
                                                 qubit_operators_pool,
                                                 shots,
-                                                sample)
+                                                test_only)
 
         total_norm = np.linalg.norm(gradient_vector)
         max_index = np.argmax(gradient_vector)
@@ -90,10 +106,10 @@ def adaptVQE(operators_pool,  # fermionic operators
             opt_result = scipy.optimize.minimize(simulate_vqe_energy,
                                                  coefficients,
                                                  (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
-                                                  shots, trotter, trotter_steps, sample),
+                                                  shots, trotter, trotter_steps, test_only),
                                                  method="COBYLA",
                                                  tol=1e-8,
-                                                 options={ 'disp': True}) # 'rhobeg': 0.01)
+                                                 options={'disp': True}) # 'rhobeg': 0.01)
 
 
         coefficients = list(opt_result.x)
@@ -147,13 +163,13 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     result, iterations = adaptVQE(operators_pool,  # fermionic operators
-                                  hamiltonian,     # fermionic hamiltonian
+                                  hamiltonian,  # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
-                                  exact_energy=False,
+                                  exact_energy=True,
                                   exact_gradient=True,
                                   trotter=False,
-                                  sample=False,
+                                  test_only=False,
                                   shots=100)
 
     print("Optimized AdaptVQE energy:", result["energy"])

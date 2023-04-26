@@ -139,7 +139,7 @@ def trotterizeOperator(operator, qubitNumber, time, steps):
     return trotterGates
 
 
-def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock, n_qubits):
+def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock):
     """
     trotterize the operators
 
@@ -151,6 +151,7 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
     :return: gates list
     """
 
+    n_qubits = len(hf_reference_fock)
     # Initialize the ansatz gate list
     trotter_ansatz = []
     # Go through the operators in the ansatz

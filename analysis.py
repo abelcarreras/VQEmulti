@@ -31,7 +31,13 @@ def compute_JK(density_matrix, Vee):
 
 
 def get_info(molecule, check_HF_data=False):
-    # check calculation properties
+    """
+    get information about the molecule
+
+    :param molecule: openfermion Molecule (with computed properties)
+    :param check_HF_data: set True for additional information
+    :return:
+    """
 
     print('Molecule description {}\n'.format(molecule.description))
     print('HF energy', molecule.hf_energy)

@@ -149,37 +149,6 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
 
     return state_preparation_gates
 
-
-def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):
-    """
-    generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
-
-    :param coefficients: operator coefficients
-    :param ansatz: operators list in qubit
-    :param hf_reference_fock: reference HF in fock vspace vector
-    :param n_qubits: number of qubits
-    :return: gates list in simulation library format
-    """
-
-    # generate matrix operator that corresponds to ansatz
-    identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-    matrix = identity
-    for _ in range(n_qubits - 1):
-        matrix = scipy.sparse.kron(identity, matrix, 'csc')
-
-    for coefficient, operator in zip(coefficients, ansatz):
-        # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
-
-        # Add unitary operator to matrix as exp(operator_matrix)
-        matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
-
-    # Get gates in simulation library format
-    state_preparation_gates = build_gradient_ansatz(hf_reference_fock, matrix)
-
-    return state_preparation_gates
-
-
 def get_circuit_depth(state_preparation_gates):
     circuit = cirq.Circuit(state_preparation_gates)
     return len(cirq.Circuit(circuit.all_operations()))

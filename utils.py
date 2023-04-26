@@ -5,15 +5,12 @@ import scipy
 
 
 def string_to_matrix(pauli_string):
-    '''
-    Converts a Pauli string to its matrix form.
+    """
+    Converts a Pauli string to its matrix form
 
-    Arguments:
-      pauli_string (str): the Pauli string (e.g. "IXYIZ")
-
-    Returns:
-      matrix (np.ndarray): the corresponding matrix, in the computational basis
-    '''
+    :param pauli_string: the Pauli string (e.g. 'IXYIZ')
+    :return: the corresponding matrix, in the computational basis
+    """
 
     # Define necessary Pauli operators (two-dimensional) as matrices
     pauli_x = np.array([[0, 1],
@@ -43,17 +40,14 @@ def string_to_matrix(pauli_string):
 
 
 def get_sparse_ket_from_fock(fock_vector):
-    '''
+    """
     Transforms a state represented in Fock space to sparse vector.
     The Jordan-Wigner Transform is used.
 
-    Arguments:
-      fock_vector (list): a list of length n representing the Fock vector
+    :param fock_vector: a list representing the Fock vector
+    :return: the corresponding sparse vector
+    """
 
-    Returns:
-      state_vector (scipy.sparse.csc_matrix): the corresponding basis vector in the
-        2^n dimensional Hilbert space
-    '''
     state_vector = [1]
 
     # Iterate through the ket, calculating the tensor product of the qubit states
@@ -65,21 +59,16 @@ def get_sparse_ket_from_fock(fock_vector):
 
 
 def get_hf_reference_in_fock_space(electron_number, qubit_number):
-    '''
+    """
     Get the Hartree Fock reference in Fock space vector
+    The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
 
-    Arguments:
-      electron_number (int): the number of electrons of the molecule.
-      qubit_number (int): the number of qubits necessary to represent the molecule
-        (equal to the number of spin orbitals we're considering active).
+    :param electron_number: number of electrons
+    :param qubit_number: the number of qubits necessary to represent the molecule
+    :return: the vector in the Fock space
+    """
 
-    Returns:
-      hf_reference (list): a list of lenght qubitNumber, representing the
-        ket of the adequate computational basis state in big-endian ordering.
-    '''
-
-    # Consider occupied the lower energy orbitals, until enough one particle
-    # states are filled
+    # This considers occupied the lower energy orbitals
     hf_reference = np.zeros(qubit_number, dtype=int)
     for i in range(electron_number):
         hf_reference[i] = 1
@@ -88,28 +77,22 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number):
 
 
 def find_sub_strings(mainString, hamiltonian, checked=()):
-    '''
+    """
     Finds and groups all the strings in a Hamiltonian that only differ from
     mainString by identity operators.
 
-    Arguments:
-      mainString (str): a Pauli string (e.g. "XZ)
-      hamiltonian (dict): a Hamiltonian (with Pauli strings as keys and their
-        coefficients as values)
-      checked (list): a list of the strings in the Hamiltonian that have already
-        been inserted in another group
-
-    Returns:
-      groupedOperators (dict): a dictionary whose keys are boolean strings
-        representing substrings of the mainString (e.g. if mainString = "XZ",
-        "IZ" would be represented as "01"). It includes all the strings in the
-        hamiltonian that can be written in this form (because they only differ
-        from mainString by identities), except for those that were in checked
-        (because they are already part of another group of strings).
-      checked (list):  the same list passed as an argument, with extra values
-        (the strings that were grouped in this function call).
-    '''
-
+    :param mainString: a Pauli string (e.g. "XZ)
+    :param hamiltonian: a Hamiltonian (with Pauli strings as keys and their coefficients as values)
+    :param checked: a list of the strings in the Hamiltonian that have already been inserted in another group
+    :return: groupedOperators (dict): a dictionary whose keys are boolean strings
+             representing substrings of the mainString (e.g. if mainString = "XZ",
+             "IZ" would be represented as "01"). It includes all the strings in the
+             hamiltonian that can be written in this form (because they only differ
+             from mainString by identities), except for those that were in checked
+             (because they are already part of another group of strings).
+             checked (list):  the same list passed as an argument, with extra values
+             (the strings that were grouped in this function call).
+    """
     grouped_operators = {}
 
     # Go through the keys in the dictionary representing the Hamiltonian that
@@ -140,25 +123,21 @@ def find_sub_strings(mainString, hamiltonian, checked=()):
 
 
 def group_hamiltonian(hamiltonian):
-    '''
+    """
     Organizes a Hamiltonian into groups where strings only differ from
     identities, so that the expectation values of all the strings in each
     group can be calculated from the same measurement array.
 
-    Arguments:
-      hamiltonian (dict): a dictionary representing a Hamiltonian, with Pauli
-        strings as keys and their coefficients as values.
-
-    Returns:
-      grouped_hamiltonian (dict): a dictionary of subhamiltonians, each of
-        which includes Pauli strings that only differ from each other by
-        identities.
-        The keys of grouped_hamiltonian are the main strings of each group: the
-        ones with least identity terms. The value associated to a main string is
-        a dictionary, whose keys are boolean strings representing substrings of
-        the respective main string (with 1 where the Pauli is the same, and 0
-        where it's identity instead). The values are their coefficients.
-    '''
+    :param hamiltonian: a dictionary representing a Hamiltonian, with Pauli strings as keys and their coefficients as values
+    :return: grouped_hamiltonian (dict): a dictionary of subhamiltonians, each of
+             which includes Pauli strings that only differ from each other by
+             identities.
+             The keys of grouped_hamiltonian are the main strings of each group: the
+             ones with least identity terms. The value associated to a main string is
+             a dictionary, whose keys are boolean strings representing substrings of
+             the respective main string (with 1 where the Pauli is the same, and 0
+             where it's identity instead). The values are their coefficients
+    """
     grouped_hamiltonian = {}
     checked = []
 
@@ -188,7 +167,7 @@ def convert_hamiltonian(qubit_hamiltonian):
     Separates a qubit Hamiltonian in dictionary entries, so that it's a suitable
     argument for functions such as measure_expectation_estimation.
 
-    :param qubit_hamiltonian:
+    :param qubit_hamiltonian: hamiltonian in qubits
     :return: formatted hamiltonian
     """
 
@@ -229,9 +208,9 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals):
     """
     get truncated hamiltonian given a number of orbitals
 
-    :param hamiltonian: fermionic hamiltonian
+    :param hamiltonian: hamiltonian in fermionic operators
     :param n_orbitals: number of orbitals to keep
-    :return: truncated hamiltonian
+    :return: truncated hamiltonian in fermionic operators
     """
 
     n_spin_orbitals = n_orbitals * 2

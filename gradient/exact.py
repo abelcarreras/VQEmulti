@@ -75,7 +75,7 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
     :param ansatz: VQE ansatz in qubit operators
     :param coefficients: list of VQE coefficients
     :param pool: pool of qubit operators
-    :return:
+    :return: the gradient vector
     """
 
     # transform hamiltonian to sparse (using JW)

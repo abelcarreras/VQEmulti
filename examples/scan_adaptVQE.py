@@ -48,7 +48,8 @@ for d in np.linspace(0.3, 3, 20):
                                   hf_reference_fock,
                                   threshold=0.1, # in Hartree
                                   exact_energy=True,
-                                  exact_gradient=True
+                                  exact_gradient=True,
+                                  test_only=True,
                                   )
 
     print("Final energy:", result["energy"])

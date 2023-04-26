@@ -2,11 +2,11 @@ from utils import convert_hamiltonian, group_hamiltonian
 from openfermion.utils import count_qubits
 from energy.simulation.trotter import get_preparation_gates_trotter, trotterizeOperator
 from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, get_preparation_gates
-# from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, get_preparation_gates
+from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, get_preparation_gates
 
 
 def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
-    '''
+    """
     Obtains the expectation value in a state by sampling (using the CIRQ
     simulator).
 
@@ -19,7 +19,7 @@ def get_sampled_energy(qubitHamiltonian, shots, statePreparationGates):
 
     Returns:
       energy (float): the energy (with sampling noise).
-    '''
+    """
 
     qubitNumber = count_qubits(qubitHamiltonian)
 

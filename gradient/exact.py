@@ -5,21 +5,33 @@ import numpy as np
 import scipy
 
 
-def prepare_adapt_state(reference_state, ansatz, coefficients, n_qubit):
+def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
+    """
+    prepare state from coefficients ansatz and reference
+
+    :param hf_reference_fock:  reference HF state in Fock space vector
+    :param ansatz: ansatz in qubit operators
+    :param coefficients: adapt-VQE coefficients
+    :param n_qubit: number of q_bits
+    :return:
+
+    """
+
     # Initialize the state vector with the reference state.
     # |state> = |state_old> · exp(i * coef · |ansatz>
     # imaginary i already included in |ansatz> by generate_jw_operator_pool function
+    # transform Fock state to sparse (and ket by transposing) using JW transformation
+    state = get_sparse_ket_from_fock(hf_reference_fock)
 
-    state = reference_state.copy()
+    n_qubits = len(hf_reference_fock)
 
-    # Apply the ansatz operators one by one to obtain the state as optimized
-    # by the last iteration
+    # Apply the ansatz operators one by one to obtain the state as optimized by the last iteration
     for coefficient, operator in zip(coefficients, ansatz):
         # Multiply the operator by the variational parameter
         operator = coefficient * operator
 
         # Obtain the sparse matrix representing the operator
-        sparse_operator = get_sparse_operator(operator, n_qubit)
+        sparse_operator = get_sparse_operator(operator, n_qubits)
 
         # Exponentiate the operator
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)
@@ -36,13 +48,10 @@ def calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian):
     coefficient c of the operator exp(c * A), at c = 0, in a given state.
     Uses dexp(c*A)/dc = <psi|[H,A]|psi> = 2 * real(<psi|HA|psi>)
 
-    Arguments:
-      sparse_operator (scipy.sparse.csc_matrix): the pool operator A.
-      sparse_state (scipy.sparse.csc_matrix): the state in which to calculate the energy.
-      sparse_hamiltonian (scipy.sparse.csc_matrix): the Hamiltonian of the system.
-
-    Returns:
-      gradient (float): the norm of dE/dc in this state, at point c = 0.
+    :param sparse_operator:  the pool operator A in sparse matrix representation
+    :param sparse_state: the state in which to calculate the energy (sparse vector representation)
+    :param sparse_hamiltonian: the Hamiltonian of the system in sparse matrix representation
+    :return: gradient (float)
     """
 
     # gradient 2 * <state | H · Op | state >  (non-explicit)
@@ -58,21 +67,25 @@ def calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian):
 
 
 def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool):
+    """
+    computes the gradient vector respect to the pool operators
 
-    # transform Fock state to sparse (and ket by transposing)
-    sparse_reference_state = get_sparse_ket_from_fock(hf_reference_fock)
+    :param hf_reference_fock: reference HF state in Fock space vector
+    :param qubit_hamiltonian: hamiltonian in qubit operators
+    :param ansatz: VQE ansatz in qubit operators
+    :param coefficients: list of VQE coefficients
+    :param pool: pool of qubit operators
+    :return:
+    """
 
-    # transform hamiltonian to sparse
+    # transform hamiltonian to sparse (using JW)
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
     n_qubits = count_qubits(qubit_hamiltonian)
 
-    # Get the current state.
-    # Since the coefficients are reoptimized every iteration, the state has to
-    # be built from the reference state each time.
-    sparse_state = prepare_adapt_state(sparse_reference_state,
+    # Prepare the current state from ansatz (& coefficient) and HF reference
+    sparse_state = prepare_adapt_state(hf_reference_fock,
                                        ansatz,
-                                       coefficients,
-                                       n_qubits)
+                                       coefficients)
 
     # Calculate and print gradients
     print("Non-Zero Gradients (calculated)")

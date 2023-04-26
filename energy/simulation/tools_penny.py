@@ -11,7 +11,7 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
     # Initialize qubits
     n_qubits = len(hf_reference_fock)
 
-    # dev1 = qml.device('default.qubit', wires=n_qubits)
+    # Add gates for HF reference
     state_preparation_gates = [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
     # Append the ansatz directly as a matrix
@@ -21,28 +21,30 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):
+    """
+    generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
-    # Create sparse 2x2 identity matrix and initialize the ansatz matrix with it
+    :param coefficients: operator coefficients
+    :param ansatz: operators list in qubit
+    :param hf_reference_fock: reference HF in fock vspace vector
+    :param n_qubits: number of qubits
+    :return: gates list in simulation library format
+    """
+
+    # generate matrix operator that corresponds to ansatz
     identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-
-    # Multiply the ansatz matrix by identity as many times as necessary to get
-    # the correct dimension
     matrix = identity
     for _ in range(n_qubits - 1):
         matrix = scipy.sparse.kron(identity, matrix, 'csc')
 
-    # Multiply the identity matrix by the matrix form of each operator in the
-    # ansatz, to obtain the matrix representing the action of the complete ansatz
     for coefficient, operator in zip(coefficients, ansatz):
-        # Get corresponding the sparse operator, with the correct dimension
-        # (forcing n_qubits = qubitNumber, even if this operator acts on less
-        # qubits)
+        # Get corresponding the operator matrix (exponent)
         operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
 
-        # Multiply previous matrix by this operator
+        # Add unitary operator to matrix as exp(operator_matrix)
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
 
-    # Prepare ansatz directly as a matrix f
+    # Get gates in simulation library format
     state_preparation_gates = build_gradient_ansatz(hf_reference_fock, matrix)
 
     return state_preparation_gates
@@ -50,71 +52,66 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock, n_qubits):
 
 def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
     """
-    Measures the expectation value of a subHamiltonian using the CIRQ simulator
-    (simulating sampling). By construction, all the expectation values of the
-    strings in subHamiltonian can be obtained from the same measurement array.
+    Measures the expectation value of a sub_hamiltonian using the Pennylane simulator.
+    By construction, all the expectation values of the strings in subHamiltonian can be
+    obtained from the same measurement array. This reduces quantum computer simulations
 
-    Arguments:
-      main_string (str): the main Pauli string. This is the string in the group
-        with the least identity terms. It defines the circuit that will be used.
-      sub_hamiltonian (dict): a dictionary whose keys are boolean strings
-        representing substrings of the main one, and whose values are the
-        respective coefficients.
-      shots (int): the number of repetitions to be performed, the
-      state_preparation_gates (list): the list of CIRQ gates that prepare (from
-        |0..0>) the state in which to obtain the expectation value.
-      qubits (list): list of cirq.LineQubit to apply the gates on
-
-    Returns:
-      total_expectation_value (float): the measurements expectation value of
-        subHamiltonian, with sampling noise.
+    :param main_string: hamiltonian main string ex: (XXYY)
+    :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
+    :param shots: number of samples to simulate
+    :param state_preparation_gates: list of gates in simulation library format that represents the state
+    :param n_qubits: number of qubits
+    :return:
     """
 
     # Initialize circuit.
     dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)], shots=shots)
 
-    # add gates to circuit
-    def circuit_function():
+    # Build circuit from preparation gates
+    @qml.qnode(dev_unique_wires)
+    def circuit():
+        # apply preparation gates
         for gate in state_preparation_gates:
             qml.apply(gate)
 
+        # apply hamiltonian gates according to main string
         for i, op in enumerate(main_string):
             if op == "X":
                 qml.Hadamard(wires=[i])
 
-            # Rotate qubit i to the Y basis if that's the desired measurement.
             elif op == "Y":
                 qml.RX(np.pi / 2, wires=[i])
-        return qml.sample()
-        # return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
 
-    # Append to the circuit the gates that prepare the state corresponding to
-    # the received parameters.
-    circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
+        # sample measurements in PauliZ
+        return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
+
+    # draw circuit
     # print(qml.draw(circuit)())
 
     result_data = {}
     if main_string != "I" * n_qubits:
         raw_results = np.array(circuit()).T
-        for i, measure_vector in enumerate(raw_results):
-            result_data.update({'{}'.format(i): measure_vector.tolist()})
+        for i, measure_z_vector in enumerate(raw_results):
+            result_data.update({'{}'.format(i): measure_z_vector.tolist()})
     else:
         raise Exception('Nothing to run')
+        # return 0
 
-    # For each substring, initialize the sum of all measurements as zero
+    # Get function return from measurements in Z according to sub_hamiltonian
     measurements = {}
     for sub_string in sub_hamiltonian:
         measurements[sub_string] = 0
 
-    for vector in raw_results.T:
+    for measure_z_vector in raw_results:
         for sub_string in sub_hamiltonian:
 
             prod_function = 1
-            for i, v in enumerate(vector):
+            for i, measure_z in enumerate(measure_z_vector):
                 if main_string[i] != "I":
-                    prod_function *= int(1 - 2 * v) ** int(sub_string[i])
+                    prod_function *= measure_z ** int(sub_string[i])
 
             measurements[sub_string] += prod_function
+
 
     # Calculate the expectation value of the subHamiltonian, by multiplying
     # the expectation value of each substring by the respective coefficient
@@ -132,21 +129,17 @@ def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_g
 
 
 def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
-    '''
+    """
     Calculates the exact energy in a specific state using matrix algebra
+    This function is basically used to test that the Pennylane circuit is correct
 
-    Arguments:
-      state_vector (np.ndarray): the state in which to obtain the
-        expectation value.
-      qubit_hamiltonian (dict): the Hamiltonian of the system.
-
-    Returns:
-      exact_evaluation (float): the expectation value in the state given the hamiltonian.
-    '''
-
-    n_qubits = count_qubits(qubit_hamiltonian)
+    :param qubit_hamiltonian: hamiltonian in qubits
+    :param state_preparation_gates: list of gates in simulation library format that represents the state
+    :return: the expectation value of the state given the hamiltonian
+    """
 
     # Initialize circuit.
+    n_qubits = count_qubits(qubit_hamiltonian)
     dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
 
     # add gates to circuit

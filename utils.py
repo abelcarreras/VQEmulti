@@ -183,24 +183,20 @@ def group_hamiltonian(hamiltonian):
     return grouped_hamiltonian
 
 
-def convert_hamiltonian(openfermion_hamiltonian):
-    '''
-    Formats a qubit Hamiltonian obtained from openfermion, so that it's a suitable
-    argument for functions such as measureExpectationEstimation.
+def convert_hamiltonian(qubit_hamiltonian):
+    """
+    Separates a qubit Hamiltonian in dictionary entries, so that it's a suitable
+    argument for functions such as measure_expectation_estimation.
 
-    Arguments:
-      openfermion_hamiltonian (openfermion.qubitOperator): the Hamiltonian.
-
-    Returns:
-      formatted_hamiltonian (dict): the Hamiltonian as a dictionary with Pauli
-        strings (eg 'YXZI') as keys and their coefficients as values.
-    '''
+    :param qubit_hamiltonian:
+    :return: formatted hamiltonian
+    """
 
     formatted_hamiltonian = {}
-    qubit_number = count_qubits(openfermion_hamiltonian)
+    qubit_number = count_qubits(qubit_hamiltonian)
 
     # Iterate through the terms in the Hamiltonian
-    for term in openfermion_hamiltonian.get_operators():
+    for term in qubit_hamiltonian.get_operators():
 
         operators = []
         coefficient = list(term.terms.values())[0]

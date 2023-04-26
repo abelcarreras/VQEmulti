@@ -7,20 +7,15 @@ import cirq
 
 
 def trotterStep(operator, qubitNumber, time):
-    '''
+    """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
 
-    Arguments:
-      operator (union[openfermion.QubitOperator, openfermion.FermionOperator,
-        openfermion.InteractionOperator]): the operator to be simulated
-      qubits ([cirq.LineQubit]): the qubits that the gates should be applied to
-      time (float): the evolution time
-
-    Returns:
-      trotterGates (cirq.OP_TREE): the list of CIRQ gates that apply the
-        trotterized operator
-    '''
+    :param operator:
+    :param qubitNumber:
+    :param time:
+    :return:
+    """
 
     qubits = cirq.LineQubit.range(qubitNumber)
 

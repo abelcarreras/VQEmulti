@@ -6,27 +6,17 @@ from openfermion.utils import count_qubits
 
 
 def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubit_hamiltonian):
-    '''
+    """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
     Uses instances of scipy.sparse.csc_matrix for efficiency.
 
-    Arguments:
-      coefficients ([float]): the list of coefficients of the ansatz operators.
-      operators (union[openfermion.FermionOperator,openfermion.QubitOperator]):
-        the list of ansatz operators (fermionic ladder operators, pre
-        exponentiation). The index of the operators in the list should be in
-        accordance with the index of the respective coefficients in coefVect.
-      hf_reference_fock ([int]): the state vector representing the state
-        prior to the application of the ansatz (e.g. the Hartree Fock ground
-        state).
-      qubit_hamiltonian (openfermion qubit): the hamiltonian of the system,
-        as a qbits.
-
-      Returns:
-        energy (float): the expectation value of the Hamiltonian in the state
-          prepared by applying the ansatz to the reference state.
-    '''
+    :param coefficients: the list of coefficients of the ansatz operators
+    :param operators: qubit operators
+    :param hf_reference_fock: HF reference in Fock space vector
+    :param qubit_hamiltonian: Hamiltonian in qubits
+    :return: exact energy
+    """
 
     # Transform Hamiltonian to matrix representation (JW transformation)
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)

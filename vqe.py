@@ -91,6 +91,7 @@ if __name__ == '__main__':
                                 multiplicity=1,
                                 charge=0,
                                 description='H2')
+    print('main')
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)

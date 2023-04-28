@@ -18,7 +18,7 @@ def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubit_hamiltoni
     :return: exact energy
     """
 
-    # Transform Hamiltonian to matrix representation (JW transformation)
+    # Transform Hamiltonian to matrix representation
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
 
     # Find the number of qubits of the system (2**n_qubit = dimension)

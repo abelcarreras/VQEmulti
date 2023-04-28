@@ -5,12 +5,11 @@ from openfermionpyscf import run_pyscf
 from vqe import vqe
 import matplotlib.pyplot as plt
 import numpy as np
-import openfermion
-from utils import generate_reduced_hamiltonian
-
+from utils import generate_reduced_hamiltonian, get_uccsd_operators
 
 n_points = 20
 vqe_energies = []
+hf_energies = []
 energies_fullci = []
 energies_ccsd = []
 for d in np.linspace(0.3, 3, n_points):
@@ -31,18 +30,12 @@ for d in np.linspace(0.3, 3, n_points):
     n_orbitals = 2  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
+
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-    # Prepare UCCSD ansatz
-    packed_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
-                                                                        molecule.ccsd_double_amps,
-                                                                        n_orbitals * 2,
-                                                                        n_electrons)
-
-    uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
-                                                       n_orbitals * 2,
-                                                       n_electrons)
+    # Get UCCSD ansatz
+    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
 
     print('Initialize VQE')
     result = vqe(hamiltonian,  # fermionic hamiltonian
@@ -53,12 +46,14 @@ for d in np.linspace(0.3, 3, n_points):
                  test_only=True)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
+    print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
     print('Coefficients:\n', result['coefficients'])
 
     vqe_energies.append(result["energy"])
+    hf_energies.append(molecule.hf_energy)
     energies_fullci.append(molecule.fci_energy)
     energies_ccsd.append(molecule.ccsd_energy)
 
@@ -67,6 +62,7 @@ plt.xlabel('Interatomic distance [Angs]')
 plt.ylabel('Energy [H]')
 
 plt.plot(np.linspace(0.3, 3, n_points), vqe_energies, label='VQE')
+plt.plot(np.linspace(0.3, 3, n_points), hf_energies, label='HF')
 plt.plot(np.linspace(0.3, 3, n_points), energies_fullci, label='FullCI')
 plt.plot(np.linspace(0.3, 3, n_points), energies_ccsd, label='CCSD')
 plt.legend()
@@ -79,8 +75,12 @@ plt.yscale('log')
 
 diff_fullci = np.subtract(vqe_energies, energies_fullci)
 diff_ccsd = np.subtract(energies_ccsd, energies_fullci)
+diff_hf = np.subtract(hf_energies, energies_fullci)
+
 plt.plot(np.linspace(0.3, 3, n_points), diff_fullci, label='VQE')
 plt.plot(np.linspace(0.3, 3, n_points), diff_ccsd, label='CCSD')
+plt.plot(np.linspace(0.3, 3, n_points), diff_hf, label='HF')
+
 plt.legend()
 
 plt.show()

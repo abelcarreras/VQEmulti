@@ -111,11 +111,10 @@ def adaptVQE(operators_pool,
                                                  tol=1e-8,
                                                  options={'disp': True}) # 'rhobeg': 0.01)
 
-
         coefficients = list(opt_result.x)
-
+        optimized_energy = opt_result.fun
         # Energy obtained by exact function (using optimized coefficients)
-        optimized_energy = exact_vqe_energy(coefficients, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
+        # optimized_energy = exact_vqe_energy(coefficients, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
 
         print("Optimized Energy:", optimized_energy)
         print("Coefficients:", coefficients)

@@ -1,5 +1,6 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
+import openfermion
 import numpy as np
 import scipy
 
@@ -219,3 +220,33 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals):
     reduced_two = hamiltonian.two_body_tensor[:n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals]
 
     return InteractionOperator(hamiltonian.constant, reduced_one, reduced_two)
+
+
+def get_uccsd_operators(n_electrons, n_orbitals):
+    """
+    get all UCCSD operators with coefficients as ones
+
+    :param n_electrons: number of electrons
+    :param n_orbitals: number of orbitals
+    :return: UCCSD operators in fermion representation
+    """
+
+    n_occupied = int(np.ceil(n_electrons / 2))
+    n_virtual = n_orbitals - n_occupied
+
+    singles = []
+    doubles_1 = []
+    doubles_2 = []
+    import itertools
+    for p, q in itertools.product(range(n_virtual), range(n_occupied)):
+        singles.append(1)
+        doubles_1.append(1)
+    for (p, q), (r, s) in itertools.combinations(
+            itertools.product(range(n_virtual), range(n_occupied)), 2):
+        doubles_2.append(1)
+
+    packed_amplitudes = singles + doubles_1 + doubles_2
+
+    return openfermion.uccsd_singlet_generator(packed_amplitudes,
+                                               n_orbitals * 2,
+                                               n_electrons)

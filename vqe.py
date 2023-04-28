@@ -1,11 +1,9 @@
 from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
-from openfermion import QubitOperator
+from openfermion import QubitOperator, FermionOperator
 from openfermion import reverse_jordan_wigner
-
 import numpy as np
-import openfermion
 import scipy
 
 
@@ -39,7 +37,7 @@ def vqe(hamiltonian,
 
     # initial guess
     n_terms = len(qubit_ansatz.terms)
-    coefficients = np.ones(n_terms)
+    coefficients = np.zeros(n_terms)
 
     # Optimize the results from analytical calculation
     if exact_energy:
@@ -82,7 +80,7 @@ if __name__ == '__main__':
 
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
-    from utils import generate_reduced_hamiltonian
+    from utils import generate_reduced_hamiltonian, get_uccsd_operators
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
@@ -106,15 +104,8 @@ if __name__ == '__main__':
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
-    # Prepare UCCSD ansatz
-    packed_amplitudes = openfermion.uccsd_singlet_get_packed_amplitudes(molecule.ccsd_single_amps,
-                                                                        molecule.ccsd_double_amps,
-                                                                        n_orbitals * 2,
-                                                                        n_electrons)
-
-    uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
-                                                       n_orbitals * 2,
-                                                       n_electrons)
+    # define UCCSD ansatz
+    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
 
     # Get reference Hartree Fock state
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -129,9 +120,10 @@ if __name__ == '__main__':
                  shots=1000,
                  test_only=False)
 
+    print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy VQE: {:.8f}'.format(result['energy']))
-    print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
+    print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
     print('Num operators: ', len(result['operators']))
     print('Operators:\n', result['operators'])

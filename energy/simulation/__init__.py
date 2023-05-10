@@ -6,7 +6,7 @@ import scipy
 # comment and uncomment to chage simulator
 from energy.simulation.trotter import get_preparation_gates_trotter, trotterizeOperator
 from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
-from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+#from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
@@ -92,6 +92,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     """
 
     if trotter:
+        #print('before trotter', ansatz)
         state_preparation_gates = get_preparation_gates_trotter(coefficients,
                                                                 ansatz,
                                                                 trotter_steps,

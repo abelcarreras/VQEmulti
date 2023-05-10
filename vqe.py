@@ -13,7 +13,7 @@ def vqe(hamiltonian,
         ansatz,
         hf_reference_fock,
         exact_energy=False,
-        trotter=False,
+        trotter=True,
         trotter_steps=1,
         test_only=False,
         shots=1000):
@@ -36,7 +36,7 @@ def vqe(hamiltonian,
 
     # transform to qubit ansatz using JW transformation
     qubit_ansatz = jordan_wigner(ansatz)
-
+    #print('qubit ansatz', qubit_ansatz)
     # initial guess
     n_terms = len(qubit_ansatz.terms)
     coefficients = np.ones(n_terms)

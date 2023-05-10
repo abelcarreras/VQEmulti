@@ -4,10 +4,9 @@ from openfermion import InteractionOperator, FermionOperator
 from energy.simulation.tools_cirq import build_reference_gates
 import numpy as np
 import cirq
-import pennylane
 
 
-def trotterStep_op(operator, qubitNumber, time):
+def trotterStep(operator, qubitNumber, time):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
@@ -107,108 +106,6 @@ def trotterStep_op(operator, qubitNumber, time):
                 trotterGates.append(cirq.rx(-np.pi / 2).on(qubits[qubitIndex]))
 
     return trotterGates
-
-def trotterStep_penn(operator, qubitNumber, time):
-    """
-    Creates the circuit for applying e^(-j*operator*time), simulating the time
-    evolution of a state under the Hamiltonian 'operator'.
-
-    :param operator:
-    :param qubitNumber:
-    :param time:
-    :return:
-    """
-    #print('trotter-step', operator)
-    qubits = cirq.LineQubit.range(qubitNumber)
-
-    # If operator is an InteractionOperator, shape it into a FermionOperator
-    if isinstance(operator, InteractionOperator):
-        operator = get_fermion_operator(operator)
-
-    # If operator is a FermionOperator, use the Jordan Wigner transformation
-    # to map it into a QubitOperator
-    if isinstance(operator, FermionOperator):
-        operator = jordan_wigner(operator)
-
-    # Get the number of qubits the operator acts on
-    qubitNumber = count_qubits(operator)
-
-    # Initialize list of gates
-    trotterGates = []
-
-    # Order the terms the same way as done by OpenFermion's
-    # trotter_operator_grouping function (sorted keys) for consistency.
-    orderedTerms = sorted(list(operator.terms.keys()))
-
-    # Add to trotterGates the gates necessary to simulate each Pauli string,
-    # going through them by the defined order
-    for pauliString in orderedTerms:
-
-        # Get real part of the coefficient (the immaginary one can't be simulated,
-        # as the exponent would be real and the operation would not be unitary).
-        # Multiply by time to get the full multiplier of the Pauli string.
-        coef = float(np.real(operator.terms[pauliString])) * time
-
-        # Keep track of the qubit indices involved in this particular Pauli string.
-        # It's necessary so as to know which are included in the sequence of CNOTs
-        # that compute the parity
-        involvedQubits = []
-
-        # Perform necessary basis rotations
-        for pauli in pauliString:
-
-            # Get the index of the qubit this Pauli operator acts on
-            qubitIndex = pauli[0]
-            involvedQubits.append(qubitIndex)
-
-            # Get the Pauli operator identifier (X,Y or Z)
-            pauliOp = pauli[1]
-
-            if pauliOp == "X":
-                # Rotate to X basis
-                trotterGates.append(cirq.H(qubits[qubitIndex]))
-
-            if pauliOp == "Y":
-                # Rotate to Y Basis
-                trotterGates.append(cirq.rx(np.pi / 2).on(qubits[qubitIndex]))
-
-        # Compute parity and store the result on the last involved qubit
-        for i in range(len(involvedQubits) - 1):
-            control = involvedQubits[i]
-            target = involvedQubits[i + 1]
-
-            trotterGates.append(cirq.CX(qubits[control], qubits[target]))
-
-        # Apply e^(-i*Z*coef) = Rz(coef*2) to the last involved qubit
-        lastQubit = max(involvedQubits)
-        trotterGates.append(cirq.rz(2 * coef).on(qubits[lastQubit]))
-
-        # Uncompute parity
-        for i in range(len(involvedQubits) - 2, -1, -1):
-            control = involvedQubits[i]
-            target = involvedQubits[i + 1]
-
-            trotterGates.append(cirq.CX(qubits[control], qubits[target]))
-
-        # Undo basis rotations
-        for pauli in pauliString:
-
-            # Get the index of the qubit this Pauli operator acts on
-            qubitIndex = pauli[0]
-
-            # Get the Pauli operator identifier (X,Y or Z)
-            pauliOp = pauli[1]
-
-            if pauliOp == "X":
-                # Rotate to Z basis from X basis
-                trotterGates.append(cirq.H(qubits[qubitIndex]))
-
-            if pauliOp == "Y":
-                # Rotate to Z basis from Y Basis
-                trotterGates.append(cirq.rx(-np.pi / 2).on(qubits[qubitIndex]))
-
-    return trotterGates
-
 
 
 def trotterizeOperator(operator, qubitNumber, time, steps):

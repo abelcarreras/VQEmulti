@@ -4,9 +4,10 @@ from openfermion import get_sparse_operator
 import scipy
 
 # comment and uncomment to chage simulator
-from energy.simulation.trotter import get_preparation_gates_trotter, trotterizeOperator
-from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
-#from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+#from energy.simulation.trotter_cirq import get_preparation_gates_trotter, trotterizeOperator
+#from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation.trotter_penny import get_preparation_gates_trotter, trotterizeOperator
+from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
@@ -97,6 +98,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
                                                                 ansatz,
                                                                 trotter_steps,
                                                                 hf_reference_fock)
+        print(state_preparation_gates)
     else:
         state_preparation_gates = get_preparation_gates(coefficients,
                                                         ansatz,
@@ -108,9 +110,13 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
 
     if test_only:
         # Calculate the exact energy in this state (test circuit)
+        print('qubit ham',qubit_hamiltonian)
         energy = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+        print('llegó', energy)
+        exit()
     else:
         # Obtain the energy expectation value by sampling from the circuit using the simulator
         energy = get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates)
-
+    print('llegó', energy)
+    exit()
     return energy

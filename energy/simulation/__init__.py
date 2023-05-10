@@ -5,8 +5,8 @@ import scipy
 
 # comment and uncomment to chage simulator
 from energy.simulation.trotter import get_preparation_gates_trotter, trotterizeOperator
-from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
-from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+#from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz, build_uccsd_circuit
+from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz, build_uccsd_circuit_Nonia
 
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
@@ -19,7 +19,6 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
     :param n_qubits: number of qubits
     :return: gates list in simulation library format
     """
-
     # generate matrix operator that corresponds to ansatz
     identity = scipy.sparse.identity(2, format='csc', dtype=complex)
     matrix = identity
@@ -73,9 +72,9 @@ def get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates):
 
     return energy.real
 
-
+#El ansatz que entra aquí es el qubit ansatz, no el uccsd fermiónico del principio
 def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
-                        trotter=True, trotter_steps=1, test_only=True):
+                        trotter=False, trotter_steps=1, test_only=True):
     """
     Obtain the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state, using the CIRQ simulator.
@@ -90,7 +89,6 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :param test_only: if True evaluate circuit exactly, not sampling (for testing the circuit)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
-
     if trotter:
         state_preparation_gates = get_preparation_gates_trotter(coefficients,
                                                                 ansatz,
@@ -104,12 +102,58 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     # from energy.simulation.tools import get_circuit_depth
     # circuit_depth = get_circuit_depth(state_preparation_gates)
     # print('circuit_depth', circuit_depth)
+    state_preparation_gates_Nonia = build_uccsd_circuit_Nonia(coefficients,ansatz.terms, ansatz, hf_reference_fock)
 
     if test_only:
         # Calculate the exact energy in this state (test circuit)
         energy = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+        energy_Nonia = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates_Nonia)
     else:
         # Obtain the energy expectation value by sampling from the circuit using the simulator
         energy = get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates)
 
+
     return energy
+
+def simulate_vqe_energy_Nonia(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
+                        trotter=False, trotter_steps=1, test_only=True):
+    """
+    Obtain the energy of the state prepared by applying an ansatz (of the
+    type of the Adapt VQE protocol) to a reference state, using the CIRQ simulator.
+
+    :param coefficients: adaptVQE coefficients
+    :param ansatz: list of qubit operators defining the current ansatz
+    :param hf_reference_fock: reference HF in fock vspace vector
+    :param qubit_hamiltonian: hamiltonian in qubits
+    :param shots: number of samples
+    :param trotter: if True trotterize ansatz operators (view Trotterization in QM Theory)
+    :param trotter_steps: number of trotter steps
+    :param test_only: if True evaluate circuit exactly, not sampling (for testing the circuit)
+    :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
+    """
+    if trotter:
+        state_preparation_gates = get_preparation_gates_trotter(coefficients,
+                                                                ansatz,
+                                                                trotter_steps,
+                                                                hf_reference_fock)
+    else:
+        state_preparation_gates = get_preparation_gates(coefficients,
+                                                        ansatz,
+                                                        hf_reference_fock)
+
+    # from energy.simulation.tools import get_circuit_depth
+    # circuit_depth = get_circuit_depth(state_preparation_gates)
+    # print('circuit_depth', circuit_depth)
+    state_preparation_gates_Nonia = build_uccsd_circuit_Nonia(coefficients,ansatz.terms, ansatz, hf_reference_fock)
+
+    if test_only:
+        # Calculate the exact energy in this state (test circuit)
+        #energy = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+        energy_Nonia = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates_Nonia)
+    else:
+        # Obtain the energy expectation value by sampling from the circuit using the simulator
+        energy = get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates)
+
+
+    return  energy_Nonia
+

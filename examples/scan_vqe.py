@@ -11,6 +11,7 @@ from utils import generate_reduced_hamiltonian
 
 n_points = 20
 vqe_energies = []
+vqe_energies_Nonia = []
 energies_fullci = []
 energies_ccsd = []
 for d in np.linspace(0.3, 3, n_points):
@@ -39,7 +40,7 @@ for d in np.linspace(0.3, 3, n_points):
                                                                         molecule.ccsd_double_amps,
                                                                         n_orbitals * 2,
                                                                         n_electrons)
-
+    packed_amplitudes = np.ones_like(packed_amplitudes)
     uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
                                                        n_orbitals * 2,
                                                        n_electrons)
@@ -48,17 +49,20 @@ for d in np.linspace(0.3, 3, n_points):
     result = vqe(hamiltonian,  # fermionic hamiltonian
                  uccsd_ansatz,  # fermionic ansatz
                  hf_reference_fock,
-                 exact_energy=True,
+                 exact_energy=False,
                  shots=1000,
                  test_only=True)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
+    print('Energy VQE Nonia: {:.8f}'.format(result['energy_Nonia']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
     print('Coefficients:\n', result['coefficients'])
+    print('Coefficients Nonia:\n', result['coefficients_Nonia'])
 
     vqe_energies.append(result["energy"])
+    vqe_energies_Nonia.append(result['energy_Nonia'])
     energies_fullci.append(molecule.fci_energy)
     energies_ccsd.append(molecule.ccsd_energy)
 
@@ -67,6 +71,7 @@ plt.xlabel('Interatomic distance [Angs]')
 plt.ylabel('Energy [H]')
 
 plt.plot(np.linspace(0.3, 3, n_points), vqe_energies, label='VQE')
+plt.plot(np.linspace(0.3, 3, n_points), vqe_energies_Nonia, label='VQE_Nonia')
 plt.plot(np.linspace(0.3, 3, n_points), energies_fullci, label='FullCI')
 plt.plot(np.linspace(0.3, 3, n_points), energies_ccsd, label='CCSD')
 plt.legend()

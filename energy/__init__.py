@@ -1,2 +1,2 @@
 from energy.exact import exact_vqe_energy
-from energy.simulation import simulate_vqe_energy
+from energy.simulation import simulate_vqe_energy,simulate_vqe_energy_Nonia

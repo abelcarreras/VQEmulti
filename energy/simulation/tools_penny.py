@@ -4,7 +4,8 @@ from openfermion.utils import count_qubits
 import pennylane as qml
 import numpy as np
 import scipy
-
+import math
+import matplotlib.pyplot
 
 def build_gradient_ansatz(hf_reference_fock, matrix):
 
@@ -16,6 +17,39 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
 
     # Append the ansatz directly as a matrix
     state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
+
+    return state_preparation_gates
+
+def build_uccsd_circuit_Nonia(coefficients,ansatz_dict,ansatz, hf_reference_fock):
+    # Add gates for HF reference
+    state_preparation_gates = [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+    j=0
+
+
+    for item in ansatz_dict.items():
+        for i in item[0]:
+            if i[1] == 'X':
+                state_preparation_gates.append(qml.Hadamard(wires=i[0]))
+            if i[1] == 'Y':
+                state_preparation_gates.append(qml.RX(-math.pi/2, wires=i[0]))
+
+
+        for i in range(3):
+            state_preparation_gates.append(qml.CNOT(wires=[i, i+1]))
+
+        state_preparation_gates.append(qml.RZ(coefficients[j],wires=3))
+
+
+        for i in range(3,0,-1):
+            state_preparation_gates.append(qml.CNOT(wires=[i-1, i]))
+
+        for i in item[0]:
+            if i[1] == 'X':
+                state_preparation_gates.append(qml.Hadamard(wires=i[0]))
+            if i[1] == 'Y':
+                state_preparation_gates.append(qml.RX(math.pi / 2, wires=i[0]))
+        j = j+1
+
 
     return state_preparation_gates
 
@@ -141,18 +175,32 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
     # Initialize circuit.
     n_qubits = count_qubits(qubit_hamiltonian)
     dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
-
     # add gates to circuit
+
+    #print('hola')
     def circuit_function():
         for gate in state_preparation_gates:
             qml.apply(gate)
         return qml.state()
 
+    state_preparation_gates_test = state_preparation_gates
+    #print(state_preparation_gates_test)
+    def circuit_function_test():
+        for gate in state_preparation_gates_test                       :
+            qml.apply(gate)
+        return qml.expval(qml.PauliZ(0))
+    #print(np.round(qml.matrix(circuit_function_test)().real, decimals=5))
+    #exit()
     # create and run circuit
     circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
     state_vector = circuit()
-
+    #circuit_test = qml.QNode(circuit_function_test, dev_unique_wires, analytic=None)
+    #print(qml.draw(circuit_test, show_all_wires=True)())
+    #exit()
+    #No cambia el hamiltoniano solo pone I cuando no hay puerta y lo deja bonito y con el formato adecuado para poder
+    #meterlo en los qubits
     formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+
 
     # Obtain the theoretical expectation value for each Pauli string in the
     # Hamiltonian by matrix multiplication, and perform the necessary weighed
@@ -168,3 +216,4 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
         exact_evaluation += formatted_hamiltonian[pauli_string] * expectation_value
 
     return exact_evaluation.real
+

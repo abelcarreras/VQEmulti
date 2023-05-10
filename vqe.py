@@ -1,5 +1,5 @@
 from utils import get_hf_reference_in_fock_space
-from energy import exact_vqe_energy, simulate_vqe_energy
+from energy import exact_vqe_energy, simulate_vqe_energy, simulate_vqe_energy_Nonia
 from openfermion.transforms import jordan_wigner
 from openfermion import QubitOperator
 from openfermion import reverse_jordan_wigner
@@ -39,7 +39,12 @@ def vqe(hamiltonian,
 
     # initial guess
     n_terms = len(qubit_ansatz.terms)
-    coefficients = np.ones(n_terms)
+
+    np.random.seed(3)
+    c = np.random.random(n_terms)
+    c = np.zeros_like(c)
+    coefficients = c
+    coefficients_Nonia = c
 
     # Optimize the results from analytical calculation
     if exact_energy:
@@ -51,7 +56,9 @@ def vqe(hamiltonian,
                                           )
 
     # Optimize the results from the CIRQ simulation
+
     else:
+
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
                                           (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
@@ -60,6 +67,21 @@ def vqe(hamiltonian,
                                           options={# 'rhobeg': 0.01,
                                                    'disp': True},
                                           )
+        #results_Nonia = results
+
+
+
+        results_Nonia = scipy.optimize.minimize(simulate_vqe_energy_Nonia,
+                                          coefficients_Nonia,
+                                          (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
+                                           shots, trotter, trotter_steps, test_only),
+                                          method="COBYLA",
+                                          options={  # 'rhobeg': 0.01,
+                                              'disp': True},
+                                          )
+        #results = results_Nonia
+
+
 
     # generate operators list adn global coefficients
     operators_list = []
@@ -73,9 +95,28 @@ def vqe(hamiltonian,
     for coefficient, op in zip(global_coefficients, operators_list):
         optimized_ansatz_qubit += coefficient * op
 
+
+
+    #NONIA
+
+    # generate operators list adn global coefficients
+    operators_list_Nonia = []
+    global_coefficients_Nonia = []
+    for coefficient, op in zip(results_Nonia.x, qubit_ansatz.terms):
+        operators_list_Nonia.append(1j * QubitOperator(op))
+        global_coefficients_Nonia.append(coefficient * np.real(qubit_ansatz.terms[op] / 1j))
+
+    # generated updated ansatz (in Qubits)
+    optimized_ansatz_qubit_Nonia = QubitOperator()
+    for coefficient, op in zip(global_coefficients_Nonia, operators_list_Nonia):
+        optimized_ansatz_qubit_Nonia += coefficient * op
+
     return {'energy': results.fun,
             'coefficients': global_coefficients,
-            'operators': operators_list}
+            'operators': operators_list,
+            'energy_Nonia': results_Nonia.fun,
+            'coefficients_Nonia': global_coefficients_Nonia,
+            'operators_Nonia': operators_list_Nonia}
 
 
 if __name__ == '__main__':
@@ -85,7 +126,7 @@ if __name__ == '__main__':
     from utils import generate_reduced_hamiltonian
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                          ['H', [0, 0, 0.74]]],
+                                          ['H', [0, 0, 0.7]]],
                                 basis='3-21g',
                                 # basis='sto-3g',
                                 multiplicity=1,
@@ -113,6 +154,7 @@ if __name__ == '__main__':
                                                                         n_orbitals * 2,
                                                                         n_electrons)
 
+    packed_amplitudes = np.ones_like(packed_amplitudes)
     uccsd_ansatz = openfermion.uccsd_singlet_generator(packed_amplitudes,
                                                        n_orbitals * 2,
                                                        n_electrons)
@@ -124,11 +166,11 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 exact_energy=True,
+                 exact_energy=False,
                  trotter=False,
                  trotter_steps=2,
                  shots=1000,
-                 test_only=False)
+                 test_only=True)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))

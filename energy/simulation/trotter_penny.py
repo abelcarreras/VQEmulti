@@ -153,6 +153,6 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
     state_preparation_gates = build_reference_gates(hf_reference_fock)
 
     # Append the trotterized ansatz
-    state_preparation_gates.append(trotter_ansatz)
+    state_preparation_gates_final = state_preparation_gates + trotter_ansatz
 
-    return state_preparation_gates
+    return state_preparation_gates_final

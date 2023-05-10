@@ -98,7 +98,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
                                                                 ansatz,
                                                                 trotter_steps,
                                                                 hf_reference_fock)
-        print(state_preparation_gates)
+
     else:
         state_preparation_gates = get_preparation_gates(coefficients,
                                                         ansatz,
@@ -110,13 +110,10 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
 
     if test_only:
         # Calculate the exact energy in this state (test circuit)
-        print('qubit ham',qubit_hamiltonian)
         energy = get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
-        print('llegó', energy)
-        exit()
+
     else:
         # Obtain the energy expectation value by sampling from the circuit using the simulator
         energy = get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates)
-    print('llegó', energy)
-    exit()
+
     return energy

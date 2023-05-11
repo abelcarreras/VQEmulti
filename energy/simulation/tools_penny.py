@@ -19,6 +19,13 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
 
     return state_preparation_gates
 
+def build_reference_gates(hf_reference_fock):
+
+    # Create the gates for preparing the Hartree Fock ground state, that serves
+    # as a reference state the ansatz will act on
+
+    return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+
 
 def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
     """
@@ -141,7 +148,6 @@ def get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates):
     # Initialize circuit.
     n_qubits = count_qubits(qubit_hamiltonian)
     dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
-
     # add gates to circuit
     def circuit_function():
         for gate in state_preparation_gates:

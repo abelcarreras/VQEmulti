@@ -4,9 +4,9 @@ from openfermion import get_sparse_operator
 import scipy
 
 # comment and uncomment to chage simulator
-#from energy.simulation.trotter_cirq import get_preparation_gates_trotter, trotterizeOperator
+#from energy.simulation.trotter_cirq import get_preparation_gates_trotter
 #from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
-from energy.simulation.trotter_penny import get_preparation_gates_trotter, trotterizeOperator
+from energy.simulation.trotter_penny import get_preparation_gates_trotter
 from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 
 
@@ -93,7 +93,6 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     """
 
     if trotter:
-        #print('before trotter', ansatz)
         state_preparation_gates = get_preparation_gates_trotter(coefficients,
                                                                 ansatz,
                                                                 trotter_steps,

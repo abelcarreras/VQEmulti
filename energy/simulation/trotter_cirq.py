@@ -6,109 +6,107 @@ import numpy as np
 import cirq
 
 
-def trotterStep(operator, qubitNumber, time):
+def trotter_step(operator, time):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
 
-    :param operator:
-    :param qubitNumber:
-    :param time:
-    :return:
+    :param operator: qubit operator
+    :param time: the evolution time
+    :return: trotter_gates
     """
-    #print('trotter-step', operator)
-    qubits = cirq.LineQubit.range(qubitNumber)
 
     # If operator is an InteractionOperator, shape it into a FermionOperator
-    if isinstance(operator, InteractionOperator):
-        operator = get_fermion_operator(operator)
+    #if isinstance(operator, InteractionOperator):
+    #   operator = get_fermion_operator(operator)
 
     # If operator is a FermionOperator, use the Jordan Wigner transformation
     # to map it into a QubitOperator
-    if isinstance(operator, FermionOperator):
-        operator = jordan_wigner(operator)
+    #if isinstance(operator, FermionOperator):
+    #    operator = jordan_wigner(operator)
 
-    # Get the number of qubits the operator acts on
-    qubitNumber = count_qubits(operator)
+    # Get the number of qubits the operator acts on and define circuit architecture
+    n_qubits = count_qubits(operator)
+    qubits = cirq.LineQubit.range(n_qubits)
 
     # Initialize list of gates
-    trotterGates = []
+    trotter_gates = []
 
     # Order the terms the same way as done by OpenFermion's
     # trotter_operator_grouping function (sorted keys) for consistency.
-    orderedTerms = sorted(list(operator.terms.keys()))
+    ordered_terms = sorted(list(operator.terms.keys()))
 
-    # Add to trotterGates the gates necessary to simulate each Pauli string,
+    # Add to trotter_gates the gates necessary to simulate each Pauli string,
     # going through them by the defined order
-    for pauliString in orderedTerms:
+    for pauli_string in ordered_terms:
 
         # Get real part of the coefficient (the immaginary one can't be simulated,
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
-        coef = float(np.real(operator.terms[pauliString])) * time
+        coefficient = float(np.real(operator.terms[pauli_string])) * time
 
         # Keep track of the qubit indices involved in this particular Pauli string.
         # It's necessary so as to know which are included in the sequence of CNOTs
         # that compute the parity
-        involvedQubits = []
+        involved_qubits = []
 
         # Perform necessary basis rotations
-        for pauli in pauliString:
+        for pauli in pauli_string:
 
             # Get the index of the qubit this Pauli operator acts on
-            qubitIndex = pauli[0]
-            involvedQubits.append(qubitIndex)
+            qubit_index = pauli[0]
+            involved_qubits.append(qubit_index)
 
             # Get the Pauli operator identifier (X,Y or Z)
-            pauliOp = pauli[1]
+            pauli_operator = pauli[1]
 
-            if pauliOp == "X":
+            if pauli_operator == "X":
                 # Rotate to X basis
-                trotterGates.append(cirq.H(qubits[qubitIndex]))
+                trotter_gates.append(cirq.H(qubits[qubit_index]))
 
-            if pauliOp == "Y":
+            if pauli_operator == "Y":
                 # Rotate to Y Basis
-                trotterGates.append(cirq.rx(np.pi / 2).on(qubits[qubitIndex]))
+                trotter_gates.append(cirq.rx(np.pi / 2).on(qubits[qubit_index]))
 
         # Compute parity and store the result on the last involved qubit
-        for i in range(len(involvedQubits) - 1):
-            control = involvedQubits[i]
-            target = involvedQubits[i + 1]
+        for i in range(len(involved_qubits) - 1):
+            control = involved_qubits[i]
+            target = involved_qubits[i + 1]
 
-            trotterGates.append(cirq.CX(qubits[control], qubits[target]))
+            trotter_gates.append(cirq.CX(qubits[control], qubits[target]))
 
-        # Apply e^(-i*Z*coef) = Rz(coef*2) to the last involved qubit
-        lastQubit = max(involvedQubits)
-        trotterGates.append(cirq.rz(2 * coef).on(qubits[lastQubit]))
+        # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
+        last_qubit = max(involved_qubits)
+        trotter_gates.append(cirq.rz(2 * coefficient).on(qubits[last_qubit]))
 
         # Uncompute parity
-        for i in range(len(involvedQubits) - 2, -1, -1):
-            control = involvedQubits[i]
-            target = involvedQubits[i + 1]
+        for i in range(len(involved_qubits) - 2, -1, -1):
+            control = involved_qubits[i]
+            target = involved_qubits[i + 1]
 
-            trotterGates.append(cirq.CX(qubits[control], qubits[target]))
+            trotter_gates.append(cirq.CX(qubits[control], qubits[target]))
 
         # Undo basis rotations
-        for pauli in pauliString:
+        for pauli in pauli_string:
 
             # Get the index of the qubit this Pauli operator acts on
-            qubitIndex = pauli[0]
+            qubit_index = pauli[0]
 
             # Get the Pauli operator identifier (X,Y or Z)
-            pauliOp = pauli[1]
+            pauli_operator = pauli[1]
 
-            if pauliOp == "X":
+            if pauli_operator == "X":
                 # Rotate to Z basis from X basis
-                trotterGates.append(cirq.H(qubits[qubitIndex]))
+                trotter_gates.append(cirq.H(qubits[qubit_index]))
 
-            if pauliOp == "Y":
+            if pauli_operator == "Y":
                 # Rotate to Z basis from Y Basis
-                trotterGates.append(cirq.rx(-np.pi / 2).on(qubits[qubitIndex]))
+                trotter_gates.append(cirq.rx(-np.pi / 2).on(qubits[qubit_index]))
 
-    return trotterGates
+    return trotter_gates
 
 
-def trotterizeOperator(operator, qubitNumber, time, steps):
+def trotterize_operator(operator, time, trotter_steps):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator', with the given
@@ -118,57 +116,47 @@ def trotterizeOperator(operator, qubitNumber, time, steps):
     For the same precision, a greater time requires a greater step number
     (again, unless the terms commute)
 
-    Arguments:
-      operator (union[openfermion.QubitOperator, openfermion.FermionOperator,
-        openfermion.InteractionOperator]): the operator to be simulated
-      qubits ([cirq.LineQubit]): the qubits that the gates should be applied to
-      time (float): the evolution time
-      steps (int): the number of trotter steps to split the time evolution into
-
-    Returns:
-      trotterGates : the list of gates that apply the
-        trotterized operator
+    :param operator: qubit operator
+    :param time: the evolution time
+    :param trotter_steps: number of trotter steps
+    :return: the number of trotter steps to split the time evolution into
     """
-    #print('trotopt', operator)
+
     # Divide time into steps and apply the evolution operator the necessary
     # number of times
-    trotterGates = []
-    for step in range(1, steps + 1):
-        trotterGates += trotterStep(operator, qubitNumber, time / steps)
 
-    return trotterGates
+    trotter_gates = []
+    for step in range(1, trotter_steps + 1):
+        trotter_gates += trotter_step(operator, time / trotter_steps)
+
+    return trotter_gates
 
 
 def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock):
     """
-    trotterize the operators
+    Trotterize the ansatz
 
-    :param coefficients:
-    :param ansatz:
-    :param trotter_steps:
-    :param hf_reference_fock:
-    :param n_qubits:
-    :return: gates list
+    :param coefficients: ansatz coefficients
+    :param ansatz: operators list in qubit
+    :param trotter_steps: number of trotter steps
+    :param hf_reference_fock: reference HF in Fock vspace vector
+    :return: trotterized gates list
     """
-    #print('get-prep-gates', ansatz)
-    n_qubits = len(hf_reference_fock)
+
     # Initialize the ansatz gate list
     trotter_ansatz = []
     # Go through the operators in the ansatz
-    for coefficient, fermionOperator in zip(coefficients, ansatz):
+    for coefficient, operator in zip(coefficients, ansatz):
         # Get the trotterized circuit for applying e**(operator*coefficient)
-        operator_trotter_circuit = trotterizeOperator(1j * fermionOperator,
-                                                      n_qubits,
-                                                      coefficient,
-                                                      trotter_steps)
+        operator_trotter_circuit = trotterize_operator(1j * operator,
+                                                       coefficient,
+                                                       trotter_steps)
 
         # Add the gates corresponding to this operator to the ansatz gate list
         trotter_ansatz += operator_trotter_circuit
-    #print('result', trotter_ansatz)
-    #exit()
+
     # Initialize the state preparation gates with the reference state preparation gates
     state_preparation_gates = build_reference_gates(hf_reference_fock)
 
-    # Append the trotterized ansatz
-    state_preparation_gates.append(trotter_ansatz)
-    return state_preparation_gates
+    # return total trotterized ansatz
+    return state_preparation_gates + trotter_ansatz

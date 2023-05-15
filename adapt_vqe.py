@@ -36,7 +36,7 @@ def adaptVQE(operators_pool,
     """
 
     # Initialize data structures
-    iterations = {"energies": [], "norms": []}
+    iterations = {'energies': [], 'norms': []}
     qubit_ansatz = []
     coefficients = []
     indices = []
@@ -46,11 +46,11 @@ def adaptVQE(operators_pool,
 
     # transform to qubits operators (JW transformation)
     qubit_operators_pool = generate_jw_operator_pool(operators_pool)
-    print("qubit pool size:", len(qubit_operators_pool))
+    print('qubit pool size:', len(qubit_operators_pool))
 
     for iteration in range(max_iterations):
 
-        print("\n*** Adapt Iteration {} ***\n".format(iteration+1))
+        print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
         if len(qubit_ansatz) != 0:
             print('ansatz: ', qubit_ansatz)
@@ -99,7 +99,7 @@ def adaptVQE(operators_pool,
             opt_result = scipy.optimize.minimize(exact_vqe_energy,
                                                  coefficients,
                                                  (qubit_ansatz, hf_reference_fock, qubit_hamiltonian),
-                                                 method="COBYLA",
+                                                 method='COBYLA',
                                                  tol=None,
                                                  options={'rhobeg': 0.1, 'disp': True})
         else:
@@ -107,21 +107,27 @@ def adaptVQE(operators_pool,
                                                  coefficients,
                                                  (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
                                                   shots, trotter, trotter_steps, test_only),
-                                                 method="COBYLA",
+                                                 method='COBYLA',
                                                  tol=1e-8,
                                                  options={'disp': True}) # 'rhobeg': 0.01)
+
+        energy_exact = exact_vqe_energy(opt_result.x, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
+        energy_sim_test = simulate_vqe_energy(opt_result.x, qubit_ansatz, hf_reference_fock, qubit_hamiltonian, shots,
+                                              False, trotter_steps, True)
+
+        assert abs(energy_exact - energy_sim_test) < 1e-8
 
         coefficients = list(opt_result.x)
         optimized_energy = opt_result.fun
         # Energy obtained by exact function (using optimized coefficients)
         # optimized_energy = exact_vqe_energy(coefficients, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
 
-        print("Optimized Energy:", optimized_energy)
-        print("Coefficients:", coefficients)
-        print("Ansatz Indices:", indices)
+        print('Optimized Energy:', optimized_energy)
+        print('Coefficients:', coefficients)
+        print('Ansatz Indices:', indices)
 
-        iterations["energies"].append(optimized_energy)
-        iterations["norms"].append(total_norm)
+        iterations['energies'].append(optimized_energy)
+        iterations['norms'].append(total_norm)
 
     raise Exception('Not converged!')
 
@@ -171,17 +177,14 @@ if __name__ == '__main__':
                                   test_only=False,
                                   shots=100)
 
-    print("Optimized AdaptVQE energy:", result["energy"])
-    print("FullCI energy:", molecule.fci_energy)
+    print('Energy HF: {:.8f}'.format(molecule.hf_energy))
+    print('Energy adaptVQE: ', result['energy'])
+    print('Energy FullCI: ', molecule.fci_energy)
 
-    error = result["energy"] - molecule.fci_energy
-    print("Error:", error)
+    error = result['energy'] - molecule.fci_energy
+    print('Error:', error)
 
-    # Define chemical accuracy
-    chemicalAccuracy = 1.5936e-3  # Hartree
-    print("(in % of chemical accuracy: {:.3f}%)\n".format(error / chemicalAccuracy * 100))
-
-    print("Ansatz:", result["ansatz"])
-    print("Indices:", result["indices"])
-    print("Coefficients:", result["coefficients"])
-    print("Num operators: {}".format(len(result["ansatz"])))
+    print('Ansatz:', result['ansatz'])
+    print('Indices:', result['indices'])
+    print('Coefficients:', result['coefficients'])
+    print('Num operators: {}'.format(len(result['ansatz'])))

@@ -1,6 +1,6 @@
-from utils import convert_hamiltonian, group_hamiltonian
+from utils import convert_hamiltonian, group_hamiltonian, transform_fermion_to_qubit
 from openfermion.utils import count_qubits
-from openfermion import get_sparse_operator
+from openfermion import get_sparse_operator, QubitOperator, FermionOperator
 import scipy
 
 # comment and uncomment to chage simulator
@@ -82,7 +82,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     type of the Adapt VQE protocol) to a reference state, using the CIRQ simulator.
 
     :param coefficients: adaptVQE coefficients
-    :param ansatz: list of qubit operators defining the current ansatz
+    :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: reference HF in fock vspace vector
     :param qubit_hamiltonian: hamiltonian in qubits
     :param shots: number of samples
@@ -91,6 +91,10 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :param test_only: if True evaluate circuit exactly, not sampling (for testing the circuit)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
+
+    if isinstance(ansatz, FermionOperator):
+        # transform fermion defined operators to qubit
+        ansatz, coefficients = transform_fermion_to_qubit(ansatz, coefficients)
 
     if trotter:
         state_preparation_gates = get_preparation_gates_trotter(coefficients,

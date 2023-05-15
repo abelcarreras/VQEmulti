@@ -1,22 +1,27 @@
 import numpy as np
 import scipy
 from openfermion import get_sparse_operator
-from utils import get_sparse_ket_from_fock
+from utils import get_sparse_ket_from_fock, transform_fermion_to_qubit
 from openfermion.utils import count_qubits
+from openfermion import QubitOperator, FermionOperator
 
 
-def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubit_hamiltonian):
+def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
     Uses instances of scipy.sparse.csc_matrix for efficiency.
 
     :param coefficients: the list of coefficients of the ansatz operators
-    :param operators: qubit operators
+    :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: HF reference in Fock space vector
     :param qubit_hamiltonian: Hamiltonian in qubits
     :return: exact energy
     """
+
+    if isinstance(ansatz, FermionOperator):
+        # transform fermion defined operators to qubit
+        ansatz, coefficients = transform_fermion_to_qubit(ansatz, coefficients)
 
     # Transform Hamiltonian to matrix representation
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
@@ -29,7 +34,7 @@ def exact_vqe_energy(coefficients, operators, hf_reference_fock, qubit_hamiltoni
 
     # Apply e ** (coefficient * operator) to the state (ket) for each operator in
     # the ansatz, following the order of the list
-    for coefficient, operator in zip(coefficients, operators):
+    for coefficient, operator in zip(coefficients, ansatz):
         # Multiply the operator by the respective coefficient
         operator = coefficient * operator
 

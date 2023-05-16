@@ -28,7 +28,7 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
     # Apply the ansatz operators one by one to obtain the state as optimized by the last iteration
     for coefficient, operator in zip(coefficients, ansatz):
         # Multiply the operator by the variational parameter
-        operator = coefficient * operator
+        operator = 1j * coefficient * operator
 
         # Obtain the sparse matrix representing the operator
         sparse_operator = get_sparse_operator(operator, n_qubits)
@@ -87,6 +87,7 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
                                        ansatz,
                                        coefficients)
 
+    print('State: ', sparse_state)
     # Calculate and print gradients
     print('pool size: ', len(pool))
     print("Non-Zero Gradients (calculated)")

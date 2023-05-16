@@ -1,9 +1,8 @@
 import numpy as np
 import scipy
 from openfermion import get_sparse_operator
-from utils import get_sparse_ket_from_fock, transform_fermion_to_qubit
+from utils import get_sparse_ket_from_fock
 from openfermion.utils import count_qubits
-from openfermion import QubitOperator, FermionOperator
 
 
 def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian):
@@ -19,9 +18,7 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :return: exact energy
     """
 
-    if ansatz.get_operators_type() == FermionOperator:
-        # transform fermion defined operators to qubit
-        ansatz, coefficients = transform_fermion_to_qubit(ansatz, coefficients)
+    ansatz_qubit = ansatz.get_quibits_list()
 
     # Transform Hamiltonian to matrix representation
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
@@ -34,9 +31,9 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
 
     # Apply e ** (coefficient * operator) to the state (ket) for each operator in
     # the ansatz, following the order of the list
-    for coefficient, operator in zip(coefficients, ansatz):
+    for coefficient, operator in zip(coefficients, ansatz_qubit):
         # Multiply the operator by the respective coefficient
-        operator = coefficient * operator
+        operator = 1j*coefficient * operator
 
         # Get the operator matrix representation of the operator (JW)
         sparse_operator = get_sparse_operator(operator, n_qubit)

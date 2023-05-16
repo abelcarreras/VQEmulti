@@ -21,13 +21,13 @@ def generate_jw_operator_pool(pool):
 
 class OperatorList:
 
-    def __new__(cls, operators):
+    def __new__(cls, operators, initialize=True):
         if isinstance(operators, OperatorList):
             return operators
 
         return object.__new__(cls)
 
-    def __init__(self, operators):
+    def __init__(self, operators, initialize=True):
         if isinstance(operators, (list, tuple)):
             if len(operators) > 0:
                 self._type = type(operators[0])
@@ -38,6 +38,9 @@ class OperatorList:
         else:
             self._type = type(operators)
             self._list = [op for op in operators]
+
+        if initialize:
+            self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
 
     def __str__(self):
         return self._list.__str__()
@@ -75,19 +78,17 @@ class OperatorList:
             from openfermion.transforms import jordan_wigner
             total_qubit = QubitOperator()
             for op in self._list:
-                print(op)
                 total_qubit += jordan_wigner(op)
         else:
             raise Exception('{} transform not available')
 
-        return OperatorList([1j*QubitOperator(t) for t in total_qubit.terms])
+        return OperatorList([QubitOperator(t) for t in total_qubit.terms])
 
     def get_expanded_list(self):
         """
         return qubits in the basis set
         :return:
         """
-
 
         expanded_list = []
         for element in self._list:
@@ -101,7 +102,7 @@ class OperatorList:
         prefactors = []
         for op in self._list:
             if self.get_operators_type() == QubitOperator:
-                prefactors.append((list(op.terms.values())[0]/1j).real)
+                prefactors.append((list(op.terms.values())[0]).real)
             else:
                 prefactors.append((list(op.terms.values())[0]).real)
 

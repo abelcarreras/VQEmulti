@@ -4,6 +4,8 @@ import openfermion
 import numpy as np
 import scipy
 
+import pool_definitions
+
 
 def string_to_matrix(pauli_string):
     """
@@ -250,21 +252,3 @@ def get_uccsd_operators(n_electrons, n_orbitals):
     return openfermion.uccsd_singlet_generator(packed_amplitudes,
                                                n_orbitals * 2,
                                                n_electrons)
-
-
-def transform_fermion_to_qubit(operators_fermion, coefficients_fermion):
-    """
-    transform ansatz provided as fermion operators based ansatz and coefficients to  qubit operators based ansatz
-    using JW transformation
-
-    :param operators_fermion: fermion operators ansatz
-    :param coefficients_fermion: the coefficients of fermi opertors
-    :return: qubit operators based ansatz, quibit operators coefficents
-    """
-    from openfermion.transforms import jordan_wigner
-
-    total_ansatz_qubit = openfermion.QubitOperator()
-    for coefficient, operator in zip(coefficients_fermion, operators_fermion):
-        total_ansatz_qubit =+ coefficient * jordan_wigner(operator)
-
-    return total_ansatz_qubit, np.ones(len(total_ansatz_qubit.terms))

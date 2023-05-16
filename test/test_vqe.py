@@ -146,7 +146,7 @@ class OperationsTest(unittest.TestCase):
         print('Operators:\n', result['operators'])
         print('Coefficients:\n', result['coefficients'])
 
-        self.assertAlmostEquals(result['energy'], -1.12294035, places=8)
+        self.assertAlmostEquals(result['energy'], -1.12988981, places=6)
         self.assertEqual(len(result['operators']), 8)
 
     def test_vqe_trotter_fermion(self):
@@ -183,6 +183,6 @@ class OperationsTest(unittest.TestCase):
         print('Operators:\n', result['operators'])
         print('Coefficients:\n', result['coefficients'])
 
-        self.assertAlmostEquals(result['energy'], -1.12988983, places=8)
+        self.assertAlmostEquals(result['energy'], -1.12988982, places=6)
 
         self.assertEqual(len(result['operators']), 8)

@@ -79,7 +79,7 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
     for coefficient, operator in zip(coefficients, ansatz):
         # Get corresponding the sparse operator, with the correct dimension
         # (forcing n_qubits = qubitNumber, even if this operator acts on less qubits)
-        operatorMatrix = get_sparse_operator(coefficient * operator, n_qubits)
+        operatorMatrix = get_sparse_operator(1j * coefficient * operator, n_qubits)
 
         # Multiply previous matrix by this operator
         total_op_matrix = scipy.sparse.linalg.expm(operatorMatrix) * total_op_matrix
@@ -88,11 +88,12 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
     gradient_vector = []
     for i, operator in enumerate(pool):
         print("Operator {}".format(i))
+        operator = 1j*operator
 
         # Prepare state from HF reference and total operator matrix
         state_preparation_gates = build_gradient_ansatz(hf_reference_fock, total_op_matrix)
 
-        if test_only:
+        if not test_only:
             sampled_gradient = np.abs(get_sampled_gradient(operator,
                                                            qubit_hamiltonian,
                                                            state_preparation_gates,
@@ -102,7 +103,6 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
             # Calculate the exact energy in this state
             commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
             sampled_gradient = np.abs(get_exact_state_evaluation(commutator_hamiltonian, state_preparation_gates).real)
-            print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
 
         # compute exact gradient for comparison (can be omitted if needed)
         from gradient.exact import calculate_gradient
@@ -111,7 +111,10 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
         print("Exact gradient: {:.6f}".format(calculated_gradient))
 
         error = np.abs(sampled_gradient - calculated_gradient)
-        print("simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, shots))
+        if test_only:
+            print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
+        else:
+            print("Simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, shots))
 
         if abs(calculated_gradient) > 1e-3:
             print("Error: {0:.3f} ({1:.3f}%)\n".format(error, 100*error/calculated_gradient))

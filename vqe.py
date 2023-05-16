@@ -35,7 +35,7 @@ def vqe(hamiltonian,
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
     # transform whatever ansatz format to operatorList object
-    ansatz = OperatorList(ansatz)
+    ansatz = OperatorList(ansatz, initialize=False)
 
     if opt_qubits:
         # transform to qubit ansatz using JW transformation

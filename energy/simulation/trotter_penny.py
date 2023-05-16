@@ -113,12 +113,12 @@ def trotterize_operator(operator, time, trotter_steps):
     return trotter_gates
 
 
-def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_reference_fock):
+def get_preparation_gates_trotter(coefficients, ansatz_qubit, trotter_steps, hf_reference_fock):
     """
     Trotterize the ansatz
 
     :param coefficients: ansatz coefficients
-    :param ansatz: operators list in qubit
+    :param ansatz_qubit: operators list in qubit
     :param trotter_steps: number of trotter steps
     :param hf_reference_fock: reference HF in Fock vspace vector
     :return: trotterized gates list
@@ -128,9 +128,9 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
     trotter_ansatz = []
 
     # Go through the operators in the ansatz
-    for coefficient, operator in zip(coefficients, ansatz):
+    for coefficient, operator in zip(coefficients, ansatz_qubit):
         # Get the trotterized circuit for applying e**(operator*coefficient)
-        operator_trotter_circuit = trotterize_operator(1j * operator,
+        operator_trotter_circuit = trotterize_operator(operator,
                                                        coefficient,
                                                        trotter_steps)
 

@@ -3,6 +3,8 @@ from energy import exact_vqe_energy, simulate_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from openfermion.transforms import jordan_wigner
 from pool_definitions import generate_jw_operator_pool
+from pool_definitions import OperatorList
+from openfermion import QubitOperator, FermionOperator
 import numpy as np
 import scipy
 
@@ -10,6 +12,7 @@ import scipy
 def adaptVQE(operators_pool,
              hamiltonian,
              hf_reference_fock,
+             opt_qubits=True,
              max_iterations=50,
              threshold=0.1,
              exact_energy=True,
@@ -37,16 +40,24 @@ def adaptVQE(operators_pool,
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': []}
-    qubit_ansatz = []
+    qubit_ansatz = OperatorList([])
     coefficients = []
     indices = []
 
     # transform to qubits hamiltonian (JW transformation)
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
-    # transform to qubits operators (JW transformation)
-    qubit_operators_pool = generate_jw_operator_pool(operators_pool)
-    print('qubit pool size:', len(qubit_operators_pool))
+    # define operatorList from pool
+    operators_pool = OperatorList(operators_pool)
+
+    if opt_qubits:
+        # transform to qubit ansatz using JW transformation
+        operators_pool = operators_pool.get_quibits_list()
+    else:
+        raise Exception('Not yet implemented')
+        # operators_pool = operators_pool.get_expanded_list()
+
+    print('qubit pool size:', len(operators_pool))
 
     for iteration in range(max_iterations):
 
@@ -61,20 +72,20 @@ def adaptVQE(operators_pool,
                                                       qubit_hamiltonian,
                                                       qubit_ansatz,
                                                       coefficients,
-                                                      qubit_operators_pool)
+                                                      operators_pool)
         else:
             gradient_vector = simulate_gradient(hf_reference_fock,
                                                 qubit_hamiltonian,
                                                 qubit_ansatz,
                                                 coefficients,
-                                                qubit_operators_pool,
+                                                operators_pool,
                                                 shots,
                                                 test_only)
 
         total_norm = np.linalg.norm(gradient_vector)
         max_index = np.argmax(gradient_vector)
         max_gradient = np.max(gradient_vector)
-        max_operator = qubit_operators_pool[max_index]
+        max_operator = operators_pool[max_index]
 
         print("Total gradient norm: {}".format(total_norm))
 
@@ -172,10 +183,10 @@ if __name__ == '__main__':
                                   hf_reference_fock,
                                   threshold=0.1,
                                   exact_energy=True,
-                                  exact_gradient=True,
+                                  exact_gradient=False,
                                   trotter=False,
-                                  test_only=False,
-                                  shots=100)
+                                  test_only=True,
+                                  shots=10000)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy adaptVQE: ', result['energy'])

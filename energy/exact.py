@@ -19,7 +19,7 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :return: exact energy
     """
 
-    if isinstance(ansatz, FermionOperator):
+    if ansatz.get_operators_type() == FermionOperator:
         # transform fermion defined operators to qubit
         ansatz, coefficients = transform_fermion_to_qubit(ansatz, coefficients)
 

@@ -92,7 +92,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
-    if isinstance(ansatz, FermionOperator):
+    if ansatz.get_operators_type() == FermionOperator:
         # transform fermion defined operators to qubit
         ansatz, coefficients = transform_fermion_to_qubit(ansatz, coefficients)
 

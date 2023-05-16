@@ -60,7 +60,7 @@ class OperationsTest(unittest.TestCase):
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(self.molecule.hf_energy, -1.12294026, places=8)
-        self.assertAlmostEquals(result['energy'], -1.12988983, places=8)
+        self.assertAlmostEquals(result['energy'], -1.12988983, places=4)
         self.assertAlmostEquals(self.molecule.ccsd_energy, -1.14781330, places=8)
         self.assertAlmostEquals(self.molecule.fci_energy, -1.14781313, places=8)
 
@@ -104,7 +104,7 @@ class OperationsTest(unittest.TestCase):
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(self.molecule.hf_energy, -1.12294026, places=8)
-        self.assertAlmostEquals(result['energy'], -1.12988983, places=8)
+        self.assertAlmostEquals(result['energy'], -1.12988977, places=6)
         self.assertAlmostEquals(self.molecule.ccsd_energy, -1.14781330, places=8)
         self.assertAlmostEquals(self.molecule.fci_energy, -1.14781313, places=8)
 

@@ -2,6 +2,7 @@ from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
 from openfermion import QubitOperator, FermionOperator
+from pool_definitions import OperatorList
 import numpy as np
 import scipy
 
@@ -19,7 +20,7 @@ def vqe(hamiltonian,
     Perform a VQE calculation
 
     :param hamiltonian: hamiltonian in fermionic operators
-    :param ansatz: ansatz to optimize in fermionic operators)
+    :param ansatz: ansatz to optimize
     :param opt_qubits: choose basis of optimization (True: qubits operators, False: fermion operators)
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
     :param exact_energy: Set True to compute energy analyticaly, set False to simulate
@@ -33,13 +34,17 @@ def vqe(hamiltonian,
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
+    # transform whatever ansatz format to operatorList object
+    ansatz = OperatorList(ansatz)
+
     if opt_qubits:
         # transform to qubit ansatz using JW transformation
-        ansatz = jordan_wigner(ansatz)
+        ansatz = ansatz.get_quibits_list()
 
     # initial guess
-    n_terms = len(ansatz.terms)
+    n_terms = len(ansatz)
     coefficients = np.zeros(n_terms)
+    print('n_terms', n_terms)
 
     # Optimize the results from analytical calculation
     if exact_energy:
@@ -68,20 +73,13 @@ def vqe(hamiltonian,
 
     assert abs(energy_exact - energy_sim_test) < 1e-8
 
-    operators_list = []
     global_coefficients = []
-    for coefficient, op in zip(results.x, ansatz.terms):
-
-        if isinstance(ansatz, FermionOperator):
-            operators_list.append(FermionOperator(op))
-            global_coefficients.append(coefficient * np.real(ansatz.terms[op]))
-        else:
-            operators_list.append(1j*QubitOperator(op))
-            global_coefficients.append(coefficient * np.real(ansatz.terms[op]/1j))
+    for coefficient, prefactor in zip(results.x, ansatz.operators_prefactors()):
+        global_coefficients.append(coefficient * prefactor)
 
     return {'energy': results.fun,
             'coefficients': global_coefficients,
-            'operators': operators_list}
+            'operators': list(ansatz)}
 
 
 if __name__ == '__main__':
@@ -123,7 +121,8 @@ if __name__ == '__main__':
                  uccsd_ansatz,
                  hf_reference_fock,
                  exact_energy=True,
-                 trotter=True,
+                 opt_qubits=True,
+                 trotter=False,
                  trotter_steps=1,
                  shots=1000,
                  test_only=True)

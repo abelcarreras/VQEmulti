@@ -83,14 +83,17 @@ class OperatorList:
     def __len__(self):
         return len(self._list)
 
-    def append(self, operator):
+    def append(self, operator, join=False):
         if self._type is None:
             self._type = type(operator)
         else:
             if self._type != type(operator):
                 raise Exception('Operator not compatible with this list')
 
-        self._list += [op for op in operator]
+        if join:
+            self._list += [op for op in operator]
+        else:
+            self._list.append(operator)
 
     def get_operators_type(self):
         return self._type

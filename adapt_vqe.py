@@ -158,7 +158,7 @@ if __name__ == '__main__':
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
     # get additional info about electronic structure properties
-    get_info(molecule, check_HF_data=False)
+    # get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons

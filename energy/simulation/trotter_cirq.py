@@ -148,7 +148,7 @@ def get_preparation_gates_trotter(coefficients, ansatz, trotter_steps, hf_refere
     # Go through the operators in the ansatz
     for coefficient, operator in zip(coefficients, ansatz):
         # Get the trotterized circuit for applying e**(operator*coefficient)
-        operator_trotter_circuit = trotterize_operator(operator,
+        operator_trotter_circuit = trotterize_operator(1j*operator,
                                                        coefficient,
                                                        trotter_steps)
 

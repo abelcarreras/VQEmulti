@@ -30,7 +30,7 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
 
     for coefficient, operator in zip(coefficients, ansatz):
         # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator(1j * coefficient * operator, n_qubits)
+        operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
@@ -92,7 +92,11 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
+    ansatz = ansatz.copy()
+    ansatz.scale_vector(coefficients)
+
     ansatz_qubit = ansatz.get_quibits_list()
+    coefficients = [1] * len(ansatz_qubit)
 
     if trotter:
         state_preparation_gates = get_preparation_gates_trotter(coefficients,

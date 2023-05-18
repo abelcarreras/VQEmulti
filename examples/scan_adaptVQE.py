@@ -24,10 +24,7 @@ for d in np.linspace(0.3, 3, 20):
     molecule = run_pyscf(h2_molecule, run_fci=True)
 
     # get additional info about electronic structure properties
-    get_info(molecule, check_HF_data=False)
-
-    # run classical calculation
-    molecule = run_pyscf(h2_molecule, run_fci=True)
+    # get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
     n_electrons = 2  # molecule.n_electrons

@@ -147,7 +147,7 @@ class OperationsTest(unittest.TestCase):
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(result['energy'], -1.12988981, places=6)
-        self.assertEqual(len(result['operators']), 8)
+        self.assertEqual(len(result['operators']), 4)
 
     def test_vqe_trotter_fermion(self):
         # get properties from classical SCF calculation
@@ -185,4 +185,4 @@ class OperationsTest(unittest.TestCase):
 
         self.assertAlmostEquals(result['energy'], -1.12988982, places=6)
 
-        self.assertEqual(len(result['operators']), 8)
+        self.assertEqual(len(result['operators']), 4)

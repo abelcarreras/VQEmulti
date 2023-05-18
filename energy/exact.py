@@ -18,7 +18,11 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :return: exact energy
     """
 
-    ansatz_qubit = ansatz.get_quibits_list()
+    #ansatz = ansatz.copy()
+    #ansatz.scale_vector(coefficients)
+
+    #ansatz_qubit = ansatz.get_quibits_list()
+    #coefficients = np.ones(len(ansatz_qubit))
 
     # Transform Hamiltonian to matrix representation
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
@@ -31,12 +35,10 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
 
     # Apply e ** (coefficient * operator) to the state (ket) for each operator in
     # the ansatz, following the order of the list
-    for coefficient, operator in zip(coefficients, ansatz_qubit):
-        # Multiply the operator by the respective coefficient
-        operator = 1j*coefficient * operator
+    for coefficient, operator in zip(coefficients, ansatz):
 
         # Get the operator matrix representation of the operator (JW)
-        sparse_operator = get_sparse_operator(operator, n_qubit)
+        sparse_operator = get_sparse_operator(coefficient * operator, n_qubit)
 
         # Exponentiate the operator and update ket to represent the state after
         # this operator has been applied

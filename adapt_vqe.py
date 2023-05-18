@@ -52,10 +52,7 @@ def adaptVQE(operators_pool,
 
     if opt_qubits:
         # transform to qubit ansatz using JW transformation
-        operators_pool = operators_pool.get_quibits_list()
-    else:
-        raise Exception('Not yet implemented')
-        # operators_pool = operators_pool.get_expanded_list()
+        operators_pool = 1j * operators_pool.get_quibits_list(normalize=True)
 
     print('qubit pool size:', len(operators_pool))
 
@@ -148,6 +145,7 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from pool_definitions import get_pool_singlet_sd
     from utils import generate_reduced_hamiltonian
+    from analysis import get_info
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
@@ -158,6 +156,9 @@ if __name__ == '__main__':
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+
+    # get additional info about electronic structure properties
+    get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
@@ -182,8 +183,9 @@ if __name__ == '__main__':
                                   hamiltonian,  # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
+                                  opt_qubits=True,
                                   exact_energy=True,
-                                  exact_gradient=False,
+                                  exact_gradient=True,
                                   trotter=False,
                                   test_only=True,
                                   shots=10000)

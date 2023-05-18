@@ -1,3 +1,4 @@
+import openfermion
 from openfermion import get_sparse_operator
 from utils import get_sparse_ket_from_fock
 from openfermion.utils import count_qubits
@@ -27,11 +28,9 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
 
     # Apply the ansatz operators one by one to obtain the state as optimized by the last iteration
     for coefficient, operator in zip(coefficients, ansatz):
-        # Multiply the operator by the variational parameter
-        operator = 1j * coefficient * operator
 
         # Obtain the sparse matrix representing the operator
-        sparse_operator = get_sparse_operator(operator, n_qubits)
+        sparse_operator = get_sparse_operator(coefficient * operator, n_qubits)
 
         # Exponentiate the operator
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)

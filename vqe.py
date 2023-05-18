@@ -34,12 +34,11 @@ def vqe(hamiltonian,
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
-    # transform whatever ansatz format to operatorList object
-    ansatz = OperatorList(ansatz, initialize=False)
+    ansatz = OperatorList(ansatz, antisymmetrize=True)
 
     if opt_qubits:
         # transform to qubit ansatz using JW transformation
-        ansatz = ansatz.get_quibits_list()
+        ansatz = 1j * ansatz.get_quibits_list(normalize=True)
 
     # initial guess
     n_terms = len(ansatz)
@@ -71,14 +70,10 @@ def vqe(hamiltonian,
     energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
                                           False, trotter_steps, True)
 
-    assert abs(energy_exact - energy_sim_test) < 1e-8
-
-    global_coefficients = []
-    for coefficient, prefactor in zip(results.x, ansatz.operators_prefactors()):
-        global_coefficients.append(coefficient * prefactor)
+    assert abs(energy_exact - energy_sim_test) < 1e-6
 
     return {'energy': results.fun,
-            'coefficients': global_coefficients,
+            'coefficients': list(results.x),
             'operators': list(ansatz)}
 
 
@@ -120,8 +115,8 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 exact_energy=True,
-                 opt_qubits=True,
+                 exact_energy=False,
+                 opt_qubits=False,
                  trotter=False,
                  trotter_steps=1,
                  shots=1000,

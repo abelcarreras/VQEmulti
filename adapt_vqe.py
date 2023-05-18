@@ -40,7 +40,7 @@ def adaptVQE(operators_pool,
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': []}
-    qubit_ansatz = OperatorList([])
+    ansatz = OperatorList([])
     coefficients = []
     indices = []
 
@@ -60,20 +60,20 @@ def adaptVQE(operators_pool,
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
-        if len(qubit_ansatz) != 0:
-            print('ansatz: ', qubit_ansatz)
+        if len(ansatz) != 0:
+            print('ansatz: ', ansatz)
             print('coefficients: ', coefficients)
 
         if exact_gradient:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
                                                       qubit_hamiltonian,
-                                                      qubit_ansatz,
+                                                      ansatz,
                                                       coefficients,
                                                       operators_pool)
         else:
             gradient_vector = simulate_gradient(hf_reference_fock,
                                                 qubit_hamiltonian,
-                                                qubit_ansatz,
+                                                ansatz,
                                                 coefficients,
                                                 operators_pool,
                                                 shots,
@@ -89,7 +89,7 @@ def adaptVQE(operators_pool,
         if total_norm < threshold:
             print("\nConvergence condition achieved!")
             result = {'energy': iterations["energies"][-1],
-                      'ansatz': qubit_ansatz,
+                      'ansatz': ansatz,
                       'indices': indices,
                       'coefficients': coefficients}
 
@@ -99,36 +99,34 @@ def adaptVQE(operators_pool,
 
         # Initialize the coefficient of the operator that will be newly added at 0
         coefficients.append(0)
-        qubit_ansatz.append(max_operator)
+        ansatz.append(max_operator)
         indices.append(max_index)
 
         # run optimization
         if exact_energy:
             opt_result = scipy.optimize.minimize(exact_vqe_energy,
                                                  coefficients,
-                                                 (qubit_ansatz, hf_reference_fock, qubit_hamiltonian),
+                                                 (ansatz, hf_reference_fock, qubit_hamiltonian),
                                                  method='COBYLA',
                                                  tol=None,
                                                  options={'rhobeg': 0.1, 'disp': True})
         else:
             opt_result = scipy.optimize.minimize(simulate_vqe_energy,
                                                  coefficients,
-                                                 (qubit_ansatz, hf_reference_fock, qubit_hamiltonian,
+                                                 (ansatz, hf_reference_fock, qubit_hamiltonian,
                                                   shots, trotter, trotter_steps, test_only),
                                                  method='COBYLA',
                                                  tol=1e-8,
                                                  options={'disp': True}) # 'rhobeg': 0.01)
 
-        energy_exact = exact_vqe_energy(opt_result.x, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
-        energy_sim_test = simulate_vqe_energy(opt_result.x, qubit_ansatz, hf_reference_fock, qubit_hamiltonian, shots,
+        energy_exact = exact_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian)
+        energy_sim_test = simulate_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
                                               False, trotter_steps, True)
 
         assert abs(energy_exact - energy_sim_test) < 1e-8
 
         coefficients = list(opt_result.x)
         optimized_energy = opt_result.fun
-        # Energy obtained by exact function (using optimized coefficients)
-        # optimized_energy = exact_vqe_energy(coefficients, qubit_ansatz, hf_reference_fock, qubit_hamiltonian)
 
         print('Optimized Energy:', optimized_energy)
         print('Coefficients:', coefficients)

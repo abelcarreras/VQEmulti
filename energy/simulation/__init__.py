@@ -41,13 +41,13 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
     return state_preparation_gates
 
 
-def get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates):
+def get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates, shots):
     """
     Obtains the expectation value in a state by sampling (using a simulator)
 
     :param qubit_hamiltonian: hamiltonian in qubits
-    :param shots: number of samples
     :param state_preparation_gates: list of gates in simulation library format that represents the state
+    :param shots: number of samples
     :return: the expectation value of the energy
     """
 
@@ -115,6 +115,6 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
 
     else:
         # Obtain the energy expectation value by sampling from the circuit using the simulator
-        energy = get_sampled_energy(qubit_hamiltonian, shots, state_preparation_gates)
+        energy = get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates, shots)
 
     return energy

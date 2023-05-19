@@ -252,3 +252,14 @@ def get_uccsd_operators(n_electrons, n_orbitals):
     return openfermion.uccsd_singlet_generator(packed_amplitudes,
                                                n_orbitals * 2,
                                                n_electrons)
+
+
+def transform_to_qubit(ansatz, coefficients):
+
+    ansatz = ansatz.copy()
+    ansatz.scale_vector(coefficients)
+
+    ansatz_qubit = ansatz.get_quibits_list()
+    coefficients = [1] * len(ansatz_qubit)
+
+    return ansatz_qubit, coefficients

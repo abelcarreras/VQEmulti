@@ -2,9 +2,7 @@ from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from openfermion.transforms import jordan_wigner
-from pool_definitions import generate_jw_operator_pool
 from pool_definitions import OperatorList
-from openfermion import QubitOperator, FermionOperator
 import numpy as np
 import scipy
 
@@ -77,6 +75,8 @@ def adaptVQE(operators_pool,
                                                 coefficients,
                                                 operators_pool,
                                                 shots,
+                                                trotter,
+                                                trotter_steps,
                                                 test_only)
 
         total_norm = np.linalg.norm(gradient_vector)
@@ -181,10 +181,10 @@ if __name__ == '__main__':
                                   hamiltonian,  # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
-                                  opt_qubits=True,
-                                  exact_energy=True,
-                                  exact_gradient=True,
-                                  trotter=False,
+                                  opt_qubits=False,
+                                  exact_energy=False,
+                                  exact_gradient=False,
+                                  trotter=True,
                                   test_only=True,
                                   shots=10000)
 

@@ -1,4 +1,4 @@
-from utils import convert_hamiltonian, group_hamiltonian
+from utils import convert_hamiltonian, group_hamiltonian, transform_to_qubit
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import scipy
@@ -92,11 +92,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
-    ansatz = ansatz.copy()
-    ansatz.scale_vector(coefficients)
-
-    ansatz_qubit = ansatz.get_quibits_list()
-    coefficients = [1] * len(ansatz_qubit)
+    ansatz_qubit, coefficients = transform_to_qubit(ansatz, coefficients)
 
     if trotter:
         state_preparation_gates = get_preparation_gates_trotter(coefficients,

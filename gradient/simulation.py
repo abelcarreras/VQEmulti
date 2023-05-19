@@ -1,13 +1,16 @@
-from utils import get_sparse_ket_from_fock, convert_hamiltonian, group_hamiltonian
+import openfermion
+
+from utils import convert_hamiltonian, group_hamiltonian, transform_to_qubit
 from gradient.exact import prepare_adapt_state
-from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation import get_preparation_gates, get_preparation_gates_trotter
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import numpy as np
 import scipy
 
 
-def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates, n_qubits, shots=1000):
+def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates, shots=1000):
     """
     Given an operator A, samples the gradient of the energy with respect to the coefficient c of
     the operator exp(c * A), at c = 0, in a given state.
@@ -20,6 +23,9 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
     :param shots: number of samples
     :return: the sampled expectation value of <psi|[H,A]|psi>, that is an estimate of the value of the gradient
     """
+
+    # get number of qubits
+    n_qubits = count_qubits(qubitHamiltonian)
 
     # group commutator hamiltonian for more efficient quantum computer computation
     commutator_hamiltonian = qubitHamiltonian * qubitOperator - qubitOperator * qubitHamiltonian
@@ -43,13 +49,15 @@ def get_sampled_gradient(qubitOperator, qubitHamiltonian, statePreparationGates,
     return commutator.real
 
 
-def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool, shots=10000, test_only=True):
+
+def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool, shots=10000,
+                      trotter=True, trotter_steps=1, test_only=True):
     """
     simulate gradient using quantum computer simulators (Cirq, pennylane)
 
     :param hf_reference_fock:  reference HF state in Fock space vector
     :param qubit_hamiltonian: hamiltonian in qubit operators
-    :param ansatz: VQE ansatz in qubit operators
+    :param ansatz: VQE ansatz in qubit/Fermion operators
     :param coefficients: list of VQE coefficients
     :param pool: pool of qubit operators
     :param shots: number of samples
@@ -58,68 +66,62 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
     """
 
     # qubit hamiltonian to sparse (Jordan-Wigner transform is used)
-    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
-    n_qubits = count_qubits(qubit_hamiltonian)
+    ansatz_qubit, coefficients = transform_to_qubit(ansatz, coefficients)
 
-    # Get the current state.
-    # Since the coefficients are reoptimized every iteration, the state has to
-    # be built from the reference state each time.
-    sparse_state = prepare_adapt_state(hf_reference_fock,
-                                       ansatz,
-                                       coefficients)
+    if trotter:
+        state_preparation_gates = get_preparation_gates_trotter(coefficients,
+                                                                ansatz_qubit,
+                                                                trotter_steps,
+                                                                hf_reference_fock)
 
-    identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-
-    total_op_matrix = identity
-    for _ in range(n_qubits - 1):
-        total_op_matrix = scipy.sparse.kron(identity, total_op_matrix, 'csc')
-
-    # Multiply the identity matrix by the matrix form of each operator in the
-    # ansatz, to obtain the matrix representing the action of the complete ansatz
-    for coefficient, operator in zip(coefficients, ansatz):
-        # Get corresponding the sparse operator, with the correct dimension
-        # (forcing n_qubits = qubitNumber, even if this operator acts on less qubits)
-        operatorMatrix = get_sparse_operator(coefficient * operator, n_qubits)
-
-        # Multiply previous matrix by this operator
-        total_op_matrix = scipy.sparse.linalg.expm(operatorMatrix) * total_op_matrix
+    else:
+        state_preparation_gates = get_preparation_gates(coefficients,
+                                                        ansatz_qubit,
+                                                        hf_reference_fock)
 
     # Calculate and print gradients
     gradient_vector = []
     for i, operator in enumerate(pool):
+
         print("Operator {}".format(i))
 
-        # Prepare state from HF reference and total operator matrix
-        state_preparation_gates = build_gradient_ansatz(hf_reference_fock, total_op_matrix)
+        if isinstance(operator, openfermion.FermionOperator):
+            operator = openfermion.jordan_wigner(operator)
 
         if not test_only:
             sampled_gradient = np.abs(get_sampled_gradient(operator,
                                                            qubit_hamiltonian,
                                                            state_preparation_gates,
-                                                           n_qubits,
                                                            shots=shots))
         else:
             # Calculate the exact energy in this state
             commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
             sampled_gradient = np.abs(get_exact_state_evaluation(commutator_hamiltonian, state_preparation_gates).real)
 
-        # compute exact gradient for comparison (can be omitted if needed)
-        from gradient.exact import calculate_gradient
-        sparse_operator = get_sparse_operator(operator, n_qubits)
-        calculated_gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
-        print("Exact gradient: {:.6f}".format(calculated_gradient))
-
-        error = np.abs(sampled_gradient - calculated_gradient)
         if test_only:
             print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
         else:
             print("Simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, shots))
 
-        if abs(calculated_gradient) > 1e-3:
-            print("Error: {0:.3f} ({1:.3f}%)\n".format(error, 100*error/calculated_gradient))
-        else:
-            print("Error: {0:.3f} NA%)\n".format(error))
-
         gradient_vector.append(sampled_gradient)
+
+        compute_exact_sparse = True
+        if compute_exact_sparse:
+            # compute exact gradient using matrix representation for comparison
+            # qubit to sparse using Jordan-Wigner transform
+            from gradient.exact import calculate_gradient
+            sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian) # Get the current hamiltonian.
+            sparse_state = prepare_adapt_state(hf_reference_fock, ansatz_qubit, coefficients) # Get the current state.
+            sparse_operator = get_sparse_operator(operator, count_qubits(qubit_hamiltonian))
+            calculated_gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
+            print("Exact gradient: {:.6f}".format(calculated_gradient))
+
+            error = np.abs(sampled_gradient - calculated_gradient)
+
+            if abs(calculated_gradient) > 1e-3:
+                print("Error: {0:.3f} ({1:.3f}%)\n".format(error, 100 * error / calculated_gradient))
+            else:
+                print("Error: {0:.3f} NA%)\n".format(error))
+
 
     return gradient_vector

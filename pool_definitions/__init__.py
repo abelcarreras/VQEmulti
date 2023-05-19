@@ -29,7 +29,7 @@ class OperatorList:
 
         return object.__new__(cls)
 
-    def __init__(self, operators, normalize=False, antisymmetrize=True):
+    def __init__(self, operators, normalize=False, antisymmetrize=True, split=False):
         """
         basis class to manage operators lists
 
@@ -73,6 +73,14 @@ class OperatorList:
                 h_op = term - hermitian_conjugated(term)
                 if h_op not in self._list:
                     self._list.append(h_op)
+
+        if split:
+            split_list = []
+            for op in self._list:
+                for term in op.terms:
+                    split_list.append(self._type(term))
+            self._list = split_list
+
 
     def __str__(self):
         return self._list.__str__()

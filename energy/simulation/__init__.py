@@ -1,4 +1,4 @@
-from utils import convert_hamiltonian, group_hamiltonian, transform_to_qubit
+from utils import convert_hamiltonian, group_hamiltonian, transform_to_scaled_qubit
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import scipy
@@ -10,11 +10,10 @@ from energy.simulation.trotter_penny import get_preparation_gates_trotter
 from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 
 
-def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
+def get_preparation_gates(ansatz, hf_reference_fock):
     """
     generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
-    :param coefficients: operator coefficients
     :param ansatz: operators list in qubit
     :param hf_reference_fock: reference HF in fock vspace vector
     :param n_qubits: number of qubits
@@ -28,9 +27,9 @@ def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
     for _ in range(n_qubits - 1):
         matrix = scipy.sparse.kron(identity, matrix, 'csc')
 
-    for coefficient, operator in zip(coefficients, ansatz):
+    for operator in ansatz:
         # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
+        operator_matrix = get_sparse_operator(operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
@@ -81,7 +80,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     Obtain the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state, using the CIRQ simulator.
 
-    :param coefficients: adaptVQE coefficients
+    :param coefficients: VQE coefficients
     :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: reference HF in fock vspace vector
     :param qubit_hamiltonian: hamiltonian in qubits
@@ -92,17 +91,16 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
-    ansatz_qubit, coefficients = transform_to_qubit(ansatz, coefficients)
+    # transform ansatz to qubit (coefficients are included in qubits objects)
+    ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
 
     if trotter:
-        state_preparation_gates = get_preparation_gates_trotter(coefficients,
-                                                                ansatz_qubit,
+        state_preparation_gates = get_preparation_gates_trotter(ansatz_qubit,
                                                                 trotter_steps,
                                                                 hf_reference_fock)
 
     else:
-        state_preparation_gates = get_preparation_gates(coefficients,
-                                                        ansatz_qubit,
+        state_preparation_gates = get_preparation_gates(ansatz_qubit,
                                                         hf_reference_fock)
 
     # from energy.simulation.tools import get_circuit_depth

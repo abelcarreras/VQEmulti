@@ -12,7 +12,7 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
 
     :param hf_reference_fock:  reference HF state in Fock space vector
     :param ansatz: ansatz in qubit operators
-    :param coefficients: adapt-VQE coefficients
+    :param coefficients: ansatz operators scale coefficients
     :param n_qubit: number of q_bits
     :return:
 

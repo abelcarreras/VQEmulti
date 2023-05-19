@@ -44,8 +44,6 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
         # this operator has been applied
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)
 
-        # print('ket shape', ket.shape)
-        # print('operator shape', exp_operator.shape)
         ket = exp_operator * ket
 
     # Get the corresponding bra and calculate the energy: |<bra| H |ket>|

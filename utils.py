@@ -4,8 +4,6 @@ import openfermion
 import numpy as np
 import scipy
 
-import pool_definitions
-
 
 def string_to_matrix(pauli_string):
     """
@@ -254,12 +252,10 @@ def get_uccsd_operators(n_electrons, n_orbitals):
                                                n_electrons)
 
 
-def transform_to_qubit(ansatz, coefficients):
+def transform_to_scaled_qubit(ansatz, coefficients):
 
     ansatz = ansatz.copy()
     ansatz.scale_vector(coefficients)
-
     ansatz_qubit = ansatz.get_quibits_list()
-    coefficients = [1] * len(ansatz_qubit)
 
-    return ansatz_qubit, coefficients
+    return ansatz_qubit

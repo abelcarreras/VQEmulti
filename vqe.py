@@ -10,7 +10,7 @@ import scipy
 def vqe(hamiltonian,
         ansatz,
         hf_reference_fock,
-        opt_qubits=True,
+        opt_qubits=False,
         exact_energy=False,
         trotter=True,
         trotter_steps=1,

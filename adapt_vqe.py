@@ -10,7 +10,7 @@ import scipy
 def adaptVQE(operators_pool,
              hamiltonian,
              hf_reference_fock,
-             opt_qubits=True,
+             opt_qubits=False,
              max_iterations=50,
              threshold=0.1,
              exact_energy=True,
@@ -181,10 +181,10 @@ if __name__ == '__main__':
                                   hamiltonian,  # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
-                                  opt_qubits=False,
+                                  # opt_qubits=True,
                                   exact_energy=False,
                                   exact_gradient=False,
-                                  trotter=True,
+                                  trotter=False,
                                   test_only=True,
                                   shots=10000)
 

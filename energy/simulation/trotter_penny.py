@@ -1,14 +1,15 @@
+from openfermion import QubitOperator
 from energy.simulation.tools_penny import build_reference_gates
 import numpy as np
 import pennylane as qml
 
 
-def trotter_step(operator, time):
+def trotter_step(qubit_operator, time):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
 
-    :param operator: qubit operator
+    :param qubit_operator: qubit operator
     :param time: the evolution time
     :return: trotter_gates
     """
@@ -18,7 +19,7 @@ def trotter_step(operator, time):
 
     # Order the terms the same way as done by OpenFermion's
     # trotter_operator_grouping function (sorted keys) for consistency.
-    ordered_terms = sorted(list(operator.terms.keys()))
+    ordered_terms = sorted(list(qubit_operator.terms.keys()))
 
     # Add to trotter_gates the gates necessary to simulate each Pauli string,
     # going through them by the defined order
@@ -27,7 +28,7 @@ def trotter_step(operator, time):
         # Get real part of the coefficient (the immaginary one can't be simulated,
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
-        coefficient = float(np.real(operator.terms[pauliString])) * time
+        coefficient = float(np.real(qubit_operator.terms[pauliString])) * time
 
         # Keep track of the qubit indices involved in this particular Pauli string.
         # It's necessary so as to know which are included in the sequence of CNOTs
@@ -88,7 +89,7 @@ def trotter_step(operator, time):
     return trotter_gates
 
 
-def trotterize_operator(operator, time, trotter_steps):
+def trotterize_operator(qubit_operator, time, trotter_steps):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator', with the given
@@ -98,7 +99,7 @@ def trotterize_operator(operator, time, trotter_steps):
     For the same precision, a greater time requires a greater step number
     (again, unless the terms commute)
 
-    :param operator: qubit operator
+    :param qubit_operator: qubit operator
     :param time: the evolution time
     :param trotter_steps: number of trotter steps
     :return: the number of trotter steps to split the time evolution into
@@ -108,16 +109,15 @@ def trotterize_operator(operator, time, trotter_steps):
     # number of times
     trotter_gates = []
     for step in range(1, trotter_steps + 1):
-        trotter_gates += trotter_step(operator, time / trotter_steps)
+        trotter_gates += trotter_step(qubit_operator, time / trotter_steps)
 
     return trotter_gates
 
 
-def get_preparation_gates_trotter(coefficients, ansatz_qubit, trotter_steps, hf_reference_fock):
+def get_preparation_gates_trotter(ansatz_qubit, trotter_steps, hf_reference_fock):
     """
     Trotterize the ansatz
 
-    :param coefficients: ansatz coefficients
     :param ansatz_qubit: operators list in qubit
     :param trotter_steps: number of trotter steps
     :param hf_reference_fock: reference HF in Fock vspace vector
@@ -128,14 +128,15 @@ def get_preparation_gates_trotter(coefficients, ansatz_qubit, trotter_steps, hf_
     trotter_ansatz = []
 
     # Go through the operators in the ansatz
-    for coefficient, operator in zip(coefficients, ansatz_qubit):
-        # Get the trotterized circuit for applying e**(operator*coefficient)
-        operator_trotter_circuit = trotterize_operator(1j*operator,
-                                                       coefficient,
-                                                       trotter_steps)
+    for operator in ansatz_qubit:
 
-        # Add the gates corresponding to this operator to the ansatz gate list
-        trotter_ansatz += operator_trotter_circuit
+        for op, time in operator.terms.items():
+            operator_trotter_circuit = trotterize_operator(-QubitOperator(op),
+                                                           time.imag,
+                                                           trotter_steps)
+
+            # Add the gates corresponding to this operator to the ansatz gate list
+            trotter_ansatz += operator_trotter_circuit
 
     # Initialize the state preparation gates with the reference state preparation gates
     state_preparation_gates = build_reference_gates(hf_reference_fock)

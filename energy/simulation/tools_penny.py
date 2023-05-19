@@ -3,7 +3,6 @@ from openfermion import get_sparse_operator
 from openfermion.utils import count_qubits
 import pennylane as qml
 import numpy as np
-import scipy
 
 
 def build_gradient_ansatz(hf_reference_fock, matrix):
@@ -26,35 +25,6 @@ def build_reference_gates(hf_reference_fock):
 
     return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-
-def get_preparation_gates(coefficients, ansatz, hf_reference_fock):
-    """
-    generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
-
-    :param coefficients: operator coefficients
-    :param ansatz: operators list in qubit
-    :param hf_reference_fock: reference HF in fock vspace vector
-    :return: gates list in simulation library format
-    """
-
-    n_qubits = len(hf_reference_fock)
-    # generate matrix operator that corresponds to ansatz
-    identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-    matrix = identity
-    for _ in range(n_qubits - 1):
-        matrix = scipy.sparse.kron(identity, matrix, 'csc')
-
-    for coefficient, operator in zip(coefficients, ansatz):
-        # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator(coefficient * operator, n_qubits)
-
-        # Add unitary operator to matrix as exp(operator_matrix)
-        matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
-
-    # Get gates in simulation library format
-    state_preparation_gates = build_gradient_ansatz(hf_reference_fock, matrix)
-
-    return state_preparation_gates
 
 
 def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):

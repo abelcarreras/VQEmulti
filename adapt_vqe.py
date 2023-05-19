@@ -170,7 +170,7 @@ if __name__ == '__main__':
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
-    # Choose specific pool of operators for adapt-VQE
+    # Get a pool of operators for adapt-VQE
     operators_pool = get_pool_singlet_sd(electronNumber=n_electrons,
                                          orbitalNumber=n_orbitals)
 

@@ -10,6 +10,7 @@ import scipy
 def vqe(hamiltonian,
         ansatz,
         hf_reference_fock,
+        coefficients=None,
         opt_qubits=False,
         exact_energy=False,
         trotter=True,
@@ -20,7 +21,8 @@ def vqe(hamiltonian,
     Perform a VQE calculation
 
     :param hamiltonian: hamiltonian in fermionic operators
-    :param ansatz: ansatz to optimize
+    :param ansatz: ansatz (fermionic operator list) to optimize
+    :param coefficients: initial guess coefficients (leave None to initialize to zero)
     :param opt_qubits: choose basis of optimization (True: qubits operators, False: fermion operators)
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
     :param exact_energy: Set True to compute energy analyticaly, set False to simulate
@@ -42,9 +44,11 @@ def vqe(hamiltonian,
 
     # initial guess
     n_terms = len(ansatz)
-    coefficients = np.zeros(n_terms)
-    print('n_terms', n_terms)
+    if coefficients is None:
+        coefficients = np.zeros(n_terms)
 
+
+    print(coefficients)
     # Optimize the results from analytical calculation
     if exact_energy:
         results = scipy.optimize.minimize(exact_vqe_energy,
@@ -105,7 +109,7 @@ if __name__ == '__main__':
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
-    # define UCCSD ansatz
+    # Get UCCSD ansatz
     uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
 
     # Get reference Hartree Fock state
@@ -129,4 +133,4 @@ if __name__ == '__main__':
 
     print('Num operators: ', len(result['operators']))
     print('Operators:\n', result['operators'])
-    print('Coefficients:\n', result['coefficients'])
+    print('Coefficients:\n', )

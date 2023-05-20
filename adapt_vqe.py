@@ -86,7 +86,7 @@ def adaptVQE(operators_pool,
 
         print("Total gradient norm: {}".format(total_norm))
 
-        if total_norm < threshold:
+        if total_norm < threshold and iteration > 0:
             print("\nConvergence condition achieved!")
             result = {'energy': iterations["energies"][-1],
                       'ansatz': ansatz,

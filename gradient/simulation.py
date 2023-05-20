@@ -2,8 +2,8 @@ import openfermion
 
 from utils import convert_hamiltonian, group_hamiltonian, transform_to_scaled_qubit
 from gradient.exact import prepare_adapt_state
-from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
-from energy.simulation import get_preparation_gates, get_preparation_gates_trotter, get_sampled_state_evaluation
+from energy.simulation import get_exact_state_evaluation, get_sampled_state_evaluation
+from energy.simulation import get_preparation_gates, get_preparation_gates_trotter
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 import numpy as np

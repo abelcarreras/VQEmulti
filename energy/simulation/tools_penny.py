@@ -5,7 +5,7 @@ import pennylane as qml
 import numpy as np
 
 
-def build_gradient_ansatz(hf_reference_fock, matrix):
+def get_matrix_operator_gates(hf_reference_fock, matrix):
 
     # Initialize qubits
     n_qubits = len(hf_reference_fock)
@@ -18,13 +18,13 @@ def build_gradient_ansatz(hf_reference_fock, matrix):
 
     return state_preparation_gates
 
+
 def build_reference_gates(hf_reference_fock):
 
     # Create the gates for preparing the Hartree Fock ground state, that serves
     # as a reference state the ansatz will act on
 
     return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
-
 
 
 def measure_expectation(main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):

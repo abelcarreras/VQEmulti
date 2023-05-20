@@ -7,7 +7,7 @@ import scipy
 #from energy.simulation.trotter_cirq import get_preparation_gates_trotter
 #from energy.simulation.tools_cirq import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
 from energy.simulation.trotter_penny import get_preparation_gates_trotter
-from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, build_gradient_ansatz
+from energy.simulation.tools_penny import measure_expectation, get_exact_state_evaluation, get_matrix_operator_gates
 
 
 def get_preparation_gates(ansatz, hf_reference_fock):
@@ -35,7 +35,7 @@ def get_preparation_gates(ansatz, hf_reference_fock):
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
 
     # Get gates in simulation library format
-    state_preparation_gates = build_gradient_ansatz(hf_reference_fock, matrix)
+    state_preparation_gates = get_matrix_operator_gates(hf_reference_fock, matrix)
 
     return state_preparation_gates
 

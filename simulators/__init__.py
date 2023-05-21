@@ -11,6 +11,12 @@ class SimulatorBase:
                  trotter_steps=1,
                  test_only=False,
                  shots=1000):
+        """
+        :param trotter: Trotterize ansatz operators
+        :param trotter_steps: number of trotter steps (only used if trotter=True)
+        :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+        :param shots: number of samples to perform in the simulation
+        """
 
         self._trotter = trotter
         self._trotter_steps = trotter_steps

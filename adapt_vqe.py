@@ -13,12 +13,8 @@ def adaptVQE(operators_pool,
              opt_qubits=False,
              max_iterations=50,
              threshold=0.1,
-             exact_energy=True,
-             exact_gradient=True,
-             trotter=False,
-             trotter_steps=2,
-             test_only=False,
-             shots=1000):
+             energy_simulator=None,
+             gradient_simulator=None):
     """
     Perform a adapt VQE calculation
 
@@ -35,15 +31,6 @@ def adaptVQE(operators_pool,
     :param shots: number of samples to perform in the simulation
     :return: results dictionary
     """
-
-    # from simulators.penny_simulator import PennylaneSimulator as Simulator
-    from simulators.cirq_simulator import CirqSimulator as Simulator
-
-    simulator = Simulator(trotter=trotter,
-                          trotter_steps=trotter_steps,
-                          test_only=test_only,
-                          shots=shots)
-
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': []}
@@ -71,7 +58,7 @@ def adaptVQE(operators_pool,
             print('ansatz: ', ansatz)
             print('coefficients: ', coefficients)
 
-        if exact_gradient:
+        if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
                                                       qubit_hamiltonian,
                                                       ansatz,
@@ -83,7 +70,7 @@ def adaptVQE(operators_pool,
                                                 ansatz,
                                                 coefficients,
                                                 operators_pool,
-                                                simulator)
+                                                gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
         max_index = np.argmax(gradient_vector)
@@ -109,33 +96,31 @@ def adaptVQE(operators_pool,
         indices.append(max_index)
 
         # run optimization
-        if exact_energy:
-            opt_result = scipy.optimize.minimize(exact_vqe_energy,
-                                                 coefficients,
-                                                 (ansatz, hf_reference_fock, qubit_hamiltonian),
-                                                 method='COBYLA',
-                                                 tol=None,
-                                                 options={'rhobeg': 0.1, 'disp': True})
+        if energy_simulator is None:
+            results = scipy.optimize.minimize(exact_vqe_energy,
+                                              coefficients,
+                                              (ansatz, hf_reference_fock, qubit_hamiltonian),
+                                              method='COBYLA',
+                                              tol=None,
+                                              options={'rhobeg': 0.1, 'disp': True})
         else:
-            opt_result = scipy.optimize.minimize(simulate_vqe_energy,
-                                                 coefficients,
-                                                 (ansatz, hf_reference_fock, qubit_hamiltonian, simulator),
-                                                 method='COBYLA',
-                                                 tol=1e-8,
-                                                 options={'disp': True}) # 'rhobeg': 0.01)
+            results = scipy.optimize.minimize(simulate_vqe_energy,
+                                              coefficients,
+                                              (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
+                                              method='COBYLA',
+                                              tol=1e-8,
+                                              options={'disp': True}) # 'rhobeg': 0.01)
 
-        energy_exact = exact_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian)
+        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
 
+        if energy_simulator is not None:
+            energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
+                                                  type(energy_simulator)(trotter=False, test_only=True))
 
-        energy_sim_test = simulate_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian,
-                                              type(simulator)(trotter=False,
-                                                              trotter_steps=trotter_steps,
-                                                              test_only=True))
+            assert abs(energy_exact - energy_sim_test) < 1e-6
 
-        assert abs(energy_exact - energy_sim_test) < 1e-7
-
-        coefficients = list(opt_result.x)
-        optimized_energy = opt_result.fun
+        coefficients = list(results.x)
+        optimized_energy = results.fun
 
         print('Optimized Energy:', optimized_energy)
         print('Coefficients:', coefficients)
@@ -186,16 +171,22 @@ if __name__ == '__main__':
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+    # Simulator
+    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    # from simulators.cirq_simulator import CirqSimulator as Simulator
+
+    simulator = Simulator(trotter=True,
+                          trotter_steps=1,
+                          test_only=True,
+                          shots=1000)
+
     result, iterations = adaptVQE(operators_pool,  # fermionic operators
                                   hamiltonian,  # fermionic hamiltonian
                                   hf_reference_fock,
                                   threshold=0.1,
                                   # opt_qubits=True,
-                                  exact_energy=False,
-                                  exact_gradient=False,
-                                  trotter=True,
-                                  test_only=True,
-                                  shots=10000)
+                                  energy_simulator=simulator,
+                                  gradient_simulator=simulator)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy adaptVQE: ', result['energy'])

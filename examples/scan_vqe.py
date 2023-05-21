@@ -41,10 +41,7 @@ for d in np.linspace(0.3, 3, n_points):
     result = vqe(hamiltonian,  # fermionic hamiltonian
                  uccsd_ansatz,  # fermionic ansatz
                  hf_reference_fock,
-                 exact_energy=True,
-                 opt_qubits=False,
-                 shots=1000,
-                 test_only=True)
+                 opt_qubits=False)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

@@ -12,11 +12,7 @@ def vqe(hamiltonian,
         hf_reference_fock,
         coefficients=None,
         opt_qubits=False,
-        exact_energy=False,
-        trotter=True,
-        trotter_steps=1,
-        test_only=False,
-        shots=1000):
+        energy_simulator=None):
     """
     Perform a VQE calculation
 
@@ -25,23 +21,9 @@ def vqe(hamiltonian,
     :param coefficients: initial guess coefficients (leave None to initialize to zero)
     :param opt_qubits: choose basis of optimization (True: qubits operators, False: fermion operators)
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
-    :param exact_energy: Set True to compute energy analyticaly, set False to simulate
-    :param trotter: Trotterize ansatz operators
-    :param trotter_steps: number of trotter steps (only used if trotter=True)
-    :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
-    :param shots: number of samples to perform in the simulation
+    :param energy_simulator: Simulator used to obtain the energy, if None do not use simulator (exact).
     :return: results dictionary
     """
-
-    # test simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
-    #from simulators.cirq_simulator import CirqSimulator as Simulator
-
-    simulator = Simulator(trotter=trotter,
-                          trotter_steps=trotter_steps,
-                          test_only=test_only,
-                          shots=shots)
-
 
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
@@ -58,7 +40,7 @@ def vqe(hamiltonian,
         coefficients = np.zeros(n_terms)
 
     # Optimize the results from analytical calculation
-    if exact_energy:
+    if energy_simulator is None:
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian),
@@ -70,7 +52,7 @@ def vqe(hamiltonian,
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
-                                          (ansatz, hf_reference_fock, qubit_hamiltonian, simulator),
+                                          (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
                                           method="COBYLA",
                                           options={# 'rhobeg': 0.01,
                                                    'disp': True},
@@ -78,12 +60,12 @@ def vqe(hamiltonian,
 
     # testing consistency
     energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
-    energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
-                                          type(simulator)(trotter=False,
-                                                          trotter_steps=trotter_steps,
-                                                          test_only=True))
 
-    assert abs(energy_exact - energy_sim_test) < 1e-6
+    if energy_simulator is not None:
+        energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
+                                              type(energy_simulator)(trotter=False, test_only=True))
+
+        assert abs(energy_exact - energy_sim_test) < 1e-6
 
     return {'energy': results.fun,
             'coefficients': list(results.x),
@@ -124,16 +106,21 @@ if __name__ == '__main__':
     # Get reference Hartree Fock state
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+    # Simulator
+    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    # from simulators.cirq_simulator import CirqSimulator as Simulator
+
+    simulator = Simulator(trotter=False,
+                          trotter_steps=1,
+                          test_only=True,
+                          shots=1000)
+
     print('Initialize VQE')
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 exact_energy=False,
-                 opt_qubits=False,
-                 trotter=False,
-                 trotter_steps=1,
-                 shots=1000,
-                 test_only=True)
+                 energy_simulator=simulator,
+                 opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy VQE: {:.8f}'.format(result['energy']))

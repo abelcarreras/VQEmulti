@@ -33,6 +33,16 @@ def vqe(hamiltonian,
     :return: results dictionary
     """
 
+    # test simulator
+    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    #from simulators.cirq_simulator import CirqSimulator as Simulator
+
+    simulator = Simulator(trotter=trotter,
+                          trotter_steps=trotter_steps,
+                          test_only=test_only,
+                          shots=shots)
+
+
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
@@ -47,8 +57,6 @@ def vqe(hamiltonian,
     if coefficients is None:
         coefficients = np.zeros(n_terms)
 
-
-    print(coefficients)
     # Optimize the results from analytical calculation
     if exact_energy:
         results = scipy.optimize.minimize(exact_vqe_energy,
@@ -62,8 +70,7 @@ def vqe(hamiltonian,
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
-                                          (ansatz, hf_reference_fock, qubit_hamiltonian,
-                                           shots, trotter, trotter_steps, test_only),
+                                          (ansatz, hf_reference_fock, qubit_hamiltonian, simulator),
                                           method="COBYLA",
                                           options={# 'rhobeg': 0.01,
                                                    'disp': True},
@@ -71,8 +78,10 @@ def vqe(hamiltonian,
 
     # testing consistency
     energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
-    energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
-                                          False, trotter_steps, True)
+    energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
+                                          type(simulator)(trotter=False,
+                                                          trotter_steps=trotter_steps,
+                                                          test_only=True))
 
     assert abs(energy_exact - energy_sim_test) < 1e-6
 
@@ -133,4 +142,4 @@ if __name__ == '__main__':
 
     print('Num operators: ', len(result['operators']))
     print('Operators:\n', result['operators'])
-    print('Coefficients:\n', )
+    print('Coefficients:\n', result['coefficients'])

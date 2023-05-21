@@ -1,18 +1,22 @@
-import openfermion
-
-from utils import convert_hamiltonian, group_hamiltonian, transform_to_scaled_qubit
-from gradient.exact import prepare_adapt_state
-from energy.simulation import get_exact_state_evaluation, get_sampled_state_evaluation
-from energy.simulation import get_preparation_gates, get_preparation_gates_trotter
-from openfermion.utils import count_qubits
-from openfermion import get_sparse_operator
+from utils import transform_to_scaled_qubit
+from openfermion import get_sparse_operator, QubitOperator, jordan_wigner, count_qubits
 import numpy as np
 
 
 def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient):
-    # compute exact gradient using matrix representation for comparison
-    # qubit to sparse using Jordan-Wigner transform
-    from gradient.exact import calculate_gradient
+    """
+    compute exact gradient using matrix representation for comparison
+    qubit to sparse using Jordan-Wigner transform
+
+    :param qubit_hamiltonian:
+    :param hf_reference_fock:
+    :param ansatz_qubit:
+    :param operator:
+    :param sampled_gradient:
+    :return:
+    """
+    from gradient.exact import calculate_gradient, prepare_adapt_state
+
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)  # Get the current hamiltonian.
     sparse_state = prepare_adapt_state(hf_reference_fock, ansatz_qubit,
                                        [1] * len(ansatz_qubit))  # Get the current state.
@@ -28,8 +32,7 @@ def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ans
         print("Error: {0:.3f} NA%)\n".format(error))
 
 
-def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool, shots=10000,
-                      trotter=True, trotter_steps=1, test_only=True):
+def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool, simulator):
     """
     simulate gradient using quantum computer simulators (Cirq, pennylane)
 
@@ -38,22 +41,14 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
     :param ansatz: VQE ansatz in qubit/Fermion operators
     :param coefficients: list of VQE coefficients
     :param pool: pool of qubit operators
-    :param shots: number of samples
-    :param test_only: If True get exact expectation gradient (test circuit)
+    :param simulator: simulation object
     :return:
     """
 
     # qubit hamiltonian to sparse (Jordan-Wigner transform is used)
     ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
 
-    if trotter:
-        state_preparation_gates = get_preparation_gates_trotter(ansatz_qubit,
-                                                                trotter_steps,
-                                                                hf_reference_fock)
-
-    else:
-        state_preparation_gates = get_preparation_gates(ansatz_qubit,
-                                                        hf_reference_fock)
+    state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 
     # Calculate and print gradients
     gradient_vector = []
@@ -62,28 +57,22 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
         print("Operator {}".format(i))
 
         # convert to qubit if necessary
-        if not isinstance(operator, openfermion.QubitOperator):
-            operator = openfermion.jordan_wigner(operator)
+        if not isinstance(operator, QubitOperator):
+            operator = jordan_wigner(operator)
 
         # get gradient as dexp(c * A) / dc = < psi | [H, A] | psi >.
         commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
 
-        if test_only:
-            # Calculate the exact gradient in this state using simulator
-            sampled_gradient = get_exact_state_evaluation(commutator_hamiltonian, state_preparation_gates).real
-
-        else:
-            # Sample the gradient in this state using simulator
-            sampled_gradient = get_sampled_state_evaluation(commutator_hamiltonian, state_preparation_gates, shots)
+        sampled_gradient = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
 
         # set absolute value for gradient
         sampled_gradient = np.abs(sampled_gradient)
         gradient_vector.append(sampled_gradient)
 
-        if test_only:
+        if simulator._test_only:
             print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
         else:
-            print("Simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, shots))
+            print("Simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, simulator._shots))
 
         # just for testing (to be removed)
         print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient)

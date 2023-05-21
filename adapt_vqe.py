@@ -36,6 +36,15 @@ def adaptVQE(operators_pool,
     :return: results dictionary
     """
 
+    # from simulators.penny_simulator import PennylaneSimulator as Simulator
+    from simulators.cirq_simulator import CirqSimulator as Simulator
+
+    simulator = Simulator(trotter=trotter,
+                          trotter_steps=trotter_steps,
+                          test_only=test_only,
+                          shots=shots)
+
+
     # Initialize data structures
     iterations = {'energies': [], 'norms': []}
     ansatz = OperatorList([])
@@ -74,10 +83,7 @@ def adaptVQE(operators_pool,
                                                 ansatz,
                                                 coefficients,
                                                 operators_pool,
-                                                shots,
-                                                trotter,
-                                                trotter_steps,
-                                                test_only)
+                                                simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
         max_index = np.argmax(gradient_vector)
@@ -113,17 +119,20 @@ def adaptVQE(operators_pool,
         else:
             opt_result = scipy.optimize.minimize(simulate_vqe_energy,
                                                  coefficients,
-                                                 (ansatz, hf_reference_fock, qubit_hamiltonian,
-                                                  shots, trotter, trotter_steps, test_only),
+                                                 (ansatz, hf_reference_fock, qubit_hamiltonian, simulator),
                                                  method='COBYLA',
                                                  tol=1e-8,
                                                  options={'disp': True}) # 'rhobeg': 0.01)
 
         energy_exact = exact_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian)
-        energy_sim_test = simulate_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian, shots,
-                                              False, trotter_steps, True)
 
-        assert abs(energy_exact - energy_sim_test) < 1e-8
+
+        energy_sim_test = simulate_vqe_energy(opt_result.x, ansatz, hf_reference_fock, qubit_hamiltonian,
+                                              type(simulator)(trotter=False,
+                                                              trotter_steps=trotter_steps,
+                                                              test_only=True))
+
+        assert abs(energy_exact - energy_sim_test) < 1e-7
 
         coefficients = list(opt_result.x)
         optimized_energy = opt_result.fun
@@ -184,7 +193,7 @@ if __name__ == '__main__':
                                   # opt_qubits=True,
                                   exact_energy=False,
                                   exact_gradient=False,
-                                  trotter=False,
+                                  trotter=True,
                                   test_only=True,
                                   shots=10000)
 

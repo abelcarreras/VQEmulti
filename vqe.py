@@ -88,23 +88,24 @@ if __name__ == '__main__':
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+    # print(molecule.orbital_energies)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
     n_orbitals = 2 # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
-    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
+    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, skip_orbitals=0)
 
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, skip_orbitals=0)
 
     # Get reference Hartree Fock state
-    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, skip_orbitals=0)
 
     # Simulator
     from simulators.penny_simulator import PennylaneSimulator as Simulator
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 energy_simulator=simulator,
+                 energy_simulator=None,
                  opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

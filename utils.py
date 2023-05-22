@@ -59,7 +59,7 @@ def get_sparse_ket_from_fock(fock_vector):
     return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(electron_number, qubit_number):
+def get_hf_reference_in_fock_space(electron_number, qubit_number, skip_orbitals=0):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
@@ -71,7 +71,7 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number):
 
     # This considers occupied the lower energy orbitals
     hf_reference = np.zeros(qubit_number, dtype=int)
-    for i in range(electron_number):
+    for i in range(electron_number-skip_orbitals*2):
         hf_reference[i] = 1
 
     return hf_reference.tolist()
@@ -205,24 +205,29 @@ def convert_hamiltonian(qubit_hamiltonian):
     return formatted_hamiltonian
 
 
-def generate_reduced_hamiltonian(hamiltonian, n_orbitals):
+def generate_reduced_hamiltonian(hamiltonian, n_orbitals, skip_orbitals=0):
     """
     get truncated hamiltonian given a number of orbitals
 
     :param hamiltonian: hamiltonian in fermionic operators
+    :param skip_orbitals: number of orbitals to skip
     :param n_orbitals: number of orbitals to keep
     :return: truncated hamiltonian in fermionic operators
     """
-
+    skip_spin_orbitals = skip_orbitals * 2
     n_spin_orbitals = n_orbitals * 2
 
-    reduced_one = hamiltonian.one_body_tensor[:n_spin_orbitals, :n_spin_orbitals]
-    reduced_two = hamiltonian.two_body_tensor[:n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals, :n_spin_orbitals]
+    reduced_one = hamiltonian.one_body_tensor[skip_spin_orbitals:n_spin_orbitals,
+                                              skip_spin_orbitals:n_spin_orbitals]
+    reduced_two = hamiltonian.two_body_tensor[skip_spin_orbitals:n_spin_orbitals,
+                                              skip_spin_orbitals:n_spin_orbitals,
+                                              skip_spin_orbitals:n_spin_orbitals,
+                                              skip_spin_orbitals:n_spin_orbitals]
 
     return InteractionOperator(hamiltonian.constant, reduced_one, reduced_two)
 
 
-def get_uccsd_operators(n_electrons, n_orbitals):
+def get_uccsd_operators(n_electrons, n_orbitals, skip_orbitals=0):
     """
     get all UCCSD operators with coefficients as ones
 
@@ -231,8 +236,8 @@ def get_uccsd_operators(n_electrons, n_orbitals):
     :return: UCCSD operators in fermion representation
     """
 
-    n_occupied = int(np.ceil(n_electrons / 2))
-    n_virtual = n_orbitals - n_occupied
+    n_occupied = int(np.ceil(n_electrons / 2)) - skip_orbitals
+    n_virtual = n_orbitals - n_occupied - skip_orbitals
 
     singles = []
     doubles_1 = []
@@ -248,8 +253,8 @@ def get_uccsd_operators(n_electrons, n_orbitals):
     packed_amplitudes = singles + doubles_1 + doubles_2
 
     return openfermion.uccsd_singlet_generator(packed_amplitudes,
-                                               n_orbitals * 2,
-                                               n_electrons)
+                                               (n_occupied + n_virtual) * 2,
+                                               n_occupied * 2)
 
 
 def transform_to_scaled_qubit(ansatz, coefficients):

@@ -1,7 +1,6 @@
 from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
-from openfermion import QubitOperator, FermionOperator
 from pool_definitions import OperatorList
 import numpy as np
 import scipy
@@ -67,6 +66,10 @@ def vqe(hamiltonian,
 
         assert abs(energy_exact - energy_sim_test) < 1e-6
 
+    if simulator is not None:
+        circuit_info = simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+        print('circuit depth: ', circuit_info['depth'])
+
     return {'energy': results.fun,
             'coefficients': list(results.x),
             'operators': list(ansatz)}
@@ -81,31 +84,32 @@ if __name__ == '__main__':
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
                                 basis='3-21g',
-                                # basis='sto-3g',
+                                #basis='sto-3g',
                                 multiplicity=1,
-                                charge=0,
+                                charge=-2,
                                 description='H2')
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
-    # print(molecule.orbital_energies)
 
     # get properties from classical SCF calculation
-    n_electrons = molecule.n_electrons
-    n_orbitals = 2 # molecule.n_orbitals
+    n_electrons = 4  # molecule.n_electrons
+    n_orbitals = 3  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
-    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, skip_orbitals=0)
+    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=1)
+    # print(hamiltonian)
 
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, skip_orbitals=0)
+    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=1)
 
     # Get reference Hartree Fock state
-    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, skip_orbitals=0)
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=1)
+    print('hf reference', hf_reference_fock)
 
     # Simulator
     from simulators.penny_simulator import PennylaneSimulator as Simulator

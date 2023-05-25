@@ -1,5 +1,5 @@
 from simulators import SimulatorBase
-from utils import convert_hamiltonian, string_to_matrix
+from utils import convert_hamiltonian, string_to_matrix, transform_to_scaled_qubit
 from openfermion.utils import count_qubits
 import numpy as np
 import pennylane as qml
@@ -260,6 +260,27 @@ class PennylaneSimulator(SimulatorBase):
 
         return trotter_gates
 
+    def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
+
+        ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
+
+        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+
+        # Initialize circuit.
+        n_qubits = len(hf_reference_fock)
+        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
+
+        # add gates to circuit
+        def circuit_function():
+            for gate in state_preparation_gates:
+                qml.apply(gate)
+            return qml.state()
+
+        # create and run circuit
+        circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
+
+        specs_func = qml.specs(circuit)
+        return specs_func()
 
 if __name__ == '__main__':
     simulator = PennylaneSimulator(trotter=True,

@@ -1,5 +1,5 @@
 from simulators import SimulatorBase
-from utils import convert_hamiltonian, string_to_matrix
+from utils import convert_hamiltonian, string_to_matrix, transform_to_scaled_qubit
 from openfermion.utils import count_qubits
 import numpy as np
 import cirq
@@ -282,10 +282,12 @@ class CirqSimulator(SimulatorBase):
 
         return trotter_gates
 
-    def get_circuit_depth(self, ansatz, hf_reference_fock):
-        state_preparation_gates = self.get_preparation_gates(ansatz, hf_reference_fock)
+    def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
+        ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
+        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
         circuit = cirq.Circuit(state_preparation_gates)
-        return len(cirq.Circuit(circuit.all_operations()))
+
+        return {'depth': len(cirq.Circuit(circuit.all_operations()))}
 
 
 if __name__ == '__main__':

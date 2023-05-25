@@ -129,6 +129,14 @@ def adaptVQE(operators_pool,
         iterations['energies'].append(optimized_energy)
         iterations['norms'].append(total_norm)
 
+        if gradient_simulator is not None:
+            circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+            print('Gradient circuit depth: ', circuit_info['depth'])
+
+        if energy_simulator is not None:
+            circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+            print('Energy circuit depth: ', circuit_info['depth'])
+
     raise Exception('Not converged!')
 
 

@@ -66,7 +66,7 @@ def vqe(hamiltonian,
 
         assert abs(energy_exact - energy_sim_test) < 1e-6
 
-    if simulator is not None:
+    if energy_simulator is not None:
         circuit_info = simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
         print('circuit depth: ', circuit_info['depth'])
 

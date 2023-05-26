@@ -232,9 +232,8 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
             energy_inactive += hamiltonian.one_body_tensor[j, j]
 
         for j in range(frozen_spin_orbitals):
-            for p in range(frozen_spin_orbitals):
-                for q in range(frozen_spin_orbitals):
-                    energy_inactive += hamiltonian.two_body_tensor[j, q, p, j] - hamiltonian.two_body_tensor[j, j, p, q]
+            for i in range(frozen_spin_orbitals):
+               energy_inactive += hamiltonian.two_body_tensor[j, i, i, j] - hamiltonian.two_body_tensor[j, j, i, i]
 
         # print('inactive Ham', energy_inactive)
 

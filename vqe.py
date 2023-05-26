@@ -81,10 +81,10 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf, PyscfMolecularData
     from utils import generate_reduced_hamiltonian, get_uccsd_operators
 
-    h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                          ['H', [0, 0, 0.74]]],
+    h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
+                                          ['He', [0, 0, 1.0]]],
                                 basis='3-21g',
-                                #basis='sto-3g',
+                                # basis='sto-3g',
                                 multiplicity=1,
                                 charge=-2,
                                 description='H2')
@@ -93,22 +93,24 @@ if __name__ == '__main__':
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
     # get properties from classical SCF calculation
-    n_electrons = 4  # molecule.n_electrons
-    n_orbitals = 3  # molecule.n_orbitals
-
-    hamiltonian = molecule.get_molecular_hamiltonian()
-    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=1)
-    # print(hamiltonian)
+    n_electrons = molecule.n_electrons
+    n_orbitals = 4  # molecule.n_orbitals
 
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
+
+    hamiltonian = molecule.get_molecular_hamiltonian()
+    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=2)
+    # print(hamiltonian)
+
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=1)
+    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=2)
+    # uccsd_ansatz = []
 
     # Get reference Hartree Fock state
-    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=1)
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=2)
     print('hf reference', hf_reference_fock)
 
     # Simulator

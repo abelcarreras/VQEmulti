@@ -215,40 +215,42 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
     :param frozen_core: number of orbitals to freeze
     :return: truncated hamiltonian in fermionic operators
     """
-    skip_spin_orbitals = frozen_core * 2
+    frozen_spin_orbitals = frozen_core * 2
     n_spin_orbitals = n_orbitals * 2
 
-    reduced_one = hamiltonian.one_body_tensor[skip_spin_orbitals: n_spin_orbitals,
-                                              skip_spin_orbitals: n_spin_orbitals]
-    reduced_two = hamiltonian.two_body_tensor[skip_spin_orbitals: n_spin_orbitals,
-                                              skip_spin_orbitals: n_spin_orbitals,
-                                              skip_spin_orbitals: n_spin_orbitals,
-                                              skip_spin_orbitals: n_spin_orbitals]
+    reduced_one = hamiltonian.one_body_tensor[frozen_spin_orbitals: n_spin_orbitals,
+                                              frozen_spin_orbitals: n_spin_orbitals]
+    reduced_two = hamiltonian.two_body_tensor[frozen_spin_orbitals: n_spin_orbitals,
+                                              frozen_spin_orbitals: n_spin_orbitals,
+                                              frozen_spin_orbitals: n_spin_orbitals,
+                                              frozen_spin_orbitals: n_spin_orbitals]
 
     if frozen_core > 0:
         # compute the core energy
         energy_inactive=0
-        for i in range(skip_spin_orbitals):
-            energy_inactive += hamiltonian.one_body_tensor[i, i]
+        for j in range(frozen_spin_orbitals):
+            energy_inactive += hamiltonian.one_body_tensor[j, j]
 
-        for i in range(skip_spin_orbitals):
-            for p in range(skip_spin_orbitals):
-                for q in range(skip_spin_orbitals):
-                    energy_inactive += hamiltonian.two_body_tensor[i, q, p, i] - hamiltonian.two_body_tensor[i, i, p, q]
+        for j in range(frozen_spin_orbitals):
+            for p in range(frozen_spin_orbitals):
+                for q in range(frozen_spin_orbitals):
+                    energy_inactive += hamiltonian.two_body_tensor[j, q, p, j] - hamiltonian.two_body_tensor[j, j, p, q]
+
+        # print('inactive Ham', energy_inactive)
 
         # construct effective hamiltonian
         def core_effective(p, q):
+
             effective_energy = 0
-            pp = p + skip_spin_orbitals
-            qq = q + skip_spin_orbitals
+            pp = p + frozen_spin_orbitals
+            qq = q + frozen_spin_orbitals
 
-            for i in range(skip_spin_orbitals):
-                for j in range(skip_spin_orbitals):
-                    effective_energy += hamiltonian.two_body_tensor[i, qq, pp, j] - hamiltonian.two_body_tensor[i, j, pp, qq]
-            return effective_energy * 2
+            for i in range(frozen_spin_orbitals):
+                effective_energy += hamiltonian.two_body_tensor[i, qq, pp, i] - hamiltonian.two_body_tensor[i, i, pp, qq]
+            return effective_energy*2
 
-        for i in range(n_spin_orbitals - skip_spin_orbitals):
-            for j in range(n_spin_orbitals - skip_spin_orbitals):
+        for i in range(n_spin_orbitals - frozen_spin_orbitals):
+            for j in range(n_spin_orbitals - frozen_spin_orbitals):
                 reduced_one[i, j] += core_effective(i, j)
 
         return InteractionOperator(hamiltonian.constant + energy_inactive, reduced_one, reduced_two)
@@ -299,14 +301,19 @@ def transform_to_scaled_qubit(ansatz, coefficients):
 def get_hf_energy_core(mol_h2, n_core_orb=0):
     from pyscf import ao2mo
 
-    print(dir(mol_h2))
+    nuclear = mol_h2.nuclear_repulsion
+    hf_orb = mol_h2.n_electrons//2
+    print('hf_orb: ', hf_orb)
+
     rhf_h2 = mol_h2._pyscf_data['scf']
     mol_h2 = mol_h2._pyscf_data['mol']
+
     #rhf_h2 = mol_h2.RHF()
     #e_rhf_h2 = rhf_h2.kernel()
 
     Fao = rhf_h2.get_fock()
     Fmo = rhf_h2.mo_coeff.T @ Fao @ rhf_h2.mo_coeff
+
     print('Fock matrix (MO)')
     print(Fmo)
 
@@ -346,79 +353,40 @@ def get_hf_energy_core(mol_h2, n_core_orb=0):
     h_energy = np.sum(d_mo * h_mo)
     coulomb_energy = np.sum(d_mo * Jmo / 2)
     exchange_energy = -0.5 * np.sum(d_mo * Kmo / 2)
-    nuclear = 0.71510434
 
     print('Computed Properties\n')
     print('1e energy:', h_energy)
     print('Total Coulomb:', coulomb_energy)
     print('HF Exchange:', exchange_energy)
     print('HF Total Electronic: {:12.8f}'.format(h_energy + coulomb_energy + exchange_energy))
-    #print('HF Total:', h_energy + coulomb_energy + exchange_energy + nuclear)
+    print('HF Total:', h_energy + coulomb_energy + exchange_energy + nuclear)
+    print('--------------------')
 
-    n_orb = 2
     energy = 0
-    for i in range(1):
+    for i in range(n_core_orb):
         energy += 2*h_mo[i, i]
 
-    def J_func(i, j):
+    def F_effect(p, q):
         tot_j = 0
-        for p in range(2):
-            for q in range(2):
-                tot_j += eri_mo[i, j, p, q]*2
-                # tot_k += eri_mo[i, q, p, j]
+        for i in range(n_core_orb):
+            tot_j += 2*eri_mo[i, i, p, q] - eri_mo[i, q, p, i]
 
         return tot_j
 
-    for i in range(1):
-        print(Jmo[i, i], Kmo[i, i])
-        #energy += Jmo[i, i] - 0.5*Kmo[i, i]
-        # energy += J_func(i, i) - 0.5*Kmo[i, i]
-        for p in range(2):
-            for q in range(2):
-                # print(eri_mo[i, i, p, q] - 0.5*eri_mo[i, q, p, i])
-                energy += 2*eri_mo[i, i, p, q] - eri_mo[i, q, p, i]
-                pass
+    for i in range(n_core_orb):
+        # energy += Jmo[i, i] - 0.5*Kmo[i, i]
+        energy += F_effect(i, i)
 
-    print('HF Test  Electronic: {:12.8f}'.format(energy))
+    print('HF Test  Electronic (base): {:12.8f}'.format(energy))
 
-    # THE TEST
+    def F_effect_2(p, q):
+        tot_j = 0
+        for i in range(n_core_orb, hf_orb):
+            tot_j += 2*eri_mo[i, i, p, q] - eri_mo[i, q, p, i]
 
-    # inactive energy
-    n_inactive = 1
-    n_total = 2
+        return tot_j
+    for i in range(n_core_orb):
+        # energy += Jmo[i, i] - 0.5*Kmo[i, i]
+        energy += F_effect_2(i, i)
 
-    energy_inactive= 0
-    for j in range(n_inactive):
-        energy_inactive += 2*h_mo[j, j]
-
-    #print('itermediate', energy_inactive)
-
-    for j in range(n_inactive):
-        for p in range(n_inactive):
-            for q in range(n_inactive):
-                # print('*tensor:', eri_mo[i, i, p, q], eri_mo[i, q, p, i])
-                energy_inactive += 2*eri_mo[j, j, p, q] - eri_mo[j, q, p, j]
-
-    print('Inactive', energy_inactive)
-
-    # Active
-    # inactive energy
-    def core_effective(i, j):
-        effective_energy = 0
-        for p in range(n_inactive):
-            for q in range(n_inactive):
-                effective_energy += 2 * eri_mo[i, i, p, q] - eri_mo[i, q, p, i]
-        return effective_energy * 2
-
-    energy_active = 0
-    for i in range(n_inactive, n_total):
-        energy_active += 2 * h_mo[i, i] + core_effective(i, i)
-
-    for i in range(n_inactive, n_total):
-        for p in range(n_inactive, n_total):
-            for q in range(n_inactive, n_total):
-                energy_active += 2 * eri_mo[i, i, p, q] - eri_mo[i, q, p, i]
-
-    print('energy_active', energy_active)
-    print('Total', energy_active + energy_inactive)
-
+    print('HF Test  Electronic (effective): {:12.8f}'.format(energy))

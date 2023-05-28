@@ -1,0 +1,6 @@
+# requieremnts for multiVQE
+numpy
+scipy
+openfermion
+cirq
+pennylane

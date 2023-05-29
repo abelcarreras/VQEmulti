@@ -1,6 +1,8 @@
 # example of oxygen molecule using frozen core of 7 orbitals (14 electrons)
 # 1 occupied orbital (8) and 1 virtual orbital (9).
 # calculation done in 4 qubits (8a, 8b, 9a, 9b).
+# https://doi.org/10.48550/arXiv.2009.01872
+
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, PyscfMolecularData
 from utils import generate_reduced_hamiltonian, get_uccsd_operators, get_hf_reference_in_fock_space

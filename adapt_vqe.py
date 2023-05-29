@@ -1,4 +1,3 @@
-from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from openfermion.transforms import jordan_wigner
@@ -144,7 +143,7 @@ if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
     from pool_definitions import get_pool_singlet_sd
-    from utils import generate_reduced_hamiltonian
+    from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from analysis import get_info
 
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],

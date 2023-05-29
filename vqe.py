@@ -1,4 +1,3 @@
-from utils import get_hf_reference_in_fock_space
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
 from pool_definitions import OperatorList
@@ -78,8 +77,8 @@ def vqe(hamiltonian,
 if __name__ == '__main__':
 
     from openfermion import MolecularData
-    from openfermionpyscf import run_pyscf, PyscfMolecularData
-    from utils import generate_reduced_hamiltonian, get_uccsd_operators
+    from openfermionpyscf import run_pyscf
+    from utils import generate_reduced_hamiltonian, get_uccsd_operators, get_hf_reference_in_fock_space
 
     h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                           ['He', [0, 0, 1.0]]],

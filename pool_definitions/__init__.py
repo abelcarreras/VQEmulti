@@ -164,7 +164,7 @@ class OperatorList:
 
     def copy(self):
         from copy import deepcopy
-        return OperatorList(deepcopy(self._list))
+        return OperatorList(deepcopy(self._list), antisymmetrize=False)
 
     def __mul__(self, other):
 

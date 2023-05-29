@@ -18,7 +18,7 @@ for d in np.linspace(0.3, 3, 20):
     # molecule definition
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, d]]],
-                                basis='sto-3g',
+                                basis='3-21g',
                                 multiplicity=1,
                                 charge=0,
                                 description='H2')
@@ -55,8 +55,8 @@ for d in np.linspace(0.3, 3, 20):
                                   hf_reference_fock,
                                   opt_qubits=False,
                                   threshold=0.1,  # in Hartree
-                                  energy_simulator=simulator,
-                                  gradient_simulator=simulator,
+                                  #energy_simulator=simulator,
+                                  #gradient_simulator=simulator,
                                   )
 
     print("Final energy:", result["energy"])

@@ -1,4 +1,4 @@
-from energy import exact_vqe_energy, simulate_vqe_energy
+from energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from openfermion.transforms import jordan_wigner
 from pool_definitions import OperatorList
@@ -12,6 +12,8 @@ def adaptVQE(operators_pool,
              opt_qubits=False,
              max_iterations=50,
              threshold=0.1,
+             coefficients=None,
+             ansatz=None,
              energy_simulator=None,
              gradient_simulator=None):
     """
@@ -22,20 +24,25 @@ def adaptVQE(operators_pool,
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
     :param max_iterations: max adaptVQE iterations
     :param threshold: convergence threshold (in Hartree)
-    :param exact_energy: Set True to compute energy analyticaly, set False to simulate
-    :param exact_gradient: Set True to compute gradients analyticaly, set False to simulate
-    :param trotter: Trotterize ansatz operators
-    :param trotter_steps: number of trotter steps (only used if trotter=True)
-    :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
-    :param shots: number of samples to perform in the simulation
+    :param coefficients: Initial coefficients (None if new calculation)
+    :param ansatz: Initial ansatz [Should match with coefficients] (None if new calculation)
+    :param energy_simulator: Set True to compute energy analyticaly, set False to simulate
+    :param gradient_simulator: Set True to compute gradients analyticaly, set False to simulate
     :return: results dictionary
     """
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': []}
-    ansatz = OperatorList([])
-    coefficients = []
     indices = []
+
+    # Check if initial guess
+    if ansatz is None:
+        ansatz = OperatorList([])
+
+    if coefficients is None:
+        coefficients = []
+
+    assert len(coefficients) == len(ansatz)
 
     # transform to qubits hamiltonian (JW transformation)
     qubit_hamiltonian = jordan_wigner(hamiltonian)
@@ -78,14 +85,20 @@ def adaptVQE(operators_pool,
 
         print("Total gradient norm: {}".format(total_norm))
 
-        if total_norm < threshold and iteration > 0:
+        if total_norm < threshold:
+            if len(iterations['energies']) > 0:
+                energy = iterations['energies'][-1]
+            else:
+                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator)
+
             print("\nConvergence condition achieved!")
-            result = {'energy': iterations["energies"][-1],
+            result = {'energy': energy,
                       'ansatz': ansatz,
                       'indices': indices,
-                      'coefficients': coefficients}
+                      'coefficients': coefficients,
+                      'iterations': iterations}
 
-            return result, iterations
+            return result
 
         print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
@@ -187,13 +200,23 @@ if __name__ == '__main__':
                           test_only=True,
                           shots=1000)
 
-    result, iterations = adaptVQE(operators_pool,  # fermionic operators
-                                  hamiltonian,  # fermionic hamiltonian
-                                  hf_reference_fock,
-                                  threshold=0.1,
-                                  # opt_qubits=True,
-                                  energy_simulator=simulator,
-                                  gradient_simulator=simulator)
+    result = adaptVQE(operators_pool,  # fermionic operators
+                      hamiltonian,  # fermionic hamiltonian
+                      hf_reference_fock,
+                      threshold=0.1,
+                      # opt_qubits=True,
+                      energy_simulator=simulator,
+                      gradient_simulator=simulator)
+
+    print('restart calculation')
+    result = adaptVQE(operators_pool,  # fermionic operators
+                      hamiltonian,  # fermionic hamiltonian
+                      hf_reference_fock,
+                      threshold=0.1,
+                      coefficients=result['coefficients'],
+                      ansatz=result['ansatz'],
+                      energy_simulator=simulator,
+                      gradient_simulator=simulator)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy adaptVQE: ', result['energy'])
@@ -203,6 +226,6 @@ if __name__ == '__main__':
     print('Error:', error)
 
     print('Ansatz:', result['ansatz'])
-    print('Indices:', result['indices'])
     print('Coefficients:', result['coefficients'])
+    print('Operator Indices:', result['indices'])
     print('Num operators: {}'.format(len(result['ansatz'])))

@@ -165,7 +165,7 @@ def get_operator_prefactors(operator):
         no_coeff_operator += FermionOperator(term) * cc
 
     # assumes all coefficients are same (average for error cancellation)
-    coefficient = np.average(coefficients)
+    coefficient = np.sum(coefficients)
 
     assert np.std(coefficients) < 1e-6
 
@@ -234,26 +234,23 @@ def project_basis(ansatz, basis_overlap_matrix, n_orb_1=None, frozen_core_1=0, n
     """
 
     basis_overlap_matrix = basis_overlap_matrix[frozen_core_1:n_orb_1, frozen_core_2:n_orb_2]
+    basis_overlap_matrix_spin = np.kron(basis_overlap_matrix, np.identity(2))
 
     projected_ansatz = FermionOperator()
 
     for term in ansatz.terms:
         op_coeff = ansatz.terms[term]
-        total_fermion_alpha = []
-        total_fermion_beta= []
+        total_fermion = []
         for iorb, itype in term:
             sum_fermion = FermionOperator()
-            sum_fermion_beta = FermionOperator()
 
-            for j_orb, coeff in enumerate(basis_overlap_matrix[iorb]):
-                sum_fermion += coeff * FermionOperator((j_orb*2, itype))
-                sum_fermion_beta += coeff * FermionOperator((j_orb*2+1, itype))
+            for j_orb, coeff in enumerate(basis_overlap_matrix_spin[iorb]):
+                sum_fermion += coeff * FermionOperator((j_orb, itype))
 
-            total_fermion_alpha.append(sum_fermion)
-            total_fermion_beta.append(sum_fermion_beta)
+            total_fermion.append(sum_fermion)
 
-        projected_ansatz += op_coeff * reduce(mul, total_fermion_alpha)
-        projected_ansatz += op_coeff * reduce(mul, total_fermion_beta)
+        if len(total_fermion) > 0:
+            projected_ansatz += op_coeff * reduce(mul, total_fermion)
 
     return projected_ansatz
 

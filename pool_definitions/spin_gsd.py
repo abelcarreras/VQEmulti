@@ -3,13 +3,22 @@ from openfermion import FermionOperator
 import openfermion
 
 
-def get_pool_spin_complement_gsd(orbitalNumber):
+def get_pool_spin_complement_gsd(n_orbitals, frozen_core=0):
+    """
+    get pool of unitary fermion operators of spin complement single and double excitations
+
+    :param n_orbitals: number of total molecular orbitals
+    :return: operators pool
+    """
+
+    n_orbitals = n_orbitals - frozen_core
+
     spin_complement_gsd = []
-    for p in range(0,orbitalNumber):
+    for p in range(0, n_orbitals):
         pa = 2*p
         pb = 2*p+1
 
-        for q in range(p,orbitalNumber):
+        for q in range(p, n_orbitals):
             qa = 2*q
             qb = 2*q+1
 
@@ -24,22 +33,22 @@ def get_pool_spin_complement_gsd(orbitalNumber):
                 spin_complement_gsd.append(termA)
 
     pq = -1
-    for p in range(0,orbitalNumber):
+    for p in range(0, n_orbitals):
         pa = 2*p
         pb = 2*p+1
 
-        for q in range(p,orbitalNumber):
+        for q in range(p, n_orbitals):
             qa = 2*q
             qb = 2*q+1
 
             pq += 1
 
             rs = -1
-            for r in range(0,orbitalNumber):
+            for r in range(0, n_orbitals):
                 ra = 2*r
                 rb = 2*r+1
 
-                for s in range(r,orbitalNumber):
+                for s in range(r, n_orbitals):
                     sa = 2*s
                     sb = 2*s+1
 

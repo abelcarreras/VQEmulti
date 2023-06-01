@@ -4,14 +4,23 @@ from openfermion.transforms import normal_ordered
 import numpy as np
 
 
-def get_pool_singlet_gsd(orbitalNumber):
+def get_pool_singlet_gsd(n_orbitals, frozen_core=0):
+    """
+    get pool of generalized unitary fermion operators of single and double excitations
+
+    :param n_electrons: number of electrons in occupied space
+    :param n_orbitals: number of total molecular orbitals
+    :return: operators pool
+    """
+    n_orbitals = n_orbitals - frozen_core
+
     singlet_gsd = []
 
-    for p in range(0,orbitalNumber):
+    for p in range(0, n_orbitals):
         pa = 2*p
         pb = 2*p+1
 
-        for q in range(p,orbitalNumber):
+        for q in range(p, n_orbitals):
             qa = 2*q
             qb = 2*q+1
 
@@ -32,22 +41,22 @@ def get_pool_singlet_gsd(orbitalNumber):
                 singlet_gsd.append(termA)
 
     pq = -1
-    for p in range(0,orbitalNumber):
+    for p in range(0, n_orbitals):
         pa = 2*p
         pb = 2*p+1
 
-        for q in range(p,orbitalNumber):
+        for q in range(p, n_orbitals):
             qa = 2*q
             qb = 2*q+1
 
             pq += 1
 
             rs = -1
-            for r in range(0,orbitalNumber):
+            for r in range(0, n_orbitals):
                 ra = 2*r
                 rb = 2*r+1
 
-                for s in range(r,orbitalNumber):
+                for s in range(r, n_orbitals):
                     sa = 2*s
                     sb = 2*s+1
 
@@ -83,7 +92,6 @@ def get_pool_singlet_gsd(orbitalNumber):
                     for t in termB.terms:
                         coeff_t = termB.terms[t]
                         coeffB += coeff_t * coeff_t
-
 
                     if termA.many_body_order() > 0:
                         termA = termA/np.sqrt(coeffA)

@@ -36,8 +36,8 @@ for d in np.linspace(0.3, 3, 20):
     generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
     # Choose specific pool of operators for adapt-VQE
-    pool = get_pool_singlet_sd(electronNumber=n_electrons,
-                               orbitalNumber=n_orbitals)
+    pool = get_pool_singlet_sd(n_electrons=n_electrons,
+                               n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -50,14 +50,14 @@ for d in np.linspace(0.3, 3, 20):
                           shots=1000)
 
     # run adaptVQE
-    result, iterations = adaptVQE(pool,
-                                  hamiltonian,
-                                  hf_reference_fock,
-                                  opt_qubits=False,
-                                  threshold=0.1,  # in Hartree
-                                  #energy_simulator=simulator,
-                                  #gradient_simulator=simulator,
-                                  )
+    result = adaptVQE(pool,
+                      hamiltonian,
+                      hf_reference_fock,
+                      opt_qubits=False,
+                      threshold=0.1,  # in Hartree
+                      #energy_simulator=simulator,
+                      #gradient_simulator=simulator,
+                      )
 
     print("Final energy:", result["energy"])
 

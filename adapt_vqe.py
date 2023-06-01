@@ -185,8 +185,7 @@ if __name__ == '__main__':
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get a pool of operators for adapt-VQE
-    operators_pool = get_pool_singlet_sd(electronNumber=n_electrons,
-                                         orbitalNumber=n_orbitals)
+    operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)

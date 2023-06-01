@@ -4,7 +4,7 @@ from pool_definitions.spin_gsd import get_pool_spin_complement_gsd
 from openfermion.transforms import jordan_wigner
 from openfermion import QubitOperator, FermionOperator, normal_ordered
 from openfermion.utils import hermitian_conjugated
-
+from utils import normalize_operator
 
 # transform pool from fermion to operators (JW), normalize (to 1j), separate in terms and remove duplicates
 def generate_jw_operator_pool(pool):
@@ -48,9 +48,6 @@ class OperatorList:
             self._type = type(operators)
             self._list = [op for op in operators]
 
-        if normalize:
-            self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
-
         if antisymmetrize and self._type == FermionOperator:
             total_fermion = FermionOperator()
             for op in self._list:
@@ -73,6 +70,10 @@ class OperatorList:
                 h_op = term - hermitian_conjugated(term)
                 if h_op not in self._list:
                     self._list.append(h_op)
+
+        if normalize:
+            self._list = [normalize_operator(op) for op in self._list]
+            # self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
 
         if split:
             split_list = []
@@ -124,10 +125,7 @@ class OperatorList:
         else:
             raise Exception('{} transform not available')
 
-        if normalize:
-            return OperatorList([QubitOperator(t) for t in total_qubit.terms])
-        else:
-            return OperatorList(total_qubit)
+        return OperatorList(total_qubit, normalize=normalize)
 
     def get_expanded_list(self):
         """

@@ -1,17 +1,25 @@
 from openfermion import FermionOperator
 from openfermion.utils import count_qubits, hermitian_conjugated
 from openfermion.transforms import normal_ordered
+from utils import normalize_operator
 import numpy as np
+
 
 
 # start singlet_SQ
 
-def get_pool_singlet_sd(electronNumber, orbitalNumber):
+def get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=0):
+    """
+    get pool of unitary fermion operators of single and double excitations
+
+    :param n_electrons: number of electrons in occupied space
+    :param n_orbitals: number of total molecular orbitals
+    :return: operators pool
+    """
     singlet_sd = []
 
-    n_occ = int(np.ceil(electronNumber / 2))
-    n_vir = orbitalNumber - n_occ
-    #print(n_occ,n_vir, orbitalNumber)
+    n_occ = int(np.ceil(n_electrons / 2)) - frozen_core
+    n_vir = n_orbitals - n_occ - frozen_core
 
 
     for i in range(0,n_occ):
@@ -74,22 +82,10 @@ def get_pool_singlet_sd(electronNumber, orbitalNumber):
                     termA = normal_ordered(termA)
                     termB = normal_ordered(termB)
 
-                    #Normalize
-                    coeffA = 0
-                    coeffB = 0
-                    for t in termA.terms:
-                        coeff_t = termA.terms[t]
-                        coeffA += coeff_t * coeff_t
-                    for t in termB.terms:
-                        coeff_t = termB.terms[t]
-                        coeffB += coeff_t * coeff_t
-
                     if termA.many_body_order() > 0:
-                        termA = termA/np.sqrt(coeffA)
-                        singlet_sd.append(termA)
+                        singlet_sd.append(normalize_operator(termA))
 
                     if termB.many_body_order() > 0:
-                        termB = termB/np.sqrt(coeffB)
-                        singlet_sd.append(termB)
+                        singlet_sd.append(normalize_operator(termB))
 
     return singlet_sd

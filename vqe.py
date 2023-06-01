@@ -26,11 +26,11 @@ def vqe(hamiltonian,
     # transform to qubit hamiltonian using JW transformation
     qubit_hamiltonian = jordan_wigner(hamiltonian)
 
-    ansatz = OperatorList(ansatz, antisymmetrize=True)
+    ansatz = OperatorList(ansatz, antisymmetrize=True, normalize=True)
 
     if opt_qubits:
         # transform to qubit ansatz using JW transformation
-        ansatz = 1j * ansatz.get_quibits_list(normalize=True)
+        ansatz = ansatz.get_quibits_list(normalize=True)
 
     # initial guess
     n_terms = len(ansatz)
@@ -42,8 +42,7 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian),
-                                          method="COBYLA",
-                                          options={'rhobeg': 0.1, 'disp': True},
+                                          method="L-BFGS-B",
                                           )
 
     # Optimize the results from the CIRQ simulation
@@ -51,9 +50,7 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
-                                          method="COBYLA",
-                                          options={# 'rhobeg': 0.01,
-                                                   'disp': True},
+                                          method="L-BFGS-B",
                                           )
 
     # testing consistency
@@ -78,7 +75,8 @@ if __name__ == '__main__':
 
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
-    from utils import generate_reduced_hamiltonian, get_uccsd_operators, get_hf_reference_in_fock_space
+    from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+    from pool_definitions.singlet_sd import get_pool_singlet_sd
 
     h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                           ['He', [0, 0, 1.0]]],
@@ -105,7 +103,7 @@ if __name__ == '__main__':
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=2)
+    uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
     # uccsd_ansatz = []
 
     # Get reference Hartree Fock state

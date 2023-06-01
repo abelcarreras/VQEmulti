@@ -147,29 +147,22 @@ def get_basis_overlap_matrix(mol, mo_mol, mol2, mo_mol2, print_extra=False):
     return cross_overlap_matrix
 
 
-
 def get_operator_prefactors(operator):
     """
-    separates operator from its coefficient
-    assumes unitary operator (all terms have same coefficient except for a sign)
+    separates operator from its coefficient and normalized form
 
-    :param operator:
-    :return:
+    :param operator: the operator
+    :return: coefficient, normalized operator
     """
-    coefficients = []
-    no_coeff_operator = FermionOperator()
-    for term in operator.terms:
-        value = operator.terms[term]
-        coefficients.append(abs(value))
-        cc = value/abs(value)
-        no_coeff_operator += FermionOperator(term) * cc
+    coeff = 0
+    for t in operator.terms:
+        coeff_t = operator.terms[t]
+        coeff += np.conj(coeff_t) * coeff_t
 
-    # assumes all coefficients are same (average for error cancellation)
-    coefficient = np.sum(coefficients)
+    if operator.many_body_order() > 0:
+        return np.sqrt(coeff), operator/np.sqrt(coeff)
 
-    assert np.std(coefficients) < 1e-6
-
-    return coefficient, no_coeff_operator
+    raise Exception('Cannot normalize 0 operator')
 
 
 def antisymmetryze(total_ansatz):
@@ -188,7 +181,7 @@ def antisymmetryze(total_ansatz):
 
     if not is_antisymmetric(total_ansatz):
         # anti-symmetrize
-        total_ansatz = (total_ansatz - hermitian_conjugated(total_ansatz)) / 2
+        total_ansatz = (total_ansatz - hermitian_conjugated(total_ansatz)) / 2 # not sure this 2
 
     # check antisymmetric
     hermitian_fermion = -hermitian_conjugated(total_ansatz)
@@ -198,7 +191,7 @@ def antisymmetryze(total_ansatz):
     list_coeff = []
     list_check = []
     for term in total_ansatz:
-        h_op = term - hermitian_conjugated(term)
+        h_op = (term - hermitian_conjugated(term))*2  # not sure this 2
         if h_op not in list_check:
             list_check.append(h_op)
             coeff, op = get_operator_prefactors(h_op)

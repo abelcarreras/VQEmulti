@@ -283,7 +283,7 @@ def get_uccsd_operators(n_electrons, n_orbitals, frozen_core=0):
 
     packed_amplitudes = singles + doubles_1 + doubles_2
 
-    return openfermion.uccsd_singlet_generator(packed_amplitudes,
+    return -openfermion.uccsd_singlet_generator(packed_amplitudes,
                                                (n_occupied + n_virtual) * 2,
                                                n_occupied * 2)
 
@@ -389,3 +389,22 @@ def get_hf_energy_core(mol_h2, n_core_orb=0):
         energy += F_effect_2(i, i)
 
     print('HF Test  Electronic (effective): {:12.8f}'.format(energy))
+
+
+def normalize_operator(operator):
+    """
+    normalize an operator
+
+    :param operator:
+    :return: the normalized operator
+    """
+
+    coeff = 0
+    for t in operator.terms:
+        coeff_t = operator.terms[t]
+        coeff += np.conj(coeff_t) * coeff_t
+
+    if operator.many_body_order() > 0:
+        return operator / np.sqrt(coeff)
+
+    raise Exception('Cannot normalize 0 operator')

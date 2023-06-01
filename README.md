@@ -75,13 +75,13 @@ print('Coefficients:\n', result['coefficients'])
 
 Basic example for adaptVQE
 ----------------------------
+
 ```python
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from pool_definitions import get_pool_singlet_sd
 from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from adapt_vqe import adaptVQE
-
 
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                       ['H', [0, 0, 0.74]]],
@@ -106,24 +106,25 @@ print('n_orbitals: ', n_orbitals)
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get a pool of fermion operators for adapt-VQE
-operators_pool = get_pool_singlet_sd(electronNumber=n_electrons,
-                                     orbitalNumber=n_orbitals)
+operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
+                                     n_orbitals=n_orbitals)
 
 # Get reference Hartree Fock state in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # Define Pennylane simulator
 from simulators.penny_simulator import PennylaneSimulator as Simulator
+
 simulator = Simulator(trotter=True,
                       trotter_steps=1,
                       shots=1000)
 
-result, iterations = adaptVQE(operators_pool,               # fermionic operators
-                              hamiltonian,                  # fermionic hamiltonian
-                              hf_reference_fock,            # reference vector in Fock space
-                              threshold=0.1,                # adaptVQE convergence gradient threshold 
-                              energy_simulator=simulator,   # simulator for energy calculation
-                              gradient_simulator=simulator) # simulator for gradient calculation
+result, iterations = adaptVQE(operators_pool,  # fermionic operators
+                              hamiltonian,  # fermionic hamiltonian
+                              hf_reference_fock,  # reference vector in Fock space
+                              threshold=0.1,  # adaptVQE convergence gradient threshold 
+                              energy_simulator=simulator,  # simulator for energy calculation
+                              gradient_simulator=simulator)  # simulator for gradient calculation
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))
 print('Energy adaptVQE: ', result['energy'])

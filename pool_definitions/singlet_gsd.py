@@ -10,6 +10,7 @@ def get_pool_singlet_gsd(n_orbitals, frozen_core=0):
 
     :param n_electrons: number of electrons in occupied space
     :param n_orbitals: number of total molecular orbitals
+    :param frozen_core: number of frozen orbitals
     :return: operators pool
     """
     n_orbitals = n_orbitals - frozen_core

@@ -14,6 +14,7 @@ def get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=0):
 
     :param n_electrons: number of electrons in occupied space
     :param n_orbitals: number of total molecular orbitals
+    :param frozen_core: number of frozen orbitals
     :return: operators pool
     """
     singlet_sd = []

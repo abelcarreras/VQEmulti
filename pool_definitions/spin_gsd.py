@@ -8,6 +8,7 @@ def get_pool_spin_complement_gsd(n_orbitals, frozen_core=0):
     get pool of unitary fermion operators of spin complement single and double excitations
 
     :param n_orbitals: number of total molecular orbitals
+    :param frozen_core: number of frozen orbitals
     :return: operators pool
     """
 

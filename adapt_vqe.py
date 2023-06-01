@@ -1,7 +1,7 @@
 from energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from openfermion.transforms import jordan_wigner
-from pool_definitions import OperatorList
+from pool.tools import OperatorList
 import numpy as np
 import scipy
 
@@ -155,7 +155,7 @@ def adaptVQE(operators_pool,
 if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
-    from pool_definitions import get_pool_singlet_sd
+    from pool import get_pool_singlet_sd
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from analysis import get_info
 

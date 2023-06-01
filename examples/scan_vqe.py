@@ -6,6 +6,7 @@ from vqe import vqe
 import matplotlib.pyplot as plt
 import numpy as np
 from utils import generate_reduced_hamiltonian, get_uccsd_operators
+from pool import get_pool_singlet_sd
 
 n_points = 20
 vqe_energies = []
@@ -35,7 +36,8 @@ for d in np.linspace(0.3, 3, n_points):
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+    # uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+    uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
     print('Initialize VQE')
     result = vqe(hamiltonian,  # fermionic hamiltonian
@@ -48,7 +50,9 @@ for d in np.linspace(0.3, 3, n_points):
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 
+    print('Ansatz:\n', result['ansatz'])
     print('Coefficients:\n', result['coefficients'])
+    print('--------------------------------')
 
     vqe_energies.append(result["energy"])
     hf_energies.append(molecule.hf_energy)

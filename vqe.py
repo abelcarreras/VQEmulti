@@ -1,6 +1,6 @@
 from energy import exact_vqe_energy, simulate_vqe_energy
 from openfermion.transforms import jordan_wigner
-from pool_definitions import OperatorList
+from pool.tools import OperatorList
 import numpy as np
 import scipy
 
@@ -68,7 +68,7 @@ def vqe(hamiltonian,
 
     return {'energy': results.fun,
             'coefficients': list(results.x),
-            'operators': list(ansatz)}
+            'ansatz': list(ansatz)}
 
 
 if __name__ == '__main__':
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
-    from pool_definitions.singlet_sd import get_pool_singlet_sd
+    from pool.singlet_sd import get_pool_singlet_sd
 
     h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                           ['He', [0, 0, 1.0]]],
@@ -131,6 +131,6 @@ if __name__ == '__main__':
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
-    print('Num operators: ', len(result['operators']))
-    print('Operators:\n', result['operators'])
+    print('Num operators: ', len(result['ansatz']))
+    print('Ansatz:\n', result['ansatz'])
     print('Coefficients:\n', result['coefficients'])

@@ -1,4 +1,4 @@
-from pool_definitions import OperatorList
+from pool.tools import OperatorList
 from posym.basis import PrimitiveGaussian, BasisFunction
 from openfermion import FermionOperator
 from operator import mul

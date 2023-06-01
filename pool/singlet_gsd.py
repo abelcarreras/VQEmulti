@@ -1,6 +1,7 @@
 from openfermion import FermionOperator
-from openfermion.utils import count_qubits, hermitian_conjugated
+from openfermion.utils import hermitian_conjugated
 from openfermion.transforms import normal_ordered
+from pool.tools import OperatorList
 import numpy as np
 
 
@@ -102,5 +103,5 @@ def get_pool_singlet_gsd(n_orbitals, frozen_core=0):
                         termB = termB/np.sqrt(coeffB)
                         singlet_gsd.append(termB)
 
-    return singlet_gsd
+    return OperatorList(singlet_gsd, antisymmetrize=False)
 

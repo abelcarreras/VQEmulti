@@ -1,7 +1,8 @@
 from openfermion import FermionOperator
-from openfermion.utils import count_qubits, hermitian_conjugated
+from openfermion.utils import hermitian_conjugated
 from openfermion.transforms import normal_ordered
 from utils import normalize_operator
+from pool.tools import OperatorList
 import numpy as np
 
 
@@ -89,4 +90,4 @@ def get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=0):
                     if termB.many_body_order() > 0:
                         singlet_sd.append(normalize_operator(termB))
 
-    return singlet_sd
+    return OperatorList(singlet_sd, antisymmetrize=False)

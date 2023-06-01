@@ -3,7 +3,7 @@
 
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool_definitions import get_pool_singlet_sd
+from pool import get_pool_singlet_sd
 from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from adapt_vqe import adaptVQE
 

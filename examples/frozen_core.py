@@ -4,8 +4,9 @@
 # https://doi.org/10.48550/arXiv.2009.01872
 
 from openfermion import MolecularData
-from openfermionpyscf import run_pyscf, PyscfMolecularData
-from utils import generate_reduced_hamiltonian, get_uccsd_operators, get_hf_reference_in_fock_space
+from openfermionpyscf import run_pyscf
+from pool import get_pool_singlet_sd
+from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqe import vqe
 
 h2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
@@ -33,7 +34,7 @@ hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get UCCSD ansatz
-uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=7)
+uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=7)
 
 # Get reference Hartree Fock state
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=7)
@@ -50,6 +51,6 @@ print('Energy VQE: {:.8f}'.format(result['energy']))
 print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
-print('Num operators: ', len(result['operators']))
-print('Operators:\n', result['operators'])
+print('Num operators: ', len(result['ansatz']))
+print('Ansatz:\n', result['ansatz'])
 print('Coefficients:\n', result['coefficients'])

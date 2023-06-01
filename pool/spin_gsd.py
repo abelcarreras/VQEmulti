@@ -1,5 +1,6 @@
 # spin_complement_gsd
 from openfermion import FermionOperator
+from pool.tools import OperatorList
 import openfermion
 
 
@@ -84,4 +85,4 @@ def get_pool_spin_complement_gsd(n_orbitals, frozen_core=0):
                     if termC.many_body_order() > 0:
                         spin_complement_gsd.append(termC)
 
-    return spin_complement_gsd
+    return OperatorList(spin_complement_gsd, antisymmetrize=False)

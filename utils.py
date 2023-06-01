@@ -1,3 +1,5 @@
+import warnings
+
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
 import openfermion
@@ -266,6 +268,7 @@ def get_uccsd_operators(n_electrons, n_orbitals, frozen_core=0):
     :param frozen_core: number of orbitals to freeze
     :return: UCCSD operators in fermion representation
     """
+    warnings.warn('To be deprecated. Use pool singlet_sd')
 
     n_occupied = int(np.ceil(n_electrons / 2)) - frozen_core
     n_virtual = n_orbitals - n_occupied - frozen_core

@@ -17,7 +17,8 @@ Basic example for regular VQE
 ```python
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from utils import generate_reduced_hamiltonian, get_uccsd_operators, get_hf_reference_in_fock_space
+from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from pool import get_pool_singlet_sd
 from vqe import vqe
 
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
@@ -44,7 +45,7 @@ hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get UCCSD ansatz in fermion operators
-uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals, frozen_core=7)
+uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=7)
 
 # Get reference Hartree Fock state in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -79,7 +80,7 @@ Basic example for adaptVQE
 ```python
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool_definitions import get_pool_singlet_sd
+from pool import get_pool_singlet_sd
 from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from adapt_vqe import adaptVQE
 

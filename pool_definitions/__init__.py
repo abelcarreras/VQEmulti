@@ -59,7 +59,7 @@ class OperatorList:
 
             if not is_antisymmetric(total_fermion):
                 # anti-symmetrize
-                total_fermion = (total_fermion - hermitian_conjugated(total_fermion)) / 2
+                total_fermion = (total_fermion - hermitian_conjugated(total_fermion))
 
             # check antisymmetric
             hermitian_fermion = -hermitian_conjugated(total_fermion)

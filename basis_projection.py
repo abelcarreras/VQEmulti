@@ -181,7 +181,7 @@ def antisymmetryze(total_ansatz):
 
     if not is_antisymmetric(total_ansatz):
         # anti-symmetrize
-        total_ansatz = (total_ansatz - hermitian_conjugated(total_ansatz)) / 2 # not sure this 2
+        total_ansatz = (total_ansatz - hermitian_conjugated(total_ansatz))
 
     # check antisymmetric
     hermitian_fermion = -hermitian_conjugated(total_ansatz)
@@ -191,7 +191,7 @@ def antisymmetryze(total_ansatz):
     list_coeff = []
     list_check = []
     for term in total_ansatz:
-        h_op = (term - hermitian_conjugated(term))*2  # not sure this 2
+        h_op = (term - hermitian_conjugated(term))
         if h_op not in list_check:
             list_check.append(h_op)
             coeff, op = get_operator_prefactors(h_op)

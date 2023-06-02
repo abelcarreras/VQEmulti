@@ -17,16 +17,13 @@ h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                             description='H2')
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
-
-mo_mol_1 = molecule._pyscf_data['scf'].mo_coeff.T
-mol_1 = molecule._pyscf_data['mol']
+molecule_1 = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
 # get properties from classical SCF calculation
-n_electrons = molecule.n_electrons
+n_electrons = molecule_1.n_electrons
 n_orbitals = 2  # molecule.n_orbitals
 
-hamiltonian = molecule.get_molecular_hamiltonian()
+hamiltonian = molecule_1.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # print data
@@ -57,19 +54,15 @@ result_first = adaptVQE(operators_pool, # fermionic operators
                         gradient_simulator=simulator)
 
 
-print('Energy HF: {:.8f}'.format(molecule.hf_energy))
+print('Energy HF: {:.8f}'.format(molecule_1.hf_energy))
 print('Energy adaptVQE: ', result_first['energy'])
-print('Energy FullCI: ', molecule.fci_energy)
+print('Energy FullCI: ', molecule_1.fci_energy)
 print('Coefficients:', result_first['coefficients'])
 
 print('\n\nSecond calculation\n')
 
 h2_molecule.basis = '3-21g'
-
 molecule_2 = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
-
-mo_mol_2 = molecule_2._pyscf_data['scf'].mo_coeff.T
-mol_2 = molecule_2._pyscf_data['mol']
 
 # get properties from classical SCF calculation
 n_electrons = molecule_2.n_electrons
@@ -93,7 +86,7 @@ print('ansatz: ', result_first['ansatz'])
 
 ansatz = sum(op * coeff for op, coeff in zip(result_first['ansatz'], result_first['coefficients']))
 
-basis_overlap_matrix = get_basis_overlap_matrix(mol_1, mo_mol_1, mol_2, mo_mol_2)
+basis_overlap_matrix = get_basis_overlap_matrix(molecule_1, molecule_2)
 projected_ansatz = project_basis(ansatz, basis_overlap_matrix, n_orb_2=n_orbitals)
 restart_coefficients, restart_ansatz = prepare_ansatz_for_restart(projected_ansatz, max_val=1e-1)
 

@@ -289,6 +289,7 @@ class PennylaneSimulator(SimulatorBase):
         specs_func = qml.specs(circuit)
         return specs_func()
 
+
 if __name__ == '__main__':
     simulator = PennylaneSimulator(trotter=True,
                                    trotter_steps=1,

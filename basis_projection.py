@@ -92,9 +92,21 @@ def get_basis_set_pyscf(pyscf_mol):
     return basis_functions
 
 
-def get_basis_overlap_matrix(mol, mo_mol, mol2, mo_mol2, print_extra=False):
+def get_basis_overlap_matrix(molecule_1, molecule_2, print_extra=False):
+    """
+    compute overlap matrix between the molecular orbitals of molecule_1 and molecule_1
+    :param molecule_1: PyscfMolecularData object
+    :param molecule_2: PyscfMolecularData object
+    :param print_extra: set True for extra printing (for testig)
+    :return: the overlap matrix (numpy array)
+    """
 
-    mol.build()
+    mol = molecule_1._pyscf_data['mol']
+    mo_mol = molecule_1._pyscf_data['scf'].mo_coeff.T
+
+    mol2 = molecule_2._pyscf_data['mol']
+    mo_mol2 = molecule_2._pyscf_data['scf'].mo_coeff.T
+
     basis_functions = get_basis_set_pyscf(mol)
 
     orbitals = []
@@ -249,24 +261,34 @@ def project_basis(ansatz, basis_overlap_matrix, n_orb_1=None, frozen_core_1=0, n
 
 
 if __name__ == '__main__':
-    mol = gto.Mole()
-    mol.build(atom='''O  0 0 0; 
+
+    # molecule basis 1
+    mol_1 = gto.Mole()
+    mol_1.build(atom='''O  0 0 0; 
                       H  0 1 0; 
                       H  0 0 1
                       ''',
-              basis='sto-3g')
+                basis='sto-3g')
 
-    mf = mol.RHF().run()
-    mo_mol = mf.mo_coeff.T
+    scf_1 = mol_1.RHF().run()
 
-    mol2 = mol.copy()
-    mol2.basis = '3-21g'
-    mol2.build()
+    # molecule basis 2
+    mol_2 = mol_1.copy()
+    mol_2.basis = '3-21g'
+    mol_2.build()
 
-    mf2 = mol2.RHF().run()
-    mo_mol2 = mf2.mo_coeff.T
+    scf_2 = mol_2.RHF().run()
 
-    basis_overlap_matrix = get_basis_overlap_matrix(mol, mo_mol, mol2, mo_mol2)
+    from dataclasses import dataclass
+
+    @dataclass
+    class MoleculeData:
+        _pyscf_data: dict
+
+    molecule_1 = MoleculeData(_pyscf_data={'mol': mol_1, 'scf': scf_1})
+    molecule_2 = MoleculeData(_pyscf_data={'mol': mol_2, 'scf': scf_2})
+
+    basis_overlap_matrix = get_basis_overlap_matrix(molecule_1, molecule_2)
 
     print('MO cross overlap')
     print(np.round(basis_overlap_matrix, decimals=2))

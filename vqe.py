@@ -42,7 +42,8 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian),
-                                          method="L-BFGS-B",
+                                          method="COBYLA",
+                                          options={'rhobeg': 0.1, 'disp': True},
                                           )
 
     # Optimize the results from the CIRQ simulation
@@ -50,7 +51,8 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
-                                          method="L-BFGS-B",
+                                          method="COBYLA",
+                                          options={'rhobeg': 0.1, 'disp': True},
                                           )
 
     # testing consistency

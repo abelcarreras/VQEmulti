@@ -44,20 +44,15 @@ class OperationsTest(unittest.TestCase):
         result = vqe(hamiltonian,
                      uccsd_ansatz,
                      hf_reference_fock,
-                     exact_energy=True,
-                     opt_qubits=True,
-                     trotter=True,
-                     trotter_steps=1,
-                     shots=1000,
-                     test_only=True)
+                     opt_qubits=True)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
         print('Energy CCSD: {:.8f}'.format(self.molecule.ccsd_energy))
         print('Energy FullCI: {:.8f}'.format(self.molecule.fci_energy))
 
-        print('Num operators: ', len(result['operators']))
-        print('Operators:\n', result['operators'])
+        print('Num operators: ', len(result['ansatz']))
+        print('Operators:\n', result['ansatz'])
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(self.molecule.hf_energy, -1.12294026, places=8)
@@ -65,7 +60,7 @@ class OperationsTest(unittest.TestCase):
         self.assertAlmostEquals(self.molecule.ccsd_energy, -1.14781330, places=8)
         self.assertAlmostEquals(self.molecule.fci_energy, -1.14781313, places=8)
 
-        self.assertEqual(len(result['operators']), 12)
+        self.assertEqual(len(result['ansatz']), 12)
 
     def test_vqe_qubit_trotter(self):
         # get properties from classical SCF calculation
@@ -85,24 +80,23 @@ class OperationsTest(unittest.TestCase):
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+        from simulators.penny_simulator import PennylaneSimulator
+        simulator = PennylaneSimulator(trotter=True, trotter_steps=1, test_only=True)
+
         print('Initialize VQE')
         result = vqe(hamiltonian,
                      uccsd_ansatz,
                      hf_reference_fock,
                      opt_qubits=True,
-                     exact_energy=False,
-                     trotter=True,
-                     trotter_steps=1,
-                     shots=1000,
-                     test_only=True)
+                     energy_simulator=simulator)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
         print('Energy CCSD: {:.8f}'.format(self.molecule.ccsd_energy))
         print('Energy FullCI: {:.8f}'.format(self.molecule.fci_energy))
 
-        print('Num operators: ', len(result['operators']))
-        print('Operators:\n', result['operators'])
+        print('Num operators: ', len(result['ansatz']))
+        print('Operators:\n', result['ansatz'])
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(self.molecule.hf_energy, -1.12294026, places=8)
@@ -110,7 +104,7 @@ class OperationsTest(unittest.TestCase):
         self.assertAlmostEquals(self.molecule.ccsd_energy, -1.14781330, places=8)
         self.assertAlmostEquals(self.molecule.fci_energy, -1.14781313, places=8)
 
-        self.assertEqual(len(result['operators']), 12)
+        self.assertEqual(len(result['ansatz']), 12)
 
     def test_vqe_exact_fermion(self):
         # get properties from classical SCF calculation
@@ -134,22 +128,17 @@ class OperationsTest(unittest.TestCase):
         result = vqe(hamiltonian,
                      uccsd_ansatz,
                      hf_reference_fock,
-                     opt_qubits=False,
-                     exact_energy=True,
-                     trotter=False,
-                     trotter_steps=1,
-                     shots=1000,
-                     test_only=True)
+                     opt_qubits=False)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
 
-        print('Num operators: ', len(result['operators']))
-        print('Operators:\n', result['operators'])
+        print('Num operators: ', len(result['ansatz']))
+        print('Operators:\n', result['ansatz'])
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(result['energy'], -1.12988981, places=6)
-        self.assertEqual(len(result['operators']), 4)
+        self.assertEqual(len(result['ansatz']), 4)
 
     def test_vqe_trotter_fermion(self):
         # get properties from classical SCF calculation
@@ -169,22 +158,21 @@ class OperationsTest(unittest.TestCase):
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+        from simulators.penny_simulator import PennylaneSimulator
+        simulator = PennylaneSimulator(trotter=True, trotter_steps=1, test_only=True)
+
         print('Initialize VQE')
         result = vqe(hamiltonian,
                      uccsd_ansatz,
                      hf_reference_fock,
                      opt_qubits=False,
-                     exact_energy=False,
-                     trotter=True,
-                     trotter_steps=1,
-                     shots=1000,
-                     test_only=True)
+                     energy_simulator=simulator)
 
         print('Energy VQE: {:.8f}'.format(result['energy']))
-        print('Num operators: ', len(result['operators']))
-        print('Operators:\n', result['operators'])
+        print('Num operators: ', len(result['ansatz']))
+        print('Operators:\n', result['ansatz'])
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(result['energy'], -1.12988982, places=6)
 
-        self.assertEqual(len(result['operators']), 4)
+        self.assertEqual(len(result['ansatz']), 4)

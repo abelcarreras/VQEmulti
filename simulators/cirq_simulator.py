@@ -109,7 +109,7 @@ class CirqSimulator(SimulatorBase):
 
     def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """
-        Calculates the exact energy in a specific state using matrix algebra.
+        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
         This function is basically used to test that the Cirq circuit is correct
 
         :param qubit_hamiltonian: hamiltonian in qubits
@@ -132,14 +132,14 @@ class CirqSimulator(SimulatorBase):
         # Obtain the theoretical expectation value for each Pauli string in the
         # Hamiltonian by matrix multiplication, and perform the necessary weighed
         # sum to obtain the energy expectation value.
-        for pauli_string in formatted_hamiltonian:
+        for pauli_string, coefficient in formatted_hamiltonian.items():
             ket = np.array(state_vector, dtype=complex)
             bra = np.conj(ket)
 
             pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
             expectation_value = np.real(np.dot(bra, pauli_ket))
 
-            exact_evaluation += formatted_hamiltonian[pauli_string] * expectation_value
+            exact_evaluation += coefficient * expectation_value
 
         return exact_evaluation.real
 

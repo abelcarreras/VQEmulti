@@ -15,15 +15,6 @@ def trotter_step(operator, time):
     :return: trotter_gates
     """
 
-    # If operator is an InteractionOperator, shape it into a FermionOperator
-    #if isinstance(operator, InteractionOperator):
-    #   operator = get_fermion_operator(operator)
-
-    # If operator is a FermionOperator, use the Jordan Wigner transformation
-    # to map it into a QubitOperator
-    #if isinstance(operator, FermionOperator):
-    #    operator = jordan_wigner(operator)
-
     # Get the number of qubits the operator acts on and define circuit architecture
     n_qubits = count_qubits(operator)
     qubits = cirq.LineQubit.range(n_qubits)

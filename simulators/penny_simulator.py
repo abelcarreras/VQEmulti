@@ -221,18 +221,18 @@ class PennylaneSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _build_reference_gates(self, hf_reference_fock, transform='jw'):
+    def _build_reference_gates(self, hf_reference_fock, mapping='jw'):
         """
         Create the gates for preparing the Hartree Fock ground state, that serves
         as a reference state the ansatz
 
         :param hf_reference_fock: HF reference in fock space
-        :param transform: mapping transform
+        :param mapping: mapping transform
         :return: reference gates
         """
 
         reference_gates = []
-        if transform == 'jw':
+        if mapping == 'jw':
             for i, occ in enumerate(hf_reference_fock):
                 if bool(occ):
                     reference_gates.append(qml.PauliX(wires=[i]))
@@ -241,7 +241,7 @@ class PennylaneSimulator(SimulatorBase):
             return reference_gates
             # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-        raise Exception('{} tranform not implemented'.format(transform))
+        raise Exception('{} tranform not implemented'.format(mapping))
 
     def _trotterize_operator(self, qubit_operator, time, trotter_steps):
         """

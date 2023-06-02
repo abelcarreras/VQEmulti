@@ -230,13 +230,13 @@ class CirqSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _build_reference_gates(self, hf_reference_fock, transform='jw'):
+    def _build_reference_gates(self, hf_reference_fock, mapping='jw'):
         """
         Create the gates for preparing the Hartree Fock ground state, that serves
         as a reference state the ansatz
 
         :param hf_reference_fock: HF reference in fock space
-        :param transform: mapping transform
+        :param mapping: mapping transform
         :return: reference gates
         """
 
@@ -247,7 +247,7 @@ class CirqSimulator(SimulatorBase):
         # Create the gates for preparing the Hartree Fock ground state, that serves
         # as a reference state the ansatz will act on
         reference_gates = []
-        if transform == 'jw':
+        if mapping == 'jw':
             for i, occ in enumerate(hf_reference_fock):
                 if bool(occ):
                     reference_gates.append(cirq.X(qubits[i]))
@@ -256,7 +256,7 @@ class CirqSimulator(SimulatorBase):
             return reference_gates
             # return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-        raise Exception('{} tranform not implemented'.format(transform))
+        raise Exception('{} mapping not implemented'.format(mapping))
 
     def _trotterize_operator(self, qubit_operator, time, trotter_steps):
         """

@@ -1,7 +1,7 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
 from utils import normalize_operator
-from openfermion.transforms import jordan_wigner
+from openfermion.transforms import jordan_wigner, bravyi_kitaev
 
 
 class OperatorList:
@@ -90,10 +90,10 @@ class OperatorList:
     def get_operators_type(self):
         return self._type
 
-    def get_quibits_list(self, transform='jw', normalize=False):
+    def get_quibits_list(self, mapping='jw', normalize=False):
         """
         return qubits in the basis set
-        :param transform:
+        :param mapping:
         :return:
         """
 
@@ -101,12 +101,14 @@ class OperatorList:
             return self
             # return OperatorList([1j*QubitOperator(list(t.terms.keys())[0]) for t in self._list])
 
-        if transform == 'jw':
-            total_qubit = QubitOperator()
-            for op in self._list:
+        total_qubit = QubitOperator()
+        for op in self._list:
+            if mapping == 'jw':
                 total_qubit += jordan_wigner(op)
-        else:
-            raise Exception('{} transform not available')
+            elif mapping == 'bk':
+                total_qubit += bravyi_kitaev(op)
+            else:
+                raise Exception('{} transform not available')
 
         return OperatorList(total_qubit, normalize=normalize)
 
@@ -174,7 +176,7 @@ if __name__ == '__main__':
         exp_list_fermion.append(exp_operator)
 
     exp_list_qubit = []
-    qubit_list = fermion_list.get_quibits_list(transform='jw')
+    qubit_list = fermion_list.get_quibits_list(mapping='jw')
     for op in qubit_list:
         sparse_operator = get_sparse_operator(op)
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)

@@ -30,7 +30,7 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     # Find the number of qubits of the system (2**n_qubit = dimension)
     n_qubit = count_qubits(qubit_hamiltonian)
 
-    # Transform reference vector into a Compressed Sparse Column matrix (JW transformation)
+    # Transform reference vector into a Compressed Sparse Column matrix
     ket = get_sparse_ket_from_fock(hf_reference_fock)
 
     # Apply e ** (coefficient * operator) to the state (ket) for each operator in

@@ -1,6 +1,6 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
-from openfermion.transforms import jordan_wigner
+from openfermion.transforms import jordan_wigner, bravyi_kitaev
 import openfermion
 import numpy as np
 import scipy
@@ -42,16 +42,16 @@ def string_to_matrix(pauli_string):
     return matrix
 
 
-def get_sparse_ket_from_fock(fock_vector, transform='jw'):
+def get_sparse_ket_from_fock(fock_vector, mapping='jw'):
     """
     Transforms a state represented in Fock space to sparse vector.
 
     :param fock_vector: a list representing the Fock vector
-    :param transform: mapping transform
+    :param mapping: mapping of fermions to qubits
     :return: the corresponding sparse vector
     """
 
-    if transform == 'jw':
+    if mapping == 'jw':
         state_vector = [1]
 
         # Iterate through the ket, calculating the tensor product of the qubit states
@@ -61,7 +61,7 @@ def get_sparse_ket_from_fock(fock_vector, transform='jw'):
 
         return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
-    raise Exception('transform not implemented')
+    raise Exception('mapping not implemented')
 
 
 def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0):
@@ -416,15 +416,17 @@ def normalize_operator(operator):
     raise Exception('Cannot normalize 0 operator')
 
 
-def fermion_to_qubit(operator, transform='jw'):
+def fermion_to_qubit(operator, mapping='jw'):
     """
     transform fermions to qubits
 
     :param operator: fermion operator
-    :param transform: type of transformation
+    :param mapping: type of mapping from fermion to qubit
     :return: qubit operator
     """
-    if transform == 'jw':
+    if mapping == 'jw':
         return jordan_wigner(operator)
+    if mapping == 'bk':
+        return bravyi_kitaev(operator)
 
-    raise Exception('transform not implemented')
+    raise Exception('mapping not implemented')

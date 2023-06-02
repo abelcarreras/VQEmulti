@@ -137,8 +137,8 @@ class PennylaneSimulator(SimulatorBase):
         # Initialize qubits
         n_qubits = len(hf_reference_fock)
 
-        # Add gates for HF reference (JW transform)
-        state_preparation_gates = [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+        # Add gates for HF reference
+        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
         # Append the ansatz directly as a matrix
         state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
@@ -221,20 +221,27 @@ class PennylaneSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _build_reference_gates(self, hf_reference_fock):
+    def _build_reference_gates(self, hf_reference_fock, transform='jw'):
+        """
+        Create the gates for preparing the Hartree Fock ground state, that serves
+        as a reference state the ansatz
 
-        # Create the gates for preparing the Hartree Fock ground state, that serves
-        # as a reference state the ansatz will act on (JW transform)
+        :param hf_reference_fock: HF reference in fock space
+        :param transform: mapping transform
+        :return: reference gates
+        """
 
         reference_gates = []
-        for i, occ in enumerate(hf_reference_fock):
-            if bool(occ):
-                reference_gates.append(qml.PauliX(wires=[i]))
-            else:
-                reference_gates.append(qml.Identity(wires=[i]))
-        return reference_gates
+        if transform == 'jw':
+            for i, occ in enumerate(hf_reference_fock):
+                if bool(occ):
+                    reference_gates.append(qml.PauliX(wires=[i]))
+                else:
+                    reference_gates.append(qml.Identity(wires=[i]))
+            return reference_gates
+            # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-        # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+        raise Exception('{} tranform not implemented'.format(transform))
 
     def _trotterize_operator(self, qubit_operator, time, trotter_steps):
         """

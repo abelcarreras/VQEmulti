@@ -134,7 +134,6 @@ class CirqSimulator(SimulatorBase):
 
         return exact_evaluation.real
 
-
     def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
 
         # Initialize qubits
@@ -142,7 +141,7 @@ class CirqSimulator(SimulatorBase):
         qubits = cirq.LineQubit.range(n_qubits)
 
         # Initialize the state preparation gates with the Hartree Fock preparation
-        state_preparation_gates = [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
         # Append the ansatz directly as a matrix
         state_preparation_gates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
@@ -231,7 +230,15 @@ class CirqSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _build_reference_gates(self, hf_reference_fock):
+    def _build_reference_gates(self, hf_reference_fock, transform='jw'):
+        """
+        Create the gates for preparing the Hartree Fock ground state, that serves
+        as a reference state the ansatz
+
+        :param hf_reference_fock: HF reference in fock space
+        :param transform: mapping transform
+        :return: reference gates
+        """
 
         # Initialize qubits
         n_qubits = len(hf_reference_fock)
@@ -240,13 +247,16 @@ class CirqSimulator(SimulatorBase):
         # Create the gates for preparing the Hartree Fock ground state, that serves
         # as a reference state the ansatz will act on
         reference_gates = []
-        for i, occ in enumerate(hf_reference_fock):
-            if bool(occ):
-                reference_gates.append(cirq.X(qubits[i]))
-            else:
-                reference_gates.append(cirq.I(qubits[i]))
-        return reference_gates
-        # return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+        if transform == 'jw':
+            for i, occ in enumerate(hf_reference_fock):
+                if bool(occ):
+                    reference_gates.append(cirq.X(qubits[i]))
+                else:
+                    reference_gates.append(cirq.I(qubits[i]))
+            return reference_gates
+            # return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
+
+        raise Exception('{} tranform not implemented'.format(transform))
 
     def _trotterize_operator(self, qubit_operator, time, trotter_steps):
         """
@@ -264,9 +274,7 @@ class CirqSimulator(SimulatorBase):
         :return: the number of trotter steps to split the time evolution into
         """
 
-        # Divide time into steps and apply the evolution operator the necessary
-        # number of times
-
+        # Divide time into steps and apply the evolution operator the necessary number of times
         trotter_gates = []
         for step in range(1, trotter_steps + 1):
             trotter_gates += trotter_step(qubit_operator, time / trotter_steps)

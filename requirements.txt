@@ -1,4 +1,4 @@
-# requieremnts for multiVQE
+# requirements for multiVQE
 numpy
 scipy
 openfermion

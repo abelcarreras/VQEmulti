@@ -1,10 +1,10 @@
-import warnings
-
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
+from openfermion.transforms import jordan_wigner
 import openfermion
 import numpy as np
 import scipy
+import warnings
 
 
 def string_to_matrix(pauli_string):
@@ -42,23 +42,26 @@ def string_to_matrix(pauli_string):
     return matrix
 
 
-def get_sparse_ket_from_fock(fock_vector):
+def get_sparse_ket_from_fock(fock_vector, transform='jw'):
     """
     Transforms a state represented in Fock space to sparse vector.
-    The Jordan-Wigner Transform is used.
 
     :param fock_vector: a list representing the Fock vector
+    :param transform: mapping transform
     :return: the corresponding sparse vector
     """
 
-    state_vector = [1]
+    if transform == 'jw':
+        state_vector = [1]
 
-    # Iterate through the ket, calculating the tensor product of the qubit states
-    for i in fock_vector:
-        qubit_vector = [not i, i]
-        state_vector = np.kron(state_vector, qubit_vector)
+        # Iterate through the ket, calculating the tensor product of the qubit states
+        for i in fock_vector:
+            qubit_vector = [not i, i]
+            state_vector = np.kron(state_vector, qubit_vector)
 
-    return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
+        return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
+
+    raise Exception('transform not implemented')
 
 
 def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0):
@@ -411,3 +414,17 @@ def normalize_operator(operator):
         return operator / np.sqrt(coeff)
 
     raise Exception('Cannot normalize 0 operator')
+
+
+def fermion_to_qubit(operator, transform='jw'):
+    """
+    transform fermions to qubits
+
+    :param operator: fermion operator
+    :param transform: type of transformation
+    :return: qubit operator
+    """
+    if transform == 'jw':
+        return jordan_wigner(operator)
+
+    raise Exception('transform not implemented')

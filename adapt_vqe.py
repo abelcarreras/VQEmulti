@@ -1,6 +1,6 @@
 from energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
-from openfermion.transforms import jordan_wigner
+from utils import fermion_to_qubit
 from pool.tools import OperatorList
 import numpy as np
 import scipy
@@ -44,15 +44,15 @@ def adaptVQE(operators_pool,
 
     assert len(coefficients) == len(ansatz)
 
-    # transform to qubits hamiltonian (JW transformation)
-    qubit_hamiltonian = jordan_wigner(hamiltonian)
+    # transform fermion hamiltonian to qubits
+    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
 
     if opt_qubits:
-        # transform to qubit ansatz using JW transformation
-        operators_pool = 1j * operators_pool.get_quibits_list(normalize=True)
+        # transform to qubit ansatz
+        operators_pool = operators_pool.get_quibits_list(normalize=True)
 
     print('qubit pool size:', len(operators_pool))
 
@@ -214,6 +214,7 @@ if __name__ == '__main__':
                       threshold=0.1,
                       coefficients=result['coefficients'],
                       ansatz=result['ansatz'],
+                      opt_qubits=True,
                       energy_simulator=simulator,
                       gradient_simulator=simulator)
 

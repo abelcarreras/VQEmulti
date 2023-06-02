@@ -137,7 +137,7 @@ class PennylaneSimulator(SimulatorBase):
         # Initialize qubits
         n_qubits = len(hf_reference_fock)
 
-        # Add gates for HF reference
+        # Add gates for HF reference (JW transform)
         state_preparation_gates = [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
         # Append the ansatz directly as a matrix
@@ -224,7 +224,7 @@ class PennylaneSimulator(SimulatorBase):
     def _build_reference_gates(self, hf_reference_fock):
 
         # Create the gates for preparing the Hartree Fock ground state, that serves
-        # as a reference state the ansatz will act on
+        # as a reference state the ansatz will act on (JW transform)
 
         reference_gates = []
         for i, occ in enumerate(hf_reference_fock):

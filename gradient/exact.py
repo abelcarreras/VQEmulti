@@ -20,8 +20,7 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
 
     # Initialize the state vector with the reference state.
     # |state> = |state_old> · exp(i * coef · |ansatz>
-    # imaginary i already included in |ansatz> by generate_jw_operator_pool function
-    # transform Fock state to sparse (and ket by transposing) using JW transformation
+    # imaginary i already included in |ansatz>
     state = get_sparse_ket_from_fock(hf_reference_fock)
 
     n_qubits = len(hf_reference_fock)
@@ -77,7 +76,7 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
     :return: the gradient vector
     """
 
-    # transform hamiltonian to sparse (using JW)
+    # transform hamiltonian to sparse
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
     n_qubits = count_qubits(qubit_hamiltonian)
 

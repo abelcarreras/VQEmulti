@@ -1,5 +1,5 @@
 from energy import exact_vqe_energy, simulate_vqe_energy
-from openfermion.transforms import jordan_wigner
+from utils import fermion_to_qubit
 from pool.tools import OperatorList
 import numpy as np
 import scipy
@@ -23,13 +23,13 @@ def vqe(hamiltonian,
     :return: results dictionary
     """
 
-    # transform to qubit hamiltonian using JW transformation
-    qubit_hamiltonian = jordan_wigner(hamiltonian)
+    # transform to qubit hamiltonian
+    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     ansatz = OperatorList(ansatz, antisymmetrize=True, normalize=True)
 
     if opt_qubits:
-        # transform to qubit ansatz using JW transformation
+        # transform to qubit ansatz
         ansatz = ansatz.get_quibits_list(normalize=True)
 
     # initial guess

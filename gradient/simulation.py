@@ -1,5 +1,5 @@
-from utils import transform_to_scaled_qubit
-from openfermion import get_sparse_operator, QubitOperator, jordan_wigner, count_qubits
+from utils import transform_to_scaled_qubit, fermion_to_qubit
+from openfermion import get_sparse_operator, QubitOperator, count_qubits
 import numpy as np
 
 
@@ -58,7 +58,7 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
 
         # convert to qubit if necessary
         if not isinstance(operator, QubitOperator):
-            operator = jordan_wigner(operator)
+            operator = fermion_to_qubit(operator)
 
         # get gradient as dexp(c * A) / dc = < psi | [H, A] | psi >.
         commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian

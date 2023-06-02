@@ -4,3 +4,4 @@ scipy
 openfermion
 cirq
 pennylane
+posym

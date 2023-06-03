@@ -61,6 +61,22 @@ def get_sparse_ket_from_fock(fock_vector, mapping='jw'):
 
         return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
+    elif mapping == 'bk':
+        def get_beta_matrix(n):
+            b_matrix = [1]
+            for n in range(n):
+                b_matrix = np.kron(np.identity(2), b_matrix)
+                b_matrix[0, n:] = 1
+            return b_matrix
+
+        state_vector = [1]
+        for i in fock_vector:
+            qubit_vector = [not i, i]
+            state_vector = np.kron(state_vector, qubit_vector)
+
+        matrix = get_beta_matrix(len(state_vector))
+        return scipy.sparse.csc_matrix(np.dot(matrix, state_vector), dtype=complex).transpose()
+
     raise Exception('mapping not implemented')
 
 

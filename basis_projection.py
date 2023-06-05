@@ -1,6 +1,6 @@
 from pool.tools import OperatorList
 from posym.basis import PrimitiveGaussian, BasisFunction
-from openfermion import FermionOperator
+from openfermion import FermionOperator, QubitOperator
 from operator import mul
 from functools import reduce
 from pyscf import gto
@@ -214,13 +214,35 @@ def antisymmetryze(total_ansatz):
 
 
 def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
+    """
+    separate normalized part of operators from its coefficients.
 
-    reduced_ansatz = FermionOperator()
-    for term in operator_ansatz.terms:
-        coeff = operator_ansatz.terms[term]
-        if coeff > max_val:
-            reduced_ansatz += coeff * FermionOperator(term)
-    list_coeff, list_op = antisymmetryze(reduced_ansatz)
+    :param operator_ansatz: Fermion of Qubit operator
+    :param max_val: maximum value for
+    :return:
+    """
+
+    if isinstance(operator_ansatz, FermionOperator):
+        reduced_ansatz = FermionOperator()
+        for term in operator_ansatz.terms:
+            coeff = operator_ansatz.terms[term]
+            if coeff > max_val:
+                reduced_ansatz += coeff * FermionOperator(term)
+        list_coeff, list_op = antisymmetryze(reduced_ansatz)
+
+    elif isinstance(operator_ansatz, QubitOperator):
+        list_coeff = []
+        list_op = []
+        for term in operator_ansatz.terms:
+            coeff = operator_ansatz.terms[term]
+            norm = np.linalg.norm(coeff)
+            if norm > max_val:
+                list_coeff.append(norm)
+                list_op.append(coeff/norm * QubitOperator(term))
+
+        list_op = OperatorList(list_op)
+    else:
+        raise Exception('Ansatz preparation for {} type not implemented'.format(type(operator_ansatz)))
 
     return list_coeff, list_op
 
@@ -241,16 +263,23 @@ def project_basis(ansatz, basis_overlap_matrix, n_orb_1=None, frozen_core_1=0, n
     basis_overlap_matrix = basis_overlap_matrix[frozen_core_1:n_orb_1, frozen_core_2:n_orb_2]
     basis_overlap_matrix_spin = np.kron(basis_overlap_matrix, np.identity(2))
 
-    projected_ansatz = FermionOperator()
+    if isinstance(ansatz, FermionOperator):
+        Operator = FermionOperator
+    elif isinstance(ansatz, QubitOperator):
+        Operator = QubitOperator
+    else:
+        raise Exception('Operator projection for {} type not implemented'.format(type(ansatz)))
+
+    projected_ansatz = Operator()
 
     for term in ansatz.terms:
         op_coeff = ansatz.terms[term]
         total_fermion = []
         for iorb, itype in term:
-            sum_fermion = FermionOperator()
+            sum_fermion = Operator()
 
             for j_orb, coeff in enumerate(basis_overlap_matrix_spin[iorb]):
-                sum_fermion += coeff * FermionOperator((j_orb, itype))
+                sum_fermion += coeff * Operator((j_orb, itype))
 
             total_fermion.append(sum_fermion)
 

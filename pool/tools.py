@@ -1,6 +1,6 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
-from utils import normalize_operator
+from utils import normalize_operator, proper_order
 from openfermion.transforms import jordan_wigner, bravyi_kitaev
 
 
@@ -50,7 +50,7 @@ class OperatorList:
 
             self._list = []
             for term in total_fermion:
-                h_op = term - hermitian_conjugated(term)
+                h_op = proper_order(term - hermitian_conjugated(term))
                 if h_op not in self._list:
                     self._list.append(h_op)
 

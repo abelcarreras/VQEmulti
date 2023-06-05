@@ -186,7 +186,9 @@ def antisymmetryze(total_ansatz):
     """
     from openfermion import normal_ordered
     from openfermion.utils import hermitian_conjugated
+    from utils import proper_order
 
+    total_ansatz = proper_order(total_ansatz)
     def is_antisymmetric(fermion):
         hermitian_fermion = -hermitian_conjugated(fermion)
         return normal_ordered(total_ansatz) == normal_ordered(hermitian_fermion)
@@ -203,14 +205,14 @@ def antisymmetryze(total_ansatz):
     list_coeff = []
     list_check = []
     for term in total_ansatz:
-        h_op = (term - hermitian_conjugated(term))
+        h_op = term - normal_ordered(hermitian_conjugated(term))
         if h_op not in list_check:
             list_check.append(h_op)
             coeff, op = get_operator_prefactors(h_op)
             list_op.append(op)
             list_coeff.append(coeff)
 
-    return list_coeff, OperatorList(list_op)
+    return list_coeff, OperatorList(list_op, antisymmetrize=False)
 
 
 def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
@@ -226,7 +228,7 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
         reduced_ansatz = FermionOperator()
         for term in operator_ansatz.terms:
             coeff = operator_ansatz.terms[term]
-            if coeff > max_val:
+            if abs(coeff) > max_val:
                 reduced_ansatz += coeff * FermionOperator(term)
         list_coeff, list_op = antisymmetryze(reduced_ansatz)
 

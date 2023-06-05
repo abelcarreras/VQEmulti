@@ -446,3 +446,43 @@ def fermion_to_qubit(operator, mapping='jw'):
         return bravyi_kitaev(operator)
 
     raise Exception('mapping not implemented')
+
+
+def sort_tuples(tuples):
+    """
+    auxilar function to order a list of tuples of 2 items along the first index.
+    To be used in sorting fermion operators
+
+    :param tuples: list of tuples. Ex. ((3, 1), (4, 1), (2, 0), (1, 0))
+    :return: ordered tuples
+    """
+    tuples = list(tuples)
+    count = 1
+
+    for index in range(len(tuples)):
+        idx = np.argmax(np.array(tuples).T[0][index:])
+
+        if index != idx + index:
+            tuples[index], tuples[idx + index] = tuples[idx + index], tuples[index]
+            count *= -1
+
+    return tuple(tuples), count
+
+
+def proper_order(ansatz):
+    """
+    reorder fermions to proper order (from higher to lower orbital)
+
+    :param ansatz: Fermion operators
+    :return: ordered Fermion operators
+    """
+    from openfermion import normal_ordered
+
+    total = openfermion.FermionOperator()
+    for term in ansatz:
+        for i, v in term.terms.items():
+            t, c = sort_tuples(i)
+            total += c*v*openfermion.FermionOperator(t)
+
+    return normal_ordered(total)
+

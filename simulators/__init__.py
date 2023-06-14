@@ -95,13 +95,6 @@ class SimulatorBase:
         return energy.real
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):
-
-        if self._trotter:
-            return self._get_preparation_gates_trotter(ansatz, hf_reference_fock)
-        else:
-            return self._get_preparation_gates_matrix(ansatz, hf_reference_fock)
-
-    def _get_preparation_gates_matrix(self, ansatz, hf_reference_fock):
         """
         generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
@@ -110,44 +103,34 @@ class SimulatorBase:
         :param n_qubits: number of qubits
         :return: gates list in simulation library format
         """
+        if self._trotter:
+            # Use trotterized operator gates
 
-        # generate matrix operator that corresponds to ansatz
-        n_qubits = len(hf_reference_fock)
-        matrix = ansatz_to_matrix(ansatz, n_qubits)
+            trotter_ansatz = []
+            # Go through the operators in the ansatz
+            for operator in ansatz:
 
-        # Get gates in simulation library format
-        state_preparation_gates = self._get_matrix_operator_gates(hf_reference_fock, matrix)
+                for op, time in operator.terms.items():
+                    operator_trotter_circuit = self._trotterize_operator(-QubitOperator(op),
+                                                                         time.imag,
+                                                                         self._trotter_steps)
 
-        return state_preparation_gates
+                    # Add the gates corresponding to this operator to the ansatz gate list
+                    trotter_ansatz += operator_trotter_circuit
 
-    def _get_preparation_gates_trotter(self, ansatz_qubit, hf_reference_fock):
-        """
-        Trotterize the ansatz
+            # Initialize the state preparation gates with the reference state preparation gates
+            state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
-        :param ansatz: operators list in qubit
-        :param trotter_steps: number of trotter steps
-        :param hf_reference_fock: reference HF in Fock vspace vector
-        :return: trotterized gates list
-        """
+            # return total trotterized ansatz
+            return state_preparation_gates + trotter_ansatz
 
-        # Initialize the ansatz gate list
-        trotter_ansatz = []
-        # Go through the operators in the ansatz
-        for operator in ansatz_qubit:
+        else:
+            # Use matrix gate
+            n_qubits = len(hf_reference_fock)
+            matrix = ansatz_to_matrix(ansatz, n_qubits)
 
-            for op, time in operator.terms.items():
-                operator_trotter_circuit = self._trotterize_operator(-QubitOperator(op),
-                                                                     time.imag,
-                                                                     self._trotter_steps)
-
-                # Add the gates corresponding to this operator to the ansatz gate list
-                trotter_ansatz += operator_trotter_circuit
-
-        # Initialize the state preparation gates with the reference state preparation gates
-        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
-
-        # return total trotterized ansatz
-        return state_preparation_gates + trotter_ansatz
+            # Get gates in simulation library format
+            return self._get_matrix_operator_gates(hf_reference_fock, matrix)
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):

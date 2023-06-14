@@ -1,4 +1,4 @@
-from utils import convert_hamiltonian, group_hamiltonian, string_to_matrix
+from utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 from openfermion import QubitOperator
@@ -31,41 +31,35 @@ class SimulatorBase:
         else:
             return self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
-    def get_preparation_gates(self, ansatz, hf_reference_fock):
-
-        if self._trotter:
-            return self._get_preparation_gates_trotter(ansatz, hf_reference_fock)
-        else:
-            return self._get_preparation_gates_matrix(ansatz, hf_reference_fock)
-
-    def _get_preparation_gates_matrix(self, ansatz, hf_reference_fock):
+    def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """
-        generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
+        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
+        This function is basically used to test that the Pennylane circuit is correct
 
-        :param ansatz: operators list in qubit
-        :param hf_reference_fock: reference HF in fock vspace vector
-        :param n_qubits: number of qubits
-        :return: gates list in simulation library format
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :return: the expectation value of the state given the hamiltonian
         """
 
-        # generate matrix operator that corresponds to ansatz
-        identity = scipy.sparse.identity(2, format='csc', dtype=complex)
-        matrix = identity
-        n_qubits = len(hf_reference_fock)
-        for _ in range(n_qubits - 1):
-            matrix = scipy.sparse.kron(identity, matrix, 'csc')
+        n_qubits = count_qubits(qubit_hamiltonian)
+        state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
 
-        for operator in ansatz:
-            # Get corresponding the operator matrix (exponent)
-            operator_matrix = get_sparse_operator(operator, n_qubits)
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
-            # Add unitary operator to matrix as exp(operator_matrix)
-            matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
+        # Obtain the theoretical expectation value for each Pauli string in the
+        # Hamiltonian by matrix multiplication, and perform the necessary weighed
+        # sum to obtain the energy expectation value.
+        energy = 0
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+            ket = np.array(state_vector, dtype=complex)
+            bra = np.conj(ket)
 
-        # Get gates in simulation library format
-        state_preparation_gates = self._get_matrix_operator_gates(hf_reference_fock, matrix)
+            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
+            expectation_value = np.real(np.dot(bra, pauli_ket))
 
-        return state_preparation_gates
+            energy += coefficient * expectation_value
+
+        return energy
 
     def _get_sampled_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """
@@ -100,35 +94,31 @@ class SimulatorBase:
 
         return energy.real
 
-    def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
+    def get_preparation_gates(self, ansatz, hf_reference_fock):
+
+        if self._trotter:
+            return self._get_preparation_gates_trotter(ansatz, hf_reference_fock)
+        else:
+            return self._get_preparation_gates_matrix(ansatz, hf_reference_fock)
+
+    def _get_preparation_gates_matrix(self, ansatz, hf_reference_fock):
         """
-        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
-        This function is basically used to test that the Pennylane circuit is correct
+        generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
-        :param qubit_hamiltonian: hamiltonian in qubits
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :return: the expectation value of the state given the hamiltonian
+        :param ansatz: operators list in qubit
+        :param hf_reference_fock: reference HF in fock vspace vector
+        :param n_qubits: number of qubits
+        :return: gates list in simulation library format
         """
 
-        n_qubits = count_qubits(qubit_hamiltonian)
-        state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
+        # generate matrix operator that corresponds to ansatz
+        n_qubits = len(hf_reference_fock)
+        matrix = ansatz_to_matrix(ansatz, n_qubits)
 
-        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+        # Get gates in simulation library format
+        state_preparation_gates = self._get_matrix_operator_gates(hf_reference_fock, matrix)
 
-        # Obtain the theoretical expectation value for each Pauli string in the
-        # Hamiltonian by matrix multiplication, and perform the necessary weighed
-        # sum to obtain the energy expectation value.
-        energy = 0
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            ket = np.array(state_vector, dtype=complex)
-            bra = np.conj(ket)
-
-            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-            expectation_value = np.real(np.dot(bra, pauli_ket))
-
-            energy += coefficient * expectation_value
-
-        return energy
+        return state_preparation_gates
 
     def _get_preparation_gates_trotter(self, ansatz_qubit, hf_reference_fock):
         """
@@ -140,7 +130,6 @@ class SimulatorBase:
         :return: trotterized gates list
         """
 
-        coefficients = None
         # Initialize the ansatz gate list
         trotter_ansatz = []
         # Go through the operators in the ansatz

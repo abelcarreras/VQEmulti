@@ -1,6 +1,7 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
 from openfermion.transforms import jordan_wigner, bravyi_kitaev
+from openfermion import get_sparse_operator
 import openfermion
 import numpy as np
 import scipy
@@ -38,6 +39,25 @@ def string_to_matrix(pauli_string):
             matrix = np.kron(matrix, pauli_y)
         elif pauli == "Z":
             matrix = np.kron(matrix, pauli_z)
+
+    return matrix
+
+
+def ansatz_to_matrix(ansatz, n_qubits):
+
+    # generate matrix operator that corresponds to ansatz
+    identity = scipy.sparse.identity(2, format='csc', dtype=complex)
+    matrix = identity
+
+    for _ in range(n_qubits - 1):
+        matrix = scipy.sparse.kron(identity, matrix, 'csc')
+
+    for operator in ansatz:
+        # Get corresponding the operator matrix (exponent)
+        operator_matrix = get_sparse_operator(operator, n_qubits)
+
+        # Add unitary operator to matrix as exp(operator_matrix)
+        matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
 
     return matrix
 

@@ -89,20 +89,12 @@ def trotter_step(qubit_operator, time):
 
     return trotter_gates
 
+
 class PennylaneSimulator(SimulatorBase):
 
-    def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
-        """
-        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
-        This function is basically used to test that the Pennylane circuit is correct
-
-        :param qubit_hamiltonian: hamiltonian in qubits
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :return: the expectation value of the state given the hamiltonian
-        """
+    def _get_state_vector(self, state_preparation_gates, n_qubits):
 
         # Initialize circuit.
-        n_qubits = count_qubits(qubit_hamiltonian)
         dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
 
         # add gates to circuit
@@ -113,24 +105,8 @@ class PennylaneSimulator(SimulatorBase):
 
         # create and run circuit
         circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
-        state_vector = circuit()
 
-        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-
-        # Obtain the theoretical expectation value for each Pauli string in the
-        # Hamiltonian by matrix multiplication, and perform the necessary weighed
-        # sum to obtain the energy expectation value.
-        exact_evaluation = 0
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            ket = np.array(state_vector, dtype=complex)
-            bra = np.conj(ket)
-
-            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-            expectation_value = np.real(np.dot(bra, pauli_ket))
-
-            exact_evaluation += coefficient * expectation_value
-
-        return exact_evaluation.real
+        return circuit()
 
     def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
 

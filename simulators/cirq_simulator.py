@@ -98,41 +98,17 @@ def trotter_step(operator, time):
 
 class CirqSimulator(SimulatorBase):
 
-    def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
-        """
-        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
-        This function is basically used to test that the Cirq circuit is correct
+    def _get_state_vector(self, state_preparation_gates, *args):
 
-        :param qubit_hamiltonian: hamiltonian in qubits
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :return: the expectation value of the state given the hamiltonian
-        """
-
+        # Initialize circuit.
         circuit = cirq.Circuit(state_preparation_gates)
 
         simulation = cirq.Simulator()
 
         # Access the exact final state vector
         results = simulation.simulate(circuit)
-        state_vector = results.final_state_vector
 
-        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-
-        exact_evaluation = 0
-
-        # Obtain the theoretical expectation value for each Pauli string in the
-        # Hamiltonian by matrix multiplication, and perform the necessary weighed
-        # sum to obtain the energy expectation value.
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            ket = np.array(state_vector, dtype=complex)
-            bra = np.conj(ket)
-
-            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-            expectation_value = np.real(np.dot(bra, pauli_ket))
-
-            exact_evaluation += coefficient * expectation_value
-
-        return exact_evaluation.real
+        return results.final_state_vector
 
     def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
 

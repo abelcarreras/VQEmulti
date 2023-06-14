@@ -1,8 +1,9 @@
-from utils import convert_hamiltonian, group_hamiltonian
+from utils import convert_hamiltonian, group_hamiltonian, string_to_matrix
 from openfermion.utils import count_qubits
 from openfermion import get_sparse_operator
 from openfermion import QubitOperator
 import scipy
+import numpy as np
 
 
 class SimulatorBase:
@@ -99,6 +100,36 @@ class SimulatorBase:
 
         return energy.real
 
+    def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
+        """
+        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
+        This function is basically used to test that the Pennylane circuit is correct
+
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :return: the expectation value of the state given the hamiltonian
+        """
+
+        n_qubits = count_qubits(qubit_hamiltonian)
+        state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
+
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+
+        # Obtain the theoretical expectation value for each Pauli string in the
+        # Hamiltonian by matrix multiplication, and perform the necessary weighed
+        # sum to obtain the energy expectation value.
+        energy = 0
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+            ket = np.array(state_vector, dtype=complex)
+            bra = np.conj(ket)
+
+            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
+            expectation_value = np.real(np.dot(bra, pauli_ket))
+
+            energy += coefficient * expectation_value
+
+        return energy
+
     def _get_preparation_gates_trotter(self, ansatz_qubit, hf_reference_fock):
         """
         Trotterize the ansatz
@@ -133,7 +164,7 @@ class SimulatorBase:
     def _measure_expectation(self, *args):
         raise NotImplementedError()
 
-    def _get_exact_state_evaluation(self, *args):
+    def _get_state_vector(self, *args):
         raise NotImplementedError()
 
     def _get_matrix_operator_gates(self, *args):

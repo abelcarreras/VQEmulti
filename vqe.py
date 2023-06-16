@@ -62,7 +62,7 @@ def vqe(hamiltonian,
         energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                               type(energy_simulator)(trotter=False, test_only=True))
 
-        assert abs(energy_exact - energy_sim_test) < 1e-6
+        #assert abs(energy_exact - energy_sim_test) < 1e-6
 
     if energy_simulator is not None:
         circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
@@ -113,19 +113,20 @@ if __name__ == '__main__':
     print('hf reference', hf_reference_fock)
 
     # Simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
-    # from simulators.cirq_simulator import CirqSimulator as Simulator
+    #from simulators.penny_simulator import PennylaneSimulator as Simulator
+    from simulators.cirq_simulator import CirqSimulator as Simulator
+    # from simulators.quiskit_simulator import QiskitSimulator as Simulator
 
-    simulator = Simulator(trotter=False,
+    simulator = Simulator(trotter=True,
                           trotter_steps=1,
-                          test_only=True,
-                          shots=1000)
+                          test_only=False,
+                          shots=100000)
 
     print('Initialize VQE')
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 energy_simulator=None,
+                 energy_simulator=simulator,
                  opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

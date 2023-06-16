@@ -153,46 +153,26 @@ class PennylaneSimulator(SimulatorBase):
                     qml.RX(np.pi / 2, wires=[i])
 
             # sample measurements in PauliZ
-            return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
+            #return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
+            return qml.counts()
 
         # draw circuit
         # print(qml.draw(circuit)())
 
-        result_data = {}
-        if main_string != "I" * n_qubits:
-            raw_results = np.array(circuit()).T
-            for i, measure_z_vector in enumerate(raw_results):
-                result_data.update({'{}'.format(i): measure_z_vector.tolist()})
-        else:
-            raise Exception('Nothing to run')
-            # return 0
+        def str_to_bit(string):
+            return 1 if string == '1' else -1
 
         # Get function return from measurements in Z according to sub_hamiltonian
-        measurements = {}
-        for sub_string in sub_hamiltonian:
-            measurements[sub_string] = 0
-
-        for measure_z_vector in raw_results:
-            for sub_string in sub_hamiltonian:
+        total_expectation_value = 0
+        for measure_string, counts in circuit().items():
+            for sub_string, coefficient in sub_hamiltonian.items():
 
                 prod_function = 1
-                for i, measure_z in enumerate(measure_z_vector):
+                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                measurements[sub_string] += prod_function
-
-        # Calculate the expectation value of the subHamiltonian, by multiplying
-        # the expectation value of each substring by the respective coefficient
-        total_expectation_value = 0
-        for sub_string, coefficient in sub_hamiltonian.items():
-            # Get the expectation value of this substring by taking the average
-            # over all the repetitions
-            expectation_value = measurements[sub_string] / shots
-
-            # Add this value to the measurements expectation value, weighed by its
-            # coefficient
-            total_expectation_value += expectation_value * coefficient
+                total_expectation_value += prod_function * coefficient * counts/shots
 
         return total_expectation_value
 

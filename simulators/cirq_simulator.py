@@ -153,19 +153,16 @@ class CirqSimulator(SimulatorBase):
         qubits = cirq.LineQubit.range(n_qubits)
 
         # parse string
-        # Append necessary rotations and measurements for each qubit.
+        # apply operators to measure each qubit in the basis given by main strings
         for i, qubit in enumerate(qubits):
             op = main_string[i]
 
-            # Rotate qubit i to the X basis if that's the desired measurement.
             if op == "X":
                 circuit.append(cirq.H(qubit))
 
-            # Rotate qubit i to the Y basis if that's the desired measurement.
             elif op == "Y":
                 circuit.append(cirq.rx(np.pi / 2).on(qubit))
 
-            # Measure qubit i in the computational basis, unless operator is I.
             if op != "I":
                 circuit.append(cirq.measure(qubit, key=str(i)))
 

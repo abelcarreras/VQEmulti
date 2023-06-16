@@ -78,21 +78,18 @@ class SimulatorBase:
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
         grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
 
-        # Obtain the expectation value for each Pauli string by
-        # calling the measure_expectation function, and perform the necessary weighed
-        # sum to obtain the energy expectation value
-        energy = 0
+        # Obtain the expectation value for each Pauli string
+        expectation_value = 0
         for main_string, sub_hamiltonian in grouped_hamiltonian.items():
-            expectation_value = self._measure_expectation(main_string,
-                                                          sub_hamiltonian,
-                                                          self._shots,
-                                                          state_preparation_gates,
-                                                          n_qubits)
-            energy += expectation_value
+            expectation_value += self._measure_expectation(main_string,
+                                                           sub_hamiltonian,
+                                                           self._shots,
+                                                           state_preparation_gates,
+                                                           n_qubits)
 
-        assert energy.imag < 1e-5
+        assert expectation_value.imag < 1e-5
 
-        return energy.real
+        return expectation_value.real
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):
         """

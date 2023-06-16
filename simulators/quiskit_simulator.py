@@ -143,12 +143,12 @@ class QiskitSimulator(SimulatorBase):
         :return:
         """
 
-        # Initialize circuit.
+        # Initialize circuit and apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
 
-        # apply hamiltonian gates according to main string
+        # apply operators to measure each qubit in the basis given by main strings
         for i, op in enumerate(main_string):
             if op == "X":
                 circuit.h([i])
@@ -178,6 +178,46 @@ class QiskitSimulator(SimulatorBase):
                         prod_function *= measure_z ** int(sub_string[i])
 
                 total_expectation_value += prod_function * coefficient * counts/shots
+
+        return total_expectation_value
+
+    def _measure_expectation_simple(self, pauli_string, shots, state_preparation_gates, n_qubits):
+
+        # apply hamiltonian gates according to main string
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        # apply main strings operators for measures
+        for i, op in enumerate(pauli_string):
+            if op == "X":
+                circuit.h([i])
+
+            elif op == "Y":
+                circuit.rx(np.pi / 2, [i])
+        circuit.measure_all()
+
+        backend = qiskit.Aer.get_backend('aer_simulator')
+        result = backend.run(circuit, shots=self._shots, memory=True).result()
+        # memory = result.get_memory()
+        counts_total = result.get_counts()
+
+        # draw circuit
+        # print(qml.draw(circuit)())
+        def str_to_bit(string):
+            return 1 if string == '1' else -1
+
+        # Get function return from measurements in Z according to sub_hamiltonian
+        total_expectation_value = 0
+        for measure_string, counts in counts_total.items():
+
+            prod_function = 1
+            for op, measure_z in zip(pauli_string, [str_to_bit(k) for k in measure_string]):
+                if op != "I":
+                    prod_function *= measure_z
+
+            # print(prod_function)
+            total_expectation_value += prod_function * counts/shots
 
         return total_expectation_value
 

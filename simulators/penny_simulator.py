@@ -144,7 +144,7 @@ class PennylaneSimulator(SimulatorBase):
             for gate in state_preparation_gates:
                 qml.apply(gate)
 
-            # apply hamiltonian gates according to main string
+            # apply operators to measure each qubit in the basis given by main strings
             for i, op in enumerate(main_string):
                 if op == "X":
                     qml.Hadamard(wires=[i])

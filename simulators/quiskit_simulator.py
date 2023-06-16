@@ -113,7 +113,7 @@ class QiskitSimulator(SimulatorBase):
         backend = qiskit.Aer.get_backend('statevector_simulator')
         result = backend.run(circuit).result()
 
-        return np.array(result.get_statevector())[::-1]
+        return np.array(result.get_statevector())
 
     def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
 
@@ -173,7 +173,7 @@ class QiskitSimulator(SimulatorBase):
             for sub_string, coefficient in sub_hamiltonian.items():
 
                 prod_function = 1
-                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string]):
+                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
@@ -230,15 +230,16 @@ class QiskitSimulator(SimulatorBase):
         :param mapping: mapping transform
         :return: reference gates
         """
-        from qiskit.circuit.library import XGate, IGate
+        from qiskit.circuit.library import XGate
+
+        n_qubits = len(hf_reference_fock)
 
         reference_gates = []
         if mapping == 'jw':
             for i, occ in enumerate(hf_reference_fock):
                 if bool(occ):
-                    reference_gates.append(CircuitInstruction(XGate(), [i]))
-                else:
-                    reference_gates.append(CircuitInstruction(IGate(), [i]))
+                    reference_gates.append(CircuitInstruction(XGate(), [n_qubits-i-1]))
+
             return reference_gates
 
         raise Exception('{} tranform not implemented'.format(mapping))

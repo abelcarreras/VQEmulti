@@ -1,5 +1,5 @@
 from simulators import SimulatorBase
-from utils import convert_hamiltonian, string_to_matrix, transform_to_scaled_qubit
+from utils import transform_to_scaled_qubit
 from openfermion.utils import count_qubits
 import numpy as np
 import cirq

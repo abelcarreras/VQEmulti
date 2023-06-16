@@ -1,7 +1,9 @@
 from simulators import SimulatorBase
 from utils import transform_to_scaled_qubit
 import numpy as np
-import pennylane as qml
+import qiskit
+from qiskit.quantum_info.operators import Operator
+from qiskit.circuit import CircuitInstruction, Operation
 
 
 def trotter_step(qubit_operator, time):
@@ -35,6 +37,9 @@ def trotter_step(qubit_operator, time):
         # that compute the parity
         involved_qubits = []
 
+        from qiskit.circuit.library import HGate, RXGate, RZGate
+        from qiskit.circuit.library import MCXGate
+
         # Perform necessary basis rotations
         for pauli in pauliString:
 
@@ -47,27 +52,30 @@ def trotter_step(qubit_operator, time):
 
             if pauli_operator == "X":
                 # Rotate to X basis
-                trotter_gates.append(qml.Hadamard(wires= qubit_index))
+                trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
 
             if pauli_operator == "Y":
                 # Rotate to Y Basis
-                trotter_gates.append(qml.RX(np.pi / 2,wires= qubit_index))
+                trotter_gates.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
 
         # Compute parity and store the result on the last involved qubit
         for i in range(len(involved_qubits) - 1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
-            trotter_gates.append(qml.CNOT(wires= [control, target]))
+            # trotter_gates.append(qml.CNOT(wires= [control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
-        # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
+            # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits)
-        trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
+        # trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
+        trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
 
         # Uncompute parity
         for i in range(len(involved_qubits) - 2, -1, -1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
-            trotter_gates.append(qml.CNOT(wires=[control, target]))
+            # trotter_gates.append(qml.CNOT(wires=[control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
         # Undo basis rotations
         for pauli in pauliString:
@@ -80,32 +88,32 @@ def trotter_step(qubit_operator, time):
 
             if pauli_operator == "X":
                 # Rotate to Z basis from X basis
-                trotter_gates.append(qml.Hadamard(qubit_index))
+                # trotter_gates.append(qml.Hadamard(qubit_index))
+                trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
 
             if pauli_operator == "Y":
                 # Rotate to Z basis from Y Basis
-                trotter_gates.append(qml.RX(-np.pi / 2, wires = qubit_index))
+                # trotter_gates.append(qml.RX(-np.pi / 2, wires = qubit_index))
+                trotter_gates.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
 
     return trotter_gates
 
 
-class PennylaneSimulator(SimulatorBase):
+class QiskitSimulator(SimulatorBase):
 
     def _get_state_vector(self, state_preparation_gates, n_qubits):
 
         # Initialize circuit.
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
 
-        # add gates to circuit
-        def circuit_function():
-            for gate in state_preparation_gates:
-                qml.apply(gate)
-            return qml.state()
+        # print(circuit)
 
-        # create and run circuit
-        circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
+        backend = qiskit.Aer.get_backend('statevector_simulator')
+        result = backend.run(circuit).result()
 
-        return circuit()
+        return np.array(result.get_statevector())[::-1]
 
     def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
 
@@ -116,13 +124,14 @@ class PennylaneSimulator(SimulatorBase):
         state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
         # Append the ansatz directly as a matrix
-        state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
+        matrix_gate = Operator(np.real(matrix.toarray()))
+        state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits))))
 
         return state_preparation_gates
 
     def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
         """
-        Measures the expectation value of a sub_hamiltonian using the Quiskit simulator.
+        Measures the expectation value of a sub_hamiltonian using the Pennylane simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
         obtained from the same measurement array. This reduces quantum computer simulations
 
@@ -135,34 +144,36 @@ class PennylaneSimulator(SimulatorBase):
         """
 
         # Initialize circuit.
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)], shots=shots)
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
 
-        # Build circuit from preparation gates
-        @qml.qnode(dev_unique_wires)
-        def circuit():
-            # apply preparation gates
-            for gate in state_preparation_gates:
-                qml.apply(gate)
+        # apply hamiltonian gates according to main string
+        for i, op in enumerate(main_string):
+            if op == "X":
+                circuit.h([i])
 
-            # apply hamiltonian gates according to main string
-            for i, op in enumerate(main_string):
-                if op == "X":
-                    qml.Hadamard(wires=[i])
+            elif op == "Y":
+                circuit.rx(np.pi / 2, [i])
+        circuit.measure_all()
 
-                elif op == "Y":
-                    qml.RX(np.pi / 2, wires=[i])
-
-            # sample measurements in PauliZ
-            return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
+        backend = qiskit.Aer.get_backend('aer_simulator')
+        result = backend.run(circuit, shots=self._shots, memory=True).result()
+        memory = result.get_memory()
+        # print(result.get_counts())
 
         # draw circuit
         # print(qml.draw(circuit)())
+        def str_to_bit(string):
+            if string == '1':
+                return 1
+            else:
+                return -1
 
         result_data = {}
         if main_string != "I" * n_qubits:
-            raw_results = np.array(circuit()).T
-            for i, measure_z_vector in enumerate(raw_results):
-                result_data.update({'{}'.format(i): measure_z_vector.tolist()})
+            for i, measure_string in enumerate(memory):
+                result_data.update({'{}'.format(i): [str_to_bit(k) for k in measure_string]})
         else:
             raise Exception('Nothing to run')
             # return 0
@@ -172,11 +183,11 @@ class PennylaneSimulator(SimulatorBase):
         for sub_string in sub_hamiltonian:
             measurements[sub_string] = 0
 
-        for measure_z_vector in raw_results:
+        for measure_string in memory:
             for sub_string in sub_hamiltonian:
 
                 prod_function = 1
-                for i, measure_z in enumerate(measure_z_vector):
+                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
@@ -205,16 +216,16 @@ class PennylaneSimulator(SimulatorBase):
         :param mapping: mapping transform
         :return: reference gates
         """
+        from qiskit.circuit.library import XGate, IGate
 
         reference_gates = []
         if mapping == 'jw':
             for i, occ in enumerate(hf_reference_fock):
                 if bool(occ):
-                    reference_gates.append(qml.PauliX(wires=[i]))
+                    reference_gates.append(CircuitInstruction(XGate(), [i]))
                 else:
-                    reference_gates.append(qml.Identity(wires=[i]))
+                    reference_gates.append(CircuitInstruction(IGate(), [i]))
             return reference_gates
-            # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
         raise Exception('{} tranform not implemented'.format(mapping))
 
@@ -250,25 +261,51 @@ class PennylaneSimulator(SimulatorBase):
 
         # Initialize circuit.
         n_qubits = len(hf_reference_fock)
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
 
-        # add gates to circuit
-        def circuit_function():
-            for gate in state_preparation_gates:
-                qml.apply(gate)
-            return qml.state()
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
 
-        # create and run circuit
-        circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
-
-        specs_func = qml.specs(circuit)
-        return specs_func()
+        return {'depth': circuit.depth()}
 
 
 if __name__ == '__main__':
-    simulator = PennylaneSimulator(trotter=True,
-                                   trotter_steps=1,
-                                   test_only=True,
-                                   shots=100)
+    from qiskit.circuit import CircuitInstruction
 
-    print(simulator.get_preparation_gates)
+
+    circuit = qiskit.QuantumCircuit(2)
+
+    circuit.h(0)
+    cx = Operator([[1, 0, 0, 0],
+                   [0, 0, 0, 1],
+                   [0, 0, 1, 0],
+                   [0, 1, 0, 0]
+                   ])
+
+    from qiskit.circuit.library.standard_gates.h import HGate
+    from qiskit.circuit.library.standard_gates.u import UGate
+
+    from qiskit.circuit.library.standard_gates.rx import RXGate
+
+    #return self.append(HGate(), [qubit], [])
+
+    list_gates = [CircuitInstruction(HGate(), [1]), CircuitInstruction(cx, [0, 1])]
+    circuit2 = qiskit.QuantumCircuit(2)
+    for gate in list_gates:
+        circuit2.append(gate)
+
+    print(circuit2)
+    exit()
+
+    for gate in circuit.data:
+        print(gate)
+
+    circuit.unitary(cx, [0, 1], label='U')
+
+
+    print('----------')
+    print(circuit.data)
+
+    #circuit = qiskit.QuantumCircuit()
+
+    print(circuit)

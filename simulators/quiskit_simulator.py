@@ -107,7 +107,9 @@ class QiskitSimulator(SimulatorBase):
                  test_only=False,
                  shots=1000,
                  backend=qiskit.Aer.get_backend('aer_simulator'),
-                 session=None
+                 use_estimator=False,
+                 session=None,
+                 verbose=False
                  ):
 
         """
@@ -115,10 +117,19 @@ class QiskitSimulator(SimulatorBase):
         :param trotter_steps: number of trotter steps (only used if trotter=True)
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
         :param shots: number of samples to perform in the simulation
+        :param backend: qiskit backend to run the calculations
+        :param use_estimator: use qiskit estimator instead of VQEmulti implementation
+        :param session: IBM runtime session to run jobs on IBM computers (estimator)
+        :param verbose: print more information (estimator only)
         """
 
         self._backend = backend
         self._session = session
+        self._verbose = verbose
+        self._use_estimator = use_estimator
+
+        if session is True:
+            self._use_estimator = True
 
         super().__init__(trotter, trotter_steps, test_only, shots)
 
@@ -169,7 +180,7 @@ class QiskitSimulator(SimulatorBase):
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
         grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
 
-        if self._session is None:
+        if self._use_estimator is False:
             # Obtain the expectation value for each Pauli string
             expectation_value = 0
             for main_string, sub_hamiltonian in grouped_hamiltonian.items():
@@ -180,21 +191,21 @@ class QiskitSimulator(SimulatorBase):
                                                                n_qubits)
 
         else:
-            expectation_value = self._measure_expectation_session(formatted_hamiltonian,
-                                                                  state_preparation_gates,
-                                                                  n_qubits,
-                                                                  self._session)
+            expectation_value = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                                    state_preparation_gates,
+                                                                    n_qubits,
+                                                                    self._session)
 
         assert expectation_value.imag < 1e-5
         return expectation_value.real
 
     def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
         """
-        Measures the expectation value of a sub_hamiltonian using the Qiskit simulator.
+        Measures the expectation value of a sub_hamiltonian (pauli string) using the Qiskit simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
         obtained from the same measurement array. This reduces quantum computer simulations
 
-        :param main_string: hamiltonian main string ex: (XXYY)
+        :param main_string: hamiltonian base Pauli string ex: (XXYY)
         :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
         :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state
@@ -239,53 +250,7 @@ class QiskitSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _measure_expectation_simple(self, pauli_string, state_preparation_gates, n_qubits):
-        """
-        Measure expectation value of the partial hamiltonian without grouping (for test only)
-
-        :param pauli_string: hamiltonian Pauli strings
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :param n_qubits: number of qubits
-        :return: expectation value
-        """
-
-        # apply hamiltonian gates according to main string
-        circuit = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates:
-            circuit.append(gate)
-
-        # apply main strings operators for measures
-        for i, op in enumerate(pauli_string):
-            if op == "X":
-                circuit.h([i])
-
-            elif op == "Y":
-                circuit.rx(np.pi / 2, [i])
-        circuit.measure_all()
-
-        result = self._backend.run(circuit, shots=self._shots, memory=True).result()
-        # memory = result.get_memory()
-        counts_total = result.get_counts()
-
-        # draw circuit
-        # print(qml.draw(circuit)())
-        def str_to_bit(string):
-            return 1 if string == '1' else -1
-
-        # Get function return from measurements in Z according to sub_hamiltonian
-        total_expectation_value = 0
-        for measure_string, counts in counts_total.items():
-
-            prod_function = 1
-            for op, measure_z in zip(pauli_string, [str_to_bit(k) for k in measure_string[::-1]]):
-                if op != "I":
-                    prod_function *= measure_z
-
-            total_expectation_value += prod_function * counts/self._shots
-
-        return total_expectation_value
-
-    def _measure_expectation_session(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
+    def _measure_expectation_estimator(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
         """
         get the expectation value of the full Hamiltonian
 
@@ -296,12 +261,14 @@ class QiskitSimulator(SimulatorBase):
         :return: expectation value of the full hamiltonian
         """
 
-        from qiskit_ibm_runtime import Estimator, Options
-
         # apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
+
+        if self._verbose:
+            print('circuit:')
+            print(circuit)
 
         list_strings = []
         for pauli_string, coefficient in formatted_hamiltonian.items():
@@ -309,11 +276,23 @@ class QiskitSimulator(SimulatorBase):
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
-        estimator = Estimator(session=session, options=Options(optimization_level=3))
+        if self._verbose:
+            print('measure operator:')
+            print(measure_op)
+
+        if self._session is None:
+            from qiskit.primitives import Estimator
+            estimator = Estimator()
+        else:
+            from qiskit_ibm_runtime import Estimator, Options
+            options = Options(optimization_level=3)
+            estimator = Estimator(session=session, options=options)
 
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
-        print(job.result().values[0])
+
+        if self._verbose:
+            print('Expectation value: ', job.result().values[0])
 
         return job.result().values[0]
 

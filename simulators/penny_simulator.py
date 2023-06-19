@@ -122,11 +122,11 @@ class PennylaneSimulator(SimulatorBase):
 
     def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
         """
-        Measures the expectation value of a sub_hamiltonian using the Quiskit simulator.
+        Measures the expectation value of a sub_hamiltonian (pauli string) using the Quiskit simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
         obtained from the same measurement array. This reduces quantum computer simulations
 
-        :param main_string: hamiltonian main string ex: (XXYY)
+        :param main_string: hamiltonian base Pauli string ex: (XXYY)
         :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
         :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state

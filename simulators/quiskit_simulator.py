@@ -1,9 +1,9 @@
 from simulators import SimulatorBase
 from utils import transform_to_scaled_qubit
-import numpy as np
-import qiskit
-from qiskit.quantum_info.operators import Operator
+from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
+import qiskit
+import numpy as np
 
 
 def trotter_step(qubit_operator, time):
@@ -101,6 +101,27 @@ def trotter_step(qubit_operator, time):
 
 class QiskitSimulator(SimulatorBase):
 
+    def __init__(self,
+                 trotter=False,
+                 trotter_steps=1,
+                 test_only=False,
+                 shots=1000,
+                 backend=qiskit.Aer.get_backend('aer_simulator'),
+                 session=None
+                 ):
+
+        """
+        :param trotter: Trotterize ansatz operators
+        :param trotter_steps: number of trotter steps (only used if trotter=True)
+        :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+        :param shots: number of samples to perform in the simulation
+        """
+
+        self._backend = backend
+        self._session = session
+
+        super().__init__(trotter, trotter_steps, test_only, shots)
+
     def _get_state_vector(self, state_preparation_gates, n_qubits):
 
         # Initialize circuit.
@@ -129,9 +150,47 @@ class QiskitSimulator(SimulatorBase):
 
         return state_preparation_gates
 
+    def _get_sampled_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
+        """
+        Obtains the expectation value in a state by sampling (using a simulator)
+
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :param shots: number of samples
+        :return: the expectation value of the energy
+        """
+        from openfermion.utils import count_qubits
+        from utils import convert_hamiltonian, group_hamiltonian
+
+        n_qubits = count_qubits(qubit_hamiltonian)
+
+        # Format and group the Hamiltonian, so as to save measurements by using
+        # the same data for Pauli strings that only differ by identities
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+        grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+
+        if self._session is None:
+            # Obtain the expectation value for each Pauli string
+            expectation_value = 0
+            for main_string, sub_hamiltonian in grouped_hamiltonian.items():
+                expectation_value += self._measure_expectation(main_string,
+                                                               sub_hamiltonian,
+                                                               self._shots,
+                                                               state_preparation_gates,
+                                                               n_qubits)
+
+        else:
+            expectation_value = self._measure_expectation_session(formatted_hamiltonian,
+                                                                  state_preparation_gates,
+                                                                  n_qubits,
+                                                                  self._session)
+
+        assert expectation_value.imag < 1e-5
+        return expectation_value.real
+
     def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
         """
-        Measures the expectation value of a sub_hamiltonian using the Pennylane simulator.
+        Measures the expectation value of a sub_hamiltonian using the Qiskit simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
         obtained from the same measurement array. This reduces quantum computer simulations
 
@@ -140,7 +199,7 @@ class QiskitSimulator(SimulatorBase):
         :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :param n_qubits: number of qubits
-        :return:
+        :return: expectation value
         """
 
         # Initialize circuit and apply hamiltonian gates according to main string
@@ -157,8 +216,7 @@ class QiskitSimulator(SimulatorBase):
                 circuit.rx(np.pi / 2, [i])
         circuit.measure_all()
 
-        backend = qiskit.Aer.get_backend('aer_simulator')
-        result = backend.run(circuit, shots=self._shots, memory=True).result()
+        result = self._backend.run(circuit, shots=self._shots, memory=True).result()
         # memory = result.get_memory()
         counts_total = result.get_counts()
 
@@ -177,11 +235,19 @@ class QiskitSimulator(SimulatorBase):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * coefficient * counts/shots
+                total_expectation_value += prod_function * coefficient * counts/self._shots
 
         return total_expectation_value
 
-    def _measure_expectation_simple(self, pauli_string, shots, state_preparation_gates, n_qubits):
+    def _measure_expectation_simple(self, pauli_string, state_preparation_gates, n_qubits):
+        """
+        Measure expectation value of the partial hamiltonian without grouping (for test only)
+
+        :param pauli_string: hamiltonian Pauli strings
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :param n_qubits: number of qubits
+        :return: expectation value
+        """
 
         # apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
@@ -197,8 +263,7 @@ class QiskitSimulator(SimulatorBase):
                 circuit.rx(np.pi / 2, [i])
         circuit.measure_all()
 
-        backend = qiskit.Aer.get_backend('aer_simulator')
-        result = backend.run(circuit, shots=self._shots, memory=True).result()
+        result = self._backend.run(circuit, shots=self._shots, memory=True).result()
         # memory = result.get_memory()
         counts_total = result.get_counts()
 
@@ -212,14 +277,45 @@ class QiskitSimulator(SimulatorBase):
         for measure_string, counts in counts_total.items():
 
             prod_function = 1
-            for op, measure_z in zip(pauli_string, [str_to_bit(k) for k in measure_string]):
+            for op, measure_z in zip(pauli_string, [str_to_bit(k) for k in measure_string[::-1]]):
                 if op != "I":
                     prod_function *= measure_z
 
-            # print(prod_function)
-            total_expectation_value += prod_function * counts/shots
+            total_expectation_value += prod_function * counts/self._shots
 
         return total_expectation_value
+
+    def _measure_expectation_session(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
+        """
+        get the expectation value of the full Hamiltonian
+
+        :param formatted_hamiltonian: hamiltonian in dictionary of Pauli strings and coefficients
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :param n_qubits: number of qubits
+        :param session: quiskit IBM runtime session
+        :return: expectation value of the full hamiltonian
+        """
+
+        from qiskit_ibm_runtime import Estimator, Options
+
+        # apply hamiltonian gates according to main string
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        list_strings = []
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+            list_strings.append((pauli_string, coefficient))
+
+        measure_op = SparsePauliOp.from_list(list_strings)
+
+        estimator = Estimator(session=session, options=Options(optimization_level=3))
+
+        # estimate [ <psi|H|psi)> ]
+        job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
+        print(job.result().values[0])
+
+        return job.result().values[0]
 
     def _build_reference_gates(self, hf_reference_fock, mapping='jw'):
         """

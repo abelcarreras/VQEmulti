@@ -167,7 +167,7 @@ def find_sub_strings(mainString, hamiltonian, checked=()):
 
 def group_hamiltonian(hamiltonian):
     """
-    Organizes a Hamiltonian into groups where strings only differ from
+    Organizes a Hamiltonian into Abelian commutative groups where strings only differ from
     identities, so that the expectation values of all the strings in each
     group can be calculated from the same measurement array.
 

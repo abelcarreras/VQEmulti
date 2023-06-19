@@ -1,8 +1,6 @@
 from utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from openfermion.utils import count_qubits
-from openfermion import get_sparse_operator
 from openfermion import QubitOperator
-import scipy
 import numpy as np
 
 
@@ -88,7 +86,6 @@ class SimulatorBase:
                                                            n_qubits)
 
         assert expectation_value.imag < 1e-5
-
         return expectation_value.real
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):

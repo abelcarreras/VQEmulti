@@ -63,7 +63,7 @@ def trotter_step(qubit_operator, time):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires= [control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [target, control]))
 
             # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits)
@@ -75,7 +75,7 @@ def trotter_step(qubit_operator, time):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires=[control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [target, control]))
 
         # Undo basis rotations
         for pauli in pauliString:
@@ -107,7 +107,7 @@ class QiskitSimulator(SimulatorBase):
                  test_only=False,
                  shots=1000,
                  backend=qiskit.Aer.get_backend('aer_simulator'),
-                 use_estimator=False,
+                 use_estimator=True,
                  session=None,
                  verbose=False
                  ):
@@ -281,15 +281,15 @@ class QiskitSimulator(SimulatorBase):
             print(measure_op)
 
         if self._session is None:
-            from qiskit.primitives import Estimator
-            estimator = Estimator()
+            from qiskit_aer.primitives import Estimator
+            estimator = Estimator(abelian_grouping=False)
         else:
             from qiskit_ibm_runtime import Estimator, Options
             options = Options(optimization_level=3)
             estimator = Estimator(session=session, options=options)
 
         # estimate [ <psi|H|psi)> ]
-        job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
+        job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
         if self._verbose:
             print('Expectation value: ', job.result().values[0])

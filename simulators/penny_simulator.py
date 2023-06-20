@@ -47,17 +47,17 @@ def trotter_step(qubit_operator, time):
 
             if pauli_operator == "X":
                 # Rotate to X basis
-                trotter_gates.append(qml.Hadamard(wires= qubit_index))
+                trotter_gates.append(qml.Hadamard(wires=qubit_index))
 
             if pauli_operator == "Y":
                 # Rotate to Y Basis
-                trotter_gates.append(qml.RX(np.pi / 2,wires= qubit_index))
+                trotter_gates.append(qml.RX(np.pi / 2, wires=qubit_index))
 
         # Compute parity and store the result on the last involved qubit
         for i in range(len(involved_qubits) - 1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
-            trotter_gates.append(qml.CNOT(wires= [control, target]))
+            trotter_gates.append(qml.CNOT(wires=[control, target]))
 
         # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits)

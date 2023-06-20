@@ -4,7 +4,7 @@ from openfermionpyscf import run_pyscf
 from vqe import vqe
 from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from pool import get_pool_singlet_sd
-from simulators.quiskit_simulator import QiskitSimulator
+from simulators.qiskit_simulator import QiskitSimulator
 from qiskit_ibm_runtime import Session
 
 

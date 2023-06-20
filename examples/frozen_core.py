@@ -15,7 +15,7 @@ h2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
                             basis='sto-3g',
                             multiplicity=1,
                             charge=0,
-                            description='H2')
+                            description='O2')
 
 # run classical calculation
 molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)

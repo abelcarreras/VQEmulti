@@ -9,7 +9,7 @@ from pool import get_pool_singlet_sd
 from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqe import vqe
 
-h2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
+o2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
                                       ['O', [0, 0, 1.0]]],
                             # basis='3-21g',
                             basis='sto-3g',
@@ -18,7 +18,7 @@ h2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
                             description='O2')
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+molecule = run_pyscf(o2_molecule, run_fci=True, run_ccsd=True)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons

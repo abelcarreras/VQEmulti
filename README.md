@@ -69,8 +69,8 @@ print('Energy VQE: {:.8f}'.format(result['energy']))
 print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
-print('Num operators: ', len(result['operators']))
-print('Operators:\n', result['operators'])
+print('Num operators: ', len(result['ansatz']))
+print('Ansatz:\n', result['ansatz'])
 print('Coefficients:\n', result['coefficients'])
 ```
 
@@ -135,7 +135,7 @@ error = result['energy'] - molecule.fci_energy
 print('Error:', error)
 
 print('Ansatz:', result['ansatz'])
-print('Indices:', result['indices'])
 print('Coefficients:', result['coefficients'])
+print('Operator Indices:', result['indices'])
 print('Num operators: {}'.format(len(result['ansatz'])))
 ```

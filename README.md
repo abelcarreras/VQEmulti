@@ -76,56 +76,56 @@ print('Coefficients:\n', result['coefficients'])
 
 Basic example for adaptVQE
 ----------------------------
-
 ```python
+from utils import get_hf_reference_in_fock_space
+from pool import get_pool_singlet_sd
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool import get_pool_singlet_sd
-from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from adapt_vqe import adaptVQE
+from utils import generate_reduced_hamiltonian
 
-h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                      ['H', [0, 0, 0.74]]],
+
+# molecule definition
+he2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
+                                       ['He', [0, 0, 1.0]]],
                             basis='3-21g',
                             multiplicity=1,
                             charge=0,
-                            description='H2')
+                            description='He2')
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+molecule = run_pyscf(he2_molecule)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 2  # molecule.n_orbitals
-
+n_orbitals = molecule.n_orbitals
 hamiltonian = molecule.get_molecular_hamiltonian()
-hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
+generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
-# print data
-print('n_electrons: ', n_electrons)
-print('n_orbitals: ', n_orbitals)
-print('n_qubits:', hamiltonian.n_qubits)
+# Choose specific pool of operators for adapt-VQE
+pool = get_pool_singlet_sd(n_electrons=n_electrons,
+                           n_orbitals=n_orbitals)
 
-# Get a pool of fermion operators for adapt-VQE
-operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
-                                     n_orbitals=n_orbitals)
-
-# Get reference Hartree Fock state in Fock space
+# Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-# Define Pennylane simulator
 from simulators.penny_simulator import PennylaneSimulator as Simulator
 
-simulator = Simulator(trotter=True,
+# define the simulator
+simulator = Simulator(trotter=False,
                       trotter_steps=1,
+                      test_only=True,
                       shots=1000)
 
-result, iterations = adaptVQE(operators_pool,  # fermionic operators
-                              hamiltonian,  # fermionic hamiltonian
-                              hf_reference_fock,  # reference vector in Fock space
-                              threshold=0.1,  # adaptVQE convergence gradient threshold 
-                              energy_simulator=simulator,  # simulator for energy calculation
-                              gradient_simulator=simulator)  # simulator for gradient calculation
+# run adaptVQE
+result = adaptVQE(pool,
+                  hamiltonian,
+                  hf_reference_fock,
+                  opt_qubits=False,
+                  threshold=0.002,
+                  energy_simulator=simulator,
+                  gradient_simulator=simulator,
+                  )
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))
 print('Energy adaptVQE: ', result['energy'])

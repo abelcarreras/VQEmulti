@@ -2,6 +2,7 @@ from energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
 from gradient import compute_gradient_vector, simulate_gradient
 from utils import fermion_to_qubit
 from pool.tools import OperatorList
+from errors import NotConvergedError
 import numpy as np
 import scipy
 
@@ -54,7 +55,7 @@ def adaptVQE(operators_pool,
         # transform to qubit ansatz
         operators_pool = operators_pool.get_quibits_list(normalize=True)
 
-    print('qubit pool size:', len(operators_pool))
+    print('pool size: ', len(operators_pool))
 
     for iteration in range(max_iterations):
 
@@ -149,7 +150,11 @@ def adaptVQE(operators_pool,
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
 
-    raise Exception('Not converged!')
+    raise NotConvergedError({'energy': iterations['energies'][-1],
+                             'ansatz': ansatz,
+                             'indices': indices,
+                             'coefficients': coefficients,
+                             'iterations': iterations})
 
 
 if __name__ == '__main__':

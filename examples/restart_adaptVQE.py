@@ -46,8 +46,8 @@ simulator = Simulator(trotter=True,
                       shots=1000)
 
 # FIRST CALCULATION
-result_first = adaptVQE(operators_pool, # fermionic operators
-                        hamiltonian,    # fermionic hamiltonian
+result_first = adaptVQE(hamiltonian,
+                        operators_pool, # fermionic operators
                         hf_reference_fock,
                         threshold=0.1,
                         energy_simulator=simulator,
@@ -55,8 +55,8 @@ result_first = adaptVQE(operators_pool, # fermionic operators
 
 # SECOND (restarted) CALCULATION
 print('restarting calculation')
-result = adaptVQE(operators_pool, # fermionic operators
-                  hamiltonian,    # fermionic hamiltonian
+result = adaptVQE(hamiltonian, # fermionic hamiltonian
+                  operators_pool, # fermionic operators
                   hf_reference_fock,
                   threshold=0.1,
                   coefficients=result_first['coefficients'],  # previous calculation coefficients

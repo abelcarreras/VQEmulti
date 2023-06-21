@@ -7,8 +7,8 @@ import numpy as np
 import scipy
 
 
-def adaptVQE(operators_pool,
-             hamiltonian,
+def adaptVQE(hamiltonian,
+             operators_pool,
              hf_reference_fock,
              opt_qubits=False,
              max_iterations=50,
@@ -204,8 +204,8 @@ if __name__ == '__main__':
                           test_only=True,
                           shots=1000)
 
-    result = adaptVQE(operators_pool,  # fermionic operators
-                      hamiltonian,  # fermionic hamiltonian
+    result = adaptVQE(hamiltonian, # fermionic hamiltonian
+                      operators_pool,  # fermionic operators
                       hf_reference_fock,
                       threshold=0.1,
                       # opt_qubits=True,
@@ -213,8 +213,8 @@ if __name__ == '__main__':
                       gradient_simulator=simulator)
 
     print('restart calculation')
-    result = adaptVQE(operators_pool,  # fermionic operators
-                      hamiltonian,  # fermionic hamiltonian
+    result = adaptVQE(hamiltonian,  # fermionic hamiltonian,
+                      operators_pool,  # fermionic operators
                       hf_reference_fock,
                       threshold=0.1,
                       coefficients=result['coefficients'],

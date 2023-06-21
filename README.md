@@ -103,8 +103,8 @@ hamiltonian = molecule.get_molecular_hamiltonian()
 generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # Choose specific pool of operators for adapt-VQE
-pool = get_pool_singlet_sd(n_electrons=n_electrons,
-                           n_orbitals=n_orbitals)
+operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
+                                     n_orbitals=n_orbitals)
 
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -118,8 +118,8 @@ simulator = Simulator(trotter=False,
                       shots=1000)
 
 # run adaptVQE
-result = adaptVQE(pool,
-                  hamiltonian,
+result = adaptVQE(hamiltonian,
+                  operators_pool,
                   hf_reference_fock,
                   opt_qubits=False,
                   threshold=0.002,

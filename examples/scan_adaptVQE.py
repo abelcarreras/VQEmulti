@@ -50,8 +50,8 @@ for d in np.linspace(0.3, 3, 20):
                           shots=1000)
 
     # run adaptVQE
-    result = adaptVQE(pool,
-                      hamiltonian,
+    result = adaptVQE(hamiltonian,
+                      pool,
                       hf_reference_fock,
                       opt_qubits=False,
                       threshold=0.1,

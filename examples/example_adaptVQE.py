@@ -39,8 +39,8 @@ hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qu
 
 try:
     # run adaptVQE
-    result = adaptVQE(pool,
-                      hamiltonian,
+    result = adaptVQE(hamiltonian,
+                      pool,
                       hf_reference_fock,
                       opt_qubits=False,
                       threshold=0.01,

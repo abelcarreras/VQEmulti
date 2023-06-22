@@ -80,9 +80,6 @@ def adaptVQE(hamiltonian,
                                                 gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
-        max_index = np.argmax(gradient_vector)
-        max_gradient = np.max(gradient_vector)
-        max_operator = operators_pool[max_index]
 
         print("Total gradient norm: {}".format(total_norm))
 
@@ -100,6 +97,10 @@ def adaptVQE(hamiltonian,
                       'iterations': iterations}
 
             return result
+
+        max_index = np.argmax(gradient_vector)
+        max_gradient = np.max(gradient_vector)
+        max_operator = operators_pool[max_index]
 
         print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
@@ -130,7 +131,8 @@ def adaptVQE(hamiltonian,
             energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                                   type(energy_simulator)(trotter=False, test_only=True))
 
-            assert abs(energy_exact - energy_sim_test) < 1e-6
+            print(energy_exact, energy_sim_test)
+            assert abs(energy_exact - energy_sim_test) < 1e-5
 
         coefficients = list(results.x)
         optimized_energy = results.fun

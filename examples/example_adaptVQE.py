@@ -11,7 +11,7 @@ from errors import NotConvergedError
 # molecule definition
 h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                       ['He', [0, 0, 1.0]]],
-                            basis='3-21g',
+                            basis='6-31g',
                             # basis='sto-3g',
                             multiplicity=1,
                             charge=0,

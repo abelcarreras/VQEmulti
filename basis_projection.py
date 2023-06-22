@@ -243,6 +243,11 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
                 list_op.append(coeff/norm * QubitOperator(term))
 
         list_op = OperatorList(list_op)
+
+    elif operator_ansatz == 0:
+        list_op = OperatorList([])
+        list_coeff = []
+
     else:
         raise Exception('Ansatz preparation for {} type not implemented'.format(type(operator_ansatz)))
 
@@ -269,6 +274,8 @@ def project_basis(ansatz, basis_overlap_matrix, n_orb_1=None, frozen_core_1=0, n
         Operator = FermionOperator
     elif isinstance(ansatz, QubitOperator):
         Operator = QubitOperator
+    elif ansatz == 0:
+        return 0
     else:
         raise Exception('Operator projection for {} type not implemented'.format(type(ansatz)))
 

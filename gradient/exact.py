@@ -94,7 +94,7 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
         gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
 
         if gradient > 1e-5:
-            print("Operator {}: {}".format(i, gradient))
+            print("Operator {}: {:.6f}".format(i, gradient))
 
         gradient_vector.append(gradient)
 

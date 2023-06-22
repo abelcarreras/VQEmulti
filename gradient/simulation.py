@@ -50,11 +50,14 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
 
     state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 
+    if simulator._test_only:
+        print('Non-Zero Gradients (Exact circuit evaluation)')
+    else:
+        print('Non-Zero Gradients (Simulated with {} shots)'.format(simulator._shots))
+
     # Calculate and print gradients
     gradient_vector = []
     for i, operator in enumerate(pool):
-
-        print("Operator {}".format(i))
 
         # convert to qubit if necessary
         if not isinstance(operator, QubitOperator):
@@ -69,12 +72,10 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
         sampled_gradient = np.abs(sampled_gradient)
         gradient_vector.append(sampled_gradient)
 
-        if simulator._test_only:
-            print('Exact gradient (simulator): {:.6f}'.format(sampled_gradient))
-        else:
-            print("Simulated gradient: {:.6f} ({} shots)".format(sampled_gradient, simulator._shots))
+        if sampled_gradient > 1e-6:
+            print("Operator {}: {:.6f}".format(i, sampled_gradient))
 
-        # just for testing (to be removed)
-        print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient)
+            # just for testing
+            # print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient)
 
     return gradient_vector

@@ -200,6 +200,7 @@ if __name__ == '__main__':
     # Simulator
     from simulators.penny_simulator import PennylaneSimulator as Simulator
     # from simulators.cirq_simulator import CirqSimulator as Simulator
+    # from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
     simulator = Simulator(trotter=True,
                           trotter_steps=1,
@@ -211,17 +212,6 @@ if __name__ == '__main__':
                       hf_reference_fock,
                       threshold=0.1,
                       # opt_qubits=True,
-                      energy_simulator=simulator,
-                      gradient_simulator=simulator)
-
-    print('restart calculation')
-    result = adaptVQE(hamiltonian,  # fermionic hamiltonian,
-                      operators_pool,  # fermionic operators
-                      hf_reference_fock,
-                      threshold=0.1,
-                      coefficients=result['coefficients'],
-                      ansatz=result['ansatz'],
-                      opt_qubits=True,
                       energy_simulator=simulator,
                       gradient_simulator=simulator)
 

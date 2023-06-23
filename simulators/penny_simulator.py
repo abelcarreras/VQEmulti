@@ -153,11 +153,14 @@ class PennylaneSimulator(SimulatorBase):
                     qml.RX(np.pi / 2, wires=[i])
 
             # sample measurements in PauliZ
-            #return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
-            return qml.counts()
+            return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
+            # return qml.counts()
 
         # draw circuit
-        # print(qml.draw(circuit)())
+        print(qml.draw(circuit)())
+        self._circuit_count.append(self._circuit_depth(circuit))
+        print(self._circuit_depth(circuit))
+        exit()
 
         def str_to_bit(string):
             return 1 if string == '1' else -1
@@ -221,6 +224,11 @@ class PennylaneSimulator(SimulatorBase):
             trotter_gates += trotter_step(qubit_operator, time / trotter_steps)
 
         return trotter_gates
+
+    def _circuit_depth(self, circuit):
+        # create and run circuit
+        specs_func = qml.specs(circuit)
+        return specs_func()['depth']
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

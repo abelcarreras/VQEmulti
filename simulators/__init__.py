@@ -21,6 +21,7 @@ class SimulatorBase:
         self._trotter_steps = trotter_steps
         self._test_only = test_only
         self._shots = shots
+        self._circuit_count = []
 
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
@@ -125,6 +126,15 @@ class SimulatorBase:
 
             # Get gates in simulation library format
             return self._get_matrix_operator_gates(hf_reference_fock, matrix)
+
+    def print_statistics(self):
+        print('\n------------------------------------')
+        print('Total shots: {}'.format(self._shots))
+        print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
+        print('Total operators (per shot): {}'.format(sum(self._circuit_count)))
+        print('Maximum circuit depth {}'.format(np.max(self._circuit_count)))
+        print('Average circuit depth {:.2f}'.format(np.average(self._circuit_count)))
+        print('------------------------------------\n')
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):

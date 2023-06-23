@@ -166,6 +166,8 @@ class CirqSimulator(SimulatorBase):
             if op != "I":
                 circuit.append(cirq.measure(qubit, key=str(i)))
 
+        self._circuit_count.append(self._circuit_depth(circuit) - 1)
+
         # Sample the desired number of repetitions from the circuit, unless
         # there are no measurements (identity term).
         if main_string != "I" * n_qubits:
@@ -254,12 +256,15 @@ class CirqSimulator(SimulatorBase):
 
         return trotter_gates
 
+    def _circuit_depth(self, circuit):
+        return len(cirq.Circuit(circuit.all_operations()))
+
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
         ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
         state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
         circuit = cirq.Circuit(state_preparation_gates)
 
-        return {'depth': len(cirq.Circuit(circuit.all_operations()))}
+        return {'depth': self._circuit_depth(circuit)}
 
 
 if __name__ == '__main__':

@@ -226,6 +226,8 @@ class QiskitSimulator(SimulatorBase):
             elif op == "Y":
                 circuit.rx(np.pi / 2, [i])
         circuit.measure_all()
+        self._circuit_count.append(self._circuit_depth(circuit)-1)
+
 
         result = self._backend.run(circuit, shots=self._shots, memory=True).result()
         # memory = result.get_memory()
@@ -288,6 +290,8 @@ class QiskitSimulator(SimulatorBase):
             options = Options(optimization_level=3)
             estimator = Estimator(session=session, options=options)
 
+        self._circuit_count += [(self._circuit_depth(circuit)+1)]*len(list_strings)
+
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
@@ -342,6 +346,9 @@ class QiskitSimulator(SimulatorBase):
             trotter_gates += trotter_step(qubit_operator, time / trotter_steps)
 
         return trotter_gates
+
+    def _circuit_depth(self, circuit):
+        return circuit.depth()
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

@@ -63,7 +63,7 @@ def trotter_step(qubit_operator, time):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires= [control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [target, control]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
             # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits)
@@ -75,7 +75,7 @@ def trotter_step(qubit_operator, time):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires=[control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [target, control]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
         # Undo basis rotations
         for pauli in pauliString:

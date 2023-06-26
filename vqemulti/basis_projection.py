@@ -1,4 +1,4 @@
-from pool.tools import OperatorList
+from vqemulti.pool.tools import OperatorList
 from posym.basis import PrimitiveGaussian, BasisFunction
 from openfermion import FermionOperator, QubitOperator
 from operator import mul

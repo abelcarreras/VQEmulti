@@ -1,6 +1,6 @@
 # spin_complement_gsd
 from openfermion import FermionOperator
-from pool.tools import OperatorList
+from vqemulti.pool.tools import OperatorList
 import openfermion
 
 

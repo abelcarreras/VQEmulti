@@ -1,8 +1,8 @@
-from energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
-from gradient import compute_gradient_vector, simulate_gradient
-from utils import fermion_to_qubit
-from pool.tools import OperatorList
-from errors import NotConvergedError
+from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
+from vqemulti.gradient import compute_gradient_vector, simulate_gradient
+from vqemulti.utils import fermion_to_qubit
+from vqemulti.pool.tools import OperatorList
+from vqemulti.errors import NotConvergedError
 import numpy as np
 import scipy
 

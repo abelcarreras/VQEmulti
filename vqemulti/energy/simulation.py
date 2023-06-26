@@ -1,4 +1,4 @@
-from utils import transform_to_scaled_qubit
+from vqemulti.utils import transform_to_scaled_qubit
 
 
 def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, simulator):

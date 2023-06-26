@@ -5,9 +5,9 @@
 
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool import get_pool_singlet_sd
-from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
-from vqe import vqe
+from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from vqemulti import vqe
 
 o2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
                                       ['O', [0, 0, 1.0]]],

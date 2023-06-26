@@ -1,4 +1,4 @@
-from utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from openfermion.utils import count_qubits
 from openfermion import QubitOperator
 import numpy as np

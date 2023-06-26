@@ -12,14 +12,22 @@ VQE algorithms currently implemented
 - adaptVQE
 
 
+Installation
+------------
+```bash
+cd vqemulti
+pip -e install .
+```
+
+
 Basic example for regular VQE
 -----------------------------
 ```python
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
-from pool import get_pool_singlet_sd
-from vqe import vqe
+from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from vqemulti.pool import get_pool_singlet_sd
+from vqemulti import vqe
 
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                       ['H', [0, 0, 1.0]]],
@@ -52,7 +60,7 @@ hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qu
 print('hf reference', hf_reference_fock)
 
 # Define Pennylane simulator
-from simulators.penny_simulator import PennylaneSimulator as Simulator
+from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
 simulator = Simulator(trotter=True,     # use Trotter transformation
                       trotter_steps=1,  # define Trotter transformation steps
@@ -77,12 +85,12 @@ print('Coefficients:\n', result['coefficients'])
 Basic example for adaptVQE
 ----------------------------
 ```python
-from utils import get_hf_reference_in_fock_space
-from pool import get_pool_singlet_sd
+from vqemulti.utils import get_hf_reference_in_fock_space
+from vqemulti.pool import get_pool_singlet_sd
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from adapt_vqe import adaptVQE
-from utils import generate_reduced_hamiltonian
+from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.utils import generate_reduced_hamiltonian
 
 
 # molecule definition
@@ -109,7 +117,7 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-from simulators.penny_simulator import PennylaneSimulator as Simulator
+from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
 # define the simulator
 simulator = Simulator(trotter=False,

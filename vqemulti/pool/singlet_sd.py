@@ -1,8 +1,8 @@
 from openfermion import FermionOperator
 from openfermion.utils import hermitian_conjugated
 from openfermion.transforms import normal_ordered
-from utils import normalize_operator
-from pool.tools import OperatorList
+from vqemulti.utils import normalize_operator
+from vqemulti.pool.tools import OperatorList
 import numpy as np
 
 

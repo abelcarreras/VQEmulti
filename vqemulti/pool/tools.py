@@ -1,6 +1,6 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
-from utils import normalize_operator, proper_order
+from vqemulti.utils import normalize_operator, proper_order
 from openfermion.transforms import jordan_wigner, bravyi_kitaev
 
 

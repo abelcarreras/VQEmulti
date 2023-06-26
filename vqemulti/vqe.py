@@ -1,6 +1,6 @@
-from energy import exact_vqe_energy, simulate_vqe_energy
-from utils import fermion_to_qubit
-from pool.tools import OperatorList
+from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy
+from vqemulti.utils import fermion_to_qubit
+from vqemulti.pool.tools import OperatorList
 import numpy as np
 import scipy
 

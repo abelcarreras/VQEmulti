@@ -1,10 +1,9 @@
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, PyscfMolecularData
-from utils import generate_reduced_hamiltonian, get_uccsd_operators
-from utils import get_hf_reference_in_fock_space
-from vqe import vqe
+from vqemulti.utils import generate_reduced_hamiltonian, get_uccsd_operators
+from vqemulti.utils import get_hf_reference_in_fock_space
+from vqemulti import vqe
 import unittest
-import numpy as np
 
 
 class OperationsTest(unittest.TestCase):
@@ -80,7 +79,7 @@ class OperationsTest(unittest.TestCase):
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-        from simulators.penny_simulator import PennylaneSimulator
+        from vqemulti.simulators.penny_simulator import PennylaneSimulator
         simulator = PennylaneSimulator(trotter=True, trotter_steps=1, test_only=True)
 
         print('Initialize VQE')
@@ -158,7 +157,7 @@ class OperationsTest(unittest.TestCase):
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-        from simulators.penny_simulator import PennylaneSimulator
+        from vqemulti.simulators.penny_simulator import PennylaneSimulator
         simulator = PennylaneSimulator(trotter=True, trotter_steps=1, test_only=True)
 
         print('Initialize VQE')

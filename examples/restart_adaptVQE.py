@@ -3,9 +3,9 @@
 
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool import get_pool_singlet_sd
-from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
-from adapt_vqe import adaptVQE
+from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from vqemulti.adapt_vqe import adaptVQE
 
 
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
@@ -38,7 +38,7 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # Simulator
-from simulators.penny_simulator import PennylaneSimulator as Simulator
+from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,

@@ -1,12 +1,12 @@
 # example of hydrogen molecule using UCCSD ansatz with VQE method
-from utils import get_hf_reference_in_fock_space
+from vqemulti.utils import get_hf_reference_in_fock_space
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from vqe import vqe
+from vqemulti import vqe
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import generate_reduced_hamiltonian, get_uccsd_operators
-from pool import get_pool_singlet_sd
+from vqemulti.utils import generate_reduced_hamiltonian, get_uccsd_operators
+from vqemulti.pool import get_pool_singlet_sd
 
 n_points = 20
 vqe_energies = []

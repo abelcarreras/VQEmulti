@@ -1,4 +1,4 @@
-from utils import transform_to_scaled_qubit, fermion_to_qubit
+from vqemulti.utils import transform_to_scaled_qubit, fermion_to_qubit
 from openfermion import get_sparse_operator, QubitOperator, count_qubits
 import numpy as np
 
@@ -15,7 +15,7 @@ def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ans
     :param sampled_gradient:
     :return:
     """
-    from gradient.exact import calculate_gradient, prepare_adapt_state
+    from vqemulti.gradient.exact import calculate_gradient, prepare_adapt_state
 
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)  # Get the current hamiltonian.
     sparse_state = prepare_adapt_state(hf_reference_fock, ansatz_qubit,

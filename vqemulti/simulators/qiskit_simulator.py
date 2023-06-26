@@ -1,5 +1,5 @@
-from simulators import SimulatorBase
-from utils import transform_to_scaled_qubit
+from vqemulti.simulators import SimulatorBase
+from vqemulti.utils import transform_to_scaled_qubit
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 import qiskit

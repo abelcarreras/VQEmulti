@@ -1,5 +1,5 @@
-from simulators import SimulatorBase
-from utils import transform_to_scaled_qubit
+from vqemulti.simulators import SimulatorBase
+from vqemulti.utils import transform_to_scaled_qubit
 import numpy as np
 import pennylane as qml
 

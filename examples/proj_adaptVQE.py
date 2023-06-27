@@ -3,10 +3,10 @@
 # into a large one [6-31G] with a full active space [4 orb]
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from pool import get_pool_singlet_sd
-from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
-from basis_projection import get_basis_overlap_matrix, project_basis, prepare_ansatz_for_restart
-from adapt_vqe import adaptVQE
+from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from vqemulti.basis_projection import get_basis_overlap_matrix, project_basis, prepare_ansatz_for_restart
+from vqemulti.adapt_vqe import adaptVQE
 
 
 # molecule definition
@@ -40,7 +40,7 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbit
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # Simulator
-from simulators.penny_simulator import PennylaneSimulator as Simulator
+from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,

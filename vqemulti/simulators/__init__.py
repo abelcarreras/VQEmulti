@@ -2,6 +2,7 @@ from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_mat
 from openfermion.utils import count_qubits
 from openfermion import QubitOperator
 import numpy as np
+import warnings
 
 
 class SimulatorBase:
@@ -128,6 +129,10 @@ class SimulatorBase:
             return self._get_matrix_operator_gates(hf_reference_fock, matrix)
 
     def print_statistics(self):
+        if len(self._circuit_count) <= 0:
+            warnings.warn('No simulation statistics to show')
+            return
+
         print('\n------------------------------------')
         print('Total shots: {}'.format(self._shots))
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
@@ -146,7 +151,7 @@ class SimulatorBase:
     def _get_matrix_operator_gates(self, *args):
         raise NotImplementedError()
 
-    def _build_reference_gates(self, *args):
+    def _build_reference_gates(self, *args, **kwargs):
         raise NotImplementedError()
 
     def _trotterize_operator(self, *args):

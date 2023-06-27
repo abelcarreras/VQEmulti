@@ -1,7 +1,6 @@
 import numpy as np
 import scipy
-from openfermion import get_sparse_operator
-from vqemulti.utils import get_sparse_ket_from_fock
+from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
 from openfermion.utils import count_qubits
 
 
@@ -17,12 +16,6 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :param qubit_hamiltonian: Hamiltonian in qubits
     :return: exact energy
     """
-
-    #ansatz = ansatz.copy()
-    #ansatz.scale_vector(coefficients)
-
-    #ansatz_qubit = ansatz.get_quibits_list()
-    #coefficients = np.ones(len(ansatz_qubit))
 
     # Transform Hamiltonian to matrix representation
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)

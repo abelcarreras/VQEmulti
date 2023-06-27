@@ -1,6 +1,5 @@
 import openfermion
-from openfermion import get_sparse_operator
-from vqemulti.utils import get_sparse_ket_from_fock
+from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
 from openfermion.utils import count_qubits
 import numpy as np
 import scipy

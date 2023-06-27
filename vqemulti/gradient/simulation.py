@@ -1,4 +1,4 @@
-from vqemulti.utils import transform_to_scaled_qubit, fermion_to_qubit
+from vqemulti.utils import fermion_to_qubit
 from openfermion import get_sparse_operator, QubitOperator, count_qubits
 import numpy as np
 
@@ -45,8 +45,7 @@ def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients
     :return:
     """
 
-    # qubit hamiltonian to sparse (Jordan-Wigner transform is used)
-    ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
+    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 
     state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 

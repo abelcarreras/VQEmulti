@@ -1,11 +1,12 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
 from openfermion.transforms import jordan_wigner, bravyi_kitaev
-from openfermion import get_sparse_operator
+from openfermion import get_sparse_operator as get_sparse_operator_openfermion
 import openfermion
 import numpy as np
 import scipy
 import warnings
+__MAPPING__ = 'jw'  # jw: Jordan-Wigner, bk: Bravyi-Kitaev
 
 
 def string_to_matrix(pauli_string):
@@ -54,7 +55,7 @@ def ansatz_to_matrix(ansatz, n_qubits):
 
     for operator in ansatz:
         # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator(operator, n_qubits)
+        operator_matrix = get_sparse_operator_openfermion(operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
@@ -62,45 +63,36 @@ def ansatz_to_matrix(ansatz, n_qubits):
     return matrix
 
 
-def get_sparse_ket_from_fock(fock_vector, mapping='jw'):
+def fock_to_bk(fock_vector):
+    bk_vector = []
+    for i, occ in enumerate(fock_vector):
+        if np.mod(i, 2) == 0:
+            bk_vector.append(occ)
+        else:
+            bk_vector.append(int(np.mod(np.sum(fock_vector[:i + 1]), 2)))
+
+    return bk_vector
+
+
+def get_sparse_ket_from_fock(fock_vector):
     """
     Transforms a state represented in Fock space to sparse vector.
 
     :param fock_vector: a list representing the Fock vector
-    :param mapping: mapping of fermions to qubits
     :return: the corresponding sparse vector
     """
 
-    if mapping == 'jw':
-        state_vector = [1]
+    state_vector = [1]
 
-        # Iterate through the ket, calculating the tensor product of the qubit states
-        for i in fock_vector:
-            qubit_vector = [not i, i]
-            state_vector = np.kron(state_vector, qubit_vector)
+    # Iterate through the ket, calculating the tensor product of the qubit states
+    for i in fock_vector:
+        qubit_vector = [not i, i]
+        state_vector = np.kron(state_vector, qubit_vector)
 
-        return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
-
-    elif mapping == 'bk':
-        def get_beta_matrix(n):
-            b_matrix = [1]
-            for n in range(n):
-                b_matrix = np.kron(np.identity(2), b_matrix)
-                b_matrix[0, n:] = 1
-            return b_matrix
-
-        state_vector = [1]
-        for i in fock_vector:
-            qubit_vector = [not i, i]
-            state_vector = np.kron(state_vector, qubit_vector)
-
-        matrix = get_beta_matrix(len(state_vector))
-        return scipy.sparse.csc_matrix(np.dot(matrix, state_vector), dtype=complex).transpose()
-
-    raise Exception('mapping not implemented')
+    return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0):
+def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0, mapping=__MAPPING__):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
@@ -108,6 +100,7 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
     :param electron_number: number of electrons
     :param qubit_number: the number of qubits necessary to represent the molecule
     :param frozen_core: number of orbitals that are frozen and not explicitly defined in Fock space
+    :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
     :return: the vector in the Fock space
     """
 
@@ -116,7 +109,10 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
     for i in range(electron_number - frozen_core * 2):
         hf_reference[i] = 1
 
-    return hf_reference.tolist()
+    if mapping == 'bk':
+        hf_reference = fock_to_bk(hf_reference)
+
+    return list(hf_reference)
 
 
 def find_sub_strings(mainString, hamiltonian, checked=()):
@@ -330,15 +326,6 @@ def get_uccsd_operators(n_electrons, n_orbitals, frozen_core=0):
                                                n_occupied * 2)
 
 
-def transform_to_scaled_qubit(ansatz, coefficients):
-
-    ansatz = ansatz.copy()
-    ansatz.scale_vector(coefficients)
-    ansatz_qubit = ansatz.get_quibits_list()
-
-    return ansatz_qubit
-
-
 def get_hf_energy_core(mol_h2, n_core_orb=0):
     from pyscf import ao2mo
 
@@ -452,12 +439,12 @@ def normalize_operator(operator):
     raise Exception('Cannot normalize 0 operator')
 
 
-def fermion_to_qubit(operator, mapping='jw'):
+def fermion_to_qubit(operator, mapping=__MAPPING__):
     """
     transform fermions to qubits
 
     :param operator: fermion operator
-    :param mapping: type of mapping from fermion to qubit
+    :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
     :return: qubit operator
     """
     if mapping == 'jw':
@@ -506,3 +493,18 @@ def proper_order(ansatz):
 
     return normal_ordered(total)
 
+
+def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1., mapping=__MAPPING__):
+    """
+    wrapper over get_sparse_operator for convenience
+
+    :param operator: operator
+    :param n_qubits: number of qubits
+    :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
+    :return:
+    """
+    if mapping == 'bk':
+        if isinstance(operator, openfermion.FermionOperator):
+            operator = bravyi_kitaev(operator)
+
+    return get_sparse_operator_openfermion(operator, n_qubits, trunc, hbar)

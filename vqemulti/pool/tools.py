@@ -1,7 +1,6 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
-from vqemulti.utils import normalize_operator, proper_order
-from openfermion.transforms import jordan_wigner, bravyi_kitaev
+from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit
 
 
 class OperatorList:
@@ -90,7 +89,7 @@ class OperatorList:
     def get_operators_type(self):
         return self._type
 
-    def get_quibits_list(self, mapping='jw', normalize=False):
+    def get_quibits_list(self, normalize=False):
         """
         return qubits in the basis set
         :param mapping:
@@ -103,12 +102,7 @@ class OperatorList:
 
         total_qubit = QubitOperator()
         for op in self._list:
-            if mapping == 'jw':
-                total_qubit += jordan_wigner(op)
-            elif mapping == 'bk':
-                total_qubit += bravyi_kitaev(op)
-            else:
-                raise Exception('{} transform not available')
+            total_qubit += fermion_to_qubit(op)
 
         return OperatorList(total_qubit, normalize=normalize)
 
@@ -148,6 +142,14 @@ class OperatorList:
     def copy(self):
         from copy import deepcopy
         return OperatorList(deepcopy(self._list), antisymmetrize=False)
+
+    def transform_to_scaled_qubit(self, coefficients):
+
+        ansatz = self.copy()
+        ansatz.scale_vector(coefficients)
+        ansatz_qubit = ansatz.get_quibits_list()
+
+        return ansatz_qubit
 
     def __mul__(self, other):
 

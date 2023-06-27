@@ -1,5 +1,4 @@
 from vqemulti.simulators import SimulatorBase
-from vqemulti.utils import transform_to_scaled_qubit
 import numpy as np
 import pennylane as qml
 
@@ -177,27 +176,23 @@ class PennylaneSimulator(SimulatorBase):
 
         return total_expectation_value
 
-    def _build_reference_gates(self, hf_reference_fock, mapping='jw'):
+    def _build_reference_gates(self, hf_reference_fock):
         """
         Create the gates for preparing the Hartree Fock ground state, that serves
         as a reference state the ansatz
 
         :param hf_reference_fock: HF reference in fock space
-        :param mapping: mapping transform
         :return: reference gates
         """
 
         reference_gates = []
-        if mapping == 'jw':
-            for i, occ in enumerate(hf_reference_fock):
-                if bool(occ):
-                    reference_gates.append(qml.PauliX(wires=[i]))
-                else:
-                    reference_gates.append(qml.Identity(wires=[i]))
-            return reference_gates
-            # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
-
-        raise Exception('{} tranform not implemented'.format(mapping))
+        for i, occ in enumerate(hf_reference_fock):
+            if bool(occ):
+                reference_gates.append(qml.PauliX(wires=[i]))
+            else:
+                reference_gates.append(qml.Identity(wires=[i]))
+        return reference_gates
+        # return [qml.PauliX(wires=[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
     def _trotterize_operator(self, qubit_operator, time, trotter_steps):
         """
@@ -230,7 +225,7 @@ class PennylaneSimulator(SimulatorBase):
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 
-        ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
+        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 
         state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 

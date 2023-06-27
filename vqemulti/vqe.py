@@ -114,11 +114,11 @@ if __name__ == '__main__':
     print('hf reference', hf_reference_fock)
 
     # Simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
-    # from simulators.cirq_simulator import CirqSimulator as Simulator
-    # from simulators.quiskit_simulator import QiskitSimulator as Simulator
+    # from simulators.penny_simulator import PennylaneSimulator as Simulator
+    from simulators.cirq_simulator import CirqSimulator as Simulator
+    # from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
-    simulator = Simulator(trotter=True,
+    simulator = Simulator(trotter=False,
                           trotter_steps=1,
                           test_only=True,
                           shots=10000)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 energy_simulator=simulator,
+                 # energy_simulator=simulator,
                  opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
@@ -138,3 +138,5 @@ if __name__ == '__main__':
     print('Num operators: ', len(result['ansatz']))
     print('Ansatz:\n', result['ansatz'])
     print('Coefficients:\n', result['coefficients'])
+
+    simulator.print_statistics()

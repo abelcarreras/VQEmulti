@@ -1,4 +1,3 @@
-from vqemulti.utils import transform_to_scaled_qubit
 
 
 def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, simulator):
@@ -15,7 +14,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     """
 
     # transform ansatz to qubit (coefficients are included in qubits objects)
-    ansatz_qubit = transform_to_scaled_qubit(ansatz, coefficients)
+    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 
     state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 

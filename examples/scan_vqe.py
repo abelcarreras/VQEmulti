@@ -24,10 +24,10 @@ for d in np.linspace(0.3, 3, n_points):
                                 description='H2')
 
     # run classical calculation
-    molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+    molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=True, guess_mix=True)
 
     # get properties from classical SCF calculation
-    n_electrons = 2 # molecule.n_electrons
+    n_electrons = molecule.n_electrons
     n_orbitals = 2  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)

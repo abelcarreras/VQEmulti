@@ -1,14 +1,13 @@
 # example of hydrogen molecule dissociation using adaptVQE method
 # and Pennylane simulator (1000 shots)
-from utils import get_hf_reference_in_fock_space
-from pool import get_pool_singlet_sd
+from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
+from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.analysis import get_info
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from adapt_vqe import adaptVQE
-from analysis import get_info
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import generate_reduced_hamiltonian
 
 vqe_energies = []
 energies_fullci = []
@@ -42,7 +41,7 @@ for d in np.linspace(0.3, 3, 20):
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
     simulator = Simulator(trotter=True,
                           trotter_steps=1,

@@ -452,7 +452,7 @@ def fermion_to_qubit(operator):
     elif Configuration().mapping == 'bk':
         return bravyi_kitaev(operator)
 
-    raise Exception('mapping not implemented')
+    raise Exception('{} mapping not implemented'.format(Configuration().mapping))
 
 
 def sort_tuples(tuples):

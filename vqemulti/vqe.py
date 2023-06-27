@@ -1,6 +1,7 @@
 from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy
 from vqemulti.utils import fermion_to_qubit
 from vqemulti.pool.tools import OperatorList
+from vqemulti.preferences import Configuration
 import numpy as np
 import scipy
 
@@ -43,7 +44,7 @@ def vqe(hamiltonian,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian),
                                           method="COBYLA",
-                                          options={'rhobeg': 0.1, 'disp': True},
+                                          options={'rhobeg': 0.1, 'disp': Configuration().verbose},
                                           )
 
     # Optimize the results from the CIRQ simulation
@@ -52,7 +53,7 @@ def vqe(hamiltonian,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
                                           method="COBYLA",
-                                          options={'rhobeg': 0.1, 'disp': True},
+                                          options={'rhobeg': 0.1, 'disp': Configuration().verbose},
                                           )
 
     # testing consistency
@@ -81,10 +82,11 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from pool.singlet_sd import get_pool_singlet_sd
-    from vqemulti.preferences import Configuration
+
 
     # set Bravyi-Kitaev mapping
     Configuration().mapping = 'bk'
+    Configuration().verbose = True
 
     h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                           ['He', [0, 0, 1.0]]],

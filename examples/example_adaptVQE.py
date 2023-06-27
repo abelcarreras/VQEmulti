@@ -1,12 +1,11 @@
 # example of He2 calculation using adaptVQE method
-from vqemulti.utils import get_hf_reference_in_fock_space
+from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.adapt_vqe import adaptVQE
+from vqemulti import NotConvergedError
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-from vqemulti.adapt_vqe import adaptVQE
 import matplotlib.pyplot as plt
-from vqemulti.utils import generate_reduced_hamiltonian
-from vqemulti import NotConvergedError
 
 # molecule definition
 h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],

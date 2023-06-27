@@ -3,6 +3,7 @@ from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.utils import fermion_to_qubit
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
+from vqemulti.preferences import Configuration
 import numpy as np
 import scipy
 
@@ -116,14 +117,14 @@ def adaptVQE(hamiltonian,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian),
                                               method='COBYLA',
                                               tol=None,
-                                              options={'rhobeg': 0.1, 'disp': True})
+                                              options={'rhobeg': 0.1, 'disp': Configuration().verbose})
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
                                               method='COBYLA',
                                               tol=1e-8,
-                                              options={'disp': True}) # 'rhobeg': 0.01)
+                                              options={'disp': Configuration().verbose}) # 'rhobeg': 0.01)
 
         energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
 
@@ -166,6 +167,8 @@ if __name__ == '__main__':
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from analysis import get_info
 
+    Configuration().verbose = True
+
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, 0.74]]],
                                 basis='3-21g',
@@ -196,6 +199,7 @@ if __name__ == '__main__':
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+    print('hf reference', hf_reference_fock)
 
     # Simulator
     from simulators.penny_simulator import PennylaneSimulator as Simulator

@@ -49,17 +49,18 @@ class SimulatorBase:
         # Obtain the theoretical expectation value for each Pauli string in the
         # Hamiltonian by matrix multiplication, and perform the necessary weighed
         # sum to obtain the energy expectation value.
-        energy = 0
+        expectation_value = 0
         for pauli_string, coefficient in formatted_hamiltonian.items():
             ket = np.array(state_vector, dtype=complex)
             bra = np.conj(ket)
 
             pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-            expectation_value = np.real(np.dot(bra, pauli_ket))
 
-            energy += coefficient * expectation_value
+            expectation_value += coefficient * np.dot(bra, pauli_ket)
 
-        return energy
+        assert expectation_value.imag < 1e-5
+
+        return expectation_value.real
 
     def _get_sampled_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """

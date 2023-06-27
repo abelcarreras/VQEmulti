@@ -1,6 +1,6 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
-from openfermion.transforms import jordan_wigner, bravyi_kitaev
+from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, binary_code_transform, get_fermion_operator
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
 from vqemulti.preferences import Configuration
 import openfermion
@@ -74,6 +74,14 @@ def fock_to_bk(fock_vector):
     return bk_vector
 
 
+def fock_to_parity(fock_vector):
+    parity_vector = []
+    for i, occ in enumerate(fock_vector):
+        parity_vector.append(int(np.mod(np.sum(fock_vector[:i + 1]), 2)))
+
+    return parity_vector
+
+
 def get_sparse_ket_from_fock(fock_vector):
     """
     Transforms a state represented in Fock space to sparse vector.
@@ -111,6 +119,8 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
 
     if Configuration().mapping == 'bk':
         hf_reference = fock_to_bk(hf_reference)
+    if Configuration().mapping == 'pc':
+        hf_reference = fock_to_parity(hf_reference)
 
     return list(hf_reference)
 
@@ -451,6 +461,10 @@ def fermion_to_qubit(operator):
         return jordan_wigner(operator)
     elif Configuration().mapping == 'bk':
         return bravyi_kitaev(operator)
+    elif Configuration().mapping == 'pc':
+        if isinstance(operator, InteractionOperator):
+            operator = get_fermion_operator(operator)
+        return binary_code_transform(operator, parity_code(count_qubits(operator)))
 
     raise Exception('{} mapping not implemented'.format(Configuration().mapping))
 
@@ -505,5 +519,8 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     if Configuration().mapping == 'bk':
         if isinstance(operator, openfermion.FermionOperator):
             operator = bravyi_kitaev(operator)
+    if Configuration().mapping == 'pc':
+        if isinstance(operator, openfermion.FermionOperator):
+            operator = binary_code_transform(operator, parity_code(count_qubits(operator)))
 
     return get_sparse_operator_openfermion(operator, n_qubits, trunc, hbar)

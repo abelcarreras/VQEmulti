@@ -12,6 +12,6 @@ class Singleton(type):
 
 @dataclass(frozen=False)
 class Configuration(metaclass=Singleton):
-    mapping: str = 'jw'  # jw: Jordan-wigner , bk: Bravyi-Kitaev
+    mapping: str = 'jw'  # jw: Jordan-wigner , bk: Bravyi-Kitaev, pc: parity transform
     verbose: bool = False
 

@@ -62,7 +62,7 @@ def vqe(hamiltonian,
         energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                               type(energy_simulator)(trotter=False, test_only=True))
 
-        print(energy_exact, energy_sim_test)
+        # print(energy_exact, energy_sim_test)
         assert abs(energy_exact - energy_sim_test) < 1e-6
 
     if energy_simulator is not None:
@@ -74,12 +74,17 @@ def vqe(hamiltonian,
             'ansatz': list(ansatz)}
 
 
+
 if __name__ == '__main__':
 
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from pool.singlet_sd import get_pool_singlet_sd
+    from vqemulti.preferences import Configuration
+
+    # set Bravyi-Kitaev mapping
+    Configuration().mapping = 'bk'
 
     h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                           ['He', [0, 0, 1.0]]],

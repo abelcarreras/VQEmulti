@@ -2,13 +2,11 @@ from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
 from openfermion.transforms import jordan_wigner, bravyi_kitaev
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
+from vqemulti.preferences import Configuration
 import openfermion
 import numpy as np
 import scipy
 import warnings
-
-# define mapping to be used along the code
-MAPPING = 'jw'  # jw: Jordan-Wigner, bk: Bravyi-Kitaev
 
 
 def string_to_matrix(pauli_string):
@@ -94,7 +92,7 @@ def get_sparse_ket_from_fock(fock_vector):
     return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0, mapping=MAPPING):
+def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
@@ -111,7 +109,7 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0,
     for i in range(electron_number - frozen_core * 2):
         hf_reference[i] = 1
 
-    if mapping == 'bk':
+    if Configuration().mapping == 'bk':
         hf_reference = fock_to_bk(hf_reference)
 
     return list(hf_reference)
@@ -441,17 +439,17 @@ def normalize_operator(operator):
     raise Exception('Cannot normalize 0 operator')
 
 
-def fermion_to_qubit(operator, mapping=MAPPING):
+def fermion_to_qubit(operator):
     """
     transform fermions to qubits
 
     :param operator: fermion operator
-    :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
     :return: qubit operator
     """
-    if mapping == 'jw':
+
+    if Configuration().mapping == 'jw':
         return jordan_wigner(operator)
-    if mapping == 'bk':
+    elif Configuration().mapping == 'bk':
         return bravyi_kitaev(operator)
 
     raise Exception('mapping not implemented')
@@ -496,16 +494,15 @@ def proper_order(ansatz):
     return normal_ordered(total)
 
 
-def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1., mapping=MAPPING):
+def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     """
     wrapper over get_sparse_operator for convenience
 
     :param operator: operator
     :param n_qubits: number of qubits
-    :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
     :return:
     """
-    if mapping == 'bk':
+    if Configuration().mapping == 'bk':
         if isinstance(operator, openfermion.FermionOperator):
             operator = bravyi_kitaev(operator)
 

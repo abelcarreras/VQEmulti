@@ -6,7 +6,9 @@ import openfermion
 import numpy as np
 import scipy
 import warnings
-__MAPPING__ = 'jw'  # jw: Jordan-Wigner, bk: Bravyi-Kitaev
+
+# define mapping to be used along the code
+MAPPING = 'jw'  # jw: Jordan-Wigner, bk: Bravyi-Kitaev
 
 
 def string_to_matrix(pauli_string):
@@ -92,7 +94,7 @@ def get_sparse_ket_from_fock(fock_vector):
     return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0, mapping=__MAPPING__):
+def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0, mapping=MAPPING):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
@@ -439,7 +441,7 @@ def normalize_operator(operator):
     raise Exception('Cannot normalize 0 operator')
 
 
-def fermion_to_qubit(operator, mapping=__MAPPING__):
+def fermion_to_qubit(operator, mapping=MAPPING):
     """
     transform fermions to qubits
 
@@ -494,7 +496,7 @@ def proper_order(ansatz):
     return normal_ordered(total)
 
 
-def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1., mapping=__MAPPING__):
+def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1., mapping=MAPPING):
     """
     wrapper over get_sparse_operator for convenience
 

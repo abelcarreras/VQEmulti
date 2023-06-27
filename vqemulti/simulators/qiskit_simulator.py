@@ -1,4 +1,5 @@
 from vqemulti.simulators import SimulatorBase
+from vqemulti.preferences import Configuration
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
@@ -106,7 +107,6 @@ class QiskitSimulator(SimulatorBase):
                  backend=qiskit.Aer.get_backend('aer_simulator'),
                  use_estimator=True,
                  session=None,
-                 verbose=False
                  ):
 
         """
@@ -117,12 +117,10 @@ class QiskitSimulator(SimulatorBase):
         :param backend: qiskit backend to run the calculations
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
         :param session: IBM runtime session to run jobs on IBM computers (estimator)
-        :param verbose: print more information (estimator only)
         """
 
         self._backend = backend
         self._session = session
-        self._verbose = verbose
         self._use_estimator = use_estimator
 
         if session is True:
@@ -265,7 +263,7 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
-        if self._verbose:
+        if Configuration().verbose:
             print('circuit:')
             print(circuit)
 
@@ -275,7 +273,7 @@ class QiskitSimulator(SimulatorBase):
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
-        if self._verbose:
+        if Configuration().verbose:
             print('measure operator:')
             print(measure_op)
 
@@ -292,7 +290,7 @@ class QiskitSimulator(SimulatorBase):
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
-        if self._verbose:
+        if Configuration().verbose:
             print('Expectation value: ', job.result().values[0])
 
         return job.result().values[0]

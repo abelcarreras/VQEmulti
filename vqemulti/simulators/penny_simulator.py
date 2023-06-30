@@ -157,7 +157,7 @@ class PennylaneSimulator(SimulatorBase):
 
         # draw circuit
         # print(qml.draw(circuit)())
-        self._circuit_count.append(self._circuit_depth(circuit))
+        self._get_circuit_stat_data(circuit)
 
         def str_to_bit(string):
             return 1 if string == '1' else -1
@@ -218,10 +218,18 @@ class PennylaneSimulator(SimulatorBase):
 
         return trotter_gates
 
-    def _circuit_depth(self, circuit):
-        # create and run circuit
+    def _get_circuit_stat_data(self, circuit):
+
         specs_func = qml.specs(circuit)
-        return specs_func()['depth']
+
+        # depth
+        self._circuit_count.append(specs_func()['depth']-1)
+
+        # gates
+        gates_dict = specs_func()['gate_types']
+        for k, v in gates_dict.items():
+            self._circuit_gates[k] += v
+
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

@@ -105,7 +105,7 @@ class QiskitSimulator(SimulatorBase):
                  test_only=False,
                  shots=1000,
                  backend=qiskit.Aer.get_backend('aer_simulator'),
-                 use_estimator=True,
+                 use_estimator=False,
                  session=None,
                  ):
 
@@ -220,8 +220,10 @@ class QiskitSimulator(SimulatorBase):
 
             elif op == "Y":
                 circuit.rx(np.pi / 2, [i])
+
+        self._get_circuit_stat_data(circuit)
+
         circuit.measure_all()
-        self._circuit_count.append(self._circuit_depth(circuit)-1)
 
 
         result = self._backend.run(circuit, shots=self._shots, memory=True).result()
@@ -285,7 +287,9 @@ class QiskitSimulator(SimulatorBase):
             options = Options(optimization_level=3)
             estimator = Estimator(session=session, options=options)
 
-        self._circuit_count += [(self._circuit_depth(circuit)+1)]*len(list_strings)
+        # circuit stats
+        for _ in list_strings:
+            self._get_circuit_stat_data(circuit)
 
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
@@ -339,8 +343,18 @@ class QiskitSimulator(SimulatorBase):
 
         return trotter_gates
 
-    def _circuit_depth(self, circuit):
-        return circuit.depth()
+    def _get_circuit_stat_data(self, circuit):
+
+        gates_name = {'x': 'PauliX', 'y': 'PauliY', 'z': 'PauliZ',
+                      'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',
+                      'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT'}
+
+        # depth
+        self._circuit_count.append(circuit.depth())
+
+        # gates
+        for gate in circuit.data:
+            self._circuit_gates[gates_name[gate[0].name]] += 1
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

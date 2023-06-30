@@ -1,6 +1,7 @@
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from openfermion.utils import count_qubits
 from openfermion import QubitOperator
+from collections import defaultdict
 import numpy as np
 import warnings
 
@@ -23,6 +24,7 @@ class SimulatorBase:
         self._test_only = test_only
         self._shots = shots
         self._circuit_count = []
+        self._circuit_gates = defaultdict(int)
 
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
@@ -137,9 +139,12 @@ class SimulatorBase:
         print('\n------------------------------------')
         print('Total shots: {}'.format(self._shots))
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
-        print('Total operators (per shot): {}'.format(sum(self._circuit_count)))
-        print('Maximum circuit depth {}'.format(np.max(self._circuit_count)))
-        print('Average circuit depth {:.2f}'.format(np.average(self._circuit_count)))
+        print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
+        print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))
+        print('Average circuit depth: {:.2f}'.format(np.average(self._circuit_count)))
+        print('Gate counts (per shot):')
+        for k, v in self._circuit_gates.items():
+            print(' {:10} : {}'.format(k, v))
         print('------------------------------------\n')
 
     # mock methods (to be implemented in subclasses)

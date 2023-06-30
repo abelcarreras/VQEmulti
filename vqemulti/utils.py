@@ -510,10 +510,15 @@ def proper_order(ansatz):
 
 def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     """
-    wrapper over get_sparse_operator for convenience
+    wrapper over openfermion's get_sparse_operator for convenience
 
-    :param operator: operator
-    :param n_qubits: number of qubits
+    :param operator: Currently supported operators include: FermionOperator,
+                     QubitOperator, DiagonalCoulombHamiltonian, PolynomialTensor, BosonOperator, QuadOperator.
+    :param n_qubits: Number qubits in the system Hilbert space. Applicable only to fermionic systems.
+    :param trunc: The size at which the Fock space should be truncated. Applicable only to bosonic systems.
+    :param hbar: the value of hbar to use in the definition of the canonical commutation
+                  relation [q_i, p_j] = \delta_{ij} i hbar. Applicable only to the QuadOperator.
+
     :return:
     """
     if Configuration().mapping == 'bk':

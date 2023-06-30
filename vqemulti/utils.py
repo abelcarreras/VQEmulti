@@ -508,6 +508,21 @@ def proper_order(ansatz):
     return normal_ordered(total)
 
 
+def cache_operator(func):
+    cache_dict = {}
+
+    def wrapper_cache(*args, **kwargs):
+        hash_key = frozenset(args[0].terms.items())
+        if hash_key in cache_dict:
+            return cache_dict[hash_key]
+
+        cache_dict[hash_key] = func(*args, **kwargs)
+        return cache_dict[hash_key]
+
+    return wrapper_cache
+
+
+@cache_operator
 def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     """
     wrapper over openfermion's get_sparse_operator for convenience

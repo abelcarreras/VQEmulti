@@ -28,7 +28,7 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
     for coefficient, operator in zip(coefficients, ansatz):
 
         # Obtain the sparse matrix representing the operator
-        sparse_operator = get_sparse_operator(coefficient * operator, n_qubits)
+        sparse_operator = coefficient * get_sparse_operator(operator, n_qubits)
 
         # Exponentiate the operator
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)

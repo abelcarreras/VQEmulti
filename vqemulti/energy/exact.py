@@ -31,7 +31,7 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     for coefficient, operator in zip(coefficients, ansatz):
 
         # Get the operator matrix representation of the operator
-        sparse_operator = get_sparse_operator(coefficient * operator, n_qubit)
+        sparse_operator = coefficient * get_sparse_operator(operator, n_qubit)
 
         # Exponentiate the operator and update ket to represent the state after
         # this operator has been applied

@@ -544,3 +544,35 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
             operator = binary_code_transform(operator, parity_code(count_qubits(operator)))
 
     return get_sparse_operator_openfermion(operator, n_qubits, trunc, hbar)
+
+
+def get_string_from_fermionic_operator(operator):
+    """
+    return a string representation of a fermionic unitary operator
+
+    :param operator: operator
+    :return: string
+    """
+    operator_string = ''
+    total_spins_string = ''
+    for term, coefficient in operator.terms.items():
+
+        spins_term = ''
+        operator_string = '('
+        for ti in term:
+            operator_string += str(int(ti[0] / 2))
+            if ti[1] == 0:
+                operator_string += "  "
+            elif ti[1] == 1:
+                operator_string += "' "
+
+            spins_term += str(ti[0] % 2)
+
+        operator_string += ')'
+        if coefficient > 0:
+            total_spins_string += spins_term + ' '
+        else:
+            total_spins_string += '[' + spins_term + '] '
+
+    return ' {:>18} : {}'.format(operator_string, total_spins_string)
+

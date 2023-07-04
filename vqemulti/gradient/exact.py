@@ -85,8 +85,8 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
                                        coefficients)
 
     # Calculate and print gradients
-    print('pool size: ', len(pool))
-    print("Non-Zero Gradients (calculated)")
+    # print('pool size: ', len(pool))
+    print("\nNon-Zero Gradients (calculated)")
     gradient_vector = []
     for i, operator in enumerate(pool):
         sparse_operator = get_sparse_operator(operator, n_qubits)

@@ -1,6 +1,6 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
-from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit
+from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit, get_string_from_fermionic_operator
 
 
 class OperatorList:
@@ -151,6 +151,10 @@ class OperatorList:
 
         return ansatz_qubit
 
+    def print_compact_representation(self):
+        for op in self._list:
+            print(get_string_from_fermionic_operator(op))
+
     def __mul__(self, other):
 
         if isinstance(other, (int, float, complex)):
@@ -178,7 +182,7 @@ if __name__ == '__main__':
         exp_list_fermion.append(exp_operator)
 
     exp_list_qubit = []
-    qubit_list = fermion_list.get_quibits_list(mapping='jw')
+    qubit_list = fermion_list.get_quibits_list()
     for op in qubit_list:
         sparse_operator = get_sparse_operator(op)
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)

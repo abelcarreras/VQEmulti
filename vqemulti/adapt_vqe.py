@@ -1,6 +1,6 @@
 from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
-from vqemulti.utils import fermion_to_qubit
+from vqemulti.utils import fermion_to_qubit, get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
@@ -63,8 +63,12 @@ def adaptVQE(hamiltonian,
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
         if len(ansatz) != 0:
-            print('ansatz: ', ansatz)
-            print('coefficients: ', coefficients)
+            print('\n{:^8}   {}'.format('coefficient', 'operator'))
+            for c, op in zip(coefficients, ansatz):
+                if opt_qubits:
+                    print('{:8.5f}   {} '.format(c, op))
+                else:
+                    print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
 
         if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,

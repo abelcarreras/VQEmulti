@@ -12,6 +12,7 @@ class Singleton(type):
 
 @dataclass(frozen=False)
 class Configuration(metaclass=Singleton):
+    print('ola')
     mapping: str = 'jw'  # jw: Jordan-wigner , bk: Bravyi-Kitaev, pc: parity transform
     verbose: bool = False
 

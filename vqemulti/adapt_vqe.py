@@ -4,6 +4,8 @@ from vqemulti.utils import fermion_to_qubit
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
+from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
+from openfermion.transforms.opconversions.conversions import get_fermion_operator
 import numpy as np
 import scipy
 
@@ -46,8 +48,11 @@ def adaptVQE(hamiltonian,
 
     assert len(coefficients) == len(ansatz)
 
-    # transform fermion hamiltonian to qubits
+    # transform fermion hamiltonian (iteration operator) to fermion operator and qubit operator
     qubit_hamiltonian = fermion_to_qubit(hamiltonian)
+    fermionop_hamiltonian = get_fermion_operator(hamiltonian)
+    sparse_hamiltonian = get_sparse_operator(fermionop_hamiltonian)
+
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
@@ -61,7 +66,6 @@ def adaptVQE(hamiltonian,
     for iteration in range(max_iterations):
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
-
         if len(ansatz) != 0:
             print('ansatz: ', ansatz)
             print('coefficients: ', coefficients)
@@ -69,6 +73,7 @@ def adaptVQE(hamiltonian,
         if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
                                                       qubit_hamiltonian,
+                                                      sparse_hamiltonian,
                                                       ansatz,
                                                       coefficients,
                                                       operators_pool)
@@ -114,9 +119,9 @@ def adaptVQE(hamiltonian,
         if energy_simulator is None:
             results = scipy.optimize.minimize(exact_vqe_energy,
                                               coefficients,
-                                              (ansatz, hf_reference_fock, qubit_hamiltonian),
+                                              (ansatz, hf_reference_fock, qubit_hamiltonian, sparse_hamiltonian),
                                               method='COBYLA',
-                                              tol=None,
+                                              tol=1e-7,
                                               options={'rhobeg': 0.1, 'disp': Configuration().verbose})
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
@@ -126,7 +131,7 @@ def adaptVQE(hamiltonian,
                                               tol=1e-8,
                                               options={'disp': Configuration().verbose}) # 'rhobeg': 0.01)
 
-        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
+        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian, sparse_hamiltonian)
 
         if energy_simulator is not None:
             energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
@@ -144,7 +149,7 @@ def adaptVQE(hamiltonian,
 
         iterations['energies'].append(optimized_energy)
         iterations['norms'].append(total_norm)
-
+        print('Energies changing with the iterations',iterations['energies'])
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])

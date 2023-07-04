@@ -4,7 +4,7 @@ from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
 from openfermion.utils import count_qubits
 
 
-def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian):
+def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, sparse_hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
@@ -16,9 +16,6 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :param qubit_hamiltonian: Hamiltonian in qubits
     :return: exact energy
     """
-
-    # Transform Hamiltonian to matrix representation
-    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
 
     # Find the number of qubits of the system (2**n_qubit = dimension)
     n_qubit = count_qubits(qubit_hamiltonian)
@@ -45,3 +42,5 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
 
     return energy
 
+def exact_gradient(qubit_hamiltonian):
+    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)

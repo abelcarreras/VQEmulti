@@ -33,11 +33,8 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
         # Get the operator matrix representation of the operator
         sparse_operator = coefficient * get_sparse_operator(operator, n_qubit)
 
-        # Exponentiate the operator and update ket to represent the state after
-        # this operator has been applied
-        exp_operator = scipy.sparse.linalg.expm(sparse_operator)
-
-        ket = exp_operator * ket
+        # Exponentiate the operator and update ket t
+        ket = scipy.sparse.linalg.expm_multiply(sparse_operator, ket)
 
     # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
     bra = ket.transpose().conj()

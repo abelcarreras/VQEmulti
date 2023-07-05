@@ -2,6 +2,7 @@
 numpy
 scipy
 openfermion
+openfermionpyscf
 cirq
 pennylane
 qiskit

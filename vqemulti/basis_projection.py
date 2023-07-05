@@ -1,6 +1,8 @@
 from vqemulti.pool.tools import OperatorList
 from posym.basis import PrimitiveGaussian, BasisFunction
-from openfermion import FermionOperator, QubitOperator
+from openfermion import FermionOperator, QubitOperator, normal_ordered
+from openfermion.utils import hermitian_conjugated
+from vqemulti.utils import proper_order
 from operator import mul
 from functools import reduce
 from pyscf import gto
@@ -184,9 +186,6 @@ def antisymmetryze(total_ansatz):
     :param total_ansatz: fermion operators ansatz
     :return: list of coefficients, list of operators
     """
-    from openfermion import normal_ordered
-    from openfermion.utils import hermitian_conjugated
-    from utils import proper_order
 
     total_ansatz = proper_order(total_ansatz)
     def is_antisymmetric(fermion):

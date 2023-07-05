@@ -1,4 +1,4 @@
-from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy
+from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy, exact_vqe_energy_gradient
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.utils import fermion_to_qubit, get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
@@ -86,7 +86,7 @@ def adaptVQE(hamiltonian,
 
         total_norm = np.linalg.norm(gradient_vector)
 
-        print("Total gradient norm: {}".format(total_norm))
+        print("\nTotal gradient norm: {}".format(total_norm))
 
         if total_norm < threshold:
             if len(iterations['energies']) > 0:
@@ -119,9 +119,13 @@ def adaptVQE(hamiltonian,
             results = scipy.optimize.minimize(exact_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian),
-                                              method='COBYLA',
-                                              tol=None,
-                                              options={'rhobeg': 0.1, 'disp': Configuration().verbose})
+                                              jac=exact_vqe_energy_gradient,
+                                              options={'gtol': 1e-8, 'disp': False},
+                                              method='BFGS',
+                                              # method='COBYLA',
+                                              # tol=None,
+                                              # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
+                                              )
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
@@ -136,17 +140,19 @@ def adaptVQE(hamiltonian,
             energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                                   type(energy_simulator)(trotter=False, test_only=True))
 
-            print(energy_exact, energy_sim_test)
+            # print(energy_exact, energy_sim_test)
             assert abs(energy_exact - energy_sim_test) < 1e-5
 
+        # get results
         coefficients = list(results.x)
-        optimized_energy = results.fun
+        energy = results.fun
 
-        print('Optimized Energy:', optimized_energy)
-        print('Coefficients:', coefficients)
+        # print iteration results
+        print('Iteration energy:', energy)
+        # print('Coefficients:', coefficients)
         print('Ansatz Indices:', indices)
 
-        iterations['energies'].append(optimized_energy)
+        iterations['energies'].append(energy)
         iterations['norms'].append(total_norm)
 
         if gradient_simulator is not None:

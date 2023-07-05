@@ -120,7 +120,7 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian),
                                               jac=exact_vqe_energy_gradient,
-                                              options={'gtol': 1e-8, 'disp': False},
+                                              options={'gtol': 1e-8, 'disp':  Configuration().verbose},
                                               method='BFGS',
                                               # method='COBYLA',
                                               # tol=None,
@@ -132,7 +132,7 @@ def adaptVQE(hamiltonian,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
                                               method='COBYLA',
                                               tol=1e-8,
-                                              options={'disp': Configuration().verbose}) # 'rhobeg': 0.01)
+                                              options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
         energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
 

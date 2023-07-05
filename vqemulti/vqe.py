@@ -1,4 +1,4 @@
-from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy
+from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, exact_vqe_energy_gradient
 from vqemulti.utils import fermion_to_qubit
 from vqemulti.pool.tools import OperatorList
 from vqemulti.preferences import Configuration
@@ -43,8 +43,12 @@ def vqe(hamiltonian,
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, qubit_hamiltonian),
-                                          method="COBYLA",
-                                          options={'rhobeg': 0.1, 'disp': Configuration().verbose},
+                                          jac=exact_vqe_energy_gradient,
+                                          options={'gtol': 1e-8, 'disp':  Configuration().verbose},
+                                          method='BFGS',
+                                          # method='COBYLA',
+                                          # tol=None,
+                                          # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                           )
 
     # Optimize the results from the CIRQ simulation

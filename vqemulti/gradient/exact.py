@@ -1,5 +1,6 @@
 import openfermion
 from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
+from vqemulti.optimization import circuit_gradient
 from openfermion.utils import count_qubits
 import numpy as np
 import scipy

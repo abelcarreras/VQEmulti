@@ -5,9 +5,11 @@ from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
+from vqemulti.optimization.gradient_opt import circuit_gradient
 from openfermion.transforms.opconversions.conversions import get_fermion_operator
 import numpy as np
 import scipy
+import time
 
 
 def adaptVQE(hamiltonian,
@@ -15,7 +17,7 @@ def adaptVQE(hamiltonian,
              hf_reference_fock,
              opt_qubits=False,
              max_iterations=50,
-             threshold=0.1,
+             threshold=0.001,
              coefficients=None,
              ansatz=None,
              energy_simulator=None,
@@ -46,12 +48,15 @@ def adaptVQE(hamiltonian,
     if coefficients is None:
         coefficients = []
 
+    ansatz_sparsemat = []
+
     assert len(coefficients) == len(ansatz)
 
     # transform fermion hamiltonian (iteration operator) to fermion operator and qubit operator
     qubit_hamiltonian = fermion_to_qubit(hamiltonian)
     fermionop_hamiltonian = get_fermion_operator(hamiltonian)
     sparse_hamiltonian = get_sparse_operator(fermionop_hamiltonian)
+
 
 
     # define operatorList from pool
@@ -93,7 +98,7 @@ def adaptVQE(hamiltonian,
             if len(iterations['energies']) > 0:
                 energy = iterations['energies'][-1]
             else:
-                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator)
+                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator, sparse_hamiltonian)
 
             print("\nConvergence condition achieved!")
             result = {'energy': energy,
@@ -114,15 +119,23 @@ def adaptVQE(hamiltonian,
         coefficients.append(0)
         ansatz.append(max_operator)
         indices.append(max_index)
+        ansatz_sparsemat.append(get_sparse_operator(max_operator))
+        ref = get_sparse_ket_from_fock(hf_reference_fock)
 
         # run optimization
         if energy_simulator is None:
+            energy_gradient = circuit_gradient(sparse_hamiltonian, ansatz_sparsemat, ref, coefficients)
+            start = time.time()
             results = scipy.optimize.minimize(exact_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, qubit_hamiltonian, sparse_hamiltonian),
-                                              method='COBYLA',
+                                              jac= circuit_gradient, #THAT MUST BE A CALLABLE, IT MUST TAKE THE SAME PARAMETERS AS THE ENERGY FUNCTION
+                                                                     #AND JUST CALL THE FUNCTION, NOT THE RESULT.
+                                              method='BFGS',
                                               tol=1e-7,
-                                              options={'rhobeg': 0.1, 'disp': Configuration().verbose})
+                                              options= {'gtol': 1e-7, 'disp':False})
+            end = time.time()
+            print('TIME USED IN OPTIMIZATION', end-start)
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,

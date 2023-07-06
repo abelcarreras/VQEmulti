@@ -1,6 +1,6 @@
 from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy, exact_vqe_energy_gradient
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
-from vqemulti.utils import fermion_to_qubit, get_string_from_fermionic_operator
+from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
@@ -45,9 +45,6 @@ def adaptVQE(hamiltonian,
         coefficients = []
 
     assert len(coefficients) == len(ansatz)
-
-    # transform fermion hamiltonian to qubits
-    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)

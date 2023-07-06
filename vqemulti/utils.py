@@ -513,6 +513,12 @@ def cache_operator(func):
 
     def wrapper_cache(*args, **kwargs):
         hash_key = frozenset(args[0].terms.items())
+        if len(args) > 1:
+            hash_key = (hash_key, args[1])
+
+        if len(kwargs) > 1:
+            hash_key = (hash_key, frozenset(kwargs.items()))
+
         if hash_key in cache_dict:
             return cache_dict[hash_key]
 

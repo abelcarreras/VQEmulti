@@ -134,9 +134,9 @@ def adaptVQE(hamiltonian,
                                               tol=1e-8,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
-        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
 
         if energy_simulator is not None:
+            energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
             energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                                   type(energy_simulator)(trotter=False, test_only=True))
 

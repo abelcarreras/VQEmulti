@@ -26,16 +26,8 @@ def prepare_adapt_state(hf_reference_fock, ansatz, coefficients):
 
     # Apply the ansatz operators one by one to obtain the state as optimized by the last iteration
     for coefficient, operator in zip(coefficients, ansatz):
-
-        # Obtain the sparse matrix representing the operator
         sparse_operator = coefficient * get_sparse_operator(operator, n_qubits)
-
-        # Exponentiate the operator
-        exp_operator = scipy.sparse.linalg.expm(sparse_operator)
-
-        # Act on the state with the operator
-        state = exp_operator.dot(state)
-
+        state = scipy.sparse.linalg.expm_multiply(sparse_operator, state)
     return state
 
 

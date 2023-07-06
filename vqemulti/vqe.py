@@ -25,7 +25,7 @@ def vqe(hamiltonian,
     """
 
     # transform to qubit hamiltonian
-    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
+    # hamiltonian = fermion_to_qubit(hamiltonian)
 
     ansatz = OperatorList(ansatz, antisymmetrize=True, normalize=True)
 
@@ -42,7 +42,7 @@ def vqe(hamiltonian,
     if energy_simulator is None:
         results = scipy.optimize.minimize(exact_vqe_energy,
                                           coefficients,
-                                          (ansatz, hf_reference_fock, qubit_hamiltonian),
+                                          (ansatz, hf_reference_fock, hamiltonian),
                                           jac=exact_vqe_energy_gradient,
                                           options={'gtol': 1e-8, 'disp':  Configuration().verbose},
                                           method='BFGS',
@@ -60,10 +60,10 @@ def vqe(hamiltonian,
                                           options={'rhobeg': 0.1, 'disp': Configuration().verbose},
                                           )
 
-    # testing consistency
-    energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
-
     if energy_simulator is not None:
+        # testing consistency
+        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian)
+
         energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
                                               type(energy_simulator)(trotter=False, test_only=True))
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 energy_simulator=simulator,
+                 # energy_simulator=simulator,
                  opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

@@ -1,6 +1,7 @@
+from vqemulti.utils import fermion_to_qubit
 
 
-def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, simulator):
+def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """
     Obtain the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state, using the CIRQ simulator.
@@ -8,10 +9,13 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltoni
     :param coefficients: VQE coefficients
     :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: reference HF in fock vspace vector
-    :param qubit_hamiltonian: hamiltonian in qubits
+    :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
     :param simulator: simulation object
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
+
+    # transform to qubit hamiltonian
+    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     # transform ansatz to qubit (coefficients are included in qubits objects)
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)

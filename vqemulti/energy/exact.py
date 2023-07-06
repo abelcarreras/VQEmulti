@@ -1,10 +1,10 @@
-import numpy as np
-import scipy
 from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
 from openfermion.utils import count_qubits
+import numpy as np
+import scipy
 
 
-def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian):
+def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
@@ -13,15 +13,15 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: HF reference in Fock space vector
-    :param qubit_hamiltonian: Hamiltonian in qubits
+    :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
     :return: exact energy
     """
 
     # Transform Hamiltonian to matrix representation
-    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
+    sparse_hamiltonian = get_sparse_operator(hamiltonian)
 
     # Find the number of qubits of the system (2**n_qubit = dimension)
-    n_qubit = count_qubits(qubit_hamiltonian)
+    n_qubit = count_qubits(hamiltonian)
 
     # Transform reference vector into a Compressed Sparse Column matrix
     ket = get_sparse_ket_from_fock(hf_reference_fock)
@@ -43,7 +43,7 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian)
     return energy
 
 
-def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian):
+def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
     Calculates the gradient of the energy with respect to the coefficients.
     To be used in the exact energy minimization function
@@ -51,15 +51,15 @@ def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, qubit_ham
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
     :param hf_reference_fock: HF reference in Fock space vector
-    :param qubit_hamiltonian: Hamiltonian in qubits
+    :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
     :return: gradient vector
     """
 
     # Transform Hamiltonian to matrix representation
-    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
+    sparse_hamiltonian = get_sparse_operator(hamiltonian)
 
     # Find the number of qubits of the system (2**n_qubit = dimension)
-    n_qubit = count_qubits(qubit_hamiltonian)
+    n_qubit = count_qubits(hamiltonian)
 
     # Transform reference vector into a Compressed Sparse Column matrix
     ket = get_sparse_ket_from_fock(hf_reference_fock)

@@ -510,9 +510,15 @@ def proper_order(ansatz):
 
 def cache_operator(func):
     cache_dict = {}
+    import openfermion
 
     def wrapper_cache(*args, **kwargs):
-        hash_key = frozenset(args[0].terms.items())
+
+        operator = args[0]
+        if isinstance(operator, openfermion.InteractionOperator):
+            operator = openfermion.get_fermion_operator(operator)
+
+        hash_key = frozenset(operator.terms.items())
         if len(args) > 1:
             hash_key = (hash_key, args[1])
 
@@ -543,10 +549,10 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     :return:
     """
     if Configuration().mapping == 'bk':
-        if isinstance(operator, openfermion.FermionOperator):
+        if isinstance(operator, (openfermion.FermionOperator, openfermion.InteractionOperator)):
             operator = bravyi_kitaev(operator)
     if Configuration().mapping == 'pc':
-        if isinstance(operator, openfermion.FermionOperator):
+        if isinstance(operator, (openfermion.FermionOperator, openfermion.InteractionOperator)):
             operator = binary_code_transform(operator, parity_code(count_qubits(operator)))
 
     return get_sparse_operator_openfermion(operator, n_qubits, trunc, hbar)

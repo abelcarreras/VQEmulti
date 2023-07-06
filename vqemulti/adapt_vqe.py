@@ -72,13 +72,13 @@ def adaptVQE(hamiltonian,
 
         if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
-                                                      qubit_hamiltonian,
+                                                      hamiltonian,
                                                       ansatz,
                                                       coefficients,
                                                       operators_pool)
         else:
             gradient_vector = simulate_gradient(hf_reference_fock,
-                                                qubit_hamiltonian,
+                                                hamiltonian,
                                                 ansatz,
                                                 coefficients,
                                                 operators_pool,
@@ -92,7 +92,7 @@ def adaptVQE(hamiltonian,
             if len(iterations['energies']) > 0:
                 energy = iterations['energies'][-1]
             else:
-                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator)
+                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
 
             print("\nConvergence condition achieved!")
             result = {'energy': energy,
@@ -118,7 +118,7 @@ def adaptVQE(hamiltonian,
         if energy_simulator is None:
             results = scipy.optimize.minimize(exact_vqe_energy,
                                               coefficients,
-                                              (ansatz, hf_reference_fock, qubit_hamiltonian),
+                                              (ansatz, hf_reference_fock, hamiltonian),
                                               jac=exact_vqe_energy_gradient,
                                               options={'gtol': 1e-8, 'disp':  Configuration().verbose},
                                               method='BFGS',
@@ -129,15 +129,15 @@ def adaptVQE(hamiltonian,
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
-                                              (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
+                                              (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                               method='COBYLA',
                                               tol=1e-8,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
 
         if energy_simulator is not None:
-            energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian)
-            energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
+            energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian)
+            energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian,
                                                   type(energy_simulator)(trotter=False, test_only=True))
 
             # print(energy_exact, energy_sim_test)
@@ -221,13 +221,14 @@ if __name__ == '__main__':
                           test_only=True,
                           shots=1000)
 
-    result = adaptVQE(hamiltonian, # fermionic hamiltonian
+    result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
                       threshold=0.1,
                       # opt_qubits=True,
-                      energy_simulator=simulator,
-                      gradient_simulator=simulator)
+                      # energy_simulator=simulator,
+                      # gradient_simulator=simulator
+                      )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy adaptVQE: ', result['energy'])

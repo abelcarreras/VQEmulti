@@ -63,12 +63,12 @@ def calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian):
     return gradient
 
 
-def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool):
+def compute_gradient_vector(hf_reference_fock, hamiltonian, ansatz, coefficients, pool):
     """
     computes the gradient vector of the energy with respect to the pool operators
 
     :param hf_reference_fock: reference HF state in Fock space vector
-    :param qubit_hamiltonian: hamiltonian in qubit operators
+    :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
     :param ansatz: VQE ansatz in qubit operators
     :param coefficients: list of VQE coefficients
     :param pool: pool of qubit operators
@@ -76,8 +76,8 @@ def compute_gradient_vector(hf_reference_fock, qubit_hamiltonian, ansatz, coeffi
     """
 
     # transform hamiltonian to sparse
-    sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)
-    n_qubits = count_qubits(qubit_hamiltonian)
+    sparse_hamiltonian = get_sparse_operator(hamiltonian)
+    n_qubits = count_qubits(hamiltonian)
 
     # Prepare the current state from ansatz (& coefficient) and HF reference
     sparse_state = prepare_adapt_state(hf_reference_fock,

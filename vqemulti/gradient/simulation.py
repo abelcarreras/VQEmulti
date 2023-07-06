@@ -1,4 +1,5 @@
 from vqemulti.utils import fermion_to_qubit
+from vqemulti.gradient.exact import calculate_gradient, prepare_adapt_state
 from openfermion import get_sparse_operator, QubitOperator, count_qubits
 import numpy as np
 
@@ -8,18 +9,17 @@ def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ans
     compute exact gradient using matrix representation for comparison
     qubit to sparse using Jordan-Wigner transform
 
-    :param qubit_hamiltonian:
-    :param hf_reference_fock:
-    :param ansatz_qubit:
-    :param operator:
-    :param sampled_gradient:
+    :param qubit_hamiltonian: hamiltonian in qubit operators
+    :param hf_reference_fock: reference HF state in Fock space vector
+    :param ansatz_qubit: VQE ansatz in qubit/Fermion operators
+    :param operator: operator in qubits
+    :param sampled_gradient: sampled gradient
     :return:
     """
     from vqemulti.gradient.exact import calculate_gradient, prepare_adapt_state
 
     sparse_hamiltonian = get_sparse_operator(qubit_hamiltonian)  # Get the current hamiltonian.
-    sparse_state = prepare_adapt_state(hf_reference_fock, ansatz_qubit,
-                                       [1] * len(ansatz_qubit))  # Get the current state.
+    sparse_state = prepare_adapt_state(hf_reference_fock, ansatz_qubit, [1] * len(ansatz_qubit))  # Get the current state.
     sparse_operator = get_sparse_operator(operator, count_qubits(qubit_hamiltonian))
     calculated_gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
     print("Exact gradient: {:.6f}".format(calculated_gradient))
@@ -32,18 +32,21 @@ def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ans
         print("Error: {0:.3f} NA%)\n".format(error))
 
 
-def simulate_gradient(hf_reference_fock, qubit_hamiltonian, ansatz, coefficients, pool, simulator):
+def simulate_gradient(hf_reference_fock, hamiltonian, ansatz, coefficients, pool, simulator):
     """
     simulate gradient using quantum computer simulators (Cirq, pennylane)
 
-    :param hf_reference_fock:  reference HF state in Fock space vector
-    :param qubit_hamiltonian: hamiltonian in qubit operators
+    :param hf_reference_fock: reference HF state in Fock space vector
+    :param hamiltonian: hamiltonian in qubit operators
     :param ansatz: VQE ansatz in qubit/Fermion operators
     :param coefficients: list of VQE coefficients
     :param pool: pool of qubit operators
     :param simulator: simulation object
-    :return:
+    :return: the gradient_vector
     """
+
+    # transform to qubit hamiltonian
+    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 

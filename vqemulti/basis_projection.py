@@ -225,7 +225,8 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2, max_op=None):
     separate normalized part of operators from its coefficients.
 
     :param operator_ansatz: Fermion of Qubit operator
-    :param max_val: maximum value for
+    :param max_val: maximum coefficient value used to remove negligible operators contributions
+    :param max_op: maximum number of operators (ordered by coefficients norm)
     :return:
     """
 

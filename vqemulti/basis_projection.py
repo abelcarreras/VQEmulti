@@ -211,10 +211,16 @@ def antisymmetryze(total_ansatz):
             list_op.append(op)
             list_coeff.append(coeff)
 
-    return list_coeff, OperatorList(list_op, antisymmetrize=False)
+    return list_coeff, list_op
 
 
-def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
+def cuttoff_op(list_coeff, list_op, max_op):
+    indices = np.argsort(np.abs(list_coeff))[:max_op]
+    indices = np.sort(indices)
+    return [list_coeff[i] for i in indices], [list_op[i] for i in indices],
+
+
+def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2, max_op=None):
     """
     separate normalized part of operators from its coefficients.
 
@@ -230,6 +236,10 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
             if abs(coeff) > max_val:
                 reduced_ansatz += coeff * FermionOperator(term)
         list_coeff, list_op = antisymmetryze(reduced_ansatz)
+        if max_op is not None:
+            list_coeff, list_op = cuttoff_op(list_coeff, list_op, max_op)
+
+        list_op = OperatorList(list_op, antisymmetrize=False)
 
     elif isinstance(operator_ansatz, QubitOperator):
         list_coeff = []
@@ -241,6 +251,8 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2):
                 list_coeff.append(norm)
                 list_op.append(coeff/norm * QubitOperator(term))
 
+        if max_op is not None:
+            list_coeff, list_op = cuttoff_op(list_coeff, list_op, max_op)
         list_op = OperatorList(list_op)
 
     elif operator_ansatz == 0:

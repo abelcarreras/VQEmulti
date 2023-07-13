@@ -12,8 +12,8 @@ def adaptVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
              opt_qubits=False,
-             max_iterations=50,
-             threshold=0.1,
+             max_iterations=20,
+             threshold=0.001,
              coefficients=None,
              ansatz=None,
              energy_simulator=None,
@@ -100,6 +100,17 @@ def adaptVQE(hamiltonian,
 
             return result
 
+        if iteration == max_iterations-1 :
+            energy = iterations['energies'][-1]
+            print("\nIterations finished in number", iteration)
+            result = {'energy': energy,
+                      'ansatz': ansatz,
+                      'indices': indices,
+                      'coefficients': coefficients,
+                      'iterations': iterations}
+            return result
+
+
         max_index = np.argmax(gradient_vector)
         max_gradient = np.max(gradient_vector)
         max_operator = operators_pool[max_index]
@@ -117,7 +128,7 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian),
                                               jac=exact_vqe_energy_gradient,
-                                              options={'gtol': 1e-8, 'disp':  Configuration().verbose},
+                                              options={'gtol': 1e-5, 'disp':  Configuration().verbose},
                                               method='BFGS',
                                               # method='COBYLA',
                                               # tol=None,
@@ -159,13 +170,13 @@ def adaptVQE(hamiltonian,
         if energy_simulator is not None:
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
-
+    '''
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
                              'iterations': iterations})
-
+    '''
 
 if __name__ == '__main__':
     from openfermion import MolecularData

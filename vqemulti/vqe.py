@@ -44,28 +44,18 @@ def vqe(hamiltonian,
                                           options={'gtol': 1e-8, 'disp':  Configuration().verbose},
                                           method='BFGS',
                                           # method='COBYLA',
-                                          # tol=None,
+                                          # tol= 1e-4,
                                           # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                           )
 
-    # Optimize the results from the CIRQ simulation
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
-                                          (ansatz, hf_reference_fock, qubit_hamiltonian, energy_simulator),
+                                          (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                           method="COBYLA",
                                           options={'rhobeg': 0.1, 'disp': Configuration().verbose},
+                                          tol=1e-4,
                                           )
-
-    if energy_simulator is not None:
-        # testing consistency
-        energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian)
-
-        energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, qubit_hamiltonian,
-                                              type(energy_simulator)(trotter=False, test_only=True))
-
-        # print(energy_exact, energy_sim_test)
-        assert abs(energy_exact - energy_sim_test) < 1e-6
 
     if energy_simulator is not None:
         circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)

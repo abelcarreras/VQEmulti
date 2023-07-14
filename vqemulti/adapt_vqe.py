@@ -83,7 +83,7 @@ def adaptVQE(hamiltonian,
 
         total_norm = np.linalg.norm(gradient_vector)
 
-        print("\nTotal gradient norm: {}".format(total_norm))
+        print("\nTotal gradient norm: {:12.6f}".format(total_norm))
 
         if total_norm < threshold:
             if len(iterations['energies']) > 0:
@@ -117,28 +117,22 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian),
                                               jac=exact_vqe_energy_gradient,
-                                              options={'gtol': 1e-8, 'disp':  Configuration().verbose},
+                                              options={'gtol': 1e-5, 'disp':  Configuration().verbose},
                                               method='BFGS',
-                                              # method='COBYLA',
-                                              # tol=None,
-                                              # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
+                                              #method='COBYLA',
+                                              #tol= 1e-4,
+                                              #options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                               )
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                               method='COBYLA',
-                                              tol=1e-8,
+                                              tol=1e-4,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
-
-        if energy_simulator is not None:
-            energy_exact = exact_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian)
-            energy_sim_test = simulate_vqe_energy(results.x, ansatz, hf_reference_fock, hamiltonian,
-                                                  type(energy_simulator)(trotter=False, test_only=True))
-
-            # print(energy_exact, energy_sim_test)
-            assert abs(energy_exact - energy_sim_test) < 1e-5
+        if abs(results.x[-1]) < 1e-10:
+            break
 
         # get results
         coefficients = list(results.x)

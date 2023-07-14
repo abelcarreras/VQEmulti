@@ -86,7 +86,6 @@ class SimulatorBase:
         for main_string, sub_hamiltonian in grouped_hamiltonian.items():
             expectation_value += self._measure_expectation(main_string,
                                                            sub_hamiltonian,
-                                                           self._shots,
                                                            state_preparation_gates,
                                                            n_qubits)
 
@@ -144,7 +143,7 @@ class SimulatorBase:
         print('Average circuit depth: {:.2f}'.format(np.average(self._circuit_count)))
         print('Gate counts (per shot):')
         for k, v in self._circuit_gates.items():
-            print(' {:10} : {}'.format(k, v))
+            print(' {:14} : {}'.format(k, v))
         print('------------------------------------\n')
 
     # mock methods (to be implemented in subclasses)

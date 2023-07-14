@@ -123,7 +123,7 @@ class CirqSimulator(SimulatorBase):
 
         return state_preparation_gates
 
-    def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
+    def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
         Measures the expectation value of a sub_hamiltonian (pauli string) using the Cirq simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
@@ -131,7 +131,6 @@ class CirqSimulator(SimulatorBase):
 
         :param main_string: hamiltonian base Pauli string ex: (XXYY)
         :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
-        :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :param n_qubits: number of qubits
         :return:
@@ -171,7 +170,7 @@ class CirqSimulator(SimulatorBase):
         # there are no measurements (identity term).
         if main_string != "I" * n_qubits:
             simulation = cirq.Simulator()
-            results = simulation.run(circuit, repetitions=shots)
+            results = simulation.run(circuit, repetitions=self._shots)
         else:
             raise Exception('Nothing to run')
 
@@ -196,7 +195,7 @@ class CirqSimulator(SimulatorBase):
         for sub_string, coefficient in sub_hamiltonian.items():
             # Get the expectation value of this substring by taking the average
             # over all the repetitions
-            expectation_value = measurements[sub_string] / shots
+            expectation_value = measurements[sub_string] / self._shots
 
             # Add this value to the measurements expectation value, weighed by its
             # coefficient
@@ -264,7 +263,11 @@ class CirqSimulator(SimulatorBase):
         for gate in circuit.all_operations():
             name = str(gate.gate).split('(')[0].split('*')[0]
             if not 'MeasurementGate' in name:
-                self._circuit_gates[gates_name[name]] += 1
+                try:
+                    self._circuit_gates[gates_name[name]] += 1
+                except KeyError:
+                    # assume its unitary operator
+                    self._circuit_gates['QubitUnitary'] += 1
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
         ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)

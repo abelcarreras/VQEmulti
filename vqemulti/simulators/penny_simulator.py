@@ -119,7 +119,7 @@ class PennylaneSimulator(SimulatorBase):
 
         return state_preparation_gates
 
-    def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
+    def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
         Measures the expectation value of a sub_hamiltonian (pauli string) using the Quiskit simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
@@ -127,14 +127,13 @@ class PennylaneSimulator(SimulatorBase):
 
         :param main_string: hamiltonian base Pauli string ex: (XXYY)
         :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
-        :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :param n_qubits: number of qubits
         :return:
         """
 
         # Initialize circuit.
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)], shots=shots)
+        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)], shots=self._shots)
 
         # Build circuit from preparation gates
         @qml.qnode(dev_unique_wires)
@@ -172,7 +171,7 @@ class PennylaneSimulator(SimulatorBase):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * coefficient * counts/shots
+                total_expectation_value += prod_function * coefficient * counts/self._shots
 
         return total_expectation_value
 

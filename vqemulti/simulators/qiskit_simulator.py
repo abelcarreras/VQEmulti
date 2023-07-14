@@ -1,5 +1,7 @@
 from vqemulti.simulators import SimulatorBase
 from vqemulti.preferences import Configuration
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian
+from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
@@ -165,8 +167,6 @@ class QiskitSimulator(SimulatorBase):
         :param shots: number of samples
         :return: the expectation value of the energy
         """
-        from openfermion.utils import count_qubits
-        from utils import convert_hamiltonian, group_hamiltonian
 
         n_qubits = count_qubits(qubit_hamiltonian)
 
@@ -194,7 +194,7 @@ class QiskitSimulator(SimulatorBase):
         assert expectation_value.imag < 1e-5
         return expectation_value.real
 
-    def _measure_expectation(self, main_string, sub_hamiltonian, shots, state_preparation_gates, n_qubits):
+    def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
         Measures the expectation value of a sub_hamiltonian (pauli string) using the Qiskit simulator.
         By construction, all the expectation values of the strings in subHamiltonian can be
@@ -202,7 +202,6 @@ class QiskitSimulator(SimulatorBase):
 
         :param main_string: hamiltonian base Pauli string ex: (XXYY)
         :param sub_hamiltonian: partial hamiltonian interactions ex: {'0000': -0.4114, '1111': -0.0222}
-        :param shots: number of samples to simulate
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :param n_qubits: number of qubits
         :return: expectation value
@@ -347,7 +346,8 @@ class QiskitSimulator(SimulatorBase):
 
         gates_name = {'x': 'PauliX', 'y': 'PauliY', 'z': 'PauliZ',
                       'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',
-                      'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT'}
+                      'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT',
+                      'unitary': 'QubitUnitary'}
 
         # depth
         self._circuit_count.append(circuit.depth())
@@ -396,9 +396,6 @@ if __name__ == '__main__':
 
     for gate in circuit.data:
         print(gate)
-
-    circuit.unitary(cx, [0, 1], label='U')
-
 
     print('----------')
     print(circuit.data)

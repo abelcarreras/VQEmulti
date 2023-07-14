@@ -181,7 +181,6 @@ class QiskitSimulator(SimulatorBase):
             for main_string, sub_hamiltonian in grouped_hamiltonian.items():
                 expectation_value += self._measure_expectation(main_string,
                                                                sub_hamiltonian,
-                                                               self._shots,
                                                                state_preparation_gates,
                                                                n_qubits)
 

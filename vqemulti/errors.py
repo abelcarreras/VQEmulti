@@ -3,6 +3,6 @@ class NotConvergedError(Exception):
         self.results = results
 
     def __str__(self):
-        n_steps = len(self.results)
+        n_steps = len(self.results['iterations'])
         return 'Not converged in {} iterations\n Increase max_iterations'.format(n_steps)
 

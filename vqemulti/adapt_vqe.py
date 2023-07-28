@@ -21,7 +21,8 @@ def adaptVQE(hamiltonian,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
              threshold=1e-4,
-             operator_update_number=1):
+             operator_update_number=1,
+             operator_update_max_grad=1e-1):
     """
     Perform a adapt VQE calculation
 
@@ -35,8 +36,9 @@ def adaptVQE(hamiltonian,
     :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
     :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
-    :param threshold:  total-gradient-norm convergence threshold (in Hartree)
+    :param threshold: total-gradient-norm convergence threshold (in Hartree)
     :param operator_update_number: number of operators to add to the ansatz at each iteration
+    :param operator_update_max_grad: max gradient deviation between operations that update together in one iteration
     :return: results dictionary
     """
 
@@ -107,8 +109,20 @@ def adaptVQE(hamiltonian,
 
             return result
 
+        # primary selection of operators
         max_indices = np.argsort(gradient_vector)[-operator_update_number:][::-1]
-        max_gradients = np.sort(gradient_vector)[-operator_update_number:][::-1]
+
+        # refine selection to ensure all operators are relevant
+        while True:
+            max_gradients = np.array(gradient_vector)[max_indices]
+            max_dev = np.max(np.std(max_gradients))
+            if max_dev > operator_update_max_grad:
+                max_indices = max_indices[:-1]
+            else:
+                break
+
+        # get gradients/operators update list
+        max_gradients = np.array(gradient_vector)[max_indices]
         max_operators = np.array(operators_pool)[max_indices]
 
         for max_index, max_gradient in zip(max_indices, max_gradients):
@@ -119,8 +133,6 @@ def adaptVQE(hamiltonian,
             coefficients.append(0)
             ansatz.append(max_operator)
             indices.append(max_index)
-
-
 
         # run optimization
         if energy_simulator is None:

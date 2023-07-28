@@ -20,9 +20,9 @@ def adaptVQE(hamiltonian,
              gradient_simulator=None,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
-             threshold=1e-4,
+             threshold=1e-6,
              operator_update_number=1,
-             operator_update_max_grad=1e-1):
+             operator_update_max_grad=2e-1):
     """
     Perform a adapt VQE calculation
 
@@ -38,12 +38,12 @@ def adaptVQE(hamiltonian,
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param threshold: total-gradient-norm convergence threshold (in Hartree)
     :param operator_update_number: number of operators to add to the ansatz at each iteration
-    :param operator_update_max_grad: max gradient deviation between operations that update together in one iteration
+    :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
     :return: results dictionary
     """
 
     # Initialize data structures
-    iterations = {'energies': [], 'norms': []}
+    iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': []}
     indices = []
 
     # Check if initial guess
@@ -116,7 +116,7 @@ def adaptVQE(hamiltonian,
         while True:
             max_gradients = np.array(gradient_vector)[max_indices]
             max_dev = np.max(np.std(max_gradients))
-            if max_dev > operator_update_max_grad:
+            if max_dev/np.max(max_gradients) > operator_update_max_grad:
                 max_indices = max_indices[:-1]
             else:
                 break
@@ -175,6 +175,8 @@ def adaptVQE(hamiltonian,
 
         iterations['energies'].append(energy)
         iterations['norms'].append(total_norm)
+        iterations['f_evaluations'].append(results.nfev)
+        iterations['ansatz_size'].append(len(coefficients))
 
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)

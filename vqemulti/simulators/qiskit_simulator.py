@@ -263,9 +263,9 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
-        if Configuration().verbose:
-            print('circuit:')
-            print(circuit)
+        #if Configuration().verbose:
+        #    print('circuit:')
+        #    print(circuit)
 
         list_strings = []
         for pauli_string, coefficient in formatted_hamiltonian.items():
@@ -273,9 +273,9 @@ class QiskitSimulator(SimulatorBase):
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
-        if Configuration().verbose:
-            print('measure operator:')
-            print(measure_op)
+        #if Configuration().verbose:
+        #    print('measure operator:')
+        #    print(measure_op)
 
         if self._session is None:
             from qiskit_aer.primitives import Estimator
@@ -292,8 +292,8 @@ class QiskitSimulator(SimulatorBase):
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
-        if Configuration().verbose:
-            print('Expectation value: ', job.result().values[0])
+        #if Configuration().verbose:
+        #    print('Expectation value: ', job.result().values[0])
 
         return job.result().values[0]
 

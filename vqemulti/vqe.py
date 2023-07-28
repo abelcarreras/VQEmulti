@@ -10,7 +10,8 @@ def vqe(hamiltonian,
         hf_reference_fock,
         coefficients=None,
         opt_qubits=False,
-        energy_simulator=None):
+        energy_simulator=None,
+        energy_threshold=1e-4):
     """
     Perform a VQE calculation
 
@@ -19,7 +20,8 @@ def vqe(hamiltonian,
     :param coefficients: initial guess coefficients (leave None to initialize to zero)
     :param opt_qubits: choose basis of optimization (True: qubits operators, False: fermion operators)
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
-    :param energy_simulator: Simulator used to obtain the energy, if None do not use simulator (exact).
+    :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
+    :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :return: results dictionary
     """
 
@@ -41,7 +43,7 @@ def vqe(hamiltonian,
                                           coefficients,
                                           (ansatz, hf_reference_fock, hamiltonian),
                                           jac=exact_vqe_energy_gradient,
-                                          options={'gtol': 1e-8, 'disp':  Configuration().verbose},
+                                          options={'gtol': energy_threshold, 'disp':  Configuration().verbose},
                                           method='BFGS',
                                           # method='COBYLA',
                                           # tol= 1e-4,
@@ -54,7 +56,7 @@ def vqe(hamiltonian,
                                           (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                           method="COBYLA",
                                           options={'rhobeg': 0.1, 'disp': Configuration().verbose},
-                                          tol=1e-4,
+                                          tol=energy_threshold,
                                           )
 
     if energy_simulator is not None:

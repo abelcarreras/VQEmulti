@@ -4,8 +4,9 @@ from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
-import numpy as np
+import warnings
 import scipy
+import numpy as np
 
 
 def adaptVQE(hamiltonian,
@@ -13,23 +14,27 @@ def adaptVQE(hamiltonian,
              hf_reference_fock,
              opt_qubits=False,
              max_iterations=50,
-             threshold=0.1,
              coefficients=None,
              ansatz=None,
              energy_simulator=None,
-             gradient_simulator=None):
+             gradient_simulator=None,
+             coeff_tolerance=1e-10,
+             energy_threshold=1e-4,
+             threshold=1e-4):
     """
     Perform a adapt VQE calculation
 
     :param operators_pool: fermionic operators pool
     :param hamiltonian: hamiltonian in fermionic operators
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
-    :param max_iterations: max adaptVQE iterations
-    :param threshold: convergence threshold (in Hartree)
+    :param max_iterations: max number of adaptVQE iterations
     :param coefficients: Initial coefficients (None if new calculation)
     :param ansatz: Initial ansatz [Should match with coefficients] (None if new calculation)
-    :param energy_simulator: Set True to compute energy analyticaly, set False to simulate
-    :param gradient_simulator: Set True to compute gradients analyticaly, set False to simulate
+    :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
+    :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
+    :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
+    :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
+    :param threshold:  total-gradient-norm convergence threshold (in Hartree)
     :return: results dictionary
     """
 
@@ -117,7 +122,8 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian),
                                               jac=exact_vqe_energy_gradient,
-                                              options={'gtol': 1e-5, 'disp':  Configuration().verbose},
+                                              options={'gtol': energy_threshold,
+                                                       'disp':  Configuration().verbose},
                                               method='BFGS',
                                               #method='COBYLA',
                                               #tol= 1e-4,
@@ -128,11 +134,17 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                               method='COBYLA',
-                                              tol=1e-4,
+                                              tol=energy_threshold,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
-        if abs(results.x[-1]) < 1e-10:
-            break
+        # check if last coefficient is zero
+        if abs(results.x[-1]) < coeff_tolerance:
+            warnings.warn('finished due to zero valued coeffient')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations}
 
         # get results
         coefficients = list(results.x)

@@ -20,7 +20,8 @@ def adaptVQE(hamiltonian,
              gradient_simulator=None,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
-             threshold=1e-4):
+             threshold=1e-4,
+             operator_update_number=1):
     """
     Perform a adapt VQE calculation
 
@@ -35,6 +36,7 @@ def adaptVQE(hamiltonian,
     :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param threshold:  total-gradient-norm convergence threshold (in Hartree)
+    :param operator_update_number: number of operators to add to the ansatz at each iteration
     :return: results dictionary
     """
 
@@ -105,16 +107,20 @@ def adaptVQE(hamiltonian,
 
             return result
 
-        max_index = np.argmax(gradient_vector)
-        max_gradient = np.max(gradient_vector)
-        max_operator = operators_pool[max_index]
+        max_indices = np.argsort(gradient_vector)[-operator_update_number:][::-1]
+        max_gradients = np.sort(gradient_vector)[-operator_update_number:][::-1]
+        max_operators = np.array(operators_pool)[max_indices]
 
-        print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
+        for max_index, max_gradient in zip(max_indices, max_gradients):
+            print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
         # Initialize the coefficient of the operator that will be newly added at 0
-        coefficients.append(0)
-        ansatz.append(max_operator)
-        indices.append(max_index)
+        for max_index, max_operator in zip(max_indices, max_operators):
+            coefficients.append(0)
+            ansatz.append(max_operator)
+            indices.append(max_index)
+
+
 
         # run optimization
         if energy_simulator is None:

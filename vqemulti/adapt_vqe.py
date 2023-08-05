@@ -68,13 +68,6 @@ def adaptVQE(hamiltonian,
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
-        if len(ansatz) != 0:
-            print('\n{:^8}   {}'.format('coefficient', 'operator'))
-            for c, op in zip(coefficients, ansatz):
-                if opt_qubits:
-                    print('{:8.5f}   {} '.format(c, op))
-                else:
-                    print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
 
         if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
@@ -151,7 +144,7 @@ def adaptVQE(hamiltonian,
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                              method='COBYLA',
+                                              method='COBYLA', # SPSA for real hardware
                                               tol=energy_threshold,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
@@ -167,6 +160,14 @@ def adaptVQE(hamiltonian,
         # get results
         coefficients = list(results.x)
         energy = results.fun
+
+        print('\n{:^8}   {}'.format('coefficient', 'operator'))
+        for c, op in zip(coefficients, ansatz):
+            if opt_qubits:
+                print('{:8.5f}   {} '.format(c, op))
+            else:
+                print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
+        print()
 
         # print iteration results
         print('Iteration energy:', energy)

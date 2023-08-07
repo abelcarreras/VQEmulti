@@ -2,7 +2,7 @@
 numpy
 scipy
 openfermion
-git+https://github.com/NoniaVS/OpenFermion-PySCF.git@NO_Implementation
+openfermionpyscf @ git+https://github.com/NoniaVS/OpenFermion-PySCF.git@NO_Implementation
 cirq
 pennylane
 qiskit

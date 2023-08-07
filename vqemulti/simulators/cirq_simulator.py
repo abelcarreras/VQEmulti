@@ -1,5 +1,6 @@
 from vqemulti.simulators import SimulatorBase
 from openfermion.utils import count_qubits
+from vqemulti.preferences import Configuration
 import numpy as np
 import cirq
 
@@ -255,6 +256,10 @@ class CirqSimulator(SimulatorBase):
         gates_name = {'X': 'PauliX', 'Y': 'PauliY', 'Z': 'PauliZ',
                       'Rx': 'RX', 'Ry': 'RY', 'Rz': 'RZ',
                       'I': 'Identity', 'H': 'Hadamard', 'CNOT': 'CNOT'}
+
+        # print circuit
+        if Configuration().verbose > 1:
+            print(circuit)
 
         # depth
         self._circuit_count.append(len(cirq.Circuit(circuit.all_operations())))

@@ -348,6 +348,10 @@ class QiskitSimulator(SimulatorBase):
                       'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT',
                       'unitary': 'QubitUnitary'}
 
+        # print circuit
+        if Configuration().verbose > 1:
+            print(circuit.draw())
+
         # depth
         self._circuit_count.append(circuit.depth())
 

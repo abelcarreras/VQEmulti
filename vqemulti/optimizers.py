@@ -11,11 +11,13 @@ def spsa_minimizer(fun, x0, args=None, **options):
     :return:
     """
     import spsa
-
+    global nfev
+    nfev = 0
     def full_function(x0):
+        global nfev
+        nfev += 1
         return fun(x0, *args)
 
     data = spsa.minimize(full_function, x0)
-    print('data:', data)
 
-    return OptimizeResult(fun=full_function(data), x=data, nit=0, nfev=0, success=True)
+    return OptimizeResult(fun=full_function(data), x=data, nit=0, nfev=nfev, success=True)

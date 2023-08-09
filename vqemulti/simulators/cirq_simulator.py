@@ -228,7 +228,7 @@ class CirqSimulator(SimulatorBase):
         return reference_gates
         # return [cirq.X(qubits[i]) for i, occ in enumerate(hf_reference_fock) if bool(occ)]
 
-    def _trotterize_operator(self, qubit_operator, time, trotter_steps):
+    def _trotterize_operator(self, qubit_operator, time, trotter_steps, n_qubits):
         """
         Creates the circuit for applying e^(-j*operator*time), simulating the time
         evolution of a state under the Hamiltonian 'operator', with the given

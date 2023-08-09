@@ -101,6 +101,8 @@ class SimulatorBase:
         :param n_qubits: number of qubits
         :return: gates list in simulation library format
         """
+        n_qubits = len(hf_reference_fock)
+
         if self._trotter:
             # Use trotterized operator gates
 
@@ -111,7 +113,8 @@ class SimulatorBase:
                 for op, time in operator.terms.items():
                     operator_trotter_circuit = self._trotterize_operator(-QubitOperator(op),
                                                                          time.imag,
-                                                                         self._trotter_steps)
+                                                                         self._trotter_steps,
+                                                                         n_qubits)
 
                     # Add the gates corresponding to this operator to the ansatz gate list
                     trotter_ansatz += operator_trotter_circuit
@@ -124,7 +127,6 @@ class SimulatorBase:
 
         else:
             # Use matrix gate
-            n_qubits = len(hf_reference_fock)
             matrix = ansatz_to_matrix(ansatz, n_qubits)
 
             # Get gates in simulation library format

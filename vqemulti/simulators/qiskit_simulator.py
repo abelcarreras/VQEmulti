@@ -9,7 +9,7 @@ import qiskit
 import numpy as np
 
 
-def trotter_step(qubit_operator, time):
+def trotter_step(qubit_operator, time, n_qubits):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
@@ -25,6 +25,7 @@ def trotter_step(qubit_operator, time):
     # Order the terms the same way as done by OpenFermion's
     # trotter_operator_grouping function (sorted keys) for consistency.
     ordered_terms = sorted(list(qubit_operator.terms.keys()))
+    top_wire = n_qubits - 1
 
     # Add to trotter_gates the gates necessary to simulate each Pauli string,
     # going through them by the defined order
@@ -52,30 +53,30 @@ def trotter_step(qubit_operator, time):
 
             if pauli_operator == "X":
                 # Rotate to X basis
-                trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
+                trotter_gates.append(CircuitInstruction(HGate(), [top_wire - qubit_index]))
 
             if pauli_operator == "Y":
                 # Rotate to Y Basis
-                trotter_gates.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+                trotter_gates.append(CircuitInstruction(RXGate(np.pi / 2), [top_wire - qubit_index]))
 
         # Compute parity and store the result on the last involved qubit
         for i in range(len(involved_qubits) - 1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires= [control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [top_wire - control, top_wire - target]))
 
             # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits)
         # trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
-        trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
+        trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [top_wire - last_qubit]))
 
         # Uncompute parity
         for i in range(len(involved_qubits) - 2, -1, -1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
             # trotter_gates.append(qml.CNOT(wires=[control, target]))
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
+            trotter_gates.append(CircuitInstruction(MCXGate(1), [top_wire - control, top_wire - target]))
 
         # Undo basis rotations
         for pauli in pauliString:
@@ -89,12 +90,12 @@ def trotter_step(qubit_operator, time):
             if pauli_operator == "X":
                 # Rotate to Z basis from X basis
                 # trotter_gates.append(qml.Hadamard(qubit_index))
-                trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
+                trotter_gates.append(CircuitInstruction(HGate(), [top_wire - qubit_index]))
 
             if pauli_operator == "Y":
                 # Rotate to Z basis from Y Basis
                 # trotter_gates.append(qml.RX(-np.pi / 2, wires = qubit_index))
-                trotter_gates.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
+                trotter_gates.append(CircuitInstruction(RXGate(-np.pi / 2), [top_wire - qubit_index]))
 
     return trotter_gates
 
@@ -136,8 +137,6 @@ class QiskitSimulator(SimulatorBase):
         circuit = qiskit.QuantumCircuit(n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
-
-        # print(circuit)
 
         backend = qiskit.Aer.get_backend('statevector_simulator')
         result = backend.run(circuit).result()
@@ -292,8 +291,12 @@ class QiskitSimulator(SimulatorBase):
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
-        #if Configuration().verbose:
-        #    print('Expectation value: ', job.result().values[0])
+        if Configuration().verbose > 1:
+            print('Expectation value: ', job.result().values[0])
+            variance = job.result().metadata[0]["variance"]
+            std = np.sqrt(variance / self._shots)
+            print('variance: ', variance)
+            print('std:', std)
 
         return job.result().values[0]
 
@@ -317,7 +320,7 @@ class QiskitSimulator(SimulatorBase):
         return reference_gates
 
 
-    def _trotterize_operator(self, qubit_operator, time, trotter_steps):
+    def _trotterize_operator(self, qubit_operator, time, trotter_steps, n_qubits):
         """
         Creates the circuit for applying e^(-j*operator*time), simulating the time
         evolution of a state under the Hamiltonian 'operator', with the given
@@ -337,7 +340,7 @@ class QiskitSimulator(SimulatorBase):
         # number of times
         trotter_gates = []
         for step in range(1, trotter_steps + 1):
-            trotter_gates += trotter_step(qubit_operator, time / trotter_steps)
+            trotter_gates += trotter_step(qubit_operator, time / trotter_steps, n_qubits)
 
         return trotter_gates
 

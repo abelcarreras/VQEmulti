@@ -103,6 +103,7 @@ class PennylaneSimulator(SimulatorBase):
 
         # create and run circuit
         circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
+        self._get_circuit_stat_data(circuit)
 
         return circuit()
 

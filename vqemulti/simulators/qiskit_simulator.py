@@ -138,6 +138,8 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
+        self._get_circuit_stat_data(circuit)
+
         backend = qiskit.Aer.get_backend('statevector_simulator')
         result = backend.run(circuit).result()
 

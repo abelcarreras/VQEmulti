@@ -102,6 +102,7 @@ class CirqSimulator(SimulatorBase):
 
         # Initialize circuit.
         circuit = cirq.Circuit(state_preparation_gates)
+        self._get_circuit_stat_data(circuit)
 
         simulation = cirq.Simulator()
 

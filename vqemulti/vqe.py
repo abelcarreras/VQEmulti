@@ -59,13 +59,9 @@ def vqe(hamiltonian,
                                           tol=energy_threshold,
                                           )
 
-    if energy_simulator is not None:
-        circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
-        print('circuit depth: ', circuit_info['depth'])
-
     return {'energy': results.fun,
             'coefficients': list(results.x),
-            'ansatz': list(ansatz),
+            'ansatz': ansatz,
             'f_evaulations': results.nfev}
 
 

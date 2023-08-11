@@ -32,7 +32,6 @@ for d in np.linspace(0.3, 3, 20):
     n_electrons = 2  # molecule.n_electrons
     n_orbitals = 2  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
-    generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
     # Choose specific pool of operators for adapt-VQE
     pool = get_pool_singlet_sd(n_electrons=n_electrons,
@@ -43,9 +42,9 @@ for d in np.linspace(0.3, 3, 20):
 
     from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
+    # define simulator paramters
     simulator = Simulator(trotter=True,
                           trotter_steps=1,
-                          # test_only=True,
                           shots=1000)
 
     # run adaptVQE
@@ -53,9 +52,9 @@ for d in np.linspace(0.3, 3, 20):
                       pool,
                       hf_reference_fock,
                       opt_qubits=False,
-                      threshold=0.1,
-                      # energy_simulator=simulator,
-                      # gradient_simulator=simulator,
+                      max_iterations=10,
+                      # energy_simulator=simulator,  # comment this line to not use sampler simulator
+                      # gradient_simulator=simulator,  # comment this line to not use sampler simulator
                       )
 
     print("Final energy:", result["energy"])

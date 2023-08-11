@@ -1,5 +1,6 @@
 # Example of restarting a calculation using previous calculation
 # using the ansatz (list of operators) and coefficients
+# this can be also understood as a simple projection if the basis set/operators pool is different
 
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
@@ -38,7 +39,7 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # Simulator
-from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
+from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,

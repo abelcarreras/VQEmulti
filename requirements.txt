@@ -6,4 +6,5 @@ openfermionpyscf @ git+https://github.com/NoniaVS/OpenFermion-PySCF.git@NO_Imple
 cirq
 pennylane
 qiskit
+qiskit-aer
 posym

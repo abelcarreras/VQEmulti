@@ -1,4 +1,4 @@
-# example of the use of IBM runtime and sessions
+# example of the use of IBM runtime and sessions (requires qiskit-ibm-runtime module)
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.vqe import vqe

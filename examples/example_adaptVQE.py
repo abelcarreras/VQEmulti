@@ -8,18 +8,19 @@ from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
 
 # molecule definition
-h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
-                                      ['He', [0, 0, 1.0]]],
-                            basis='6-31g',
-                            # basis='sto-3g',
-                            multiplicity=1,
-                            charge=0,
-                            description='He2')
+he2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
+                                       ['He', [0, 0, 1.0]]],
+                             basis='6-31g',
+                             # basis='sto-3g',
+                             multiplicity=1,
+                             charge=0,
+                             description='He2')
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True)
+molecule = run_pyscf(he2_molecule, run_fci=True, nat_orb=True, guess_mix=False)
 
 # get additional info about electronic structure properties
+# from vqemulti.analysis import get_info
 # get_info(molecule, check_HF_data=False)
 
 # get properties from classical SCF calculation
@@ -41,9 +42,8 @@ try:
     result = adaptVQE(hamiltonian,
                       pool,
                       hf_reference_fock,
-                      opt_qubits=False,
-                      threshold=0.01,
-                      max_iterations=15
+                      opt_qubits=False,  # use fermion operators
+                      max_iterations=15  # maximum number of interations
                       )
 
 except NotConvergedError as e:
@@ -52,6 +52,7 @@ except NotConvergedError as e:
 
 print('Final results\n-----------')
 
+print('HF energy:', molecule.hf_energy)
 print('Final adaptVQE energy:', result["energy"])
 print('FullCI energy: {:.8f}'.format(molecule.fci_energy))
 

@@ -1,3 +1,4 @@
+# example to compute the variance of a sampled (using simulator) VQE calculation
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
@@ -15,7 +16,7 @@ h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                             basis='3-21g',
                             multiplicity=1,
                             charge=0,
-                            description='He'
+                            description='H2'
                              )
 
 # run classical calculation

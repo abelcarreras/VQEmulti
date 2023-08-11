@@ -52,5 +52,6 @@ print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
 print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
 print('Num operators: ', len(result['ansatz']))
-print('Ansatz:\n', result['ansatz'])
+print('Ansatz (compact representation):')
+result['ansatz'].print_compact_representation()
 print('Coefficients:\n', result['coefficients'])

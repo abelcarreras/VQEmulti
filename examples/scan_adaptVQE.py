@@ -53,6 +53,7 @@ for d in np.linspace(0.3, 3, 20):
                       hf_reference_fock,
                       opt_qubits=False,
                       max_iterations=10,
+                      coeff_tolerance=1e-3
                       # energy_simulator=simulator,  # comment this line to not use sampler simulator
                       # gradient_simulator=simulator,  # comment this line to not use sampler simulator
                       )

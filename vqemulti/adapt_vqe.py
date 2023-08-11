@@ -121,11 +121,18 @@ def adaptVQE(hamiltonian,
         for max_index, max_gradient in zip(max_indices, max_gradients):
             print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
+        # check if repeated operator
+        repeat_operator = len(max_indices) == len(indices[-len(max_indices):]) and \
+                          np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
+
         # Initialize the coefficient of the operator that will be newly added at 0
-        for max_index, max_operator in zip(max_indices, max_operators):
-            coefficients.append(0)
-            ansatz.append(max_operator)
-            indices.append(max_index)
+        if (not repeat_operator) or energy_simulator is None:
+            for max_index, max_operator in zip(max_indices, max_operators):
+                coefficients.append(0)
+                ansatz.append(max_operator)
+                indices.append(max_index)
+        else:
+            print('Same operator/s selected. Re-optimizing with current ansatz')
 
         # run optimization
         if energy_simulator is None:
@@ -149,12 +156,13 @@ def adaptVQE(hamiltonian,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
         # check if last coefficient is zero
+        print('Coeff:  ', results.x[-1])
         if abs(results.x[-1]) < coeff_tolerance:
-            warnings.warn('finished due to zero valued coeffient')
+            # warnings.warn('finished due to zero valued coefficient')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,
-                    'indices': indices,
-                    'coefficients': coefficients,
+                    'indices': indices[:-1],
+                    'coefficients': coefficients[:-1],
                     'iterations': iterations}
 
         # get results

@@ -43,9 +43,9 @@ result = adaptVQE(hamiltonian,
                   pool,
                   hf_reference_fock,
                   opt_qubits=False,
-                  max_iterations=10,
+                  max_iterations=20,
                   energy_threshold=1e-2,  # energy tolerance for classical optimization function
-                  coeff_tolerance=1e-2,  # threshold value for which coefficient is assumed to be zero
+                  coeff_tolerance=5e-2,  # threshold value for which coefficient is assumed to be zero
                   energy_simulator=simulator,  # comment this line to not use sampler simulator
                   gradient_simulator=simulator,  # comment this line to not use sampler simulator
                   )

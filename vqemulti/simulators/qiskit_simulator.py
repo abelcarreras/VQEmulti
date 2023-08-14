@@ -354,7 +354,7 @@ class QiskitSimulator(SimulatorBase):
                       'unitary': 'QubitUnitary'}
 
         # circuit drawing
-        self._circuit_draw.append(str(circuit.draw(fold=-1)))
+        self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
         if Configuration().verbose > 1:
             print(self._circuit_draw[-1])
 

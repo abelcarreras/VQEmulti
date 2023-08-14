@@ -25,6 +25,7 @@ class SimulatorBase:
         self._shots = shots
         self._circuit_count = []
         self._circuit_gates = defaultdict(int)
+        self._circuit_draw = []
 
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
@@ -147,6 +148,15 @@ class SimulatorBase:
         for k, v in self._circuit_gates.items():
             print(' {:14} : {}'.format(k, v))
         print('------------------------------------\n')
+
+    def print_circuits(self):
+        print('Total circuits: {}'.format(len(self._circuit_draw)))
+        for i, c in enumerate(self._circuit_draw):
+            print('\n Circuit {}\n'.format(i+1) + c)
+
+    def get_circuits(self):
+        return self._circuit_draw
+
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):

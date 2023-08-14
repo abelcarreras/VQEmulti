@@ -1,6 +1,7 @@
 from vqemulti.simulators import SimulatorBase
 import numpy as np
 import pennylane as qml
+from vqemulti.preferences import Configuration
 
 
 def trotter_step(qubit_operator, time):
@@ -221,6 +222,11 @@ class PennylaneSimulator(SimulatorBase):
     def _get_circuit_stat_data(self, circuit):
 
         specs_func = qml.specs(circuit)
+
+        if self._test_only:
+            self._circuit_draw.append(qml.draw(circuit, max_length=10000, decimals=6)())
+            if Configuration().verbose > 1:
+                print(self._circuit_draw[-1])
 
         # depth
         self._circuit_count.append(specs_func()['depth']-1)

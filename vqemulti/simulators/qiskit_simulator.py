@@ -121,7 +121,7 @@ class QiskitSimulator(SimulatorBase):
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
         :param session: IBM runtime session to run jobs on IBM computers (estimator)
         """
-
+        # backend.set_options(device='GPU')
         self._backend = backend
         self._session = session
         self._use_estimator = use_estimator
@@ -353,9 +353,10 @@ class QiskitSimulator(SimulatorBase):
                       'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT',
                       'unitary': 'QubitUnitary'}
 
-        # print circuit
+        # circuit drawing
+        self._circuit_draw.append(str(circuit.draw(fold=-1)))
         if Configuration().verbose > 1:
-            print(circuit.draw())
+            print(self._circuit_draw[-1])
 
         # depth
         self._circuit_count.append(circuit.depth())

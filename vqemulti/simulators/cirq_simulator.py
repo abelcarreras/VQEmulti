@@ -258,9 +258,10 @@ class CirqSimulator(SimulatorBase):
                       'Rx': 'RX', 'Ry': 'RY', 'Rz': 'RZ',
                       'I': 'Identity', 'H': 'Hadamard', 'CNOT': 'CNOT'}
 
-        # print circuit
+        # circuit drawing
+        self._circuit_draw.append(str(circuit))
         if Configuration().verbose > 1:
-            print(circuit)
+            print(self._circuit_draw[-1])
 
         # depth
         self._circuit_count.append(len(cirq.Circuit(circuit.all_operations())))

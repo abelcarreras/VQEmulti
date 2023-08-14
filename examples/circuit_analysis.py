@@ -57,13 +57,16 @@ print('Coefficients:\n', result['coefficients'])
 
 simulator.print_statistics()
 
-conf.verbose = 2  # show circuit
+# perform a single call to energy evaluator an use new simulator object to store only one circuit
+simulator_sp = QiskitSimulator(trotter=True, test_only=True)
 
-# perform a single call to energy evaluator
 energy = get_vqe_energy(result['coefficients'],
                         result['ansatz'],
                         hf_reference_fock,
                         hamiltonian,
-                        energy_simulator=simulator)
+                        energy_simulator=simulator_sp)
 
 print('Energy VQE: {:.8f}'.format(energy))
+
+# print circuits
+simulator_sp.print_circuits()

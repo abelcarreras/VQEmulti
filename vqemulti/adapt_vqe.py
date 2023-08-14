@@ -125,14 +125,21 @@ def adaptVQE(hamiltonian,
         repeat_operator = len(max_indices) == len(indices[-len(max_indices):]) and \
                           np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
 
+        # if repeat operator finish adaptVQE
+        if repeat_operator:
+            print('Converge archived due to repeated operator')
+            energy = iterations['energies'][-1]
+            return {'energy': energy,
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations}
+
         # Initialize the coefficient of the operator that will be newly added at 0
-        if (not repeat_operator) or energy_simulator is None:
-            for max_index, max_operator in zip(max_indices, max_operators):
-                coefficients.append(0)
-                ansatz.append(max_operator)
-                indices.append(max_index)
-        else:
-            print('Same operator/s selected. Re-optimizing with current ansatz')
+        for max_index, max_operator in zip(max_indices, max_operators):
+            coefficients.append(0)
+            ansatz.append(max_operator)
+            indices.append(max_index)
 
         # run optimization
         if energy_simulator is None:

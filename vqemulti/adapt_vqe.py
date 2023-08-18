@@ -166,10 +166,11 @@ def adaptVQE(hamiltonian,
         print('Coeff:  ', results.x[-1])
         if abs(results.x[-1]) < coeff_tolerance:
             # warnings.warn('finished due to zero valued coefficient')
+            n_operators = len(max_indices)
             return {'energy': iterations['energies'][-1],
-                    'ansatz': ansatz,
-                    'indices': indices[:-1],
-                    'coefficients': coefficients[:-1],
+                    'ansatz': ansatz[:-n_operators],
+                    'indices': indices[:-n_operators],
+                    'coefficients': coefficients[:-n_operators],
                     'iterations': iterations}
 
         # get results

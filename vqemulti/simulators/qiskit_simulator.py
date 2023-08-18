@@ -224,7 +224,6 @@ class QiskitSimulator(SimulatorBase):
 
         circuit.measure_all()
 
-
         result = self._backend.run(circuit, shots=self._shots, memory=True).result()
         # memory = result.get_memory()
         counts_total = result.get_counts()

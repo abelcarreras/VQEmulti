@@ -28,6 +28,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, si
 
     return energy
 
+
 def simulate_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """
     Obtain the energy square expectation value for a given state (reference + ansatz) and a hamiltonian

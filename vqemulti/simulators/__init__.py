@@ -139,7 +139,9 @@ class SimulatorBase:
             return
 
         print('\n------------------------------------')
-        print('Total shots: {}'.format(self._shots))
+        if not self._test_only:
+            print('Total shots: {}'.format(self._shots))
+
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
         print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
         print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))

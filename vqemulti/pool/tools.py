@@ -35,23 +35,23 @@ class OperatorList:
             for op in self._list:
                 total_fermion += op
 
-            def is_antisymmetric(fermion):
+            def is_anti_hermitian(fermion):
                 hermitian_fermion = -hermitian_conjugated(fermion)
                 return normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
 
-            if not is_antisymmetric(total_fermion):
+            if not is_anti_hermitian(total_fermion):
                 # anti-symmetrize
                 total_fermion = (total_fermion - hermitian_conjugated(total_fermion))
 
-            # check antisymmetric
-            hermitian_fermion = -hermitian_conjugated(total_fermion)
-            assert normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
+                # check antisymmetric
+                hermitian_fermion = -hermitian_conjugated(total_fermion)
+                assert normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
 
-            self._list = []
-            for term in total_fermion:
-                h_op = proper_order(term - hermitian_conjugated(term))
-                if h_op not in self._list:
-                    self._list.append(h_op)
+                self._list = []
+                for term in total_fermion:
+                    h_op = proper_order(term - hermitian_conjugated(term))
+                    if h_op not in self._list:
+                        self._list.append(h_op)
 
         if normalize:
             self._list = [normalize_operator(op) for op in self._list]

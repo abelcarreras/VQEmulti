@@ -168,7 +168,7 @@ def adaptVQE(hamiltonian,
             # warnings.warn('finished due to zero valued coefficient')
             n_operators = len(max_indices)
             return {'energy': iterations['energies'][-1],
-                    'ansatz': ansatz[:-n_operators],
+                    'ansatz': OperatorList(ansatz[:-n_operators]),
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations}

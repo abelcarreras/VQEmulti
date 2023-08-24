@@ -163,7 +163,6 @@ def adaptVQE(hamiltonian,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
         # check if last coefficient is zero
-        print('Coeff:  ', results.x[-1])
         if abs(results.x[-1]) < coeff_tolerance:
             # warnings.warn('finished due to zero valued coefficient')
             n_operators = len(max_indices)

@@ -2,11 +2,12 @@
 # 1 occupied orbital (8) and 1 virtual orbital (9).
 # calculation done in 4 qubits (8a, 8b, 9a, 9b).
 # https://doi.org/10.48550/arXiv.2009.01872
-
+import numpy as np
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti import vqe
 
 o2_molecule = MolecularData(geometry=[['O', [0, 0, 0]],
@@ -55,3 +56,9 @@ print('Num operators: ', len(result['ansatz']))
 print('Ansatz (compact representation):')
 result['ansatz'].print_compact_representation()
 print('Coefficients:\n', result['coefficients'])
+
+
+density_matrix = get_density_matrix(result['coefficients'], result['ansatz'],
+                                    hf_reference_fock, n_orbitals, frozen_core=7)
+
+print('fidelity: {:.5f}'.format(density_fidelity(molecule.fci_one_rdm, density_matrix)))

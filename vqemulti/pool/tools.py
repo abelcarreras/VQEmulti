@@ -11,7 +11,7 @@ class OperatorList:
 
         return object.__new__(cls)
 
-    def __init__(self, operators, normalize=False, antisymmetrize=True, split=False):
+    def __init__(self, operators, normalize=False, antisymmetrize=True, spin_symmetry=False):
         """
         basis class to manage operators lists
 
@@ -32,37 +32,30 @@ class OperatorList:
 
         if antisymmetrize and self._type == FermionOperator:
             total_fermion = FermionOperator()
-            for op in self._list:
-                total_fermion += op
+            self._original_list = self._list
+            self._list = []
+            for op in self._original_list:
 
-            def is_anti_hermitian(fermion):
-                hermitian_fermion = -hermitian_conjugated(fermion)
-                return normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
+                def is_anti_hermitian(fermion):
+                    hermitian_fermion = -hermitian_conjugated(fermion)
+                    return normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
 
-            if not is_anti_hermitian(total_fermion):
-                # anti-symmetrize
-                total_fermion = (total_fermion - hermitian_conjugated(total_fermion))
+                if is_anti_hermitian(op):
+                    self._list.append(op)
 
-                # check antisymmetric
-                hermitian_fermion = -hermitian_conjugated(total_fermion)
-                assert normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
+                else:
+                    # anti-symmetrize
+                    total_fermion = (total_fermion - hermitian_conjugated(total_fermion))
 
-                self._list = []
-                for term in total_fermion:
-                    h_op = proper_order(term - hermitian_conjugated(term))
-                    if h_op not in self._list:
-                        self._list.append(h_op)
+                    # check antisymmetric
+                    anti_hermitian_fermion = -hermitian_conjugated(total_fermion)
+                    assert normal_ordered(total_fermion) == normal_ordered(anti_hermitian_fermion)
+
+                    self._list.append(anti_hermitian_fermion)
 
         if normalize:
             self._list = [normalize_operator(op) for op in self._list]
             # self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
-
-        if split:
-            split_list = []
-            for op in self._list:
-                for term in op.terms:
-                    split_list.append(self._type(term))
-            self._list = split_list
 
 
     def __str__(self):

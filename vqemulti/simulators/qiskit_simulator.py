@@ -379,6 +379,8 @@ class QiskitSimulator(SimulatorBase):
 
         return {'depth': circuit.depth()}
 
+    def simulator_info(self):
+        return 'qiskit ' + str(qiskit.__version__)
 
 if __name__ == '__main__':
 

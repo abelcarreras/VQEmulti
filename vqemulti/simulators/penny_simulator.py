@@ -236,7 +236,6 @@ class PennylaneSimulator(SimulatorBase):
         for k, v in gates_dict.items():
             self._circuit_gates[k] += v
 
-
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 
         ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
@@ -259,6 +258,8 @@ class PennylaneSimulator(SimulatorBase):
         specs_func = qml.specs(circuit)
         return specs_func()
 
+    def simulator_info(self):
+        return 'pennylane ' + str(qml.__version__)
 
 if __name__ == '__main__':
     simulator = PennylaneSimulator(trotter=True,

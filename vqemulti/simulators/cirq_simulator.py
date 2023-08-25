@@ -282,6 +282,8 @@ class CirqSimulator(SimulatorBase):
         circuit = cirq.Circuit(state_preparation_gates)
         return {'depth': len(cirq.Circuit(circuit.all_operations()))}
 
+    def simulator_info(self):
+        return 'cirq ' + str(cirq.__version__)
 
 if __name__ == '__main__':
     simulator = CirqSimulator(trotter=True,

@@ -139,6 +139,7 @@ class SimulatorBase:
             return
 
         print('\n------------------------------------')
+        print('version: {}'.format(self.get_info()))
         if not self._test_only:
             print('Total shots: {}'.format(self._shots))
 
@@ -174,4 +175,7 @@ class SimulatorBase:
         raise NotImplementedError()
 
     def _trotterize_operator(self, *args):
+        raise NotImplementedError()
+
+    def get_info(self, *args):
         raise NotImplementedError()

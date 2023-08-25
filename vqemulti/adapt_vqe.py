@@ -24,7 +24,7 @@ def adaptVQE(hamiltonian,
              operator_update_number=1,
              operator_update_max_grad=2e-1):
     """
-    Perform a adapt VQE calculation
+    Perform an adaptVQE calculation
 
     :param operators_pool: fermionic operators pool
     :param hamiltonian: hamiltonian in fermionic operators

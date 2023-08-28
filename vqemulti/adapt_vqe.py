@@ -143,9 +143,9 @@ def adaptVQE(hamiltonian,
                                               options={'gtol': energy_threshold,
                                                        'disp':  Configuration().verbose},
                                               method='BFGS',
-                                              #method='COBYLA',
-                                              #tol= 1e-4,
-                                              #options={'rhobeg': 0.1, 'disp': Configuration().verbose}
+                                              # method='COBYLA',
+                                              # tol=None,
+                                              # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                               )
         else:
             results = scipy.optimize.minimize(simulate_vqe_energy,

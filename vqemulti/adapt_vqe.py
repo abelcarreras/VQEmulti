@@ -93,7 +93,7 @@ def adaptVQE(hamiltonian,
             else:
                 energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
 
-            print("\nConvergence condition achieved!")
+            print("\nConverge archived due to gradient norm threshold")
             result = {'energy': energy,
                       'ansatz': ansatz,
                       'indices': indices,
@@ -164,7 +164,7 @@ def adaptVQE(hamiltonian,
 
         # check if last coefficient is zero
         if abs(results.x[-1]) < coeff_tolerance:
-            # warnings.warn('finished due to zero valued coefficient')
+            print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
             return {'energy': iterations['energies'][-1],
                     'ansatz': OperatorList(ansatz[:-n_operators]),

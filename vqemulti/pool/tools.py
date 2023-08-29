@@ -38,7 +38,7 @@ class OperatorList:
 
                 def is_anti_hermitian(fermion):
                     hermitian_fermion = -hermitian_conjugated(fermion)
-                    return normal_ordered(total_fermion) == normal_ordered(hermitian_fermion)
+                    return normal_ordered(fermion) == normal_ordered(hermitian_fermion)
 
                 if is_anti_hermitian(op):
                     self._list.append(op)

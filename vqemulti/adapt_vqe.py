@@ -151,7 +151,7 @@ def adaptVQE(hamiltonian,
                                                        'disp':  Configuration().verbose},
                                               method='BFGS',
                                               #method='COBYLA',
-                                              #tol= 1e-4,
+                                              tol=energy_threshold,
                                               #options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                               )
         else:
@@ -166,7 +166,7 @@ def adaptVQE(hamiltonian,
         if abs(results.x[-1]) < coeff_tolerance:
             print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
-            return {'energy': iterations['energies'][-1],
+            return {'energy': results.fun,
                     'ansatz': OperatorList(ansatz[:-n_operators]),
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],

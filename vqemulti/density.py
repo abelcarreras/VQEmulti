@@ -6,7 +6,7 @@ import scipy
 
 def get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orbitals, frozen_core=0):
     """
-    Calculates the density matrix in molecular orbitals basis
+    Calculates the one particle density matrix in the molecular orbitals basis
 
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
@@ -58,7 +58,38 @@ def get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orbitals, froz
 
 def density_fidelity(density_ref, density_vqe):
     """
-    compute fidelity based in 1p-density matrices.
+    compute quantum fidelity based in 1p-density matrices.
+    source: https://en.wikipedia.org/wiki/Fidelity_of_quantum_states.
+    The result is a real number between 0 (low fidelity) and 1 (high fidelity)
+
+    :param density_ref: density matrix of reference wave function (usually fullCI)
+    :param density_vqe: density matrix of target wave function (usually VQE)
+    :return: quantum fidelity measure
+    """
+
+    n_electrons = np.trace(density_ref)
+
+    density_ref = np.array(density_ref)/n_electrons
+    density_vqe = np.array(density_vqe)/n_electrons
+
+    # padding with zero if different sizes
+    n_pad = len(density_ref) - len(density_vqe)
+    density_vqe = np.pad(density_vqe, (0, n_pad), 'constant')
+
+    sqrt_ref = scipy.linalg.sqrtm(density_ref)
+    sqrt_vqe = scipy.linalg.sqrtm(density_vqe)
+
+    dens = np.dot(sqrt_ref, sqrt_vqe)
+
+    trace = np.trace(scipy.linalg.sqrtm(np.dot(dens.T, dens)))
+
+    return np.absolute(trace)**2
+
+
+def density_fidelity_simple(density_ref, density_vqe):
+    """
+    compute Quantum fidelity based in 1p-density matrices.
+    Simple implementation defined as 1 - (the norm of the difference between density matrices)
     The result is a real number between 0 (low fidelity) and 1 (high fidelity)
 
     :param density_ref: density matrix of reference wave function (usually fullCI)

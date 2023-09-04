@@ -62,8 +62,10 @@ class OperatorList:
         return self._list.__str__()
 
     def __getitem__(self, item):
-        return self._list[item]
-
+        if isinstance(self._list[item], list):
+            return OperatorList(self._list[item], antisymmetrize=False, normalize=False)
+        else:
+            return self._list[item]
     def __len__(self):
         return len(self._list)
 

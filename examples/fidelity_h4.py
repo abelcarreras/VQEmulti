@@ -8,7 +8,8 @@ from vqemulti.pool import get_pool_singlet_sd, get_pool_spin_complement_gsd
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqemulti.adapt_vqe import adaptVQE
 from vqemulti.preferences import Configuration
-from vqemulti.density import get_density_matrix
+from vqemulti.density import get_density_matrix, density_fidelity
+
 
 r = 3.0
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
@@ -83,7 +84,6 @@ print('\nadaptVQE density matrix')
 print(density_matrix)
 print(np.trace(density_matrix))
 
-# WF fidelity proposal based in density matrix comparison (1: perfect match, 0: totally different)
-fidelity = 1 - (np.linalg.norm(molecule.fci_one_rdm - density_matrix)/n_electrons)
-
+# WF quantum fidelity (1: perfect match, 0: totally different)
+fidelity = density_fidelity(density_matrix, molecule.fci_one_rdm)
 print('\nFidelity measure: {:5.2f}'.format(fidelity))

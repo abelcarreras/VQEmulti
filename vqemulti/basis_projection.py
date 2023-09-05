@@ -220,7 +220,7 @@ def cuttoff_op(list_coeff, list_op, max_op):
     return [list_coeff[i] for i in indices], [list_op[i] for i in indices],
 
 
-def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2, max_op=None):
+def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2, max_op=None, singlet_symmetry=False, ref_pool=None):
     """
     separate normalized part of operators from its coefficients.
 
@@ -229,6 +229,12 @@ def prepare_ansatz_for_restart(operator_ansatz, max_val=1e-2, max_op=None):
     :param max_op: maximum number of operators (ordered by coefficients norm)
     :return:
     """
+
+    if ref_pool is not None:
+        list_coeff, list_op = ansatz_projection_into_pool(ref_pool, operator_ansatz, max_val=max_val)
+        if max_op is not None:
+            list_coeff, list_op = cuttoff_op(list_coeff, list_op, max_op)
+        return list_coeff, OperatorList(list_op, antisymmetrize=False)
 
     if isinstance(operator_ansatz, FermionOperator):
         reduced_ansatz = FermionOperator()
@@ -308,6 +314,40 @@ def project_basis(ansatz, basis_overlap_matrix, n_orb_1=None, frozen_core_1=0, n
             projected_ansatz += op_coeff * reduce(mul, total_fermion)
 
     return projected_ansatz
+
+
+def operator_dot(operator_1, operator_2):
+    """
+    compute overlap between two operators
+
+    :param operator_1: operator 1
+    :param operator_2: operator 2
+    :return:
+    """
+    sum = 0
+    for term_op1, coeff_op1 in operator_1.terms.items():
+        for term_op2, coeff_op2 in operator_2.terms.items():
+            if term_op1 == term_op2:
+                sum += coeff_op1 * coeff_op2
+    return sum
+
+
+def state_projection_into_pool(ansatz_ref, state_operators):
+    """
+    project state_operators (raw ansatz)  into a pool ansatz_ref (Operators list)
+
+    :param ansatz_ref: reference ansatz (result will be expressed in this basis)
+    :param state_operators: operators that define state (including coefficients)
+
+    :return: coefficients, projected ansatz (operators list)
+    """
+
+    coefficients = []
+    for op in ansatz_ref:
+        overlap = operator_dot(op, state_operators)
+        coefficients.append(overlap)
+
+    return coefficients
 
 
 if __name__ == '__main__':

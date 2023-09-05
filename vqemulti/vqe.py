@@ -62,7 +62,7 @@ def vqe(hamiltonian,
     return {'energy': results.fun,
             'coefficients': list(results.x),
             'ansatz': ansatz,
-            'f_evaulations': results.nfev}
+            'f_evaluations': results.nfev}
 
 
 

@@ -37,6 +37,8 @@ def vqe(hamiltonian,
     if coefficients is None:
         coefficients = np.zeros(n_terms)
 
+    assert len(coefficients) == len(ansatz)
+
     # Optimize the results from analytical calculation
     if energy_simulator is None:
         results = scipy.optimize.minimize(exact_vqe_energy,

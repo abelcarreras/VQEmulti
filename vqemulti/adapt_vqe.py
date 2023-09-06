@@ -162,12 +162,24 @@ def adaptVQE(hamiltonian,
                                               tol=energy_threshold,
                                               options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
 
-        # check if last coefficient is zero
+        # check if last coefficient is zero (likely to happen in exact optimizations)
         if abs(results.x[-1]) < coeff_tolerance:
             print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
             return {'energy': results.fun,
-                    'ansatz': OperatorList(ansatz[:-n_operators]),
+                    'ansatz': ansatz[:-n_operators],
+                    'indices': indices[:-n_operators],
+                    'coefficients': coefficients[:-n_operators],
+                    'iterations': iterations}
+
+        # check if last iteration energy is better (likely to happen in sampled optimizations)
+        diff_threshold = np.sqrt(2) * energy_threshold  # central limit theorem
+        if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < energy_threshold:
+
+            print('Converge archived due to not energy improvement')
+            n_operators = len(max_indices)
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations}

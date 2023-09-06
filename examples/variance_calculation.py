@@ -7,6 +7,7 @@ from vqemulti.vqe import vqe
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from vqemulti.energy.simulation import simulate_vqe_energy_square, simulate_vqe_energy
 from vqemulti.energy import exact_vqe_energy
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -56,18 +57,17 @@ exact = exact_vqe_energy(result['coefficients'], result['ansatz'], hf_reference_
 print('Exact energy: ', exact)
 
 # compute the variance as Var = E[X^2] - E[X]^2 with simulator
-n_measures = 100
-simulator = Simulator(trotter=True, test_only=False, shots=10000)
+n_measures = 1000
+simulator = Simulator(trotter=True, test_only=False, shots=100)
 
-e = np.average([simulate_vqe_energy(result['coefficients'],
-                                    result['ansatz'],
-                                    hf_reference_fock, hamiltonian, simulator)
-                for _ in range(n_measures)])
+e_list = [simulate_vqe_energy(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
+          for _ in range(n_measures)]
 
-e2 = np.average([simulate_vqe_energy_square(result['coefficients'],
-                                            result['ansatz'],
-                                            hf_reference_fock, hamiltonian, simulator)
-                 for _ in range(n_measures)])
+e2_list = [simulate_vqe_energy_square(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
+           for _ in range(n_measures)]
+
+e = np.average(e_list)
+e2 = np.average(e2_list)
 
 print('E[X^2]: ', e2)
 print('E[X]^2: ', e**2)
@@ -77,3 +77,13 @@ variance = e2 - e**2
 print('Variance: ', variance)
 std = np.sqrt(abs(variance) / n_measures)
 print('standard error: ', std)
+
+plt.title('Energy distribution')
+plt.hist(e_list, histtype=u'step', density=True, label='E')
+plt.xlabel('E (Hartree)')
+plt.figure()
+plt.title('Energy square distribution')
+plt.hist(e2_list, histtype=u'step', density=True, label='E^2')
+plt.xlabel('E^2 (Hartree^2)')
+
+plt.show()

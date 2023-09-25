@@ -186,11 +186,19 @@ def adaptVQE(hamiltonian,
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
 
-    raise NotConvergedError({'energy': iterations['energies'][-1],
+        if iteration == max_iterations-1 :
+            warnings.warn('finished due to max iterations reached')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations}
+
+    '''raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
-                             'iterations': iterations})
+                             'iterations': iterations})'''
 
 
 if __name__ == '__main__':

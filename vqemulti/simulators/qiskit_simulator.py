@@ -400,5 +400,5 @@ if __name__ == '__main__':
     print(circuit.data)
 
     #circuit = qiskit.QuantumCircuit()
-
     print(circuit)
+

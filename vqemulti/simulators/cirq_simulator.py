@@ -265,6 +265,7 @@ class CirqSimulator(SimulatorBase):
 
         # depth
         self._circuit_count.append(len(cirq.Circuit(circuit.all_operations())))
+        self._shot_count.append(self._shots)
 
         # gates
         for gate in circuit.all_operations():

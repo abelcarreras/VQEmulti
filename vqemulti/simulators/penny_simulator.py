@@ -230,6 +230,7 @@ class PennylaneSimulator(SimulatorBase):
 
         # depth
         self._circuit_count.append(specs_func()['depth']-1)
+        self._shot_count.append(self._shots)
 
         # gates
         gates_dict = specs_func()['gate_types']

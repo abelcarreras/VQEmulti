@@ -76,6 +76,10 @@ def adaptVQE(hamiltonian,
                                                       coefficients,
                                                       operators_pool)
         else:
+            gradient_simulator.update_model(precision=energy_threshold,
+                                            n_coefficients=len(coefficients),
+                                            c_constant=0.4)
+
             gradient_vector = simulate_gradient(hf_reference_fock,
                                                 hamiltonian,
                                                 ansatz,
@@ -155,12 +159,16 @@ def adaptVQE(hamiltonian,
                                               #options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                               )
         else:
+            opt_tolerance = energy_simulator.update_model(precision=energy_threshold,
+                                                          n_coefficients=len(coefficients),
+                                                          c_constant=0.4)
+
             results = scipy.optimize.minimize(simulate_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
                                               method='COBYLA', # SPSA for real hardware
-                                              tol=energy_threshold,
-                                              options={'disp': Configuration().verbose})  # 'rhobeg': 0.01)
+                                              tol=opt_tolerance,
+                                              options={'disp': Configuration().verbose, 'rhobeg': 0.1})
 
         # check if last coefficient is zero (likely to happen in exact optimizations)
         if abs(results.x[-1]) < coeff_tolerance:
@@ -173,8 +181,8 @@ def adaptVQE(hamiltonian,
                     'iterations': iterations}
 
         # check if last iteration energy is better (likely to happen in sampled optimizations)
-        diff_threshold = np.sqrt(2) * energy_threshold  # central limit theorem
-        if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < energy_threshold:
+        diff_threshold = 0
+        if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < diff_threshold:
 
             print('Converge archived due to not energy improvement')
             n_operators = len(max_indices)

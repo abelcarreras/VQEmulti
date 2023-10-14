@@ -359,6 +359,7 @@ class QiskitSimulator(SimulatorBase):
 
         # depth
         self._circuit_count.append(circuit.depth())
+        self._shot_count.append(self._shots)
 
         # gates
         for gate in circuit.data:

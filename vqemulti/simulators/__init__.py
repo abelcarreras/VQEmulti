@@ -24,8 +24,13 @@ class SimulatorBase:
         self._test_only = test_only
         self._shots = shots
         self._circuit_count = []
+        self._shot_count = []
         self._circuit_gates = defaultdict(int)
         self._circuit_draw = []
+        self._shots_model = None
+
+    def set_shots_model(self, shots_model):
+        self._shots_model = shots_model
 
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
@@ -141,7 +146,9 @@ class SimulatorBase:
         print('\n------------------------------------')
         print('version: {}'.format(self.simulator_info()))
         if not self._test_only:
-            print('Total shots: {}'.format(self._shots))
+            if self._shots_model is None:
+                print('Shots per evaluation: {}'.format(self._shots))
+            print('Total shots: {}'.format(np.sum(self._shot_count)))
 
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
         print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
@@ -160,6 +167,14 @@ class SimulatorBase:
     def get_circuits(self):
         return self._circuit_draw
 
+    def update_model(self, **param_dict):
+        if self._shots_model is not None:
+            tolerance, self._shots = self._shots_model(param_dict)
+            print('shots_update: ', self._shots)
+
+            return tolerance
+
+        return param_dict['precision']
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):

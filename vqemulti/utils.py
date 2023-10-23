@@ -272,6 +272,9 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
                                               frozen_spin_orbitals: n_spin_orbitals,
                                               frozen_spin_orbitals: n_spin_orbitals]
 
+    # reduced_one = np.ones_like(reduced_one)
+    # reduced_two = np.ones_like(reduced_two)
+
     if frozen_core > 0:
         # compute the core energy
         energy_inactive=0

@@ -1,4 +1,4 @@
-from vqemulti.energy.exact import exact_vqe_energy, exact_vqe_energy_gradient
+from vqemulti.energy.exact import exact_vqe_energy, exact_vqe_energy_gradient, exact_vqe_energy_no_trotter
 from vqemulti.energy.simulation import simulate_vqe_energy
 
 

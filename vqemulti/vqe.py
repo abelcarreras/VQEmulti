@@ -1,4 +1,4 @@
-from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, exact_vqe_energy_gradient
+from vqemulti.energy import exact_vqe_energy_no_trotter, simulate_vqe_energy, exact_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
 from vqemulti.preferences import Configuration
 import numpy as np
@@ -41,7 +41,7 @@ def vqe(hamiltonian,
 
     # Optimize the results from analytical calculation
     if energy_simulator is None:
-        results = scipy.optimize.minimize(exact_vqe_energy,
+        results = scipy.optimize.minimize(exact_vqe_energy_no_trotter,
                                           coefficients,
                                           (ansatz, hf_reference_fock, hamiltonian),
                                           jac=exact_vqe_energy_gradient,

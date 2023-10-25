@@ -4,7 +4,7 @@ from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
-import warnings
+from vqemulti.density import get_density_matrix, density_fidelity
 import scipy
 import numpy as np
 
@@ -22,7 +22,8 @@ def adaptVQE(hamiltonian,
              energy_threshold=1e-4,
              threshold=1e-6,
              operator_update_number=1,
-             operator_update_max_grad=2e-1):
+             operator_update_max_grad=2e-1,
+             reference_dm=None):
     """
     Perform an adaptVQE calculation
 
@@ -39,6 +40,7 @@ def adaptVQE(hamiltonian,
     :param threshold: total-gradient-norm convergence threshold (in Hartree)
     :param operator_update_number: number of operators to add to the ansatz at each iteration
     :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
+    :param reference_dm: reference density matrix (ideally from fullCI) that is used to compute the quantum fidelity
     :return: results dictionary
     """
 
@@ -203,6 +205,12 @@ def adaptVQE(hamiltonian,
             else:
                 print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
         print()
+
+        if reference_dm is not None:
+            n_orb = len(hf_reference_fock)//2
+            density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
+            fidelity = density_fidelity(reference_dm, density_matrix)
+            print('fidelity: {:5.2f}'.format(fidelity))
 
         # print iteration results
         print('Iteration energy:', energy)

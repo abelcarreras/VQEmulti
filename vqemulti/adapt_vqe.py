@@ -218,7 +218,7 @@ def adaptVQE(hamiltonian,
         iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
-        energy_simulator.print_statistics()
+        #energy_simulator.print_statistics()
         y = energy_simulator.print_statistics()
         number_cnots.append(y)
         if gradient_simulator is not None:

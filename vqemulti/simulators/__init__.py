@@ -149,7 +149,12 @@ class SimulatorBase:
             if self._shots_model is None:
                 print('Shots per evaluation: {}'.format(self._shots))
             print('Total shots: {}'.format(np.sum(self._shot_count)))
-
+        '''First number is the total number of evaluations (number of times the mean value of a circuit is done) performed, this'
+              'includes one evaluation per gradient and then the number of evaluations needed to optimize the parameters. '
+              'Second number is the number of gates that are evaluated in total in all the evaluations, _circuit_count is
+              a list [1,1,1,1, 415,415,415] which means that one operator has been evaluated in the first 4 evaluations (these are
+              the gradients) and then in each iteration of the classical optimizer 415 operators have been evaluated, which is the 
+              longitude of the hamiltonian with the ansatz'''
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
         print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
         print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))
@@ -157,7 +162,14 @@ class SimulatorBase:
         print('Gate counts (per shot):')
         for k, v in self._circuit_gates.items():
             print(' {:14} : {}'.format(k, v))
+
+        desired_key = 'CNOT'
+        if desired_key in self._circuit_gates:
+            number_CNOTs = self._circuit_gates[desired_key]
+        else:
+            print(f"The key '{desired_key}' was not found in the dictionary.")
         print('------------------------------------\n')
+        return(number_CNOTs)
 
     def print_circuits(self):
         print('Total circuits: {}'.format(len(self._circuit_draw)))

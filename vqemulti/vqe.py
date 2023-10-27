@@ -126,7 +126,7 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 # energy_simulator=simulator,
+                 energy_simulator=simulator,
                  opt_qubits=False)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

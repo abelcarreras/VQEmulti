@@ -45,6 +45,7 @@ def adaptVQE(hamiltonian,
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': []}
     indices = []
+    number_cnots = []
 
     # Check if initial guess
     if ansatz is None:
@@ -102,7 +103,8 @@ def adaptVQE(hamiltonian,
                       'ansatz': ansatz,
                       'indices': indices,
                       'coefficients': coefficients,
-                      'iterations': iterations}
+                      'iterations': iterations,
+                      'number cnots' : number_cnots}
 
             return result
 
@@ -137,7 +139,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz,
                     'indices': indices,
                     'coefficients': coefficients,
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'number cnots' : number_cnots}
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):
@@ -178,7 +181,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'number cnots' : number_cnots}
 
         # check if last iteration energy is better (likely to happen in sampled optimizations)
         diff_threshold = 0
@@ -190,7 +194,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'number cnots' : number_cnots}
 
         # get results
         coefficients = list(results.x)
@@ -213,7 +218,9 @@ def adaptVQE(hamiltonian,
         iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
-
+        energy_simulator.print_statistics()
+        y = energy_simulator.print_statistics()
+        number_cnots.append(y)
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])
@@ -222,11 +229,20 @@ def adaptVQE(hamiltonian,
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
 
-    raise NotConvergedError({'energy': iterations['energies'][-1],
+        if iteration == max_iterations-1 :
+            warnings.warn('finished due to max iterations reached')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations,
+                    'number cnots' : number_cnots}
+
+    '''raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
-                             'iterations': iterations})
+                             'iterations': iterations})'''
 
 
 if __name__ == '__main__':

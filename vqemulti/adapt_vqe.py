@@ -218,9 +218,17 @@ def adaptVQE(hamiltonian,
         iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
-        #energy_simulator.print_statistics()
-        y = energy_simulator.print_statistics()
-        number_cnots.append(y)
+
+
+        #----------------------------------------------
+        #ACTIVATE FOR VISUALIZING GATE STATISTICS!!!!!
+
+        #y = energy_simulator.print_statistics()
+        #number_cnots.append(y)
+
+        # -----------------------------------------------
+
+
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])

@@ -158,13 +158,12 @@ def density_fidelity(density_ref, density_vqe):
 
     density_ref = np.array(density_ref)/n_electrons
     density_vqe = np.array(density_vqe)/n_electrons
-
+    print(density_ref.shape)
+    print(density_vqe.shape)
     # padding with zero if different sizes
     n_pad = len(density_ref) - len(density_vqe)
     density_vqe = np.pad(density_vqe, (0, n_pad), 'constant')
-
     sqrt_vqe = scipy.linalg.sqrtm(density_vqe)
-
     dens = np.dot(np.dot(sqrt_vqe, density_ref), sqrt_vqe)
     trace = np.trace(scipy.linalg.sqrtm(dens))
 

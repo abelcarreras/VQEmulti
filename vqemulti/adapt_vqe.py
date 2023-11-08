@@ -48,6 +48,7 @@ def adaptVQE(hamiltonian,
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': []}
     indices = []
     number_cnots = []
+    fidelities = []
 
     # Check if initial guess
     if ansatz is None:
@@ -106,7 +107,8 @@ def adaptVQE(hamiltonian,
                       'indices': indices,
                       'coefficients': coefficients,
                       'iterations': iterations,
-                      'number cnots' : number_cnots}
+                      'number cnots' : number_cnots,
+                      'fidelities' : fidelities}
 
             return result
 
@@ -142,7 +144,8 @@ def adaptVQE(hamiltonian,
                     'indices': indices,
                     'coefficients': coefficients,
                     'iterations': iterations,
-                    'number cnots' : number_cnots}
+                    'number cnots' : number_cnots,
+                    'fidelities' : fidelities}
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):
@@ -184,7 +187,8 @@ def adaptVQE(hamiltonian,
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations,
-                    'number cnots' : number_cnots}
+                    'number cnots' : number_cnots,
+                    'fidelities' : fidelities}
 
         # check if last iteration energy is better (likely to happen in sampled optimizations)
         diff_threshold = 0
@@ -197,7 +201,8 @@ def adaptVQE(hamiltonian,
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations,
-                    'number cnots' : number_cnots}
+                    'number cnots' : number_cnots,
+                    'fidelities' : fidelities }
 
         # get results
         coefficients = list(results.x)
@@ -215,6 +220,7 @@ def adaptVQE(hamiltonian,
             n_orb = len(hf_reference_fock)//2
             density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
             fidelity = density_fidelity(reference_dm, density_matrix)
+            fidelities.append(fidelity)
             print('fidelity: {:5.2f}'.format(fidelity))
 
         # print iteration results
@@ -252,7 +258,8 @@ def adaptVQE(hamiltonian,
                     'indices': indices,
                     'coefficients': coefficients,
                     'iterations': iterations,
-                    'number cnots' : number_cnots}
+                    'number cnots' : number_cnots,
+                    'fidelities' : fidelities}
 
     '''raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,

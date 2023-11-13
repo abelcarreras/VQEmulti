@@ -7,6 +7,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 import scipy
 import numpy as np
+import warnings
 
 
 def adaptVQE(hamiltonian,

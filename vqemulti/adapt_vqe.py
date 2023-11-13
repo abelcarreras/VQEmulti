@@ -236,7 +236,7 @@ def adaptVQE(hamiltonian,
         iterations['ansatz_size'].append(len(coefficients))
 
 
-        if trotter = True:
+        if trotter == True:
             y = energy_simulator.print_statistics()
             number_cnots.append(y)
 

@@ -24,7 +24,8 @@ def adaptVQE(hamiltonian,
              threshold=1e-6,
              operator_update_number=1,
              operator_update_max_grad=2e-1,
-             reference_dm=None):
+             reference_dm=None,
+             trotter = False):
     """
     Perform an adaptVQE calculation
 
@@ -235,13 +236,11 @@ def adaptVQE(hamiltonian,
         iterations['ansatz_size'].append(len(coefficients))
 
 
-        #----------------------------------------------
-        #ACTIVATE FOR VISUALIZING GATE STATISTICS!!!!!
+        if trotter = True:
+            y = energy_simulator.print_statistics()
+            number_cnots.append(y)
 
-        #y = energy_simulator.print_statistics()
-        #number_cnots.append(y)
 
-        # -----------------------------------------------
 
 
         if gradient_simulator is not None:

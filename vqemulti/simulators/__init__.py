@@ -152,8 +152,8 @@ class SimulatorBase:
         '''First number is the total number of evaluations (number of times the mean value of a circuit is done) performed, this'
               'includes one evaluation per gradient and then the number of evaluations needed to optimize the parameters. '
               'Second number is the number of gates that are evaluated in total in all the evaluations, _circuit_count is
-              a list [1,1,1,1, 415,415,415] which means that one operator has been evaluated in the first 4 evaluations (these are
-              the gradients) and then in each iteration of the classical optimizer 415 operators have been evaluated, which is the 
+              a list [1,1,1,1, 415,415,415, etc.] which means that one layer of depth has been evaluated in the first 4 evaluations (these are
+              the gradients) and then in each iteration of the classical optimizer 415 layers have been evaluated, which is the 
               longitude of the hamiltonian with the ansatz'''
         print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
         print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))

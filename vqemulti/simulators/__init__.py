@@ -115,8 +115,8 @@ class SimulatorBase:
             trotter_ansatz = []
             # Go through the operators in the ansatz
             for operator in ansatz:
-
                 for op, time in operator.terms.items():
+
                     operator_trotter_circuit = self._trotterize_operator(-QubitOperator(op),
                                                                          time.imag,
                                                                          self._trotter_steps,

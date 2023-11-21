@@ -84,7 +84,7 @@ class OperatorList:
     def get_operators_type(self):
         return self._type
 
-    def get_quibits_list(self, normalize=False):
+    def get_quibits_list(self, normalize=False, reorganize=True):
         """
         return qubits in the basis set
         :param mapping:
@@ -96,10 +96,15 @@ class OperatorList:
             # return OperatorList([1j*QubitOperator(list(t.terms.keys())[0]) for t in self._list])
 
         total_qubit = QubitOperator()
-        for op in self._list:
-            total_qubit += fermion_to_qubit(op)
-
-        return OperatorList(total_qubit, normalize=normalize)
+        if reorganize:
+            for op in self._list:
+                total_qubit += fermion_to_qubit(op)
+            return OperatorList(total_qubit, normalize=normalize)
+        else:
+            total_qubit = []
+            for op in self._list:
+                total_qubit.append(fermion_to_qubit(op))
+            return OperatorList(total_qubit, normalize=normalize)
 
     def get_expanded_list(self):
         """
@@ -142,7 +147,7 @@ class OperatorList:
 
         ansatz = self.copy()
         ansatz.scale_vector(coefficients)
-        ansatz_qubit = ansatz.get_quibits_list()
+        ansatz_qubit = ansatz.get_quibits_list(reorganize=False)
 
         return ansatz_qubit
 

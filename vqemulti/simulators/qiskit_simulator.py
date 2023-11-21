@@ -321,7 +321,7 @@ class QiskitSimulator(SimulatorBase):
         return reference_gates
 
 
-    def _trotterize_operator(self, qubit_operator, time, trotter_steps, n_qubits):
+    def _trotterize_operator(self, qubit_operator, n_qubits):
         """
         Creates the circuit for applying e^(-j*operator*time), simulating the time
         evolution of a state under the Hamiltonian 'operator', with the given
@@ -339,9 +339,10 @@ class QiskitSimulator(SimulatorBase):
 
         # Divide time into steps and apply the evolution operator the necessary
         # number of times
+
         trotter_gates = []
-        for step in range(1, trotter_steps + 1):
-            trotter_gates += trotter_step(qubit_operator, time / trotter_steps, n_qubits)
+        for step in range(1, self._trotter_steps + 1):
+            trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
 
         return trotter_gates
 

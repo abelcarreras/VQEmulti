@@ -115,15 +115,8 @@ class SimulatorBase:
             trotter_ansatz = []
             # Go through the operators in the ansatz
             for operator in ansatz:
-                for op, time in operator.terms.items():
-
-                    operator_trotter_circuit = self._trotterize_operator(-QubitOperator(op),
-                                                                         time.imag,
-                                                                         self._trotter_steps,
-                                                                         n_qubits)
-
-                    # Add the gates corresponding to this operator to the ansatz gate list
-                    trotter_ansatz += operator_trotter_circuit
+                # Add the gates corresponding to this operator to the ansatz gate list
+                trotter_ansatz += self._trotterize_operator(operator, n_qubits)
 
             # Initialize the state preparation gates with the reference state preparation gates
             state_preparation_gates = self._build_reference_gates(hf_reference_fock)

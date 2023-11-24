@@ -53,7 +53,7 @@ hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get UCCSD ansatz in fermion operators
-uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=7)
+uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
 # Get reference Hartree Fock state in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)

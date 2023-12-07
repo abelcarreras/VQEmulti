@@ -1,6 +1,5 @@
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from openfermion.utils import count_qubits
-from openfermion import QubitOperator
 from collections import defaultdict
 import numpy as np
 import warnings
@@ -11,11 +10,13 @@ class SimulatorBase:
                  trotter=False,
                  trotter_steps=1,
                  test_only=False,
+                 hamiltonian_grouping=True,
                  shots=1000):
         """
         :param trotter: Trotterize ansatz operators
         :param trotter_steps: number of trotter steps (only used if trotter=True)
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+        :param hamiltonian_grouping: organize Hamiltonian into Abelian commutative groups (reduce evaluations)
         :param shots: number of samples to perform in the simulation
         """
 
@@ -28,6 +29,7 @@ class SimulatorBase:
         self._circuit_gates = defaultdict(int)
         self._circuit_draw = []
         self._shots_model = None
+        self._hamiltonian_grouping = hamiltonian_grouping
 
     def set_shots_model(self, shots_model):
         self._shots_model = shots_model
@@ -82,10 +84,17 @@ class SimulatorBase:
 
         n_qubits = count_qubits(qubit_hamiltonian)
 
-        # Format and group the Hamiltonian, so as to save measurements by using
-        # the same data for Pauli strings that only differ by identities
+        # Format and the Hamiltonian in pauli strings and coefficients
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-        grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+
+        if self._hamiltonian_grouping:
+            # use hamiltonian grouping
+            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+        else:
+            # skip hamiltonian grouping
+            grouped_hamiltonian = {}
+            for pauli_string, coefficient in formatted_hamiltonian.items():
+                grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
 
         # Obtain the expectation value for each Pauli string
         expectation_value = 0

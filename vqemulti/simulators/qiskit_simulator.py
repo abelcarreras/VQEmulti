@@ -106,6 +106,7 @@ class QiskitSimulator(SimulatorBase):
                  trotter=False,
                  trotter_steps=1,
                  test_only=False,
+                 hamiltonian_grouping=True,
                  shots=1000,
                  backend=qiskit.Aer.get_backend('aer_simulator'),
                  use_estimator=False,
@@ -129,7 +130,7 @@ class QiskitSimulator(SimulatorBase):
         if session is True:
             self._use_estimator = True
 
-        super().__init__(trotter, trotter_steps, test_only, shots)
+        super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, shots)
 
     def _get_state_vector(self, state_preparation_gates, n_qubits):
 

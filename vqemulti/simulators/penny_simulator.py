@@ -171,7 +171,7 @@ class PennylaneSimulator(SimulatorBase):
                 prod_function = 1
                 for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
                     if main_string[i] != "I":
-                        prod_function *= measure_z ** int(sub_string[i])
+                        prod_function *= measure_z ** int(sub_string[-i])
 
                 total_expectation_value += prod_function * coefficient * counts/self._shots
 

@@ -174,7 +174,7 @@ class CirqSimulator(SimulatorBase):
             simulation = cirq.Simulator()
             results = simulation.run(circuit, repetitions=self._shots)
         else:
-            raise Exception('Nothing to run')
+            return sum(sub_hamiltonian.values())
 
         # For each substring, initialize the sum of all measurements as zero
         measurements = {}

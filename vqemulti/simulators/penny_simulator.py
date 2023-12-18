@@ -161,7 +161,7 @@ class PennylaneSimulator(SimulatorBase):
         self._get_circuit_stat_data(circuit)
 
         def str_to_bit(string):
-            return 1 if string == '1' else -1
+            return 1 if string == '0' else -1
 
         # Get function return from measurements in Z according to sub_hamiltonian
         total_expectation_value = 0
@@ -169,9 +169,9 @@ class PennylaneSimulator(SimulatorBase):
             for sub_string, coefficient in sub_hamiltonian.items():
 
                 prod_function = 1
-                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
+                for i, measure_z in enumerate([str_to_bit(k) for k in measure_string]):
                     if main_string[i] != "I":
-                        prod_function *= measure_z ** int(sub_string[-i])
+                        prod_function *= measure_z ** int(sub_string[i])
 
                 total_expectation_value += prod_function * coefficient * counts/self._shots
 

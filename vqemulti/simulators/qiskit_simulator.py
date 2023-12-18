@@ -232,7 +232,7 @@ class QiskitSimulator(SimulatorBase):
         # draw circuit
         # print(qml.draw(circuit)())
         def str_to_bit(string):
-            return 1 if string == '1' else -1
+            return 1 if string == '0' else -1
 
         # Get function return from measurements in Z according to sub_hamiltonian
         total_expectation_value = 0

@@ -9,7 +9,7 @@ import scipy
 import numpy as np
 
 
-def adaptVQE(hamiltonian,
+def tetrisVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
              opt_qubits=False,
@@ -23,7 +23,8 @@ def adaptVQE(hamiltonian,
              threshold=1e-6,
              operator_update_number=1,
              operator_update_max_grad=2e-1,
-             reference_dm=None):
+             reference_dm=None,
+             print_circuit = False):
     """
     Perform an adaptVQE calculation
 
@@ -47,6 +48,8 @@ def adaptVQE(hamiltonian,
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': []}
     indices = []
+    number_cnots = []
+    fidelities = []
 
     # Check if initial guess
     if ansatz is None:
@@ -104,7 +107,8 @@ def adaptVQE(hamiltonian,
                       'ansatz': ansatz,
                       'indices': indices,
                       'coefficients': coefficients,
-                      'iterations': iterations}
+                      'iterations': iterations,
+                      'fidelities' : fidelities}
 
             return result
 
@@ -139,7 +143,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz,
                     'indices': indices,
                     'coefficients': coefficients,
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'fidelities': fidelities}
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):
@@ -180,7 +185,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'fidelities': fidelities}
 
         # check if last iteration energy is better (likely to happen in sampled optimizations)
         diff_threshold = 0
@@ -192,7 +198,8 @@ def adaptVQE(hamiltonian,
                     'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations}
+                    'iterations': iterations,
+                    'fidelities': fidelities}
 
         # get results
         coefficients = list(results.x)
@@ -210,6 +217,7 @@ def adaptVQE(hamiltonian,
             n_orb = len(hf_reference_fock)//2
             density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
             fidelity = density_fidelity(reference_dm, density_matrix)
+            fidelities.append(fidelity)
             print('fidelity: {:5.2f}'.format(fidelity))
 
         # print iteration results
@@ -221,6 +229,13 @@ def adaptVQE(hamiltonian,
         iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
+
+        if print_circuit == True:
+            energy_simulator.print_statistics()
+            energy_simulator.print_circuits()
+
+
+
 
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
@@ -234,7 +249,8 @@ def adaptVQE(hamiltonian,
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
-                             'iterations': iterations})
+                             'iterations': iterations,
+                             'fidelities': fidelities})
 
 
 if __name__ == '__main__':
@@ -279,7 +295,7 @@ if __name__ == '__main__':
     print('hf reference', hf_reference_fock)
 
     # Simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    from simulators.qiskit_simulator import QiskitSimulator as Simulator
     # from simulators.cirq_simulator import CirqSimulator as Simulator
     # from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
@@ -288,13 +304,17 @@ if __name__ == '__main__':
                           test_only=True,
                           shots=1000)
 
-    result = adaptVQE(hamiltonian,     # fermionic hamiltonian
+    result = tetrisVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
-                      threshold=0.1,
-                      # opt_qubits=True,
-                      # energy_simulator=simulator,
-                      # gradient_simulator=simulator
+                      opt_qubits=False,
+                      max_iterations=30,
+                      coeff_tolerance=1e-3,
+                      energy_threshold=1e-4,
+                      threshold=1e-9,
+                      energy_simulator=simulator,
+                      gradient_simulator=simulator,
+                      print_circuit= True
                       )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
@@ -308,3 +328,4 @@ if __name__ == '__main__':
     print('Coefficients:', result['coefficients'])
     print('Operator Indices:', result['indices'])
     print('Num operators: {}'.format(len(result['ansatz'])))
+

@@ -161,6 +161,8 @@ class SimulatorBase:
             print(' {:14} : {}'.format(k, v))
         print('------------------------------------\n')
 
+
+
     def print_circuits(self):
         print('Total circuits: {}'.format(len(self._circuit_draw)))
         for i, c in enumerate(self._circuit_draw):

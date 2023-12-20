@@ -9,6 +9,35 @@ import scipy
 import numpy as np
 
 
+def operator_action(pool, index):
+        """Return a set of integers corresponding to qubit indices the qubit
+        operator acts on.
+
+        Returns:
+            list: Set of qubit indices.
+        """
+
+        qubit_indices = set()
+        if len(index) == 1:
+            index = int(index[0])
+            for term in pool[index].terms:
+                if term:
+                    indices = list(zip(*term))[0]
+                    qubit_indices.update(indices)
+
+        else:
+            for i in range(len(index)):
+                for term in pool[index[i]].terms:
+                    if term:
+                        indices = list(zip(*term))[0]
+                        qubit_indices.update(indices)
+
+        return qubit_indices
+
+
+
+
+
 def tetrisVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
@@ -92,6 +121,9 @@ def tetrisVQE(hamiltonian,
                                                 operators_pool,
                                                 gradient_simulator)
 
+        print(gradient_vector)
+
+
         total_norm = np.linalg.norm(gradient_vector)
 
         print("\nTotal gradient norm: {:12.6f}".format(total_norm))
@@ -112,9 +144,23 @@ def tetrisVQE(hamiltonian,
 
             return result
 
-        # primary selection of operators
-        max_indices = np.argsort(gradient_vector)[-operator_update_number:][::-1]
 
+        # primary selection of operators
+        indices_sorted = np.argsort(gradient_vector)[::-1]
+        max_indices = np.argsort(gradient_vector)[::-1][:1]  #Always add the operator with the largest gradient
+        #Now let's add the rest of the operators
+        for i in range(len(indices_sorted)-1):
+            index_list = [indices_sorted[i+1].tolist()]
+            if (operator_action(operators_pool, index_list) & operator_action(operators_pool, max_indices)):
+                pass
+            else:
+                max_indices = np.append(max_indices, indices_sorted[i+1])
+        print('indices finales',max_indices)
+
+
+
+
+        '''
         # refine selection to ensure all operators are relevant
         while True:
             max_gradients = np.array(gradient_vector)[max_indices]
@@ -123,6 +169,8 @@ def tetrisVQE(hamiltonian,
                 max_indices = max_indices[:-1]
             else:
                 break
+        '''
+
 
         # get gradients/operators update list
         max_gradients = np.array(gradient_vector)[max_indices]
@@ -131,6 +179,7 @@ def tetrisVQE(hamiltonian,
         for max_index, max_gradient in zip(max_indices, max_gradients):
             print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
+        '''
         # check if repeated operator
         repeat_operator = len(max_indices) == len(indices[-len(max_indices):]) and \
                           np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
@@ -145,6 +194,8 @@ def tetrisVQE(hamiltonian,
                     'coefficients': coefficients,
                     'iterations': iterations,
                     'fidelities': fidelities}
+        '''
+
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):
@@ -256,7 +307,7 @@ def tetrisVQE(hamiltonian,
 if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
-    from pool import get_pool_singlet_sd
+    from pool import get_pool_singlet_gsd
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from analysis import get_info
 
@@ -277,7 +328,7 @@ if __name__ == '__main__':
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = 4  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -288,7 +339,7 @@ if __name__ == '__main__':
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get a pool of operators for adapt-VQE
-    operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
+    operators_pool = get_pool_singlet_gsd(n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)

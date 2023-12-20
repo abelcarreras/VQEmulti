@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = 4  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -279,9 +279,9 @@ if __name__ == '__main__':
     print('hf reference', hf_reference_fock)
 
     # Simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    #from simulators.penny_simulator import PennylaneSimulator as Simulator
     # from simulators.cirq_simulator import CirqSimulator as Simulator
-    # from simulators.qiskit_simulator import QiskitSimulator as Simulator
+    from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
     simulator = Simulator(trotter=True,
                           trotter_steps=1,
@@ -291,10 +291,13 @@ if __name__ == '__main__':
     result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
-                      threshold=0.1,
-                      # opt_qubits=True,
-                      # energy_simulator=simulator,
-                      # gradient_simulator=simulator
+                      opt_qubits=False,
+                      max_iterations=30,
+                      coeff_tolerance=1e-3,
+                      energy_threshold=1e-4,
+                      threshold=1e-9,
+                      energy_simulator=simulator,
+                      gradient_simulator=simulator
                       )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

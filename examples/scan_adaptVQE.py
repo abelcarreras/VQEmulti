@@ -8,6 +8,7 @@ from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 vqe_energies = []
 energies_fullci = []

@@ -7,6 +7,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 import scipy
 import numpy as np
+import warnings
 
 
 def adaptVQE(hamiltonian,
@@ -230,11 +231,21 @@ def adaptVQE(hamiltonian,
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
 
+        if iteration == max_iterations - 1:
+            warnings.warn('finished due to max iterations reached')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations}
+
+    '''
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
                              'iterations': iterations})
+    '''
 
 
 if __name__ == '__main__':

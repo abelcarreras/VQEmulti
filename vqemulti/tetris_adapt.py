@@ -7,6 +7,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 import scipy
 import numpy as np
+import warnings
 
 
 def operator_action(pool, index):
@@ -31,7 +32,6 @@ def operator_action(pool, index):
                     if term:
                         indices = list(zip(*term))[0]
                         qubit_indices.update(indices)
-
         return qubit_indices
 
 
@@ -95,6 +95,9 @@ def tetrisVQE(hamiltonian,
     if opt_qubits:
         # transform to qubit ansatz
         operators_pool = operators_pool.get_quibits_list(normalize=True)
+        print(operators_pool)
+
+
 
     print('pool size: ', len(operators_pool))
 
@@ -147,6 +150,8 @@ def tetrisVQE(hamiltonian,
 
         # primary selection of operators
         indices_sorted = np.argsort(gradient_vector)[::-1]
+        print('indices sorted',indices_sorted)
+
         max_indices = np.argsort(gradient_vector)[::-1][:1]  #Always add the operator with the largest gradient
         #Now let's add the rest of the operators
         for i in range(len(indices_sorted)-1):
@@ -154,7 +159,11 @@ def tetrisVQE(hamiltonian,
             if (operator_action(operators_pool, index_list) & operator_action(operators_pool, max_indices)):
                 pass
             else:
+                print('I added', operator_action(operators_pool, index_list))
+                print('I already had', operator_action(operators_pool, max_indices))
                 max_indices = np.append(max_indices, indices_sorted[i+1])
+                print(max_indices)
+                print('NO COMMON')
         print('indices finales',max_indices)
 
 
@@ -296,12 +305,25 @@ def tetrisVQE(hamiltonian,
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
 
+        if iteration == max_iterations - 1:
+            warnings.warn('finished due to max iterations reached')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations}
+
+
+    '''
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': indices,
                              'coefficients': coefficients,
                              'iterations': iterations,
                              'fidelities': fidelities})
+    '''
+
+
 
 
 if __name__ == '__main__':
@@ -328,7 +350,7 @@ if __name__ == '__main__':
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 4  # molecule.n_orbitals
+    n_orbitals = 2  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -358,14 +380,14 @@ if __name__ == '__main__':
     result = tetrisVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
-                      opt_qubits=False,
+                      opt_qubits=True,
                       max_iterations=30,
                       coeff_tolerance=1e-3,
                       energy_threshold=1e-4,
                       threshold=1e-9,
                       energy_simulator=simulator,
                       gradient_simulator=simulator,
-                      print_circuit= True
+                      print_circuit= False
                       )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

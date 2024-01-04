@@ -161,7 +161,10 @@ def density_fidelity(density_ref, density_vqe):
 
     # padding with zero if different sizes
     n_pad = len(density_ref) - len(density_vqe)
-    density_vqe = np.pad(density_vqe, (0, n_pad), 'constant')
+    if n_pad > 0:
+        density_vqe = np.pad(density_vqe, (0, n_pad), 'constant')
+    else:
+        density_ref = np.pad(density_ref, (0, -n_pad), 'constant')
 
     sqrt_vqe = scipy.linalg.sqrtm(density_vqe)
 

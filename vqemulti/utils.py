@@ -272,12 +272,9 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
                                               frozen_spin_orbitals: n_spin_orbitals,
                                               frozen_spin_orbitals: n_spin_orbitals]
 
-    # reduced_one = np.ones_like(reduced_one)
-    # reduced_two = np.ones_like(reduced_two)
-
+    energy_inactive = 0
     if frozen_core > 0:
         # compute the core energy
-        energy_inactive=0
         for j in range(frozen_spin_orbitals):
             energy_inactive += hamiltonian.one_body_tensor[j, j]
 
@@ -302,9 +299,7 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
             for j in range(n_spin_orbitals - frozen_spin_orbitals):
                 reduced_one[i, j] += core_effective(i, j)
 
-        return InteractionOperator(hamiltonian.constant + energy_inactive, reduced_one, reduced_two)
-    else:
-        return InteractionOperator(hamiltonian.constant, reduced_one, reduced_two)
+    return InteractionOperator(hamiltonian.constant + energy_inactive, reduced_one, reduced_two)
 
 
 def get_uccsd_operators(n_electrons, n_orbitals, frozen_core=0):

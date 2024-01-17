@@ -1,4 +1,4 @@
-from vqemulti.energy import exact_vqe_energy_no_trotter, simulate_vqe_energy, exact_vqe_energy_gradient
+from vqemulti.energy import exact_vqe_energy_no_trotter, simulate_vqe_energy, exact_vqe_energy_gradient, get_vqe_energy
 from vqemulti.pool.tools import OperatorList
 from vqemulti.preferences import Configuration
 import numpy as np
@@ -38,6 +38,11 @@ def vqe(hamiltonian,
         coefficients = np.zeros(n_terms)
 
     assert len(coefficients) == len(ansatz)
+
+    # check if no coefficients
+    if n_terms == 0:
+        energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+        return {'energy': energy, 'coefficients': [], 'ansatz': ansatz, 'f_evaluations': 0}
 
     # Optimize the results from analytical calculation
     if energy_simulator is None:

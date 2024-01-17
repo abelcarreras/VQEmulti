@@ -4,11 +4,10 @@ import numpy as np
 import scipy
 
 
-def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
+def exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
-    Applies Trotter approach (n=1) -> psi> = prod(e^(theta_i*T_i)) |0>
 
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
@@ -43,11 +42,10 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
     return energy
 
 
-def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamiltonian):
+def exact_adapt_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
-    Calculates the gradient of the energy with respect to the coefficients.
+    Calculates the gradient of the energy with respect to the coefficients for adapt VQE Wave function.
     To be used in the exact energy minimization function
-    Assumes Trotter approach (n=1) -> psi> = prod(e^(theta_i*T_i)) |0>
 
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
@@ -98,11 +96,10 @@ def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamiltoni
     return gradient
 
 
-def exact_vqe_energy_no_trotter(coefficients, ansatz, hf_reference_fock, hamiltonian):
+def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
-    type of the Adapt VQE protocol) to a reference state.
-    Uses Psi> =  e^sum(theta_i * T_i) |0>
+    type of the VQE protocol) to a reference state.
 
     :param coefficients: the list of coefficients of the ansatz operators
     :param ansatz: ansatz expressed in qubit/fermion operators
@@ -133,3 +130,44 @@ def exact_vqe_energy_no_trotter(coefficients, ansatz, hf_reference_fock, hamilto
     energy = np.sum(bra * sparse_hamiltonian * ket).real
 
     return energy
+
+
+def exact_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamiltonian):
+    """
+    Calculates the gradient of the energy with respect to the coefficients for VQE function.
+    To be used in the exact energy minimization function
+
+    :param coefficients: the list of coefficients of the ansatz operators
+    :param ansatz: ansatz expressed in qubit/fermion operators
+    :param hf_reference_fock: HF reference in Fock space vector
+    :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
+    :return: gradient vector
+    """
+
+    # Transform Hamiltonian to matrix representation
+    sparse_hamiltonian = get_sparse_operator(hamiltonian)
+
+    # Find the number of qubits of the system (2**n_qubit = dimension)
+    n_qubit = count_qubits(hamiltonian)
+
+    # Transform reference vector into a Compressed Sparse Column matrix
+    ket = get_sparse_ket_from_fock(hf_reference_fock)
+
+    # Get total exponent operator list
+    exponent = scipy.sparse.csr_array((2**n_qubit, 2**n_qubit), dtype=float)
+    for coefficient, operator in zip(coefficients, ansatz):
+        exponent += coefficient * get_sparse_operator(operator, n_qubit)
+
+    # Apply operator to ket
+    ket = scipy.sparse.linalg.expm_multiply(exponent, ket)
+
+    bra = ket.transpose().conj()
+    hbra = bra.dot(sparse_hamiltonian)
+
+    gradient = []
+    # Compute gradient as A_n * exp(A_1*c_1 + A_2*c_2 + A_3*c_3 + ... )
+    for a_term, coefficient in zip(ansatz, coefficients):
+        operator = get_sparse_operator(a_term, n_qubit)
+        gradient.append(hbra.dot(operator).dot(ket)[0, 0].real)
+
+    return gradient

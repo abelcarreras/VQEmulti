@@ -1,4 +1,4 @@
-from vqemulti.energy import exact_vqe_energy, simulate_vqe_energy, get_vqe_energy, exact_vqe_energy_gradient
+from vqemulti.energy import exact_adapt_vqe_energy, simulate_adapt_vqe_energy, get_adapt_vqe_energy, exact_adapt_vqe_energy_gradient
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
@@ -97,7 +97,7 @@ def adaptVQE(hamiltonian,
             if len(iterations['energies']) > 0:
                 energy = iterations['energies'][-1]
             else:
-                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+                energy = get_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
 
             print("\nConverge archived due to gradient norm threshold")
             result = {'energy': energy,
@@ -149,10 +149,10 @@ def adaptVQE(hamiltonian,
 
         # run optimization
         if energy_simulator is None:
-            results = scipy.optimize.minimize(exact_vqe_energy,
+            results = scipy.optimize.minimize(exact_adapt_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian),
-                                              jac=exact_vqe_energy_gradient,
+                                              jac=exact_adapt_vqe_energy_gradient,
                                               options={'gtol': energy_threshold,
                                                        'disp':  Configuration().verbose},
                                               method='BFGS',
@@ -165,18 +165,22 @@ def adaptVQE(hamiltonian,
                                                           n_coefficients=len(coefficients),
                                                           c_constant=0.4)
 
-            results = scipy.optimize.minimize(simulate_vqe_energy,
+            results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                              method='COBYLA', # SPSA for real hardware
+                                              method='COBYLA',  # SPSA for real hardware
                                               tol=opt_tolerance,
                                               options={'disp': Configuration().verbose, 'rhobeg': 0.1})
+
+        # get results
+        coefficients = list(results.x)
+        energy = results.fun
 
         # check if last coefficient is zero (likely to happen in exact optimizations)
         if abs(results.x[-1]) < coeff_tolerance:
             print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
-            return {'energy': results.fun,
+            return {'energy': energy,
                     'ansatz': ansatz[:-n_operators],
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
@@ -184,7 +188,7 @@ def adaptVQE(hamiltonian,
 
         # check if last iteration energy is better (likely to happen in sampled optimizations)
         diff_threshold = 0
-        if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < diff_threshold:
+        if len(iterations['energies']) > 0 and iterations['energies'][-1] - energy < diff_threshold:
 
             print('Converge archived due to not energy improvement')
             n_operators = len(max_indices)
@@ -193,10 +197,6 @@ def adaptVQE(hamiltonian,
                     'indices': indices[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations}
-
-        # get results
-        coefficients = list(results.x)
-        energy = results.fun
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):

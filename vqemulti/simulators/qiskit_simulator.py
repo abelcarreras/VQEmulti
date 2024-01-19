@@ -141,6 +141,9 @@ class QiskitSimulator(SimulatorBase):
 
         self._get_circuit_stat_data(circuit)
 
+        # set the same qubit order as other simulators
+        circuit = circuit.reverse_bits()
+
         backend = qiskit.Aer.get_backend('statevector_simulator')
         result = backend.run(circuit).result()
 
@@ -156,7 +159,7 @@ class QiskitSimulator(SimulatorBase):
 
         # Append the ansatz directly as a matrix
         matrix_gate = Operator(np.real(matrix.toarray()))
-        state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits))))
+        state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
 
         return state_preparation_gates
 
@@ -175,7 +178,15 @@ class QiskitSimulator(SimulatorBase):
         # Format and group the Hamiltonian, so as to save measurements by using
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-        grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+
+        if self._hamiltonian_grouping:
+            # use hamiltonian grouping
+            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+        else:
+            # skip hamiltonian grouping
+            grouped_hamiltonian = {}
+            for pauli_string, coefficient in formatted_hamiltonian.items():
+                grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
 
         if self._use_estimator is False:
             # Obtain the expectation value for each Pauli string
@@ -230,7 +241,6 @@ class QiskitSimulator(SimulatorBase):
         counts_total = result.get_counts()
 
         # draw circuit
-        # print(qml.draw(circuit)())
         def str_to_bit(string):
             return 1 if string == '0' else -1
 
@@ -317,7 +327,7 @@ class QiskitSimulator(SimulatorBase):
         reference_gates = []
         for i, occ in enumerate(hf_reference_fock):
             if bool(occ):
-                reference_gates.append(CircuitInstruction(XGate(), [n_qubits-i-1]))
+                reference_gates.append(CircuitInstruction(XGate(), [i]))
 
         return reference_gates
 

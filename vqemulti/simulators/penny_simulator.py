@@ -173,7 +173,7 @@ class PennylaneSimulator(SimulatorBase):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * coefficient * counts/self._shots
+                total_expectation_value += prod_function * float(coefficient) * counts/self._shots
 
         return total_expectation_value
 

@@ -84,7 +84,7 @@ def trotter_step(qubit_operator, time):
 
             if pauli_operator == "Y":
                 # Rotate to Z basis from Y Basis
-                trotter_gates.append(qml.RX(-np.pi / 2, wires = qubit_index))
+                trotter_gates.append(qml.RX(-np.pi / 2, wires=qubit_index))
 
     return trotter_gates
 

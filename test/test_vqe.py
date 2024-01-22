@@ -1,6 +1,7 @@
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, PyscfMolecularData
-from vqemulti.utils import generate_reduced_hamiltonian, get_uccsd_operators
+from vqemulti.utils import generate_reduced_hamiltonian
+from vqemulti.pool.singlet_sd import get_pool_singlet_sd
 from vqemulti.utils import get_hf_reference_in_fock_space
 from vqemulti import vqe
 import unittest
@@ -34,7 +35,7 @@ class OperationsTest(unittest.TestCase):
         print('n_qubits:', hamiltonian.n_qubits)
 
         # define UCCSD ansatz
-        uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -43,7 +44,7 @@ class OperationsTest(unittest.TestCase):
         result = vqe(hamiltonian,
                      uccsd_ansatz,
                      hf_reference_fock,
-                     opt_qubits=True)
+                     opt_qubits=False)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -59,7 +60,7 @@ class OperationsTest(unittest.TestCase):
         self.assertAlmostEquals(self.molecule.ccsd_energy, -1.14781330, places=8)
         self.assertAlmostEquals(self.molecule.fci_energy, -1.14781313, places=8)
 
-        self.assertEqual(len(result['ansatz']), 12)
+        self.assertEqual(len(result['ansatz']), 2)
 
     def test_vqe_qubit_trotter(self):
         # get properties from classical SCF calculation
@@ -74,7 +75,7 @@ class OperationsTest(unittest.TestCase):
         print('n_qubits:', hamiltonian.n_qubits)
 
         # define UCCSD ansatz
-        uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -118,7 +119,7 @@ class OperationsTest(unittest.TestCase):
         print('n_qubits:', hamiltonian.n_qubits)
 
         # define UCCSD ansatz
-        uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -137,12 +138,12 @@ class OperationsTest(unittest.TestCase):
         print('Coefficients:\n', result['coefficients'])
 
         self.assertAlmostEquals(result['energy'], -1.12988981, places=6)
-        self.assertEqual(len(result['ansatz']), 3)
+        self.assertEqual(len(result['ansatz']), 2)
 
     def test_vqe_trotter_fermion(self):
         # get properties from classical SCF calculation
         n_electrons = self.molecule.n_electrons
-        n_orbitals = 2  # molecule.n_orbitals
+        n_orbitals = 3  # self.molecule.n_orbitals
 
         hamiltonian = self.molecule.get_molecular_hamiltonian()
         hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -152,7 +153,7 @@ class OperationsTest(unittest.TestCase):
         print('n_qubits:', hamiltonian.n_qubits)
 
         # define UCCSD ansatz
-        uccsd_ansatz = get_uccsd_operators(n_electrons, n_orbitals)
+        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -172,6 +173,6 @@ class OperationsTest(unittest.TestCase):
         print('Operators:\n', result['ansatz'])
         print('Coefficients:\n', result['coefficients'])
 
-        self.assertAlmostEquals(result['energy'], -1.12988982, places=6)
+        self.assertAlmostEquals(result['energy'], -1.13557013, places=6)
 
-        self.assertEqual(len(result['ansatz']), 3)
+        self.assertEqual(len(result['ansatz']), 5)

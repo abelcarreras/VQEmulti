@@ -37,9 +37,12 @@ class SimulatorBase:
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
         if self._test_only:
-            return self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            evaluation = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
         else:
-            return self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            evaluation = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+
+        # make sure that main simulator class returns consistent float value
+        return float(evaluation)
 
     def _get_exact_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """

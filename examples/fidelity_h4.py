@@ -32,7 +32,7 @@ molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=True, gue
 nat_orb = h2_molecule.canonical_orbitals
 can_orb = molecule._pyscf_data['scf'].mo_coeff
 
-overlap_matrix = molecule._pyscf_data['scf'].get_ovlp( molecule._pyscf_data['mol'])
+overlap_matrix = molecule._pyscf_data['scf'].get_ovlp(molecule._pyscf_data['mol'])
 
 # dot_can = np.dot(can_orb.T, overlap_matrix @ can_orb)
 # dot_nat = np.dot(nat_orb.T, overlap_matrix @ nat_orb)

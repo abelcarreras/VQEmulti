@@ -66,7 +66,8 @@ def trotter_step(operator, time):
             trotter_gates.append(cirq.CX(qubits[control], qubits[target]))
 
         # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
-        last_qubit = max(involved_qubits)
+        last_qubit = max(involved_qubits) if len(involved_qubits) != 0 else 0
+
         trotter_gates.append(cirq.rz(2 * coefficient).on(qubits[last_qubit]))
 
         # Uncompute parity

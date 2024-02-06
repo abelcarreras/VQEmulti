@@ -60,7 +60,7 @@ def trotter_step(qubit_operator, time):
             trotter_gates.append(qml.CNOT(wires=[control, target]))
 
         # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
-        last_qubit = max(involved_qubits)
+        last_qubit = max(involved_qubits) if len(involved_qubits) != 0 else 0
         trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
 
         # Uncompute parity

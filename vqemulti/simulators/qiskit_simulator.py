@@ -67,7 +67,8 @@ def trotter_step(qubit_operator, time, n_qubits):
             trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
             # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
-        last_qubit = max(involved_qubits)
+        last_qubit = max(involved_qubits) if len(involved_qubits) != 0 else 0
+
         # trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
         trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
 

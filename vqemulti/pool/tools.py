@@ -143,11 +143,16 @@ class OperatorList:
         from copy import deepcopy
         return OperatorList(deepcopy(self._list), antisymmetrize=False)
 
-    def transform_to_scaled_qubit(self, coefficients):
+    def transform_to_scaled_qubit(self, coefficients, join=False):
 
         ansatz = self.copy()
         ansatz.scale_vector(coefficients)
-        ansatz_qubit = ansatz.get_quibits_list(reorganize=False)
+        ansatz_qubit = ansatz.get_quibits_list(reorganize=join)
+
+        if join:
+            sum_ansatz = sum(ansatz_qubit)
+            if sum_ansatz != 0:
+                return OperatorList([sum_ansatz])
 
         return ansatz_qubit
 

@@ -6,15 +6,14 @@ import numpy as np
 
 def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient):
     """
-    compute exact gradient using matrix representation for comparison
-    qubit to sparse using Jordan-Wigner transform
+    compute exact gradient using matrix representation for comparison qubit to sparse
 
     :param qubit_hamiltonian: hamiltonian in qubit operators
     :param hf_reference_fock: reference HF state in Fock space vector
     :param ansatz_qubit: VQE ansatz in qubit/Fermion operators
     :param operator: operator in qubits
     :param sampled_gradient: sampled gradient
-    :return:
+    :return: None
     """
     from vqemulti.gradient.exact import calculate_gradient, prepare_adapt_state
 
@@ -34,7 +33,7 @@ def print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ans
 
 def simulate_gradient(hf_reference_fock, hamiltonian, ansatz, coefficients, pool, simulator):
     """
-    simulate gradient using quantum computer simulators (Cirq, pennylane)
+    simulate gradient dH/dA for adaptVQE using simulator
 
     :param hf_reference_fock: reference HF state in Fock space vector
     :param hamiltonian: hamiltonian in qubit operators

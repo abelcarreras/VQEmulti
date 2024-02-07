@@ -1,4 +1,4 @@
-from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix, ansatz_to_matrix_list
 from openfermion.utils import count_qubits
 from collections import defaultdict
 import numpy as np
@@ -11,12 +11,14 @@ class SimulatorBase:
                  trotter_steps=1,
                  test_only=False,
                  hamiltonian_grouping=True,
+                 separate_matrix_operators=True,
                  shots=1000):
         """
         :param trotter: Trotterize ansatz operators
         :param trotter_steps: number of trotter steps (only used if trotter=True)
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
         :param hamiltonian_grouping: organize Hamiltonian into Abelian commutative groups (reduce evaluations)
+        :param separate_matrix_operators: separate adaptVQE matrix operators (only with test_only = True)
         :param shots: number of samples to perform in the simulation
         """
 
@@ -30,6 +32,7 @@ class SimulatorBase:
         self._circuit_draw = []
         self._shots_model = None
         self._hamiltonian_grouping = hamiltonian_grouping
+        self._separate_matrix_operators = separate_matrix_operators
 
     def set_shots_model(self, shots_model):
         self._shots_model = shots_model
@@ -138,10 +141,13 @@ class SimulatorBase:
 
         else:
             # Use matrix gate
-            matrix = ansatz_to_matrix(ansatz, n_qubits)
+            if self._separate_matrix_operators:
+                matrix_list = ansatz_to_matrix_list(ansatz, n_qubits)
+            else:
+                matrix_list = [ansatz_to_matrix(ansatz, n_qubits)]
 
             # Get gates in simulation library format
-            return self._get_matrix_operator_gates(hf_reference_fock, matrix)
+            return self._get_matrix_operator_gates(hf_reference_fock, matrix_list)
 
     def print_statistics(self):
         if len(self._circuit_count) <= 0:

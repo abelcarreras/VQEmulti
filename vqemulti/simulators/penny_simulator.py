@@ -108,7 +108,7 @@ class PennylaneSimulator(SimulatorBase):
 
         return circuit()
 
-    def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
+    def _get_matrix_operator_gates(self, hf_reference_fock, matrix_list):
 
         # Initialize qubits
         n_qubits = len(hf_reference_fock)
@@ -117,7 +117,8 @@ class PennylaneSimulator(SimulatorBase):
         state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
         # Append the ansatz directly as a matrix
-        state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
+        for matrix in matrix_list:
+            state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
 
         return state_preparation_gates
 

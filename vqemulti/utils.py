@@ -45,8 +45,14 @@ def string_to_matrix(pauli_string):
 
 
 def ansatz_to_matrix(ansatz, n_qubits):
+    """
+    generate a matrix representation of the operator that corresponds to ansatz
 
-    # generate matrix operator that corresponds to ansatz
+    :param ansatz: list of operators
+    :param n_qubits: number of quibits
+    :return: the matrix
+    """
+
     identity = scipy.sparse.identity(2, format='csc', dtype=complex)
     matrix = identity
 
@@ -61,6 +67,26 @@ def ansatz_to_matrix(ansatz, n_qubits):
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
 
     return matrix
+
+
+def ansatz_to_matrix_list(ansatz, n_qubits):
+    """
+    generate a list of matrix representations of the operators that corresponds to each element of the ansatz list
+
+    :param ansatz: list of operators
+    :param n_qubits: number of quibits
+    :return: list of matrices
+    """
+
+    matrix_list = []
+    for operator in ansatz:
+        # Get corresponding the operator matrix (exponent)
+        operator_matrix = get_sparse_operator_openfermion(operator, n_qubits)
+
+        # Add unitary operator to matrix as exp(operator_matrix)
+        matrix_list.append(scipy.sparse.linalg.expm(operator_matrix))
+
+    return matrix_list
 
 
 def fock_to_bk(fock_vector):

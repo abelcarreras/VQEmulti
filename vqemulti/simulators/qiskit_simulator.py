@@ -108,6 +108,7 @@ class QiskitSimulator(SimulatorBase):
                  trotter_steps=1,
                  test_only=False,
                  hamiltonian_grouping=True,
+                 separate_matrix_operators=True,
                  shots=1000,
                  backend=qiskit.Aer.get_backend('aer_simulator'),
                  use_estimator=False,
@@ -118,6 +119,7 @@ class QiskitSimulator(SimulatorBase):
         :param trotter: Trotterize ansatz operators
         :param trotter_steps: number of trotter steps (only used if trotter=True)
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
+        :param separate_matrix_operators: separate adaptVQE matrix operators (only with test_only = True)
         :param shots: number of samples to perform in the simulation
         :param backend: qiskit backend to run the calculations
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
@@ -131,7 +133,7 @@ class QiskitSimulator(SimulatorBase):
         if session is True:
             self._use_estimator = True
 
-        super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, shots)
+        super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
     def _get_state_vector(self, state_preparation_gates, n_qubits):
 
@@ -150,7 +152,7 @@ class QiskitSimulator(SimulatorBase):
 
         return np.array(result.get_statevector())
 
-    def _get_matrix_operator_gates(self, hf_reference_fock, matrix):
+    def _get_matrix_operator_gates(self, hf_reference_fock, matrix_list):
 
         # Initialize qubits
         n_qubits = len(hf_reference_fock)
@@ -159,8 +161,9 @@ class QiskitSimulator(SimulatorBase):
         state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 
         # Append the ansatz directly as a matrix
-        matrix_gate = Operator(np.real(matrix.toarray()))
-        state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
+        for matrix in matrix_list:
+            matrix_gate = Operator(np.real(matrix.toarray()))
+            state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
 
         return state_preparation_gates
 

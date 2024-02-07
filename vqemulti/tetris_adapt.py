@@ -154,6 +154,7 @@ def tetrisVQE(hamiltonian,
 
         max_indices = np.argsort(gradient_vector)[::-1][:1]  #Always add the operator with the largest gradient
         #Now let's add the rest of the operators
+
         for i in range(len(indices_sorted)-1):
             index_list = [indices_sorted[i+1].tolist()]
             if (operator_action(operators_pool, index_list) & operator_action(operators_pool, max_indices)):

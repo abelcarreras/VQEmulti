@@ -5,7 +5,7 @@ from vqemulti import vqe
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from vqemulti.preferences import Configuration
-from vqemulti.energy import get_adapt_vqe_energy
+from vqemulti.energy import get_vqe_energy
 
 
 conf = Configuration()
@@ -60,7 +60,7 @@ simulator.print_statistics()
 # perform a single call to energy evaluator an use new simulator object to store only one circuit
 simulator_sp = QiskitSimulator(trotter=True, test_only=True)
 
-energy = get_adapt_vqe_energy(result['coefficients'],
+energy = get_vqe_energy(result['coefficients'],
                               result['ansatz'],
                               hf_reference_fock,
                               hamiltonian,

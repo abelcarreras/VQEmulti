@@ -33,6 +33,7 @@ class SimulatorBase:
         self._shots_model = None
         self._hamiltonian_grouping = hamiltonian_grouping
         self._separate_matrix_operators = separate_matrix_operators
+        self._n_hamiltonian_terms = None
 
     def set_shots_model(self, shots_model):
         self._shots_model = shots_model
@@ -61,6 +62,12 @@ class SimulatorBase:
         state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
 
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+        if self._hamiltonian_grouping:
+            # use hamiltonian grouping
+            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+            self._n_hamiltonian_terms = len(grouped_hamiltonian)
+        else:
+            self._n_hamiltonian_terms = len(formatted_hamiltonian)
 
         # Obtain the theoretical expectation value for each Pauli string in the
         # Hamiltonian by matrix multiplication, and perform the necessary weighed
@@ -154,6 +161,8 @@ class SimulatorBase:
             warnings.warn('No simulation statistics to show')
             return
 
+        n_mult = self._n_hamiltonian_terms if self._test_only else 1
+
         print('\n------------------------------------')
         print('version: {}'.format(self.simulator_info()))
         if not self._test_only:
@@ -161,13 +170,13 @@ class SimulatorBase:
                 print('Shots per evaluation: {}'.format(self._shots))
             print('Total shots: {}'.format(np.sum(self._shot_count)))
 
-        print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)))
+        print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)*n_mult))
         print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
         print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))
         print('Average circuit depth: {:.2f}'.format(np.average(self._circuit_count)))
         print('Gate counts (per shot):')
         for k, v in self._circuit_gates.items():
-            print(' {:14} : {}'.format(k, v))
+            print(' {:14} : {}'.format(k, v*n_mult))
         print('------------------------------------\n')
 
     def print_circuits(self):

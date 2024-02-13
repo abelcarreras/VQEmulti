@@ -95,3 +95,30 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, si
     energy = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
 
     return energy
+
+
+def simulate_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+    """
+    Obtain the hamiltonian square expectation value for a given VQE state (reference + ansatz) and a hamiltonian
+
+    :param coefficients: VQE coefficients
+    :param ansatz: ansatz expressed in qubit/fermion operators
+    :param hf_reference_fock: reference HF in fock vspace vector
+    :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
+    :param simulator: simulation object
+    :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
+    """
+
+    # transform to qubit hamiltonian
+    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
+
+    # define operator hamiltonian square
+    qubit_hamiltonian_square = qubit_hamiltonian * qubit_hamiltonian
+
+    # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
+    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=True)
+
+    # evaluate hamiltonian
+    energy = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian_square, simulator)
+
+    return energy

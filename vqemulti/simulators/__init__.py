@@ -161,22 +161,29 @@ class SimulatorBase:
             warnings.warn('No simulation statistics to show')
             return
 
-        n_mult = self._n_hamiltonian_terms if self._test_only else 1
+        print('\n')
+        if self._test_only:
+            print('Circuit evaluations (not separated in hamiltonian terms)')
+        else:
+            print('Hamiltonian terms evaluations per shot')
+        print('------------------------------------')
 
-        print('\n------------------------------------')
         print('version: {}'.format(self.simulator_info()))
         if not self._test_only:
             if self._shots_model is None:
                 print('Shots per evaluation: {}'.format(self._shots))
             print('Total shots: {}'.format(np.sum(self._shot_count)))
 
-        print('Circuit evaluations (per shot): {}'.format(len(self._circuit_count)*n_mult))
-        print('Total circuit depth (per shot): {}'.format(sum(self._circuit_count)))
+        if self._n_hamiltonian_terms is not None:
+            print('Hamiltonian terms: {}'.format(self._n_hamiltonian_terms))
+
+        print('Circuit evaluations: {}'.format(len(self._circuit_count)))
+        print('Total circuit depth: {}'.format(sum(self._circuit_count)))
         print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))
         print('Average circuit depth: {:.2f}'.format(np.average(self._circuit_count)))
-        print('Gate counts (per shot):')
+        print('Gate counts:')
         for k, v in self._circuit_gates.items():
-            print(' {:14} : {}'.format(k, v*n_mult))
+            print(' {:14} : {}'.format(k, v))
         print('------------------------------------\n')
 
     def print_circuits(self):

@@ -163,9 +163,9 @@ class SimulatorBase:
 
         print('\n')
         if self._test_only:
-            print('Circuit evaluations (not separated in hamiltonian terms)')
+            print('Exact evaluation (one evaluation per circuit)')
         else:
-            print('Hamiltonian terms evaluations per shot')
+            print('Sampled evaluation (one evaluation per hamiltonian term)')
         print('------------------------------------')
 
         print('version: {}'.format(self.simulator_info()))

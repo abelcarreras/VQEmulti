@@ -120,6 +120,75 @@ class SimulatorBase:
         assert expectation_value.imag < 1e-5
         return expectation_value.real
 
+    def get_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
+        """
+        Obtains the expectation value in a state by sampling (using a simulator)
+
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :param shots: number of samples
+        :return: the expectation value of the energy
+        """
+
+        n_qubits = count_qubits(qubit_hamiltonian)
+
+        # Format and the Hamiltonian in pauli strings and coefficients
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+
+        if self._hamiltonian_grouping:
+            # use hamiltonian grouping
+            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
+        else:
+            # skip hamiltonian grouping
+            grouped_hamiltonian = {}
+            for pauli_string, coefficient in formatted_hamiltonian.items():
+                grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
+
+        # Obtain the expectation value for each Pauli string
+        variance_list = []
+        energy_total = 0
+        total_elements = 0
+        for main_string, sub_hamiltonian in grouped_hamiltonian.items():
+            energy = self._measure_expectation(main_string,
+                                               sub_hamiltonian,
+                                               state_preparation_gates,
+                                               n_qubits).real
+
+            # get square
+            def get_square(sub_hamiltonian):
+                return sub_hamiltonian
+
+            # get square
+            main_string_square = 'I'*len(main_string)
+            #print(len(sub_hamiltonian), energy)
+
+            for sub in sub_hamiltonian:
+                #print(sub, sub_hamiltonian[sub])
+                sub_hamiltonian[sub] *= sub_hamiltonian[sub]
+
+            energy_2 = self._measure_expectation(main_string_square,
+                                                 sub_hamiltonian,
+                                                 state_preparation_gates,
+                                                 n_qubits).real
+
+            len_sub = len(sub_hamiltonian)
+            # print('len_sum: ', len_sub)
+
+            #energy_2 = energy_2 / len_sub**2
+            #energy = energy / len_sub
+            # for k in range(len_sub):
+            variance_list.append((energy_2*len_sub - (energy*len_sub)**2))
+
+            # variance_list.append(np.real(energy_2 - energy**2))
+            total_elements += len_sub
+
+            energy_total += energy
+
+        # print(len(grouped_hamiltonian)) # 185
+        # print(variance_list)
+        print('total_elements: ', total_elements)
+        return np.abs(np.sum(variance_list).real)
+
     def get_preparation_gates(self, ansatz, hf_reference_fock):
         """
         generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
@@ -205,6 +274,9 @@ class SimulatorBase:
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):
+        raise NotImplementedError()
+
+    def _measure_expectation_variance(self, *args):
         raise NotImplementedError()
 
     def _get_state_vector(self, *args):

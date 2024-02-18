@@ -5,7 +5,7 @@ from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
-from vqemulti.energy.simulation import simulate_adapt_vqe_energy_square
+from vqemulti.energy.simulation import simulate_adapt_vqe_variance
 import scipy
 import numpy as np
 
@@ -24,7 +24,6 @@ def adaptVQE(hamiltonian,
              threshold=1e-6,
              operator_update_number=1,
              operator_update_max_grad=2e-1,
-             guess_variance=0,
              reference_dm=None):
     """
     Perform an adaptVQE calculation
@@ -42,7 +41,6 @@ def adaptVQE(hamiltonian,
     :param threshold: total-gradient-norm convergence threshold (in Hartree)
     :param operator_update_number: number of operators to add to the ansatz at each iteration
     :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
-    :param guess_variance: initial guess variance (used for shot prediction)
     :param reference_dm: reference density matrix (ideally from fullCI) that is used to compute the quantum fidelity
     :return: results dictionary
     """
@@ -50,7 +48,6 @@ def adaptVQE(hamiltonian,
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': []}
     indices = []
-    variance = guess_variance
 
     # Check if initial guess
     if ansatz is None:
@@ -69,6 +66,12 @@ def adaptVQE(hamiltonian,
         operators_pool = operators_pool.get_quibits_list(normalize=True)
 
     print('pool size: ', len(operators_pool))
+
+    # initialize variance
+    if energy_simulator is not None:
+        variance = simulate_adapt_vqe_variance([], operators_pool[:0], hf_reference_fock, hamiltonian, energy_simulator)
+    else:
+        variance = 0
 
     for iteration in range(max_iterations):
 
@@ -184,8 +187,8 @@ def adaptVQE(hamiltonian,
             #                          hamiltonian_grouping=energy_simulator._hamiltonian_grouping)
 
             # Calculation of Hamiltonian variance
-            e_2 = simulate_adapt_vqe_energy_square(list(results.x), ansatz, hf_reference_fock, hamiltonian, energy_simulator)
-            variance = e_2 - results.x[-1] ** 2
+
+            variance = simulate_adapt_vqe_variance(list(results.x), ansatz, hf_reference_fock, hamiltonian, energy_simulator)
             print('Hamiltonian Variance: ', variance)
 
         # get results

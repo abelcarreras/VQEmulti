@@ -218,8 +218,7 @@ def group_hamiltonian(hamiltonian):
 
     # Go through the hamiltonian, starting by the terms that have less
     # identity operators
-    for main_string in \
-            sorted(hamiltonian, key=lambda pauliString: pauliString.count("I")):
+    for main_string in sorted(hamiltonian, key=lambda pauliString: pauliString.count("I")):
 
         # Call findSubStrings to find all the strings in the dictionary that
         # only differ from main_string by identities, and organize them as a
@@ -228,7 +227,8 @@ def group_hamiltonian(hamiltonian):
 
         # Use the dictionary as a value for the main_string key in the
         # grouped_hamiltonian dictionary
-        grouped_hamiltonian[main_string] = grouped_operators
+        if len(grouped_operators) > 0:
+            grouped_hamiltonian[main_string] = grouped_operators
 
         # If all the strings have been grouped, exit the for cycle
         if len(checked) == len(hamiltonian.keys()):

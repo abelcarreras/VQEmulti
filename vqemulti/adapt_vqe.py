@@ -86,6 +86,7 @@ def adaptVQE(hamiltonian,
         else:
             gradient_simulator.update_model(precision=energy_threshold,
                                             variance=variance,
+                                            n_coefficients=len(coefficients),
                                             n_qubits=hamiltonian.n_qubits)
 
             gradient_vector = simulate_gradient(hf_reference_fock,
@@ -171,6 +172,7 @@ def adaptVQE(hamiltonian,
         else:
             energy_simulator.update_model(precision=energy_threshold,
                                           variance=variance,
+                                          n_coefficients=len(coefficients),
                                           n_qubits=hamiltonian.n_qubits)
 
             # print('opt_tolerance: ', opt_tolerance)

@@ -146,21 +146,18 @@ class SimulatorBase:
 
         # Obtain the expectation value for each Pauli string
         variance_list = []
-        energy_total = 0
-        total_elements = 0
         for main_string, sub_hamiltonian in grouped_hamiltonian.items():
-            energy = self._measure_expectation(main_string,
-                                               sub_hamiltonian,
-                                               state_preparation_gates,
-                                               n_qubits).real
 
-            # get square
-            def get_square(sub_hamiltonian):
-                return sub_hamiltonian
+            energy = 0
+            for sub in sub_hamiltonian.items():
+                energy += self._measure_expectation(main_string,
+                                                    dict([sub]),
+                                                    state_preparation_gates,
+                                                    n_qubits).real ** 2
+            energy = np.sqrt(energy)
 
             # get square
             main_string_square = 'I'*len(main_string)
-            #print(len(sub_hamiltonian), energy)
 
             for sub in sub_hamiltonian:
                 #print(sub, sub_hamiltonian[sub])
@@ -171,22 +168,8 @@ class SimulatorBase:
                                                  state_preparation_gates,
                                                  n_qubits).real
 
-            len_sub = len(sub_hamiltonian)
-            # print('len_sum: ', len_sub)
+            variance_list.append((energy_2 - energy**2))
 
-            #energy_2 = energy_2 / len_sub**2
-            #energy = energy / len_sub
-            # for k in range(len_sub):
-            variance_list.append((energy_2*len_sub - (energy*len_sub)**2))
-
-            # variance_list.append(np.real(energy_2 - energy**2))
-            total_elements += len_sub
-
-            energy_total += energy
-
-        # print(len(grouped_hamiltonian)) # 185
-        # print(variance_list)
-        # print('total_elements: ', total_elements)
         return np.abs(np.sum(variance_list).real)
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):

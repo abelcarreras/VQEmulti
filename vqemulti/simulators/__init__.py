@@ -186,7 +186,7 @@ class SimulatorBase:
 
         # print(len(grouped_hamiltonian)) # 185
         # print(variance_list)
-        print('total_elements: ', total_elements)
+        # print('total_elements: ', total_elements)
         return np.abs(np.sum(variance_list).real)
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):

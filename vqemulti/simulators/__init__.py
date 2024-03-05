@@ -212,9 +212,6 @@ class SimulatorBase:
 
             variance_list.append(energy_2 - energy**2)
 
-            target_dev = 1e-2
-            n_shots = int((energy_2 - energy**2) / target_dev ** 2)
-
             # print('variance: {:.5f} {}'.format(energy_2 - energy**2, n_shots))
 
         return np.abs(np.sum(variance_list))

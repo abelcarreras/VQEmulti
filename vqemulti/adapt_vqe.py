@@ -8,6 +8,7 @@ from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti.energy.simulation import simulate_adapt_vqe_variance, simulate_adapt_vqe_energy
 from vqemulti.gradient.simulation import simulate_vqe_energy_gradient, simulate_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
+from vqemulti.optimizers import OptimizerParams
 
 import scipy
 import numpy as np
@@ -24,10 +25,12 @@ def adaptVQE(hamiltonian,
              gradient_simulator=None,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
-             threshold=1e-6,
+             gradient_threshold=1e-6,
              operator_update_number=1,
              operator_update_max_grad=2e-1,
-             reference_dm=None):
+             reference_dm=None,
+             optimizer_params=None,
+             ):
     """
     Perform an adaptVQE calculation
 
@@ -41,12 +44,19 @@ def adaptVQE(hamiltonian,
     :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
     :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
-    :param threshold: total-gradient-norm convergence threshold (in Hartree)
+    :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
     :param operator_update_number: number of operators to add to the ansatz at each iteration
     :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
     :param reference_dm: reference density matrix (ideally from fullCI) that is used to compute the quantum fidelity
+    :param optimizer_params: parameters to be used in the optimizer (OptimizerParams object)
     :return: results dictionary
     """
+
+    # set default optimizer params
+    if optimizer_params is None:
+        optimizer_params = OptimizerParams()
+
+    print('optimizer params: ', optimizer_params)
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': []}
@@ -103,7 +113,7 @@ def adaptVQE(hamiltonian,
 
         print("\nTotal gradient norm: {:12.6f}".format(total_norm))
 
-        if total_norm < threshold:
+        if total_norm < gradient_threshold:
             if len(iterations['energies']) > 0:
                 energy = iterations['energies'][-1]
             else:
@@ -165,12 +175,9 @@ def adaptVQE(hamiltonian,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian),
                                               jac=exact_adapt_vqe_energy_gradient,
-                                              options={'gtol': energy_threshold,
-                                                       'disp':  Configuration().verbose},
-                                              method='BFGS',
-                                              # method='COBYLA',
+                                              method=optimizer_params.method,
+                                              options=optimizer_params.options,
                                               tol=energy_threshold,
-                                              # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
                                               )
         else:
             energy_simulator.update_model(precision=energy_threshold,
@@ -178,16 +185,13 @@ def adaptVQE(hamiltonian,
                                           n_coefficients=len(coefficients),
                                           n_qubits=hamiltonian.n_qubits)
 
-            # print('opt_tolerance: ', opt_tolerance)
             results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                              # jac=simulate_vqe_energy_gradient,
-                                              # method='BFGS',
-                                              # options={'gtol': energy_threshold, 'disp': Configuration().verbose},
-                                              method='COBYLA',  # SPSA for real hardware
+                                              jac=simulate_vqe_energy_gradient,
+                                              method=optimizer_params.method,
+                                              options=optimizer_params.options,
                                               tol=energy_threshold,
-                                              options={'disp': Configuration().verbose, 'rhobeg': 0.1}
                                               )
 
             # Calculation of Hamiltonian variance
@@ -317,7 +321,7 @@ if __name__ == '__main__':
     result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
-                      threshold=0.1,
+                      energy_threshold=0.1,
                       # opt_qubits=True,
                       # energy_simulator=simulator,
                       # gradient_simulator=simulator

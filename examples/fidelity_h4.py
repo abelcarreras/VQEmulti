@@ -40,6 +40,8 @@ overlap_matrix = molecule._pyscf_data['scf'].get_ovlp(molecule._pyscf_data['mol'
 
 #  nat x can
 trans_mat = np.dot(nat_orb.T, overlap_matrix @ can_orb)
+# trans_mat = molecule.canonical_natural_trans_mat
+
 
 print('Check trans_mat is unitary matrix', np.trace(trans_mat.T @ trans_mat))
 

@@ -1,4 +1,31 @@
 from scipy.optimize import OptimizeResult
+from vqemulti.preferences import Configuration
+
+
+class OptimizerParams:
+    def __init__(self,
+                 method='BFGS',
+                 options=None):
+
+        self._method = method
+        self._options = options
+
+        if self._options is None:
+            self._options = {}
+
+        # set display connected to verbose
+        self._options['disp'] = Configuration().verbose
+
+    def __str__(self):
+        return '{} / {}'.format(self._method, str(self._options))
+
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def options(self):
+        return self._options
 
 
 def spsa_minimizer(fun, x0, args=None, **options):

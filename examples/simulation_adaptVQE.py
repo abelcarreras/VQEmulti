@@ -55,7 +55,7 @@ try:
                       energy_threshold=1e-2,
                       opt_qubits=False,  # use fermion operators
                       max_iterations=15,  # maximum number of interations
-                      # optimizer_params=opt_cobyla # optimizer parameters
+                      optimizer_params=opt_cobyla # optimizer parameters
                       )
 
 except NotConvergedError as e:

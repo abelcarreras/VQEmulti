@@ -1,4 +1,5 @@
-from vqemulti.energy import exact_vqe_energy, exact_vqe_energy_gradient, get_vqe_energy, simulate_vqe_energy
+from vqemulti.energy import exact_vqe_energy, get_vqe_energy, simulate_vqe_energy
+from vqemulti.gradient import exact_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
 from vqemulti.preferences import Configuration
 import numpy as np

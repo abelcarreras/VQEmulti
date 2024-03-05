@@ -1,11 +1,14 @@
-from vqemulti.energy import exact_adapt_vqe_energy, simulate_adapt_vqe_energy, get_adapt_vqe_energy, exact_adapt_vqe_energy_gradient
-from vqemulti.gradient import compute_gradient_vector, simulate_gradient
+from vqemulti.energy import exact_adapt_vqe_energy, get_adapt_vqe_energy
+from vqemulti.gradient import compute_gradient_vector
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
-from vqemulti.energy.simulation import simulate_adapt_vqe_variance
+from vqemulti.energy.simulation import simulate_adapt_vqe_variance, simulate_adapt_vqe_energy
+from vqemulti.gradient.simulation import simulate_vqe_energy_gradient, simulate_gradient
+from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
+
 import scipy
 import numpy as np
 
@@ -179,17 +182,15 @@ def adaptVQE(hamiltonian,
             results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
                                               coefficients,
                                               (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
+                                              # jac=simulate_vqe_energy_gradient,
+                                              # method='BFGS',
+                                              # options={'gtol': energy_threshold, 'disp': Configuration().verbose},
                                               method='COBYLA',  # SPSA for real hardware
                                               tol=energy_threshold,
-                                              options={'disp': Configuration().verbose, 'rhobeg': 0.1})
-
-            # Force exact calculation of < Psi | H^2| Psi > (for testing)
-            # from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
-            # simulator_e2 = Simulator(trotter=energy_simulator._trotter, test_only=True,
-            #                          hamiltonian_grouping=energy_simulator._hamiltonian_grouping)
+                                              options={'disp': Configuration().verbose, 'rhobeg': 0.1}
+                                              )
 
             # Calculation of Hamiltonian variance
-
             variance = simulate_adapt_vqe_variance(list(results.x), ansatz, hf_reference_fock, hamiltonian, energy_simulator)
             print('Hamiltonian Variance: ', variance)
 

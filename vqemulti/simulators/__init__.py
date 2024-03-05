@@ -121,6 +121,16 @@ class SimulatorBase:
         return expectation_value.real
 
     def get_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
+
+        if self._test_only:
+            evaluation = self._get_exact_state_evaluation_variance(qubit_hamiltonian, state_preparation_gates)
+        else:
+            evaluation = self._get_sampled_state_evaluation_variance(qubit_hamiltonian, state_preparation_gates)
+
+        # make sure that main simulator class returns consistent float value
+        return float(evaluation)
+
+    def _get_sampled_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
         """
         Obtains the expectation value in a state by sampling (using a simulator)
 
@@ -154,13 +164,12 @@ class SimulatorBase:
                                                     dict([sub]),
                                                     state_preparation_gates,
                                                     n_qubits).real ** 2
-            energy = np.sqrt(energy)
+            energy_abs = np.sqrt(energy)
 
             # get square
             main_string_square = 'I'*len(main_string)
 
             for sub in sub_hamiltonian:
-                #print(sub, sub_hamiltonian[sub])
                 sub_hamiltonian[sub] *= sub_hamiltonian[sub]
 
             energy_2 = self._measure_expectation(main_string_square,
@@ -168,9 +177,47 @@ class SimulatorBase:
                                                  state_preparation_gates,
                                                  n_qubits).real
 
-            variance_list.append((energy_2 - energy**2))
+            variance_list.append((energy_2 - energy_abs**2))
 
         return np.abs(np.sum(variance_list).real)
+
+    def _get_exact_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
+        """
+        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
+        This function is basically used to test that the Pennylane circuit is correct
+
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :return: the expectation value of the state given the hamiltonian
+        """
+
+        n_qubits = count_qubits(qubit_hamiltonian)
+        state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
+
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+        # Obtain the theoretical expectation value for each Pauli string in the
+        # Hamiltonian by matrix multiplication, and perform the necessary weighed
+        # sum to obtain the energy expectation value.
+
+        variance_list = []
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+            ket = np.array(state_vector, dtype=complex)
+            bra = np.conj(ket)
+
+            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
+            energy = coefficient * np.dot(bra, pauli_ket).real
+
+            pauli_ket_square = np.matmul(string_to_matrix(pauli_string), pauli_ket)
+            energy_2 = coefficient**2 * np.dot(bra, pauli_ket_square).real
+
+            variance_list.append(energy_2 - energy**2)
+
+            target_dev = 1e-2
+            n_shots = int((energy_2 - energy**2) / target_dev ** 2)
+
+            # print('variance: {:.5f} {}'.format(energy_2 - energy**2, n_shots))
+
+        return np.abs(np.sum(variance_list))
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):
         """

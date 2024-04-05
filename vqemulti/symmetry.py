@@ -71,6 +71,7 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
 
         return total_sum
 
+    mo_coefficients = np.array(mo_coefficients, copy=True)
     n_orbitals = len(mo_coefficients.T)
     for n_orb_chunk in range(skip_first, n_orbitals-1):
         print('Symmetry iteration: ', n_orb_chunk)

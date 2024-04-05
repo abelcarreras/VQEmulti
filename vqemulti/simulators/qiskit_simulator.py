@@ -63,20 +63,17 @@ def trotter_step(qubit_operator, time, n_qubits):
         for i in range(len(involved_qubits) - 1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
-            # trotter_gates.append(qml.CNOT(wires= [control, target]))
             trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
             # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
         last_qubit = max(involved_qubits) if len(involved_qubits) != 0 else 0
 
-        # trotter_gates.append(qml.RZ((2 * coefficient), wires=last_qubit))
         trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
 
         # Uncompute parity
         for i in range(len(involved_qubits) - 2, -1, -1):
             control = involved_qubits[i]
             target = involved_qubits[i + 1]
-            # trotter_gates.append(qml.CNOT(wires=[control, target]))
             trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
         # Undo basis rotations
@@ -95,7 +92,6 @@ def trotter_step(qubit_operator, time, n_qubits):
 
             if pauli_operator == "Y":
                 # Rotate to Z basis from Y Basis
-                # trotter_gates.append(qml.RX(-np.pi / 2, wires = qubit_index))
                 trotter_gates.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
 
     return trotter_gates

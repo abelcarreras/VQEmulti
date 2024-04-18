@@ -59,7 +59,7 @@ def adaptVQE(hamiltonian,
     print('optimizer params: ', optimizer_params)
 
     # Initialize data structures
-    iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': []}
+    iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': []}
     indices = []
 
     # Check if initial guess
@@ -239,6 +239,7 @@ def adaptVQE(hamiltonian,
             density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
             fidelity = density_fidelity(reference_dm, density_matrix)
             print('fidelity: {:6.3f}'.format(fidelity))
+            iterations['fidelity'].append(fidelity)
 
         # print iteration results
         print('Iteration energy:', energy)

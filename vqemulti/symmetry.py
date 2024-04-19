@@ -6,6 +6,22 @@ from itertools import combinations
 import numpy as np
 
 
+def plot_orbital(orbital):
+    import matplotlib.pyplot as plt
+
+    x = np.linspace(-2, 5, 50)
+    y = np.linspace(-2, 5, 50)
+
+    X, Y = np.meshgrid(x, y)
+
+    Z = orbital(X, Y, np.zeros_like(X))
+    plt.imshow(Z, interpolation='bilinear', origin='lower', cmap='seismic')
+    plt.figure()
+    plt.axes().set_aspect('equal')
+    plt.contour(X, Y, Z, colors='k')
+    plt.show()
+
+
 def cost_fuction(values):
     return np.sum([np.prod(pair) for pair in combinations(values, 2)])
 
@@ -22,19 +38,22 @@ def generate_unitary(n, params):
     return expm(anti_symmetric)
 
 
-def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=False):
+def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=False, return_sym=False):
 
     # get geometric data
     symbols = [atom[0] for atom in molecule.geometry]
     coordinates = molecule._pyscf_data['mol'].atom_coords()
 
     geom_sym = SymmetryMolecule(group, coordinates, symbols)
-    print('geom_sym: ', geom_sym)
+    print('geom_sym {} : {}'.format(group, geom_sym))
+    # print(geom_sym.orientation_angles)
+    # print(geom_sym.center)
 
     # get electronic data
     basis_set = get_basis_set_pyscf(molecule._pyscf_data['mol'])
 
     print('\nMO symmetry (initial)')
+    sym_orbitals = []
     for i, orbital_vect in enumerate(mo_coefficients.T):
         orb = build_orbital(basis_set, orbital_vect)
 
@@ -44,11 +63,15 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
                                          )
         values = sym_orb.get_ir_representation().values
         cost = cost_fuction(values)
+        sym_orbitals.append(sym_orb)
 
         print('orbital {:3}: {:6.2f} ({})'.format(i, cost, sym_orb))
 
     if skip:
-        return mo_coefficients
+        if return_sym:
+            return mo_coefficients, sym_orbitals
+        else:
+            return mo_coefficients
 
     def minimize_function(a, restrict, group):
 
@@ -81,7 +104,7 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
         n_params = (n_dim ** 2 - n_dim) // 2
         params = np.zeros(n_params)
 
-        res = minimize(minimize_function, params, args=(restrict, group))
+        res = minimize(minimize_function, params, args=(restrict, group), method='BFGS', options={'gtol': 1e-3})
 
         u_matrix = generate_unitary(n_dim, res.x)
 
@@ -90,6 +113,7 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
 
     # final check
     print('\nMO symmetry (final)')
+    sym_orbitals = []
     for i, orbital_vect in enumerate(mo_coefficients.T):
         orb = build_orbital(basis_set, orbital_vect)
 
@@ -97,14 +121,55 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
                                          orientation_angles=geom_sym.orientation_angles,
                                          center=geom_sym.center
                                          )
-
         values = sym_orb.get_ir_representation().values
         cost = np.sum([np.prod(pair) for pair in combinations(values, 2)])
+        sym_orbitals.append(sym_orb)
 
         print('orbital {:3}: {:6.2f} ({})'.format(i, cost, sym_orb))
         # print('values: ', values)
 
-    return mo_coefficients
+    if return_sym:
+        return mo_coefficients, sym_orbitals
+    else:
+        return mo_coefficients
+
+
+def get_hamiltonian_terms_symmetry(hamiltonian, sym_orbitals):
+
+    tot_sum = []
+    for term in hamiltonian.unique_iter():
+        if len(term) == 0:
+            continue
+
+        prod_list = []
+        for op in term:
+            orb_index = op[0]//2
+            prod_list.append(sym_orbitals[orb_index])
+        # print(term, np.prod(prod_list))
+        tot_sum.append(np.prod(prod_list))
+
+    return np.sum(tot_sum)
+
+
+def get_pool_symmetry(pool, sym_orbitals):
+
+    ferm_op_list = []
+    for full_op in pool:
+        tot_sum = []
+        for term in full_op.terms:
+            if len(term) == 0:
+                continue
+
+            prod_list = []
+            for op in term:
+                orb_index = op[0]//2
+                prod_list.append(sym_orbitals[orb_index])
+
+            tot_sum.append(np.prod(prod_list))
+
+        ferm_op_list.append(np.sum(tot_sum))
+
+    return ferm_op_list
 
 
 if __name__ == '__main__':

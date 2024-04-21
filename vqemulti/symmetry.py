@@ -1,8 +1,10 @@
-from posym import SymmetryMolecule, SymmetryGaussianLinear
+from posym import SymmetryMolecule, SymmetryGaussianLinear, SymmetryObject
 from posym.tools import get_basis_set_pyscf, build_density, build_orbital
+from posym.algebra import dot as sym_dot
 from scipy.linalg import expm
 from scipy.optimize import minimize
 from itertools import combinations
+from vqemulti.pool.tools import OperatorList
 import numpy as np
 
 
@@ -38,11 +40,14 @@ def generate_unitary(n, params):
     return expm(anti_symmetric)
 
 
-def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=False, return_sym=False):
+def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False):
 
     # get geometric data
     symbols = [atom[0] for atom in molecule.geometry]
     coordinates = molecule._pyscf_data['mol'].atom_coords()
+
+    # get electronic data
+    mo_coefficients = molecule.canonical_orbitals
 
     geom_sym = SymmetryMolecule(group, coordinates, symbols)
     print('geom_sym {} : {}'.format(group, geom_sym))
@@ -68,10 +73,7 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
         print('orbital {:3}: {:6.2f} ({})'.format(i, cost, sym_orb))
 
     if skip:
-        if return_sym:
-            return mo_coefficients, sym_orbitals
-        else:
-            return mo_coefficients
+        return sym_orbitals
 
     def minimize_function(a, restrict, group):
 
@@ -128,10 +130,10 @@ def symmetrize_orbitals(mo_coefficients, molecule, group, skip_first=0, skip=Fal
         print('orbital {:3}: {:6.2f} ({})'.format(i, cost, sym_orb))
         # print('values: ', values)
 
-    if return_sym:
-        return mo_coefficients, sym_orbitals
-    else:
-        return mo_coefficients
+    from openfermionpyscf import set_mo_coefficients
+    set_mo_coefficients(molecule, mo_coefficients)
+
+    return sym_orbitals
 
 
 def get_hamiltonian_terms_symmetry(hamiltonian, sym_orbitals):
@@ -172,6 +174,31 @@ def get_pool_symmetry(pool, sym_orbitals):
     return ferm_op_list
 
 
+def get_symmetry_reduced_pool(pool, sym_orbitals):
+
+    rep = sym_orbitals[0].get_point_group().ir_labels[0]
+    group = sym_orbitals[0].get_point_group().label
+
+    # assuming state symmetry is most symmetric IR
+    hamiltonian_sym = SymmetryObject(group=group, rep=rep)
+
+    # assuming state symmetry is most symmetric IR
+    state_sym = SymmetryObject(group=group, rep=rep)
+
+    pool_sym = get_pool_symmetry(pool, sym_orbitals)
+
+    new_pool = []
+    for i, op_sym in enumerate(pool_sym):
+        dot_sym = abs(sym_dot(op_sym * hamiltonian_sym, state_sym))
+        if dot_sym > 1e-2:
+            new_pool.append(pool[i])
+            print(i, ' : {:10.2f} {}'.format(dot_sym, True))
+        else:
+            print(i, ' : {:10.2f} {}'.format(dot_sym, False))
+
+    return OperatorList(new_pool, antisymmetrize=False)
+
+
 if __name__ == '__main__':
 
     from openfermionpyscf import prepare_pyscf_molecule
@@ -202,7 +229,7 @@ if __name__ == '__main__':
     symbols = [atom[0] for atom in molecule.geometry]
     coordinates = molecule._pyscf_data['mol'].atom_coords()
 
-    mo_coefficients = symmetrize_orbitals(mo_coefficients, coordinates, symbols, 'd4h', skip=False)
+    mo_coefficients = symmetrize_molecular_orbitals(mo_coefficients, coordinates, symbols, 'd4h', skip=False)
 
     mol = prepare_pyscf_molecule(pyscf_molecule)
     n_electrons = pyscf_molecule.n_electrons

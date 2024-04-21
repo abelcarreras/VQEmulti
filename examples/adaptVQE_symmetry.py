@@ -49,17 +49,6 @@ h4_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
 # run classical calculation
 molecule = run_pyscf(h4_molecule, run_fci=True, verbose=True, nat_orb=True)
 
-"""
-from pyscf.tools import molden
-
-mol = molecule._pyscf_data['mol']
-mf = molecule._pyscf_data['scf']
-
-with open('test.molden', 'w') as f1:
-    molden.header(mol, f1)
-    molden.orbital_coeff(mol, f1, mf.mo_coeff, ene=mf.mo_energy, occ=mf.mo_occ)
-"""
-
 # symmetrize molecular orbitals (MolecularData object)
 sym_orbitals = symmetrize_molecular_orbitals(molecule, 'c2h', skip=False)
 

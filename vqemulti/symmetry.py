@@ -99,7 +99,7 @@ def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False):
     mo_coefficients = np.array(mo_coefficients, copy=True)
     n_orbitals = len(mo_coefficients.T)
     for n_orb_chunk in range(skip_first, n_orbitals-1):
-        print('Symmetry iteration: ', n_orb_chunk)
+        # print('Symmetry iteration: ', n_orb_chunk)
         restrict = mo_coefficients[:, n_orb_chunk:]
 
         n_dim = len(restrict.T)
@@ -187,14 +187,15 @@ def get_symmetry_reduced_pool(pool, sym_orbitals):
 
     pool_sym = get_pool_symmetry(pool, sym_orbitals)
 
+    print('\npool symmetry')
     new_pool = []
     for i, op_sym in enumerate(pool_sym):
         dot_sym = abs(sym_dot(op_sym * hamiltonian_sym, state_sym))
         if dot_sym > 1e-2:
             new_pool.append(pool[i])
-            print(i, ' : {:10.2f} {}'.format(dot_sym, True))
+            print('operator {:3} : {:6.2f} {:6}  ({})'.format(i, dot_sym, str(True), op_sym))
         else:
-            print(i, ' : {:10.2f} {}'.format(dot_sym, False))
+            print('operator {:3} : {:6.2f} {:6}  ({})'.format(i, dot_sym, str(False), op_sym))
 
     return OperatorList(new_pool, antisymmetrize=False)
 

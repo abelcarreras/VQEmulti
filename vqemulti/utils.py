@@ -615,3 +615,35 @@ def get_string_from_fermionic_operator(operator):
 
     return ' {:>18} : {}'.format(operator_string, total_spins_string)
 
+
+def store_hamiltonian(hamiltonian, file='hamiltonian.npz'):
+    """
+    store the hamiltonian in a file
+
+    :param hamiltonian: Hamiltonian as InteractionOperator object
+    :param file: filename
+    :return:
+    """
+
+    one_body = hamiltonian.one_body_tensor
+    two_body = hamiltonian.two_body_tensor
+    constant = hamiltonian.constant
+
+    np.savez(file, one_body, two_body, constant)
+
+
+def load_hamiltonian(file='hamiltonian.npz'):
+    """
+    load Hamiltonian from a file
+
+    :param file: filename
+    :return: Hamiltonian as InteractionOperator object
+    """
+
+    npzfile = np.load(file)
+
+    one_body = npzfile['arr_0']
+    two_body = npzfile['arr_1']
+    constant = npzfile['arr_2']
+
+    return InteractionOperator(constant, one_body, two_body)

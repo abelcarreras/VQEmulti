@@ -23,6 +23,7 @@ def adaptVQE(hamiltonian,
              ansatz=None,
              energy_simulator=None,
              gradient_simulator=None,
+             variance_simulator=None,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
              gradient_threshold=1e-6,
@@ -42,6 +43,7 @@ def adaptVQE(hamiltonian,
     :param ansatz: Initial ansatz [Should match with coefficients] (None if new calculation)
     :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
     :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
+    :param variance_simulator: Simulator object used to obtain the variance, if None use energy_simulator
     :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
@@ -82,7 +84,8 @@ def adaptVQE(hamiltonian,
 
     # initialize variance
     if energy_simulator is not None:
-        variance = simulate_adapt_vqe_variance([], operators_pool[:0], hf_reference_fock, hamiltonian, energy_simulator)
+        variance_simulator = energy_simulator if variance_simulator is None else variance_simulator
+        variance = simulate_adapt_vqe_variance([], operators_pool[:0], hf_reference_fock, hamiltonian, variance_simulator)
     else:
         variance = 0
 
@@ -195,7 +198,7 @@ def adaptVQE(hamiltonian,
                                               )
 
             # Calculation of Hamiltonian variance
-            variance = simulate_adapt_vqe_variance(list(results.x), ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+            variance = simulate_adapt_vqe_variance(list(results.x), ansatz, hf_reference_fock, hamiltonian, variance_simulator)
             print('Hamiltonian Variance: ', variance)
 
         # get results

@@ -207,3 +207,54 @@ def spsa_minimizer(fun, x0, args=(), **options):
     data = spsa.minimize(full_function, x0)
 
     return OptimizeResult(fun=full_function(data), x=data, nit=0, nfev=nfev, success=True)
+
+def cobyla_mod(fun, x0, jac, args=(), **options):
+
+    """
+    wrapper of sps implementation module to works as a custom method for scipy minimizer
+
+    :param fun: optimization function
+    :param x0: initial guess
+    :param args: optimization function additional arguments
+    :param options: additional options (not used for now)
+    :return: OptimizeResult
+    """
+
+    from scipy.optimize._cobyla_py import _minimize_cobyla
+
+    # default parameters
+    params = {'rhobeg': 1.0,
+              'maxiter': 1000,
+              'tol': 1-4,
+              'catol': 2e-4,
+              'n_guess': 8,
+              'guess_range': 2}
+
+    params.update(options)
+
+    n_points = params['n_guess']
+    energy_list = []
+    x_range = list(np.linspace(-params['guess_range'], params['guess_range'], params['n_guess']))
+    for x_test in x_range:
+        x0_test = [x for x in x0]
+        x0_test[-1] = x_test
+        energy_list.append(fun(x0_test, *args))
+
+    x0[-1] = x_range[np.argmin(energy_list)]
+
+    result = _minimize_cobyla(fun, x0, args=args,
+                              rhobeg=params['rhobeg'], tol=params['tol'], maxiter=params['maxiter'],
+                              disp=options['disp'], catol=params['catol'], callback=None)
+
+    return OptimizeResult(x=result.x, fun=result.fun, jac=jac,
+                          nit=result.nfev + params['n_guess'],
+                          nfev=result.nfev + params['n_guess'],
+                          success=result.success)
+
+    # from scipy.optimize.cobyla import fmin_cobyla
+
+    #a = fmin_cobyla(fun, x0, (), args=args, consargs=None, rhobeg=params['rhobeg'],
+    #                rhoend=1e-4, maxfun=params['maxfun'], disp=options['disp'], catol=2e-4,
+    #                callback=None)
+
+    # return OptimizeResult(x=a, fun=fun(x0, *args), jac=jac, nit=0, nfev=0, success=True)

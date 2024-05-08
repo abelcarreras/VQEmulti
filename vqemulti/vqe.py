@@ -1,5 +1,8 @@
-from vqemulti.energy import exact_vqe_energy, exact_vqe_energy_gradient, get_vqe_energy, simulate_vqe_energy
+from vqemulti.energy import exact_vqe_energy, get_vqe_energy, simulate_vqe_energy
+from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
+from vqemulti.gradient import exact_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
+from vqemulti.optimizers import OptimizerParams
 from vqemulti.preferences import Configuration
 import numpy as np
 import scipy
@@ -11,7 +14,9 @@ def vqe(hamiltonian,
         coefficients=None,
         opt_qubits=False,
         energy_simulator=None,
-        energy_threshold=1e-4):
+        energy_threshold=1e-4,
+        optimizer_params=None
+        ):
     """
     Perform a VQE calculation
 
@@ -24,6 +29,12 @@ def vqe(hamiltonian,
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :return: results dictionary
     """
+
+    # set default optimizer params
+    if optimizer_params is None:
+        optimizer_params = OptimizerParams()
+
+    print('optimizer params: ', optimizer_params)
 
     # transform to qubit hamiltonian
     ansatz = OperatorList(ansatz, antisymmetrize=True, normalize=True)
@@ -50,19 +61,18 @@ def vqe(hamiltonian,
                                           coefficients,
                                           (ansatz, hf_reference_fock, hamiltonian),
                                           jac=exact_vqe_energy_gradient,
-                                          options={'gtol': energy_threshold, 'disp':  Configuration().verbose},
-                                          method='BFGS',
-                                          # method='COBYLA',
-                                          # tol= 1e-4,
-                                          # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
+                                          method=optimizer_params.method,
+                                          options=optimizer_params.options,
+                                          tol=energy_threshold,
                                           )
 
     else:
         results = scipy.optimize.minimize(simulate_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                          method="COBYLA",
-                                          options={'rhobeg': 0.1, 'disp': Configuration().verbose},
+                                          jac=simulate_vqe_energy_gradient,
+                                          method=optimizer_params.method,
+                                          options=optimizer_params.options,
                                           tol=energy_threshold,
                                           )
 
@@ -79,7 +89,7 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
     from pool.singlet_sd import get_pool_singlet_sd
-
+    from vqemulti.preferences import Configuration
 
     # set Bravyi-Kitaev mapping
     Configuration().mapping = 'bk'

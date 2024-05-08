@@ -1,2 +1,3 @@
 from vqemulti.gradient.exact import compute_gradient_vector
+from vqemulti.gradient.exact import exact_vqe_energy_gradient
 from vqemulti.gradient.simulation import simulate_gradient

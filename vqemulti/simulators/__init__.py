@@ -228,7 +228,7 @@ class SimulatorBase:
         n_qubits = len(hf_reference_fock)
 
         if self._trotter:
-            # Use trotterized operator gates
+            # Use discrete (trotterized) operator gates
 
             trotter_ansatz = []
             # Go through the operators in the ansatz

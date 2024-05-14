@@ -424,7 +424,7 @@ class QiskitSimulator(SimulatorBase):
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
 
-        if session is True:
+        if session is not None:
             self._use_estimator = True
 
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
@@ -521,14 +521,6 @@ class QiskitSimulator(SimulatorBase):
         circuit = qiskit.QuantumCircuit(n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
-
-        # apply operators to measure each qubit in the basis given by main strings
-        for i, op in enumerate(main_string):
-            if op == "X":
-                circuit.h([i])
-
-            elif op == "Y":
-                circuit.rx(np.pi / 2, [i])
 
         self._get_circuit_stat_data(circuit)
 

@@ -522,6 +522,14 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
+        # apply operators to measure each qubit in the basis given by main strings
+        for i, op in enumerate(main_string):
+            if op == "X":
+                circuit.h([i])
+
+            elif op == "Y":
+                circuit.rx(np.pi / 2, [i])
+
         self._get_circuit_stat_data(circuit)
 
         circuit.measure_all()

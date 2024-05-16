@@ -6,6 +6,10 @@ from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_foc
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from qiskit_ibm_runtime import Session
+from vqemulti.preferences import Configuration
+
+config = Configuration()
+config.verbose = 1
 
 
 he_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
@@ -38,22 +42,30 @@ uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=2)
 print('hf reference', hf_reference_fock)
 
+# real hardware backend
+backend = 'ibm_kyoto'
+
+# fake backend
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+backend = FakeManilaV2()
+
 # Start session
 print('Initialize VQE')
-with Session(backend="ibmq_qasm_simulator") as session:
+with Session(backend=backend) as session:
 
     # Qiskit Simulator
     simulator = QiskitSimulator(trotter=True,
                                 trotter_steps=1,
-                                shots=10000,
-                                session=session
+                                shots=1024,
+                                test_only=False,
+                                hamiltonian_grouping=True,
+                                session=session,
                                 )
 
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 energy_simulator=simulator,
-                 opt_qubits=False)
+                 energy_simulator=simulator)
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -63,5 +75,3 @@ with Session(backend="ibmq_qasm_simulator") as session:
     print('Num operators: ', len(result['ansatz']))
     print('Ansatz:\n', result['ansatz'])
     print('Coefficients:\n', result['coefficients'])
-
-    session.close()

@@ -7,6 +7,7 @@ from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
 from qiskit import transpile
+from qiskit_aer import AerSimulator, StatevectorSimulator
 import qiskit
 import numpy as np
 
@@ -402,7 +403,7 @@ class QiskitSimulator(SimulatorBase):
                  separate_matrix_operators=True,
                  shots=1000,
                  qiskit_optimizer=False,
-                 backend=qiskit.Aer.get_backend('aer_simulator'),
+                 backend=AerSimulator(),
                  use_estimator=False,
                  session=None,
                  ):
@@ -440,9 +441,7 @@ class QiskitSimulator(SimulatorBase):
 
         # set the same qubit order as other simulators
         circuit = circuit.reverse_bits()
-
-        backend = qiskit.Aer.get_backend('statevector_simulator')
-        result = backend.run(circuit).result()
+        result = StatevectorSimulator().run(circuit).result()
 
         return np.array(result.get_statevector())
 
@@ -471,38 +470,47 @@ class QiskitSimulator(SimulatorBase):
         :return: the expectation value of the energy
         """
 
+        if self._use_estimator is False:
+            return super()._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+
+        # get the number of qubits
         n_qubits = count_qubits(qubit_hamiltonian)
 
         # Format and group the Hamiltonian, so as to save measurements by using
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
-        if self._hamiltonian_grouping:
-            # use hamiltonian grouping
-            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
-        else:
-            # skip hamiltonian grouping
-            grouped_hamiltonian = {}
-            for pauli_string, coefficient in formatted_hamiltonian.items():
-                grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
+        expectation_value, var = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                                     state_preparation_gates,
+                                                                     n_qubits,
+                                                                     self._session)
+
+        return expectation_value
+
+    def _get_sampled_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
+        """
+        Obtains the expectation value in a state by sampling (using a simulator)
+
+        :param qubit_hamiltonian: hamiltonian in qubits
+        :param state_preparation_gates: list of gates in simulation library format that represents the state
+        :param shots: number of samples
+        :return: the expectation value of the energy
+        """
 
         if self._use_estimator is False:
-            # Obtain the expectation value for each Pauli string
-            expectation_value = 0
-            for main_string, sub_hamiltonian in grouped_hamiltonian.items():
-                expectation_value += self._measure_expectation(main_string,
-                                                               sub_hamiltonian,
-                                                               state_preparation_gates,
-                                                               n_qubits)
+            return super()._get_sampled_state_evaluation_variance(qubit_hamiltonian, state_preparation_gates)
 
-        else:
-            expectation_value = self._measure_expectation_estimator(formatted_hamiltonian,
-                                                                    state_preparation_gates,
-                                                                    n_qubits,
-                                                                    self._session)
+        # get number of qubits
+        n_qubits = count_qubits(qubit_hamiltonian)
 
-        assert expectation_value.imag < 1e-5
-        return expectation_value.real
+        # Format and the Hamiltonian in pauli strings and coefficients
+        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+
+        energy, var = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                          state_preparation_gates,
+                                                          n_qubits,
+                                                          self._session)
+        return var
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
@@ -578,7 +586,8 @@ class QiskitSimulator(SimulatorBase):
 
         list_strings = []
         for pauli_string, coefficient in formatted_hamiltonian.items():
-            list_strings.append((pauli_string, coefficient))
+            # print(pauli_string, coefficient)
+            list_strings.append((pauli_string[::-1], coefficient))
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
@@ -588,10 +597,10 @@ class QiskitSimulator(SimulatorBase):
 
         if self._session is None:
             from qiskit_aer.primitives import Estimator
-            estimator = Estimator(abelian_grouping=False)
+            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
         else:
             from qiskit_ibm_runtime import Estimator, Options
-            options = Options(optimization_level=3)
+            options = Options(optimization_level=1)
             estimator = Estimator(session=session, options=options)
 
         # circuit stats
@@ -601,14 +610,16 @@ class QiskitSimulator(SimulatorBase):
         # estimate [ <psi|H|psi)> ]
         job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
 
+        # get variance
+        variance = job.result().metadata[0]["variance"]
+
         if Configuration().verbose > 1:
             print('Expectation value: ', job.result().values[0])
-            variance = job.result().metadata[0]["variance"]
             std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
 
-        return job.result().values[0]
+        return sum(job.result().values), variance
 
     def _build_reference_gates(self, hf_reference_fock):
         """

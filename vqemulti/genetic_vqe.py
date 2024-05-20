@@ -82,6 +82,8 @@ def geneticVQE(hamiltonian,
 
     print('pool size: ', len(operators_pool))
     all_indices = []
+    all_ansatz = []
+    all_coeddicients = []
     for iteration in range(max_iterations):
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
@@ -93,6 +95,8 @@ def geneticVQE(hamiltonian,
         index_peasant = []
         number_peasants = int(len(operators_pool)*population_number)
         selected_already = []
+
+
 
         if iteration == 0:
             for i in range(number_peasants):
@@ -143,7 +147,7 @@ def geneticVQE(hamiltonian,
                     fit1 = new_peasant[2]
                     indi1 = new_peasant[3]
 
-                secon_op_prob = 0.2
+                secon_op_prob = 0.25
                 random_number_secondop = np.random.rand()
                 selected_already = []
                 if random_number_secondop < secon_op_prob:
@@ -282,6 +286,8 @@ def geneticVQE(hamiltonian,
                                               options={'disp': Configuration().verbose, 'rhobeg': 0.1})
 
 
+
+
         #print('ITERATIONS', iterations)
         #print('RESULT MIN', results)
 
@@ -319,6 +325,43 @@ def geneticVQE(hamiltonian,
         print('Final indices selected', indices)
 
         iterations['energies'].append(energy)
+        if len(iterations['energies']) >= 2:
+            if iterations['energies'][-2]-iterations['energies'][-1] < 0.00001:
+                print('wrong energy')
+                iterations['energies'].pop(-1)
+                ansatz = peasants_list[second_indice]
+                indices = index_peasant[second_indice]
+                coefficients = coefficients_list[second_indice]
+                results = scipy.optimize.minimize(exact_vqe_energy,
+                                                  coefficients,
+                                                  (ansatz, hf_reference_fock, hamiltonian),
+                                                  jac=exact_vqe_energy_gradient,
+                                                  options={'gtol': energy_threshold,
+                                                           'disp': Configuration().verbose},
+                                                  method='BFGS',
+                                                  # method='COBYLA',
+                                                  tol=energy_threshold,
+                                                  # options={'rhobeg': 0.1, 'disp': Configuration().verbose}
+                                                  )
+                coefficients = list(results.x)
+                energy = results.fun
+                iterations['energies'].append(energy)
+                all_ansatz.append(ansatz)
+                all_coeddicients.append(coefficients)
+                all_indices.pop(-1)
+                all_indices.append(indices)
+
+                print('due to wrong energies the selected are back to', indices, 'with energy',
+                      iterations['energies'][-1])
+            else:
+                all_ansatz.append(ansatz)
+                all_coeddicients.append(coefficients)
+        else:
+            all_ansatz.append(ansatz)
+            all_coeddicients.append(coefficients)
+
+        print('LONGITUD',len(all_ansatz))
+
         #iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))

@@ -9,7 +9,7 @@ import random
 
 
 
-def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param, selected_already):
+def add_new_excitation_first_it(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param, selected_already):
 
     #random_operator = generate_new_operator(operators_pool, einstein_index, cheat_param)
 
@@ -43,30 +43,119 @@ def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, ope
         random_number = np.random.rand()
         if random_number < 0.5:
             new_coeff = 0.05
+            #print('POSITIVE')
             #new_coeff = coefficients[-1] - math.pi * random_number * coefficients[-1]
             #new_coeff = math.pi * random_number
             #new_coeff = coefficients[-1] - 0.2 * coefficients[-1]
             new_coefficients.append(new_coeff)
         else:
             new_coeff = -0.05
+            #print('NEGATIVE')
             #new_coeff = coefficients[-1] - math.pi * random_number * coefficients[-1]
             #new_coeff = math.pi * random_number
             #new_coeff = coefficients[-1] + 0.2 * coefficients[-1]
             new_coefficients.append(new_coeff)
 
 
-    fitness = exact_vqe_energy(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
+    fitness = fitness_evaluation(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
     einstein_index_game.append(random_operator)
     selected = random_operator
-    print('Added', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game, 'fitness', fitness)
+    #print('Added', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game, 'fitness', fitness)
     return new_ansatz, new_coefficients, fitness, einstein_index_game, selected
+
+
+def add_new_excitation_double(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param, selected_already):
+
+    list_possible = []
+    for i in range(len(operators_pool)):
+        list_possible.append(i)
+    for i in range(len(selected_already)):
+        index = list_possible.index(selected_already[i])
+        list_possible.pop(index)
+
+    #random_operator = np.random.randint(0, len(list_possible))
+    random_operator = generate_reduced_pool(operators_pool, selected_already, einstein_index, cheat_param)
+    #random_operator = list_possible[random_operator]
+
+
+
+    einstein_index_game_1 = deepcopy(einstein_index)
+    einstein_index_game_2 = deepcopy(einstein_index)
+
+    if len(ansatz) == 0:
+        new_ansatz_1 = []
+        new_ansatz_2 = []
+    else:
+        new_ansatz_1 = deepcopy(ansatz)
+        new_ansatz_2 = deepcopy(ansatz)
+
+    new_ansatz_1.append(operators_pool[random_operator])
+    new_ansatz_2.append(operators_pool[random_operator])
+
+    if len(coefficients) == 0:
+        new_coefficients_1 = []
+        new_coefficients_2 = []
+        new_coefficients_1.append(0.05)
+        new_coefficients_2.append(-0.05)
+    else:
+        new_coefficients_1 = deepcopy(coefficients)
+        new_coefficients_2 = deepcopy(coefficients)
+        new_coefficients_1.append(0.05)
+        new_coefficients_2.append(-0.05)
+
+
+    fitness_1 = fitness_evaluation(new_coefficients_1, new_ansatz_1, hf_reference_fock, hamiltonian)
+    einstein_index_game_1.append(random_operator)
+    fitness_2 = fitness_evaluation(new_coefficients_2, new_ansatz_2, hf_reference_fock, hamiltonian)
+    einstein_index_game_2.append(random_operator)
+    selected = random_operator
+    #print('Added', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game, 'fitness', fitness)
+    return new_ansatz_1, new_coefficients_1, fitness_1, einstein_index_game_1, selected, new_ansatz_2, new_coefficients_2, fitness_2, einstein_index_game_2
+
+
+
+
+
+
+
+def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param):
+
+    random_operator = generate_new_operator(operators_pool, einstein_index, cheat_param)
+    einstein_index_game = deepcopy(einstein_index)
+
+    if len(ansatz) == 0:
+        new_ansatz = []
+    else:
+        new_ansatz = deepcopy(ansatz)
+
+    new_ansatz.append(operators_pool[random_operator])
+
+    if len(coefficients) == 0:
+        new_coefficients = []
+        new_coefficients.append(0.05)
+    else:
+        new_coefficients = deepcopy(coefficients)
+        random_number = np.random.rand()
+        if random_number < 0.5:
+            new_coeff = 0.05
+            new_coefficients.append(new_coeff)
+        else:
+            new_coeff = -0.05
+            new_coefficients.append(new_coeff)
+
+
+    fitness = fitness_evaluation(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
+    einstein_index_game.append(random_operator)
+    #print('Added', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game, 'fitness', fitness)
+    return new_ansatz, new_coefficients, fitness, einstein_index_game
+
 
 
 
 def delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, einstein_index):
 
     if len(ansatz) == 0 or len(ansatz) == 1:
-        fitness = exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
+        fitness = fitness_evaluation(coefficients, ansatz, hf_reference_fock, hamiltonian)
         return ansatz, coefficients, fitness, einstein_index
 
     einstein_index_game = deepcopy(einstein_index)
@@ -77,9 +166,9 @@ def delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, eins
     new_coefficients = deepcopy(coefficients)
     new_coefficients.pop(random_operator)
 
-    fitness = exact_vqe_energy(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
+    fitness = fitness_evaluation(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
     einstein_index_game.pop(random_operator)
-    print('Deleted', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game,'fitness', fitness)
+    #print('Deleted', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game,'fitness', fitness)
 
     return new_ansatz, new_coefficients, fitness, einstein_index_game
 
@@ -87,7 +176,7 @@ def delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, eins
 def change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index, cheat_param):
 
     if len(ansatz) == 0:
-        fitness = exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
+        fitness = fitness_evaluation(coefficients, ansatz, hf_reference_fock, hamiltonian)
         return ansatz, coefficients, fitness, einstein_index
 
     einstein_index_game = deepcopy(einstein_index)
@@ -106,8 +195,8 @@ def change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, oper
         new_coefficients[random_operator_change] = -0.05
 
 
-    fitness = exact_vqe_energy(coefficients, new_ansatz, hf_reference_fock, hamiltonian)
-    print('Change', random_operator_add, 'coefficients', coefficients,'indeces',einstein_index_game,'fitness',fitness)
+    fitness = fitness_evaluation(coefficients, new_ansatz, hf_reference_fock, hamiltonian)
+    #print('Deleated', random_operator_change, 'coefficients', coefficients,'indeces final',einstein_index_game,'fitness',fitness)
 
     return new_ansatz, coefficients, fitness, einstein_index_game
 
@@ -122,7 +211,7 @@ def change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, oper
 
 
 
-def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
+def fitness_evaluation(coefficients, ansatz, hf_reference_fock, hamiltonian):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.

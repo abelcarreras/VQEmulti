@@ -1,2 +1,2 @@
-from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation
+from vqemulti.genetic_tools.mutations import add_new_excitation_first_it, delete_excitation, change_excitation, add_new_excitation, fitness_evaluation, add_new_excitation_double
 from vqemulti.genetic_tools.probs_cheating import generate_new_operator, delete_an_operator

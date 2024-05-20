@@ -428,6 +428,14 @@ class QiskitSimulator(SimulatorBase):
         if session is not None:
             self._use_estimator = True
 
+            from qiskit_ibm_runtime import QiskitRuntimeService
+            from qiskit.providers.exceptions import QiskitBackendNotFoundError
+            service = QiskitRuntimeService()
+            try:
+                self._backend = service.backend(session.backend())
+            except QiskitBackendNotFoundError:
+                pass
+
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
     def _get_state_vector(self, state_preparation_gates, n_qubits):
@@ -595,26 +603,32 @@ class QiskitSimulator(SimulatorBase):
         #    print('measure operator:')
         #    print(measure_op)
 
-        if self._session is None:
-            from qiskit_aer.primitives import Estimator
-            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
-        else:
-            from qiskit_ibm_runtime import Estimator, Options
-            options = Options(optimization_level=1)
-            estimator = Estimator(session=session, options=options)
-
         # circuit stats
         for _ in list_strings:
             self._get_circuit_stat_data(circuit)
 
-        # estimate [ <psi|H|psi)> ]
-        job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
+        if self._session is None:
+            from qiskit_aer.primitives import Estimator
+            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
+            job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
+        else:
+            from qiskit_ibm_runtime import Estimator, Options
+            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+            pm = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+            isa_circuit = pm.run(circuit)
+
+            mapped_observables = measure_op.apply_layout(isa_circuit.layout)
+
+            # estimate [ <psi|H|psi)> ]
+            estimator = Estimator(session=session, options=Options(optimization_level=1))
+            job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
 
         # get variance
-        variance = job.result().metadata[0]["variance"]
+        variance = sum([meta['variance'] for meta in job.result().metadata])
 
         if Configuration().verbose > 1:
-            print('Expectation value: ', job.result().values[0])
+            print('Expectation value: ', sum(job.result().values))
             std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
@@ -689,7 +703,11 @@ class QiskitSimulator(SimulatorBase):
 
         # gates
         for gate in circuit.data:
-            self._circuit_gates[gates_name[gate[0].name]] += 1
+            try:
+                self._circuit_gates[gates_name[gate[0].name]] += 1
+            except KeyError:
+                gates_name.update({gate[0].name: gate[0].name})
+                self._circuit_gates[gates_name[gate[0].name]] += 1
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

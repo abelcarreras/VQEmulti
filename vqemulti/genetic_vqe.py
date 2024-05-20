@@ -5,7 +5,7 @@ from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
-from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation
+from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation, add_new_excitation_double
 import scipy
 import numpy as np
 import warnings
@@ -81,7 +81,7 @@ def geneticVQE(hamiltonian,
         operators_pool = operators_pool.get_quibits_list(normalize=True)
 
     print('pool size: ', len(operators_pool))
-
+    all_indices = []
     for iteration in range(max_iterations):
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
@@ -96,7 +96,7 @@ def geneticVQE(hamiltonian,
 
         if iteration == 0:
             for i in range(number_peasants):
-                new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
+                new_peasant = add_new_excitation_double(hf_reference_fock, hamiltonian, ansatz, coefficients,
                                                  operators_pool,
                                                  indices, cheat_param, selected_already)
                 peasants_list.append(new_peasant[0])
@@ -104,36 +104,106 @@ def geneticVQE(hamiltonian,
                 fitness_vector.append(new_peasant[2])
                 index_peasant.append(new_peasant[3])
                 selected_already.append(new_peasant[4])
+                peasants_list.append(new_peasant[5])
+                coefficients_list.append(new_peasant[6])
+                fitness_vector.append(new_peasant[7])
+                index_peasant.append(new_peasant[8])
         else:
             for i in range(number_peasants):
-                random_number= np.random.rand()
-                if 0 <= random_number <= add_probability:
+                random_number_firtop= np.random.rand()
+                if 0 <= random_number_firtop <= add_probability:
                     #print('will add to', ansatz)
-                    new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool,
+                    new_peasant = add_new_excitation_double(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool,
                                                      indices, cheat_param, selected_already)
-                    peasants_list.append(new_peasant[0])
-                    coefficients_list.append(new_peasant[1])
-                    fitness_vector.append(new_peasant[2])
-                    index_peasant.append(new_peasant[3])
+                    peas1 = new_peasant[0]
+                    coef1 = new_peasant[1]
+                    fit1 = new_peasant[2]
+                    indi1 = new_peasant[3]
+                    peas2 = new_peasant[5]
+                    coef2 = new_peasant[6]
+                    fit2 = new_peasant[7]
+                    indi2 = new_peasant[8]
                     selected_already.append(new_peasant[4])
-                    #print('added with result', new_peasant[3])
 
-                if add_probability < random_number <= add_probability + delete_probability:
+                if add_probability < random_number_firtop <= add_probability + delete_probability:
                     #print('will delete from', ansatz)
                     new_peasant = delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, indices)
-                    peasants_list.append(new_peasant[0])
-                    coefficients_list.append(new_peasant[1])
-                    fitness_vector.append(new_peasant[2])
-                    index_peasant.append(new_peasant[3])
-                    #print('deleted with result', new_peasant[3])
+                    peas1 = new_peasant[0]
+                    coef1 = new_peasant[1]
+                    fit1 = new_peasant[2]
+                    indi1 = new_peasant[3]
 
-                if add_probability + delete_probability < random_number <= 1:
+
+                if add_probability + delete_probability < random_number_firtop <= 1:
                     new_peasant = change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,operators_pool,
                                                     indices, cheat_param)
-                    peasants_list.append(new_peasant[0])
-                    coefficients_list.append(new_peasant[1])
-                    fitness_vector.append(new_peasant[2])
-                    index_peasant.append(new_peasant[3])
+
+                    peas1 = new_peasant[0]
+                    coef1 = new_peasant[1]
+                    fit1 = new_peasant[2]
+                    indi1 = new_peasant[3]
+
+                secon_op_prob = 0.2
+                random_number_secondop = np.random.rand()
+                selected_already = []
+                if random_number_secondop < secon_op_prob:
+                    print('DOING SECOND OP')
+                    if 0 <= random_number_firtop <= add_probability:
+                        if fit2 < fit1:
+                            peas1 = peas2
+                            coef1 = coef2
+                            indi1 = indi2
+                    random_number = np.random.rand()
+                    if 0 <= random_number <= add_probability:
+                        # print('will add to', ansatz)
+                        new_peasant = add_new_excitation_double(hf_reference_fock, hamiltonian, peas1, coef1,
+                                                                operators_pool,
+                                                                indi1, cheat_param, selected_already)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                        selected_already.append(new_peasant[4])
+                        peasants_list.append(new_peasant[5])
+                        coefficients_list.append(new_peasant[6])
+                        fitness_vector.append(new_peasant[7])
+                        index_peasant.append(new_peasant[8])
+
+                    if add_probability < random_number <= add_probability + delete_probability:
+                        # print('will delete from', ansatz)
+                        new_peasant = delete_excitation(hf_reference_fock, hamiltonian, peas1, coef1, indi1)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                        # print('deleted with result', new_peasant[3])
+
+                    if add_probability + delete_probability < random_number <= 1:
+                        new_peasant = change_excitation(hf_reference_fock, hamiltonian, peas1, coef1,
+                                                        operators_pool,
+                                                        indi1, cheat_param)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                    print('finished second op')
+
+
+
+                else:
+                    peasants_list.append(peas1)
+                    coefficients_list.append(coef1)
+                    fitness_vector.append(fit1)
+                    index_peasant.append(indi1)
+                    if 0 <= random_number_firtop <= add_probability:
+                        peasants_list.append(peas2)
+                        coefficients_list.append(coef2)
+                        fitness_vector.append(fit2)
+                        index_peasant.append(indi2)
+
+
+
+
 
 
 
@@ -182,6 +252,9 @@ def geneticVQE(hamiltonian,
                 print('\n')
 
 
+        all_indices.append(indices)
+        for i in range(len(all_indices)):
+            print(all_indices[i])
 
         # run optimization
         if energy_simulator is None:
@@ -278,7 +351,7 @@ def geneticVQE(hamiltonian,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
 
-        if 1.96327803704193 + energy < 1e-4 :
+        if 1.96846485862782 + energy < 1e-4 :
             warnings.warn('finished due to adapt ansatz reached')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,

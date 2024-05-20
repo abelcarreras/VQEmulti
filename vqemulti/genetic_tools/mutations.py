@@ -42,13 +42,13 @@ def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, ope
         new_coefficients = deepcopy(coefficients)
         random_number = np.random.rand()
         if random_number < 0.5:
-            new_coeff = 0.05
+            new_coeff = 0.1
             #new_coeff = coefficients[-1] - math.pi * random_number * coefficients[-1]
             #new_coeff = math.pi * random_number
             #new_coeff = coefficients[-1] - 0.2 * coefficients[-1]
             new_coefficients.append(new_coeff)
         else:
-            new_coeff = -0.05
+            new_coeff = -0.1
             #new_coeff = coefficients[-1] - math.pi * random_number * coefficients[-1]
             #new_coeff = math.pi * random_number
             #new_coeff = coefficients[-1] + 0.2 * coefficients[-1]
@@ -60,6 +60,58 @@ def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, ope
     selected = random_operator
     print('Added', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game, 'fitness', fitness)
     return new_ansatz, new_coefficients, fitness, einstein_index_game, selected
+
+
+
+def add_new_excitation_double(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param, selected_already):
+
+    list_possible = []
+    for i in range(len(operators_pool)):
+        list_possible.append(i)
+    for i in range(len(selected_already)):
+        index = list_possible.index(selected_already[i])
+        list_possible.pop(index)
+
+    #random_operator = np.random.randint(0, len(list_possible))
+    random_operator = generate_reduced_pool(operators_pool, selected_already, einstein_index, cheat_param)
+    #random_operator = list_possible[random_operator]
+
+
+
+    einstein_index_game_1 = deepcopy(einstein_index)
+    einstein_index_game_2 = deepcopy(einstein_index)
+
+    if len(ansatz) == 0:
+        new_ansatz_1 = []
+        new_ansatz_2 = []
+    else:
+        new_ansatz_1 = deepcopy(ansatz)
+        new_ansatz_2 = deepcopy(ansatz)
+
+    new_ansatz_1.append(operators_pool[random_operator])
+    new_ansatz_2.append(operators_pool[random_operator])
+
+    if len(coefficients) == 0:
+        new_coefficients_1 = []
+        new_coefficients_2 = []
+        new_coefficients_1.append(0.1)
+        new_coefficients_2.append(-0.1)
+    else:
+        new_coefficients_1 = deepcopy(coefficients)
+        new_coefficients_2 = deepcopy(coefficients)
+        new_coefficients_1.append(0.1)
+        new_coefficients_2.append(-0.1)
+
+
+    fitness_1 = exact_vqe_energy(new_coefficients_1, new_ansatz_1, hf_reference_fock, hamiltonian)
+    einstein_index_game_1.append(random_operator)
+    fitness_2 = exact_vqe_energy(new_coefficients_2, new_ansatz_2, hf_reference_fock, hamiltonian)
+    einstein_index_game_2.append(random_operator)
+    selected = random_operator
+    print('Added', random_operator, 'coefficients', new_coefficients_1,'indeces',einstein_index_game_1, 'fitness', fitness_1)
+    print('Added', random_operator, 'coefficients', new_coefficients_2, 'indeces', einstein_index_game_2, 'fitness',
+          fitness_2)
+    return new_ansatz_1, new_coefficients_1, fitness_1, einstein_index_game_1, selected, new_ansatz_2, new_coefficients_2, fitness_2, einstein_index_game_2
 
 
 

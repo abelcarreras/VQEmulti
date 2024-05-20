@@ -38,9 +38,6 @@ def generate_new_operator(operators_pool, einstein_index, cheat_param):
         if wheel[j][0] <= r < wheel[j][1]:
             selected = wheel[j][2]
 
-    print('SELECTED IS', selected)
-
-
     return selected
 
 def delete_an_operator(einstein_index, coefficients):
@@ -115,8 +112,5 @@ def generate_reduced_pool(operators_pool, selected_already, einstein_index, chea
     for j in range(len(wheel)):
         if wheel[j][0] <= r < wheel[j][1]:
             selected = wheel[j][2]
-
-    print('SELECTED IS', selected)
-
 
     return selected

@@ -5,18 +5,26 @@ from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
+from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation
 import scipy
 import numpy as np
 import warnings
+from copy import deepcopy
+import math
 
-
-def adaptVQE(hamiltonian,
+def geneticVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
              opt_qubits=False,
              max_iterations=50,
+             add_probability = 0.6,
+             delete_probability = 0.2,
+             change_probability = 0.2,
+             population_number = 0.8,
+             cheat_param = 0.2,
              coefficients=None,
              ansatz=None,
+             einstein_index = None,
              energy_simulator=None,
              gradient_simulator=None,
              coeff_tolerance=1e-10,
@@ -59,6 +67,9 @@ def adaptVQE(hamiltonian,
     if coefficients is None:
         coefficients = []
 
+    if einstein_index is None:
+        einstein_index = []
+
     assert len(coefficients) == len(ansatz)
 
     # define operatorList from pool
@@ -75,100 +86,102 @@ def adaptVQE(hamiltonian,
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
-        if reference_dm is not None:
-            n_orb = len(hf_reference_fock)//2
-            density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
-            fidelity = density_fidelity(reference_dm, density_matrix)
-            fidelities.append(fidelity)
-            print('fidelity',fidelity)
-        if gradient_simulator is None:
-            gradient_vector = compute_gradient_vector(hf_reference_fock,
-                                                      hamiltonian,
-                                                      ansatz,
-                                                      coefficients,
-                                                      operators_pool)
+        #HERE I INSERT GENETIC ALGORITHM INSTEAD OF ADAPT-VQE
+        fitness_vector = []
+        peasants_list= []
+        coefficients_list = []
+        index_peasant = []
+        number_peasants = int(len(operators_pool)*population_number)
+        selected_already = []
+
+        if iteration == 0:
+            for i in range(number_peasants):
+                new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
+                                                 operators_pool,
+                                                 indices, cheat_param, selected_already)
+                peasants_list.append(new_peasant[0])
+                coefficients_list.append(new_peasant[1])
+                fitness_vector.append(new_peasant[2])
+                index_peasant.append(new_peasant[3])
+                selected_already.append(new_peasant[4])
         else:
-            gradient_simulator.update_model(precision=energy_threshold,
-                                            n_coefficients=len(coefficients),
-                                            c_constant=0.4)
+            for i in range(number_peasants):
+                random_number= np.random.rand()
+                if 0 <= random_number <= add_probability:
+                    #print('will add to', ansatz)
+                    new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool,
+                                                     indices, cheat_param, selected_already)
+                    peasants_list.append(new_peasant[0])
+                    coefficients_list.append(new_peasant[1])
+                    fitness_vector.append(new_peasant[2])
+                    index_peasant.append(new_peasant[3])
+                    selected_already.append(new_peasant[4])
+                    #print('added with result', new_peasant[3])
 
-            gradient_vector = simulate_gradient(hf_reference_fock,
-                                                hamiltonian,
-                                                ansatz,
-                                                coefficients,
-                                                operators_pool,
-                                                gradient_simulator)
+                if add_probability < random_number <= add_probability + delete_probability:
+                    #print('will delete from', ansatz)
+                    new_peasant = delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, indices)
+                    peasants_list.append(new_peasant[0])
+                    coefficients_list.append(new_peasant[1])
+                    fitness_vector.append(new_peasant[2])
+                    index_peasant.append(new_peasant[3])
+                    #print('deleted with result', new_peasant[3])
+
+                if add_probability + delete_probability < random_number <= 1:
+                    new_peasant = change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,operators_pool,
+                                                    indices, cheat_param)
+                    peasants_list.append(new_peasant[0])
+                    coefficients_list.append(new_peasant[1])
+                    fitness_vector.append(new_peasant[2])
+                    index_peasant.append(new_peasant[3])
 
 
-        total_norm = np.linalg.norm(gradient_vector)
 
-        print("\nTotal gradient norm: {:12.6f}".format(total_norm))
-        '''
-        if reference_dm is not None:
-            n_orb = len(hf_reference_fock)//2
-            density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
-            fidelity = density_fidelity(reference_dm, density_matrix)
-            fidelities.append(fidelity)
-            print('fidelity: {:5.2f}'.format(fidelity))
-        '''
-        
-        if total_norm < threshold:
-            if len(iterations['energies']) > 0:
-                energy = iterations['energies'][-1]
+
+        max_indices = np.argsort(fitness_vector)[0]
+        second_indice = np.argsort(fitness_vector)[1]
+
+        # get Einstein from generation
+        einstein = peasants_list[max_indices]
+        einstein_coefficients = coefficients_list[max_indices]
+        einstein_fitness = fitness_vector[max_indices]
+        einstein_index = index_peasant[max_indices]
+        if len(indices) <= 1:
+            # Initialize the coefficient of the operator that will be newly added at 0
+            coefficients = einstein_coefficients
+            ansatz = einstein
+            indices = einstein_index
+            print('\n')
+            print('\n')
+            print('The Einstein of the generation is', indices)
+            print('\n')
+            print('\n')
+
+        if len(indices) > 1:
+            if einstein_index[-1] == einstein_index[-2]:
+                print('\n')
+                print('\n')
+                print('REPEATED OPS, THE EINSTEIN WAS', einstein_index)
+                print('eins ind -1',einstein_index[-1], einstein_index[-2])
+                coefficients = coefficients_list[second_indice]
+                ansatz = peasants_list[second_indice]
+                indices = index_peasant[second_indice]
+                print('WE Ktake the second one', indices)
+                print('\n')
+                print('\n')
+
             else:
-                energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+                # Initialize the coefficient of the operator that will be newly added at 0
+                coefficients = einstein_coefficients
+                ansatz = einstein
+                indices = einstein_index
+                print('\n')
+                print('\n')
+                print('The Einstein of the generation is', indices)
+                print('\n')
+                print('\n')
 
-            print("\nConverge archived due to gradient norm threshold")
-            result = {'energy': energy,
-                      'ansatz': ansatz,
-                      'indices': indices,
-                      'coefficients': coefficients,
-                      'iterations': iterations,
-                      'number cnots': number_cnots,
-                      'fidelities': fidelities}
 
-            return result
-
-        # primary selection of operators
-        max_indices = np.argsort(gradient_vector)[-operator_update_number:][::-1]
-
-        # refine selection to ensure all operators are relevant
-        while True:
-            max_gradients = np.array(gradient_vector)[max_indices]
-            max_dev = np.max(np.std(max_gradients))
-            if max_dev/np.max(max_gradients) > operator_update_max_grad:
-                max_indices = max_indices[:-1]
-            else:
-                break
-
-        # get gradients/operators update list
-        max_gradients = np.array(gradient_vector)[max_indices]
-        max_operators = np.array(operators_pool)[max_indices]
-
-        for max_index, max_gradient in zip(max_indices, max_gradients):
-            print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
-
-        # check if repeated operator
-        repeat_operator = len(max_indices) == len(indices[-len(max_indices):]) and \
-                          np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
-
-        # if repeat operator finish adaptVQE
-        if repeat_operator:
-            print('Converge archived due to repeated operator')
-            energy = iterations['energies'][-1]
-            return {'energy': energy,
-                    'ansatz': ansatz,
-                    'indices': indices,
-                    'coefficients': coefficients,
-                    'iterations': iterations,
-                    'number cnots': number_cnots,
-                    'fidelities': fidelities}
-
-        # Initialize the coefficient of the operator that will be newly added at 0
-        for max_index, max_operator in zip(max_indices, max_operators):
-            coefficients.append(0)
-            ansatz.append(max_operator)
-            indices.append(max_index)
 
         # run optimization
         if energy_simulator is None:
@@ -196,35 +209,20 @@ def adaptVQE(hamiltonian,
                                               options={'disp': Configuration().verbose, 'rhobeg': 0.1})
 
 
-        print('ITERATIONS', iterations)
-        # check if last coefficient is zero (likely to happen in exact optimizations)
-        if abs(results.x[-1]) < coeff_tolerance:
-            print('Converge archived due to zero valued coefficient')
-            n_operators = len(max_indices)
-            return {'energy': results.fun,
-                    'ansatz': ansatz[:-n_operators],
-                    'indices': indices[:-n_operators],
-                    'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations,
-                    'number cnots': number_cnots,
-                    'fidelities': fidelities}
-
-        # check if last iteration energy is better (likely to happen in sampled optimizations)
-        diff_threshold = 0
-        if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < diff_threshold:
-
-            print('Converge archived due to not energy improvement')
-            n_operators = len(max_indices)
-            return {'energy': iterations['energies'][-1],
-                    'ansatz': ansatz[:-n_operators],
-                    'indices': indices[:-n_operators],
-                    'coefficients': coefficients[:-n_operators],
-                    'number cnots': number_cnots,
-                    'iterations': iterations}
+        #print('ITERATIONS', iterations)
+        #print('RESULT MIN', results)
 
         # get results
         coefficients = list(results.x)
         energy = results.fun
+
+        if abs(results.x[-1]) < coeff_tolerance or abs(results.x[-1]) % math.pi < 0.001:
+            ansatz = ansatz[:-1]
+            indices = indices[:-1]
+            coefficients = coefficients[:-1]
+
+
+
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
@@ -233,6 +231,7 @@ def adaptVQE(hamiltonian,
             else:
                 print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
         print()
+
 
         if reference_dm is not None:
             n_orb = len(hf_reference_fock)//2
@@ -244,14 +243,15 @@ def adaptVQE(hamiltonian,
         # print iteration results
         print('Iteration energy:', energy)
         # print('Coefficients:', coefficients)
-        print('Ansatz Indices:', indices)
+        print('Final indices selected', indices)
 
         iterations['energies'].append(energy)
-        iterations['norms'].append(total_norm)
+        #iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
+        #print(iterations['energies'])
 
-        energy_simulator.print_statistics()
+        #energy_simulator.print_statistics()
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])
@@ -262,8 +262,8 @@ def adaptVQE(hamiltonian,
 
 
 
-        y = energy_simulator.print_statistics()
-        number_cnots.append(y)
+        #y = energy_simulator.print_statistics()
+        #number_cnots.append(y)
 
 
 
@@ -277,6 +277,17 @@ def adaptVQE(hamiltonian,
                     'iterations': iterations,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
+
+        if 1.96327803704193 + energy < 1e-4 :
+            warnings.warn('finished due to adapt ansatz reached')
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': indices,
+                    'coefficients': coefficients,
+                    'iterations': iterations,
+                    'number cnots': number_cnots,
+                    'fidelities': fidelities}
+
 
     '''
     raise NotConvergedError({'energy': iterations['energies'][-1],

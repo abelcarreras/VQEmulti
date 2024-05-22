@@ -81,7 +81,9 @@ def geneticVQE(hamiltonian,
         operators_pool = operators_pool.get_quibits_list(normalize=True)
 
     print('pool size: ', len(operators_pool))
-
+    indices_all = []
+    coefficients_all = []
+    ansatzs_all = []
     for iteration in range(max_iterations):
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
@@ -93,7 +95,8 @@ def geneticVQE(hamiltonian,
         index_peasant = []
         number_peasants = int(len(operators_pool)*population_number)
         selected_already = []
-
+        deleted_already = []
+        deleted_already_2 = []
         if iteration == 0:
             for i in range(number_peasants):
                 new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
@@ -104,7 +107,24 @@ def geneticVQE(hamiltonian,
                 fitness_vector.append(new_peasant[2])
                 index_peasant.append(new_peasant[3])
                 selected_already.append(new_peasant[4])
+                peasants_list.append(new_peasant[5])
+                coefficients_list.append(new_peasant[6])
+                fitness_vector.append(new_peasant[7])
+                index_peasant.append(new_peasant[8])
         else:
+            count = {}
+            for i in indices:
+                if not i in count:
+                    count[i] = 1
+                else:
+                    count[i] += 1
+
+            for key in count:
+                if count[key] >= 2:
+                    selected_already.append(key)
+                    print('ELIMINATING FROM POOL', key)
+                    print('sele', selected_already)
+
             for i in range(number_peasants):
                 random_number= np.random.rand()
                 if 0 <= random_number <= add_probability:
@@ -116,16 +136,36 @@ def geneticVQE(hamiltonian,
                     fitness_vector.append(new_peasant[2])
                     index_peasant.append(new_peasant[3])
                     selected_already.append(new_peasant[4])
-                    #print('added with result', new_peasant[3])
+                    peasants_list.append(new_peasant[5])
+                    coefficients_list.append(new_peasant[6])
+                    fitness_vector.append(new_peasant[7])
+                    index_peasant.append(new_peasant[8])
 
                 if add_probability < random_number <= add_probability + delete_probability:
-                    #print('will delete from', ansatz)
-                    new_peasant = delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, indices)
-                    peasants_list.append(new_peasant[0])
-                    coefficients_list.append(new_peasant[1])
-                    fitness_vector.append(new_peasant[2])
-                    index_peasant.append(new_peasant[3])
-                    #print('deleted with result', new_peasant[3])
+                    if len(deleted_already) == len(indices):
+                        print('NOT DELETING')
+
+                        new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
+                                                         operators_pool,
+                                                         indices, cheat_param, selected_already)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                        selected_already.append(new_peasant[4])
+                        peasants_list.append(new_peasant[5])
+                        coefficients_list.append(new_peasant[6])
+                        fitness_vector.append(new_peasant[7])
+                        index_peasant.append(new_peasant[8])
+                    else:
+                        new_peasant = delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, indices, deleted_already)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                        if len(ansatz) > 1:
+                            deleted_already.append(new_peasant[4])
+
 
                 if add_probability + delete_probability < random_number <= 1:
                     new_peasant = change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,operators_pool,
@@ -138,8 +178,10 @@ def geneticVQE(hamiltonian,
 
 
 
+
         max_indices = np.argsort(fitness_vector)[0]
         second_indice = np.argsort(fitness_vector)[1]
+        third_indice = np.argsort(fitness_vector)[2]
 
         # get Einstein from generation
         einstein = peasants_list[max_indices]
@@ -169,6 +211,17 @@ def geneticVQE(hamiltonian,
                 print('WE Ktake the second one', indices)
                 print('\n')
                 print('\n')
+                if indices[-1] == indices[-2]:
+                    print('\n')
+                    print('\n')
+                    print('REPEATED OPS, THE EINSTEIN WAS', indices)
+                    print('eins ind -1', indices[-1], indices[-2])
+                    coefficients = coefficients_list[third_indice]
+                    ansatz = peasants_list[third_indice]
+                    indices = index_peasant[third_indice]
+                    print('WE Ktake the third one', indices)
+                    print('\n')
+                    print('\n')
 
             else:
                 # Initialize the coefficient of the operator that will be newly added at 0
@@ -181,7 +234,45 @@ def geneticVQE(hamiltonian,
                 print('\n')
                 print('\n')
 
+            count = {}
+            for i in indices:
+                if not i in count:
+                    count[i] = 1
+                else:
+                    count[i] += 1
 
+            for key in count:
+                if count[key] > 3:
+                    print('\n')
+                    print('\n')
+                    print('REPEATED OPS, THE EINSTEIN WAS', indices)
+                    print('eins ind -1', indices[-1], indices[-2])
+                    coefficients = coefficients_list[second_indice]
+                    ansatz = peasants_list[second_indice]
+                    indices = index_peasant[second_indice]
+                    print('WE Ktake the second one', indices)
+                    print('\n')
+                    print('\n')
+
+            count = {}
+            for i in indices:
+                if not i in count:
+                    count[i] = 1
+                else:
+                    count[i] += 1
+
+            for key in count:
+                if count[key] > 3:
+                    print('\n')
+                    print('\n')
+                    print('REPEATED OPS, THE EINSTEIN WAS', indices)
+                    print('eins ind -1', indices[-1], indices[-2])
+                    coefficients = coefficients_list[third_indice]
+                    ansatz = peasants_list[third_indice]
+                    indices = index_peasant[third_indice]
+                    print('WE Ktake the third one', indices)
+                    print('\n')
+                    print('\n')
 
         # run optimization
         if energy_simulator is None:
@@ -214,6 +305,7 @@ def geneticVQE(hamiltonian,
 
         # get results
         coefficients = list(results.x)
+
         energy = results.fun
 
         if abs(results.x[-1]) < coeff_tolerance or abs(results.x[-1]) % math.pi < 0.001:
@@ -221,8 +313,12 @@ def geneticVQE(hamiltonian,
             indices = indices[:-1]
             coefficients = coefficients[:-1]
 
+        coefficients_all.append(coefficients)
+        ansatzs_all.append(ansatz)
+        indices_all.append(indices)
 
-
+        for i in range(len(indices_all)):
+            print(indices_all[i])
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
@@ -246,6 +342,19 @@ def geneticVQE(hamiltonian,
         print('Final indices selected', indices)
 
         iterations['energies'].append(energy)
+        '''
+        if len(iterations['energies']) >= 2:
+            if iterations['energies'][-2] - iterations['energies'][-1] < 0.00001:
+                print('wrong energy, return to past ansatz')
+                print('it -2',iterations['energies'][-2], 'it -1', iterations['energies'][-1], 'dif', iterations['energies'][-2] - iterations['energies'][-1] )
+                indices_all.pop(-1)
+                indices = indices_all[-1]
+                ansatzs_all.pop(-1)
+                ansatz = ansatzs_all[-1]
+                coefficients_all.pop(-1)
+                coefficients = coefficients_all[-1]
+                iterations['energies'].pop(-1)
+        '''
         #iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
@@ -278,7 +387,7 @@ def geneticVQE(hamiltonian,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
 
-        if 1.96327803704193 + energy < 1e-4 :
+        if 1.96846485862782 + energy < 1e-4 :
             warnings.warn('finished due to adapt ansatz reached')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,

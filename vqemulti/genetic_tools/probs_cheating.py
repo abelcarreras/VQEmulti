@@ -38,12 +38,52 @@ def generate_new_operator(operators_pool, einstein_index, cheat_param):
         if wheel[j][0] <= r < wheel[j][1]:
             selected = wheel[j][2]
 
-    print('SELECTED IS', selected)
 
 
     return selected
 
-def delete_an_operator(einstein_index, coefficients):
+def delete_an_operator(einstein_index, coefficients, deleted_already):
+    delete_probability = []
+    indices_deleted = []
+
+    for i in range(len(einstein_index)):
+        for j in range(len(deleted_already)):
+            if deleted_already[j] == einstein_index[i]:
+                indices_deleted.append(i)
+
+    for i in range(len(coefficients)):
+        delete_probability.append(abs(1 / coefficients[i]))
+        for j in range(len(indices_deleted)):
+            if indices_deleted[j] == i:
+                delete_probability[i] = 0
+    print('deleted_already', deleted_already)
+    print(delete_probability)
+
+    #normalize this vector
+    total_sum = np.sum(delete_probability)
+    for i in range(len(coefficients)):
+        delete_probability[i] = delete_probability[i]/total_sum
+    print('normalized delete prob', delete_probability)
+    def makeWheel(delete_probability):
+        wheel = []
+        init_point = 0
+        for i in range(len(delete_probability)):
+            f = delete_probability[i]
+            wheel.append((init_point, init_point + f, i))
+            init_point += f
+        return wheel
+
+    wheel = makeWheel(delete_probability)
+    # Here we generate the random position of the first pointer
+    r = np.random.rand()
+    for j in range(len(wheel)):
+        if wheel[j][0] <= r < wheel[j][1]:
+            selected = wheel[j][2]
+
+    return selected
+
+
+def delete_an_operator_change(einstein_index, coefficients):
     delete_probability = []
     for i in range(len(coefficients)):
         delete_probability.append(1/coefficients[i])
@@ -116,7 +156,6 @@ def generate_reduced_pool(operators_pool, selected_already, einstein_index, chea
         if wheel[j][0] <= r < wheel[j][1]:
             selected = wheel[j][2]
 
-    print('SELECTED IS', selected)
 
 
     return selected

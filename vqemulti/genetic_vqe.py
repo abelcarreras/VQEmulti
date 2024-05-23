@@ -5,7 +5,7 @@ from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
-from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation
+from vqemulti.genetic_tools.mutations import add_new_excitation, delete_excitation, change_excitation, interchange_excitations
 import scipy
 import numpy as np
 import warnings
@@ -97,6 +97,7 @@ def geneticVQE(hamiltonian,
         selected_already = []
         deleted_already = []
         deleted_already_2 = []
+        permutations_chosen = []
         if iteration == 0:
             for i in range(number_peasants):
                 new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
@@ -168,12 +169,53 @@ def geneticVQE(hamiltonian,
 
 
                 if add_probability + delete_probability < random_number <= 1:
+                    '''
                     new_peasant = change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,operators_pool,
                                                     indices, cheat_param)
                     peasants_list.append(new_peasant[0])
                     coefficients_list.append(new_peasant[1])
                     fitness_vector.append(new_peasant[2])
                     index_peasant.append(new_peasant[3])
+                    '''
+                    if len(ansatz) > 7:
+                        new_peasant = interchange_excitations(hf_reference_fock, hamiltonian, ansatz, coefficients,
+                                                              operators_pool, indices, permutations_chosen, selected_already,
+                                                              cheat_param)
+
+
+                        if len(new_peasant) > 6:
+                            peasants_list.append(new_peasant[0])
+                            coefficients_list.append(new_peasant[1])
+                            fitness_vector.append(new_peasant[2])
+                            index_peasant.append(new_peasant[3])
+                            selected_already.append(new_peasant[4])
+                            peasants_list.append(new_peasant[5])
+                            coefficients_list.append(new_peasant[6])
+                            fitness_vector.append(new_peasant[7])
+                            index_peasant.append(new_peasant[8])
+                        else:
+                            peasants_list.append(new_peasant[0])
+                            coefficients_list.append(new_peasant[1])
+                            fitness_vector.append(new_peasant[2])
+                            index_peasant.append(new_peasant[3])
+                            permutations_chosen.append(new_peasant[4])
+
+
+
+                    else:
+
+                        new_peasant = add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients,
+                                                         operators_pool,
+                                                         indices, cheat_param, selected_already)
+                        peasants_list.append(new_peasant[0])
+                        coefficients_list.append(new_peasant[1])
+                        fitness_vector.append(new_peasant[2])
+                        index_peasant.append(new_peasant[3])
+                        selected_already.append(new_peasant[4])
+                        peasants_list.append(new_peasant[5])
+                        coefficients_list.append(new_peasant[6])
+                        fitness_vector.append(new_peasant[7])
+                        index_peasant.append(new_peasant[8])
 
 
 
@@ -344,7 +386,7 @@ def geneticVQE(hamiltonian,
         iterations['energies'].append(energy)
         '''
         if len(iterations['energies']) >= 2:
-            if iterations['energies'][-2] - iterations['energies'][-1] < 0.00001:
+            if iterations['energies'][-2] - iterations['energies'][-1] < 0:
                 print('wrong energy, return to past ansatz')
                 print('it -2',iterations['energies'][-2], 'it -1', iterations['energies'][-1], 'dif', iterations['energies'][-2] - iterations['energies'][-1] )
                 indices_all.pop(-1)
@@ -387,7 +429,7 @@ def geneticVQE(hamiltonian,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
 
-        if 1.96846485862782 + energy < 1e-4 :
+        if 1.9738555258027 + energy < 1e-4 :
             warnings.warn('finished due to adapt ansatz reached')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,

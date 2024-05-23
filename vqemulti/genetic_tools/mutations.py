@@ -1,5 +1,5 @@
 from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
-from vqemulti.genetic_tools.probs_cheating import generate_new_operator, delete_an_operator, generate_reduced_pool, delete_an_operator_change
+from vqemulti.genetic_tools.probs_cheating import generate_new_operator, delete_an_operator, generate_reduced_pool, delete_an_operator_change, interchange_selection
 from openfermion.utils import count_qubits
 import numpy as np
 import scipy
@@ -106,6 +106,67 @@ def change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, oper
 
     return new_ansatz, coefficients, fitness, einstein_index_game
 
+
+
+def interchange_excitations(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index, permutations_chosen, selected_already, cheat_param):
+    einstein_index_game = deepcopy(einstein_index)
+
+    einstein_index_game = deepcopy(einstein_index)
+    coefficients_game = deepcopy(coefficients)
+    new_ansatz = deepcopy(ansatz)
+    operators_to_interchange = interchange_selection(einstein_index_game, permutations_chosen, coefficients, operators_pool)
+    if operators_to_interchange[0] == 0:
+        random_operator = generate_reduced_pool(operators_pool, selected_already, einstein_index, cheat_param)
+
+        einstein_index_game_1 = deepcopy(einstein_index)
+        einstein_index_game_2 = deepcopy(einstein_index)
+
+        if len(ansatz) == 0:
+            new_ansatz_1 = []
+            new_ansatz_2 = []
+        else:
+            new_ansatz_1 = deepcopy(ansatz)
+            new_ansatz_2 = deepcopy(ansatz)
+
+        new_ansatz_1.append(operators_pool[random_operator])
+        new_ansatz_2.append(operators_pool[random_operator])
+
+        if len(coefficients) == 0:
+            new_coefficients_1 = []
+            new_coefficients_2 = []
+            new_coefficients_1.append(0.05)
+            new_coefficients_2.append(-0.05)
+        else:
+            new_coefficients_1 = deepcopy(coefficients)
+            new_coefficients_2 = deepcopy(coefficients)
+            new_coefficients_1.append(0.05)
+            new_coefficients_2.append(-0.05)
+
+        fitness_1 = exact_vqe_energy(new_coefficients_1, new_ansatz_1, hf_reference_fock, hamiltonian)
+        einstein_index_game_1.append(random_operator)
+        fitness_2 = exact_vqe_energy(new_coefficients_2, new_ansatz_2, hf_reference_fock, hamiltonian)
+        einstein_index_game_2.append(random_operator)
+        selected = random_operator
+        print('Added', random_operator, 'coefficients', new_coefficients_1, 'indeces', einstein_index_game_1, 'fitness',
+              fitness_1)
+        print('Added', random_operator, 'coefficients', new_coefficients_2, 'indeces', einstein_index_game_2, 'fitness',
+              fitness_2)
+        return new_ansatz_1, new_coefficients_1, fitness_1, einstein_index_game_1, selected, new_ansatz_2, new_coefficients_2, fitness_2, einstein_index_game_2
+
+    if operators_to_interchange[0] == 1:
+        einstein_index_game[operators_to_interchange[1][0]] = einstein_index[operators_to_interchange[1][1]]
+        einstein_index_game[operators_to_interchange[1][1]] = einstein_index[operators_to_interchange[1][0]]
+
+        coefficients_game[operators_to_interchange[1][0]] = coefficients[operators_to_interchange[1][1]]
+        coefficients_game[operators_to_interchange[1][1]] = coefficients[operators_to_interchange[1][0]]
+
+        new_ansatz[operators_to_interchange[1][0]] = ansatz[operators_to_interchange[1][1]]
+        new_ansatz[operators_to_interchange[1][1]] = ansatz[operators_to_interchange[1][0]]
+        fitness = exact_vqe_energy(coefficients_game, new_ansatz, hf_reference_fock, hamiltonian)
+
+        print('The indices interchamged are', einstein_index_game, 'with coefficients', coefficients_game, 'and fitness', fitness)
+
+        return new_ansatz, coefficients_game, fitness, einstein_index_game, [einstein_index[operators_to_interchange[1][0]], einstein_index[operators_to_interchange[1][1]]]
 
 
 

@@ -113,6 +113,7 @@ def geneticVQE(hamiltonian,
                 fitness_vector.append(new_peasant[7])
                 index_peasant.append(new_peasant[8])
         else:
+
             count = {}
             for i in indices:
                 if not i in count:
@@ -384,7 +385,7 @@ def geneticVQE(hamiltonian,
         print('Final indices selected', indices)
 
         iterations['energies'].append(energy)
-        '''
+
         if len(iterations['energies']) >= 2:
             if iterations['energies'][-2] - iterations['energies'][-1] < 0:
                 print('wrong energy, return to past ansatz')
@@ -396,7 +397,7 @@ def geneticVQE(hamiltonian,
                 coefficients_all.pop(-1)
                 coefficients = coefficients_all[-1]
                 iterations['energies'].pop(-1)
-        '''
+
         #iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
@@ -429,7 +430,7 @@ def geneticVQE(hamiltonian,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
 
-        if 1.9738555258027 + energy < 1e-4 :
+        if 1.96846485862782 + energy < 1e-4 :
             warnings.warn('finished due to adapt ansatz reached')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,

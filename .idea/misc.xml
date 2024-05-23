@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.8 (VQEmulti)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.8 (VQEmulti)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (VQEmulti_genetic)" project-jdk-type="Python SDK" />
 </project>

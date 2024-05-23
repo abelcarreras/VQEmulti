@@ -1,7 +1,7 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
 from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit, get_string_from_fermionic_operator
-
+from copy import deepcopy
 
 class OperatorList:
 
@@ -57,6 +57,22 @@ class OperatorList:
             self._list = [normalize_operator(op) for op in self._list]
             # self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
 
+    def __deepcopy__(self, memo):
+        # Create a new instance of OperatorList with the same operators
+        new_operators = deepcopy(self._list, memo)
+        new_instance = OperatorList(new_operators)
+        # If there are any other attributes that need to be copied, do so here
+        new_instance._type = self._type
+        return new_instance
+
+    def pop(self, index=-1):
+        """
+        Remove and return the operator at the given index in the list.
+
+        :param index: The index of the operator to remove (default is -1, the last item).
+        :return: The removed operator.
+        """
+        return self._list.pop(index)
 
     def __str__(self):
         return self._list.__str__()

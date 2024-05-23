@@ -66,15 +66,27 @@ def linear_h4_mol(distance, basis='sto-3g'):
     return mol
 
 
+def water(distance, basis='sto-3g'):
+    mol = MolecularData(geometry=[['O', [0, 0, 0]],
+                                  ['H', [0, 2.37206872122, 1.83665184012]],
+                                  ['H', [0, -2.37206872122, 1.83665184012]]],
+                        basis=basis,
+                        multiplicity=1,
+                        charge=0,
+                        description='H2O')
+    return mol
+
+
+
 # run classical calculation
-molecule = run_pyscf(linear_h4_mol(1.5, '3-21g'), nat_orb= True, run_fci=True)
+molecule = run_pyscf(water(1, '3-21g'), nat_orb= False, run_fci=True)
 
 # get additional info about electronic structure properties
 # get_info(molecule, check_HF_data=False)
 
 # get properties from classical SCF calculation
-n_electrons = 4  # molecule.n_electrons
-n_orbitals = 5 # molecule.n_orbitals
+n_electrons = 10  # molecule.n_electrons
+n_orbitals = 8 # molecule.n_orbitals
 hamiltonian = molecule.get_molecular_hamiltonian()
 
 # Choose specific pool of operators for adapt-VQE
@@ -95,7 +107,7 @@ result = tetrisVQE(hamiltonian,
                   pool,
                   hf_reference_fock,
                   opt_qubits=True,
-                  max_iterations=20,
+                  max_iterations=100,
                   coeff_tolerance=1e-3,
                   energy_threshold=1e-4,
                   threshold=1e-9

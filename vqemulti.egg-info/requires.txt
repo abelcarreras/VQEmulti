@@ -1,0 +1,7 @@
+numpy
+scipy
+openfermion
+posym
+cirq
+pennylane
+qiskit

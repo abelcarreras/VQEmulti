@@ -95,7 +95,7 @@ def tetrisVQE(hamiltonian,
     if opt_qubits:
         # transform to qubit ansatz
         operators_pool = operators_pool.get_quibits_list(normalize=True)
-        print(operators_pool)
+
 
 
 
@@ -150,16 +150,17 @@ def tetrisVQE(hamiltonian,
 
         # primary selection of operators
         indices_sorted = np.argsort(gradient_vector)[::-1]
-        print('indices sorted',indices_sorted)
+
 
         max_indices = np.argsort(gradient_vector)[::-1][:1]  #Always add the operator with the largest gradient
         #Now let's add the rest of the operators
-
+        amount = 1
         for i in range(len(indices_sorted)-1):
             index_list = [indices_sorted[i+1].tolist()]
             if (operator_action(operators_pool, index_list) & operator_action(operators_pool, max_indices)):
                 pass
             else:
+                amount += 1
                 print('I added', operator_action(operators_pool, index_list))
                 print('I already had', operator_action(operators_pool, max_indices))
                 max_indices = np.append(max_indices, indices_sorted[i+1])
@@ -239,7 +240,7 @@ def tetrisVQE(hamiltonian,
                                               options={'disp': Configuration().verbose, 'rhobeg': 0.1})
 
         # check if last coefficient is zero (likely to happen in exact optimizations)
-        if abs(results.x[-1]) < coeff_tolerance:
+        if abs(results.x[-amount]) < coeff_tolerance:
             print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
             return {'energy': results.fun,

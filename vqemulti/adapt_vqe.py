@@ -8,7 +8,8 @@ from vqemulti.density import get_density_matrix, density_fidelity
 import scipy
 import numpy as np
 import warnings
-
+from vqemulti.genetic_tools import delete_excitation
+from copy import deepcopy
 
 def adaptVQE(hamiltonian,
              operators_pool,
@@ -81,6 +82,7 @@ def adaptVQE(hamiltonian,
             fidelity = density_fidelity(reference_dm, density_matrix)
             fidelities.append(fidelity)
             print('fidelity',fidelity)
+
         if gradient_simulator is None:
             gradient_vector = compute_gradient_vector(hf_reference_fock,
                                                       hamiltonian,
@@ -153,6 +155,7 @@ def adaptVQE(hamiltonian,
                           np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
 
         # if repeat operator finish adaptVQE
+        '''
         if repeat_operator:
             print('Converge archived due to repeated operator')
             energy = iterations['energies'][-1]
@@ -163,12 +166,46 @@ def adaptVQE(hamiltonian,
                     'iterations': iterations,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
+        '''
+        deleting = 'no'
+        if len(coefficients) > 7:
+            r = np.random.rand()
+            if 0.9 > r:
+                print('I AM GOING TO DELETE FROM', indices)
+                change = delete_excitation(ansatz, coefficients, indices)
+                ansatz.append(max_operator)
+                ansatz = list(ansatz)
+                old_ansatz = deepcopy(ansatz)
 
-        # Initialize the coefficient of the operator that will be newly added at 0
-        for max_index, max_operator in zip(max_indices, max_operators):
-            coefficients.append(0)
-            ansatz.append(max_operator)
-            indices.append(max_index)
+                ansatz = change[0]
+                ansatz.append(max_operator)
+
+                coefficients.append(0)
+                old_coefficients = deepcopy(coefficients)
+                coefficients = change[1]
+                coefficients.append(0)
+
+                indices.append(max_index)
+                old_indices = deepcopy(indices)
+                indices = change[2]
+                indices.append(max_index)
+
+                deleted = change[3]
+
+                print('RESULTING IN', indices)
+                deleting = 'yes'
+            else:
+                for max_index, max_operator in zip(max_indices, max_operators):
+                    coefficients.append(0)
+                    ansatz.append(max_operator)
+                    indices.append(max_index)
+        else:
+            # Initialize the coefficient of the operator that will be newly added at 0
+            for max_index, max_operator in zip(max_indices, max_operators):
+                coefficients.append(0)
+                ansatz.append(max_operator)
+                indices.append(max_index)
+
 
         # run optimization
         if energy_simulator is None:
@@ -197,7 +234,9 @@ def adaptVQE(hamiltonian,
 
 
         print('ITERATIONS', iterations)
+        print('coefficients', results.x)
         # check if last coefficient is zero (likely to happen in exact optimizations)
+        '''
         if abs(results.x[-1]) < coeff_tolerance:
             print('Converge archived due to zero valued coefficient')
             n_operators = len(max_indices)
@@ -208,9 +247,11 @@ def adaptVQE(hamiltonian,
                     'iterations': iterations,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
-
+        '''
         # check if last iteration energy is better (likely to happen in sampled optimizations)
+        #if deleting == 'no':
         diff_threshold = 0
+        '''
         if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < diff_threshold:
 
             print('Converge archived due to not energy improvement')
@@ -221,10 +262,25 @@ def adaptVQE(hamiltonian,
                     'coefficients': coefficients[:-n_operators],
                     'number cnots': number_cnots,
                     'iterations': iterations}
-
+        '''
         # get results
         coefficients = list(results.x)
         energy = results.fun
+
+        '''
+        if deleting == 'yes':
+            diff_threshold = 0.0001
+            if len(iterations['energies']) > 0 and iterations['energies'][-1] - results.fun < diff_threshold:
+                print('THE CHANGE IS TOO BAD', results.fun )
+                ansatz = old_ansatz
+                coefficients = list(results.x)
+                #coefficients.insert(deleted, old_coefficients[deleted])
+                coefficients.insert(deleted, 0.05)
+
+                indices = old_indices
+                print('RETURN TO INDICES', indices)
+                print('with coefficients', coefficients)
+        '''
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
@@ -251,7 +307,7 @@ def adaptVQE(hamiltonian,
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
 
-        energy_simulator.print_statistics()
+        #energy_simulator.print_statistics()
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])
@@ -262,8 +318,8 @@ def adaptVQE(hamiltonian,
 
 
 
-        y = energy_simulator.print_statistics()
-        number_cnots.append(y)
+        #y = energy_simulator.print_statistics()
+        #number_cnots.append(y)
 
 
 

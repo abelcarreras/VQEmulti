@@ -120,7 +120,7 @@ def geneticVQE(hamiltonian,
 
                 if add_probability < random_number <= add_probability + delete_probability:
                     #print('will delete from', ansatz)
-                    new_peasant = delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, indices)
+                    new_peasant = delete_excitation(ansatz, coefficients, indices)
                     peasants_list.append(new_peasant[0])
                     coefficients_list.append(new_peasant[1])
                     fitness_vector.append(new_peasant[2])
@@ -278,7 +278,7 @@ def geneticVQE(hamiltonian,
                     'number cnots': number_cnots,
                     'fidelities': fidelities}
 
-        if 1.96327803704193 + energy < 1e-4 :
+        if 1.96846485862782 + energy < 1e-4 :
             warnings.warn('finished due to adapt ansatz reached')
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,

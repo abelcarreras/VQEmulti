@@ -7,6 +7,7 @@ from copy import deepcopy
 import math
 import random
 
+from vqemulti.pool.tools import OperatorList
 
 
 def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index,cheat_param, selected_already):
@@ -63,25 +64,26 @@ def add_new_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, ope
 
 
 
-def delete_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, einstein_index):
-
-    if len(ansatz) == 0 or len(ansatz) == 1:
-        fitness = exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
-        return ansatz, coefficients, fitness, einstein_index
+def delete_excitation(ansatz, coefficients, einstein_index):
 
     einstein_index_game = deepcopy(einstein_index)
-    random_operator = delete_an_operator(einstein_index, coefficients)
+    index_for_del = deepcopy(einstein_index_game)
+    index_for_del.pop(-1)
+    coef_for_del = deepcopy(coefficients)
+    coef_for_del.pop(-1)
+    random_operator = delete_an_operator(index_for_del, coef_for_del)
     #random_operator = np.random.randint(0, len(ansatz))
-    new_ansatz = deepcopy(ansatz)
+    ansatz_list = list(ansatz)
+    new_ansatz = deepcopy(ansatz_list)
     new_ansatz.pop(random_operator)
     new_coefficients = deepcopy(coefficients)
     new_coefficients.pop(random_operator)
 
-    fitness = exact_vqe_energy(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
+    #fitness = exact_vqe_energy(new_coefficients, new_ansatz, hf_reference_fock, hamiltonian)
     einstein_index_game.pop(random_operator)
-    print('Deleted', random_operator, 'coefficients', new_coefficients,'indeces',einstein_index_game,'fitness', fitness)
+    print('Deleted', random_operator, 'coefficients', new_coefficients,'indeces', einstein_index_game)
 
-    return new_ansatz, new_coefficients, fitness, einstein_index_game
+    return new_ansatz, new_coefficients, einstein_index_game, random_operator
 
 
 def change_excitation(hf_reference_fock, hamiltonian, ansatz, coefficients, operators_pool, einstein_index, cheat_param):

@@ -176,7 +176,7 @@ class CirqSimulator(SimulatorBase):
             simulation = cirq.Simulator()
             results = simulation.run(circuit, repetitions=self._shots)
         else:
-            return sum(sub_hamiltonian.values())
+            return sum(sub_hamiltonian.values()), 0
 
         # For each substring, initialize the sum of all measurements as zero
         measurements = {}
@@ -196,16 +196,15 @@ class CirqSimulator(SimulatorBase):
         # Calculate the expectation value of the subHamiltonian, by multiplying
         # the expectation value of each substring by the respective coefficient
         total_expectation_value = 0
+        total_variance = 0
         for sub_string, coefficient in sub_hamiltonian.items():
-            # Get the expectation value of this substring by taking the average
-            # over all the repetitions
-            expectation_value = measurements[sub_string] / self._shots
+            # Get the expectation value of this substring
+            expectation_value = coefficient * measurements[sub_string] / self._shots
 
-            # Add this value to the measurements expectation value, weighed by its
-            # coefficient
-            total_expectation_value += expectation_value * coefficient
+            total_variance += coefficient ** 2 - expectation_value**2
+            total_expectation_value += expectation_value
 
-        return total_expectation_value
+        return total_expectation_value, total_variance
 
     def _build_reference_gates(self, hf_reference_fock):
         """

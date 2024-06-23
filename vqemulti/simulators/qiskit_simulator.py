@@ -488,37 +488,12 @@ class QiskitSimulator(SimulatorBase):
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
-        expectation_value, var = self._measure_expectation_estimator(formatted_hamiltonian,
-                                                                     state_preparation_gates,
-                                                                     n_qubits,
-                                                                     self._session)
+        expectation_value, variance = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                                          state_preparation_gates,
+                                                                          n_qubits,
+                                                                          self._session)
 
-        return expectation_value
-
-    def _get_sampled_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
-        """
-        Obtains the expectation value in a state by sampling (using a simulator)
-
-        :param qubit_hamiltonian: hamiltonian in qubits
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :param shots: number of samples
-        :return: the expectation value of the energy
-        """
-
-        if self._use_estimator is False:
-            return super()._get_sampled_state_evaluation_variance(qubit_hamiltonian, state_preparation_gates)
-
-        # get number of qubits
-        n_qubits = count_qubits(qubit_hamiltonian)
-
-        # Format and the Hamiltonian in pauli strings and coefficients
-        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-
-        energy, var = self._measure_expectation_estimator(formatted_hamiltonian,
-                                                          state_preparation_gates,
-                                                          n_qubits,
-                                                          self._session)
-        return var
+        return expectation_value, variance
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
@@ -560,17 +535,22 @@ class QiskitSimulator(SimulatorBase):
 
         # Get function return from measurements in Z according to sub_hamiltonian
         total_expectation_value = 0
-        for measure_string, counts in counts_total.items():
-            for sub_string, coefficient in sub_hamiltonian.items():
+        total_variance = 0
+        for sub_string, coefficient in sub_hamiltonian.items():
+            expectation_value = 0
+            for measure_string, counts in counts_total.items():
 
                 prod_function = 1
                 for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * coefficient * counts/self._shots
+                expectation_value += prod_function * coefficient * counts/self._shots
 
-        return total_expectation_value
+            total_variance += coefficient ** 2 - expectation_value**2
+            total_expectation_value += expectation_value
+
+        return total_expectation_value, total_variance
 
     def _measure_expectation_estimator(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
         """
@@ -726,35 +706,3 @@ class QiskitSimulator(SimulatorBase):
 
     def simulator_info(self):
         return 'qiskit ' + str(qiskit.__version__)
-
-if __name__ == '__main__':
-
-    circuit = qiskit.QuantumCircuit(2)
-
-    circuit.h(0)
-    cx = Operator([[1, 0, 0, 0],
-                   [0, 0, 0, 1],
-                   [0, 0, 1, 0],
-                   [0, 1, 0, 0]
-                   ])
-
-
-    #return self.append(HGate(), [qubit], [])
-
-    list_gates = [CircuitInstruction(HGate(), [1]), CircuitInstruction(cx, [0, 1])]
-    circuit2 = qiskit.QuantumCircuit(2)
-    for gate in list_gates:
-        circuit2.append(gate)
-
-    print(circuit2)
-    exit()
-
-    for gate in circuit.data:
-        print(gate)
-
-    print('----------')
-    print(circuit.data)
-
-    #circuit = qiskit.QuantumCircuit()
-
-    print(circuit)

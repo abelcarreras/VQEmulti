@@ -131,7 +131,6 @@ class SimulatorBase:
         else:
             energy, variance = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
-        print('ENERGY: ', energy, 'VARIANCE: ', variance)
         # make sure that main simulator class returns consistent float value
         return float(variance)
 

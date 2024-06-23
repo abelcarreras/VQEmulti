@@ -6,7 +6,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.optimizers import OptimizerParams
 from vqemulti import NotConvergedError
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
-from vqemulti.optimizers import adam, rmsprop, sgd
+from vqemulti.optimizers import adam, rmsprop, sgd, cobyla_mod
 from vqemulti.symmetry import get_symmetry_reduced_pool, symmetrize_molecular_orbitals
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
@@ -32,6 +32,25 @@ def shot_model_1(dict_parameters):
     return tolerance, n_shots
 
 
+def shot_model(dict_parameters):
+
+    s_prec = 1
+    precision = dict_parameters['precision']/s_prec
+    n_coefficients = dict_parameters['n_coefficients']
+    variance = dict_parameters['variance']
+
+    #s_opt = precision / n_coefficients**0.85
+    #s_opt = precision / (n_coefficients**(0.33)) # sum() + error
+
+    s_opt = precision / (0.42 * n_coefficients + n_coefficients**(0.33)) # sum() + error
+
+
+    n_shots = int(variance / s_opt ** 2)
+    n_shots = max(1, n_shots)
+
+    return dict_parameters['precision'], n_shots
+
+
 # general configuration
 Configuration().verbose = 1
 
@@ -41,21 +60,30 @@ h4_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                       ['H', [distance, 0, 0]],
                                       ['H', [0, distance, 0]],
                                       ['H', [distance, distance, 0]]],
-                            basis='3-21g',
+                            basis='sto-3g',
                             multiplicity=1,
                             charge=0,
                             description='H4')
 
+#from generate_mol import square_h4_mol
+#h4_molecule = square_h4_mol(distance=3.0, basis='sto-3g')
+
 # run classical calculation
-molecule = run_pyscf(h4_molecule, run_fci=True, verbose=True, nat_orb=True)
+molecule = run_pyscf(h4_molecule, run_fci=True, verbose=True, nat_orb=False)
 
 # symmetrize molecular orbitals (MolecularData object)
 sym_orbitals = symmetrize_molecular_orbitals(molecule, 'c2h', skip=False)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 5  # molecule.n_orbitals
+n_orbitals = 4  # molecule.n_orbitals
 hamiltonian = molecule.get_molecular_hamiltonian()
+
+# store/load from disk
+from vqemulti.utils import store_hamiltonian, load_hamiltonian
+# store_hamiltonian(hamiltonian, file='hamiltonian.npz')
+# hamiltonian = load_hamiltonian(file='hamiltonian.npz')
+
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)  # using active space
 
 # Choose specific pool of operators for adapt-VQE
@@ -66,12 +94,13 @@ pool = get_symmetry_reduced_pool(pool, sym_orbitals) # using symmetry
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # define simulator
-simulator = Simulator(trotter=True, test_only=True, qiskit_optimizer=False) #, shots=250)
-simulator.set_shots_model(shot_model_1)
+simulator = Simulator(trotter=True, test_only=True, hamiltonian_grouping=True)
+simulator.set_shots_model(shot_model)
 
 # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
 opt_bfgs = OptimizerParams(method='BFGS', options={'gtol': 1e-2})
 opt_cobyla = OptimizerParams(method='COBYLA', options={'rhobeg': 0.1})
+opt_cobyla_mod = OptimizerParams(method=cobyla_mod, options={'rhobeg': 0.1})
 
 # define custom optimizers
 opt_rmsprop = OptimizerParams(method=rmsprop, options={'learning_rate': 0.01, 'gtol': 1e-2})
@@ -84,37 +113,15 @@ try:
                       pool,
                       hf_reference_fock,
                       energy_simulator=simulator,
-                      gradient_simulator=simulator,
-                      energy_threshold=1e-3,
+                      # gradient_simulator=simulator,
+                      # variance_simulator=simulator_variance,
+                      energy_threshold=1e-2,
                       max_iterations=15,  # maximum number of interations
-                      optimizer_params=opt_bfgs  # optimizer parameters
+                      optimizer_params=opt_cobyla_mod  # optimizer parameters
                       )
 
 except NotConvergedError as e:
     result = e.results
-
-if False:
-    # perform a single call to energy evaluator an use new simulator object to store only one circuit
-    from vqemulti.simulators.qiskit_simulator import QiskitSimulator
-    from vqemulti.energy import get_adapt_vqe_energy
-
-    simulator_sp = QiskitSimulator(trotter=True,
-                                   test_only=True,
-                                   hamiltonian_grouping=True,
-                                   qiskit_optimizer=False)
-
-    energy = get_adapt_vqe_energy(result['coefficients'],
-                                result['ansatz'],
-                                hf_reference_fock,
-                                hamiltonian,
-                                energy_simulator=simulator_sp
-                                )
-
-    simulator_sp.print_statistics()
-    simulator_sp.print_circuits()
-    print('energy SP: ', energy)
-    exit()
-
 
 print('Final results\n-----------')
 print('HF energy:', molecule.hf_energy)

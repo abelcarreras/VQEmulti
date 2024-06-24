@@ -1,4 +1,5 @@
 # example of the use of IBM runtime and sessions (requires qiskit-ibm-runtime module)
+import numpy as np
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.vqe import vqe
@@ -6,7 +7,10 @@ from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_foc
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from qiskit_ibm_runtime import Session
+from vqemulti.energy import get_vqe_energy
+from vqemulti.energy.simulation import simulate_vqe_variance
 from vqemulti.preferences import Configuration
+from qiskit_ibm_runtime import QiskitRuntimeService
 
 config = Configuration()
 config.verbose = 1
@@ -42,15 +46,23 @@ uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=2)
 print('hf reference', hf_reference_fock)
 
-# real hardware backend
-backend = 'ibm_kyoto'
-
 # fake backend
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-backend = FakeManilaV2()
+from qiskit_ibm_runtime.fake_provider import FakeBrisbane, FakeAlmadenV2
+backend = FakeBrisbane()
+# backend = FakeAlmadenV2()
+
+# real hardware backend
+# backend = 'ibm_cusco'
+
+service = QiskitRuntimeService()
+# backend = service.least_busy(simulator=False, operational=True)
+# print('backend: ', backend.name)
 
 # Start session
 print('Initialize VQE')
+
+single_point_test = True
+
 with Session(backend=backend) as session:
 
     # Qiskit Simulator
@@ -58,20 +70,36 @@ with Session(backend=backend) as session:
                                 trotter_steps=1,
                                 shots=1024,
                                 test_only=False,
-                                hamiltonian_grouping=True,
+                                hamiltonian_grouping=False,
                                 session=session,
                                 )
 
-    result = vqe(hamiltonian,
-                 uccsd_ansatz,
-                 hf_reference_fock,
-                 energy_simulator=simulator)
+    if single_point_test:
+        # single point energy
+        variance = simulate_vqe_variance([0.0, 0.8061306828994627], uccsd_ansatz, hf_reference_fock, hamiltonian, simulator)
+        print('Variance: ', variance)
 
-    print('Energy HF: {:.8f}'.format(molecule.hf_energy))
-    print('Energy VQE: {:.8f}'.format(result['energy']))
-    print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
-    print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
+        energy_list = []
+        for i in range(20):
+            energy = get_vqe_energy([0.0, 0.8061306828994627], uccsd_ansatz, hf_reference_fock, hamiltonian, simulator)
+            print('energy: ', energy)
+            energy_list.append(energy)
+            # variance = simulate_vqe_variance([0.0, 0.0], uccsd_ansatz, hf_reference_fock, hamiltonian, simulator)
+            # print('Variance: ', variance)
 
-    print('Num operators: ', len(result['ansatz']))
-    print('Ansatz:\n', result['ansatz'])
-    print('Coefficients:\n', result['coefficients'])
+        print('Variance: ', np.var(energy_list), variance/simulator._shots)
+
+    else:
+        result = vqe(hamiltonian,
+                     uccsd_ansatz,
+                     hf_reference_fock,
+                     energy_simulator=simulator)
+
+        print('Energy HF: {:.8f}'.format(molecule.hf_energy))
+        print('Energy VQE: {:.8f}'.format(result['energy']))
+        print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
+        print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
+
+        print('Num operators: ', len(result['ansatz']))
+        print('Ansatz:\n', result['ansatz'])
+        print('Coefficients:\n', result['coefficients'])

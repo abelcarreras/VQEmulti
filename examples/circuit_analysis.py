@@ -1,4 +1,4 @@
-from vqemulti.utils import get_hf_reference_in_fock_space
+from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti import vqe
@@ -61,10 +61,10 @@ simulator.print_statistics()
 simulator_sp = QiskitSimulator(trotter=True, test_only=True)
 
 energy = get_vqe_energy(result['coefficients'],
-                              result['ansatz'],
-                              hf_reference_fock,
-                              hamiltonian,
-                              energy_simulator=simulator_sp)
+                        result['ansatz'],
+                        hf_reference_fock,
+                        hamiltonian,
+                        energy_simulator=simulator_sp)
 
 print('Energy VQE: {:.8f}'.format(energy))
 

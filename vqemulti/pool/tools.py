@@ -160,6 +160,17 @@ class OperatorList:
         for op in self._list:
             print(get_string_from_fermionic_operator(op))
 
+    def get_index(self, operators_pool):
+        indeces = []
+        for operator in self._list:
+            for j in range(len(operators_pool)):
+                if operator == operators_pool[j]:
+                    indeces.append(j)
+        return indeces
+
+
+
+
     def __mul__(self, other):
 
         if isinstance(other, (int, float, complex)):

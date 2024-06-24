@@ -2,14 +2,14 @@ from vqemulti.energy import exact_adapt_vqe_energy, get_adapt_vqe_energy
 from vqemulti.gradient import compute_gradient_vector
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
-from vqemulti.errors import NotConvergedError
+from vqemulti.errors import NotConvergedError, Converged
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti.energy.simulation import simulate_adapt_vqe_variance, simulate_adapt_vqe_energy
 from vqemulti.gradient.simulation import simulate_vqe_energy_gradient, simulate_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
-
+from vqemulti.update_ansatz import update_ansatz
 import scipy
 import numpy as np
 
@@ -62,7 +62,6 @@ def adaptVQE(hamiltonian,
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': []}
-    indices = []
 
     # Check if initial guess
     if ansatz is None:
@@ -76,10 +75,6 @@ def adaptVQE(hamiltonian,
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
 
-    if opt_qubits:
-        # transform to qubit ansatz
-        operators_pool = operators_pool.get_quibits_list(normalize=True)
-
     print('pool size: ', len(operators_pool))
 
     # set variance simulator
@@ -87,96 +82,31 @@ def adaptVQE(hamiltonian,
         # variance_simulator = gradient_simulator if variance_simulator is None else variance_simulator
         variance_simulator = energy_simulator if variance_simulator is None else variance_simulator
 
+    # compute circuit variance
+    if variance_simulator is not None:
+        # Calculation of Hamiltonian variance
+        variance = simulate_adapt_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, variance_simulator)
+        print('Hamiltonian Variance: ', variance)
+    else:
+        variance = 0
+
     for iteration in range(max_iterations):
 
-        # compute circuit variance
-        if variance_simulator is not None:
-            # Calculation of Hamiltonian variance
-            variance = simulate_adapt_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, variance_simulator)
-            print('Hamiltonian Variance: ', variance)
-        else:
-            variance = 0
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
-        if gradient_simulator is None:
-            gradient_vector = compute_gradient_vector(hf_reference_fock,
-                                                      hamiltonian,
-                                                      ansatz,
-                                                      coefficients,
-                                                      operators_pool)
-        else:
-            gradient_simulator.update_model(precision=energy_threshold,
-                                            variance=variance,
-                                            n_coefficients=len(coefficients),
-                                            n_qubits=hamiltonian.n_qubits)
-
-            gradient_vector = simulate_gradient(hf_reference_fock,
-                                                hamiltonian,
-                                                ansatz,
-                                                coefficients,
-                                                operators_pool,
-                                                gradient_simulator)
-
-        total_norm = np.linalg.norm(gradient_vector)
-
-        print("\nTotal gradient norm: {:12.6f}".format(total_norm))
-
-        if total_norm < gradient_threshold:
-            if len(iterations['energies']) > 0:
-                energy = iterations['energies'][-1]
-            else:
-                energy = get_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
-
-            print("\nConverge archived due to gradient norm threshold")
-            result = {'energy': energy,
-                      'ansatz': ansatz,
-                      'indices': indices,
-                      'coefficients': coefficients,
-                      'iterations': iterations,
-                      'variance': variance}
-
-            return result
-
-        # primary selection of operators
-        max_indices = np.argsort(gradient_vector)[-operator_update_number:][::-1]
-
-        # refine selection to ensure all operators are relevant
-        while True:
-            max_gradients = np.array(gradient_vector)[max_indices]
-            max_dev = np.max(np.std(max_gradients))
-            if max_dev/np.max(max_gradients) > operator_update_max_grad:
-                max_indices = max_indices[:-1]
-            else:
-                break
-
-        # get gradients/operators update list
-        max_gradients = np.array(gradient_vector)[max_indices]
-        max_operators = np.array(operators_pool)[max_indices]
-
-        for max_index, max_gradient in zip(max_indices, max_gradients):
-            print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
-
-        # check if repeated operator
-        repeat_operator = len(max_indices) == len(indices[-len(max_indices):]) and \
-                          np.all(np.array(max_indices) == np.array(indices[-len(max_indices):]))
-
-        # if repeat operator finish adaptVQE
-        if repeat_operator:
-            print('Converge archived due to repeated operator')
-            energy = iterations['energies'][-1]
-            return {'energy': energy,
-                    'ansatz': ansatz,
-                    'indices': indices,
-                    'coefficients': coefficients,
-                    'iterations': iterations,
-                    'variance': variance}
-
-        # Initialize the coefficient of the operator that will be newly added at 0
-        for max_index, max_operator in zip(max_indices, max_operators):
-            coefficients.append(0)
-            ansatz.append(max_operator)
-            indices.append(max_index)
+        try:
+            ansatz, coefficients, max_indices, total_norm = update_ansatz(hf_reference_fock, hamiltonian, ansatz, coefficients, gradient_simulator,
+                                                 energy_threshold, operators_pool, variance, gradient_threshold, iterations,
+                                                 operator_update_number, operator_update_max_grad, energy_simulator)
+        except Converged as c:
+            print(c.message)
+            return {'energy': c.energy,
+                    'ansatz':c.ansatz,
+                    'indices': c.indices,
+                    'coefficients': c.coefficients,
+                    'iterations': c.iterations,
+                    'variance': c.variance}
 
         # run optimization
         if energy_simulator is None:
@@ -213,7 +143,7 @@ def adaptVQE(hamiltonian,
             n_operators = len(max_indices)
             return {'energy': energy,
                     'ansatz': ansatz[:-n_operators],
-                    'indices': indices[:-n_operators],
+                    'indices': ansatz.get_index(operators_pool)[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations,
                     'variance': variance}
@@ -226,7 +156,7 @@ def adaptVQE(hamiltonian,
             n_operators = len(max_indices)
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz[:-n_operators],
-                    'indices': indices[:-n_operators],
+                    'indices': ansatz.get_index(operators_pool)[:-n_operators],
                     'coefficients': coefficients[:-n_operators],
                     'iterations': iterations,
                     'variance': variance}
@@ -249,7 +179,7 @@ def adaptVQE(hamiltonian,
         # print iteration results
         print('Iteration energy:', energy)
         # print('Coefficients:', coefficients)
-        print('Ansatz Indices:', indices)
+        print('Ansatz Indices:', ansatz.get_index(operators_pool))
 
         iterations['energies'].append(energy)
         iterations['norms'].append(total_norm)
@@ -267,7 +197,7 @@ def adaptVQE(hamiltonian,
 
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
-                             'indices': indices,
+                             'indices': ansatz.get_index(operators_pool),
                              'coefficients': coefficients,
                              'iterations': iterations,
                              'variance': variance})

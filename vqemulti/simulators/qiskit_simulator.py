@@ -7,6 +7,7 @@ from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
 from qiskit import transpile
+from qiskit_aer import AerSimulator, StatevectorSimulator
 import qiskit
 import numpy as np
 
@@ -238,6 +239,11 @@ def trotter_step(qubit_operator, time, n_qubits):
         if len(pauliString) == 0:
             continue
 
+        # handle first qubit in pauli string
+        first_qubit_index = pauliString[0][0]
+        if first_qubit_index > 0:
+            cnot_inversion_list[first_qubit_index-1] = cnot_inversion_list[first_qubit_index]
+
         # Get real part of the coefficient (the immaginary one can't be simulated,
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
@@ -247,16 +253,16 @@ def trotter_step(qubit_operator, time, n_qubits):
         # It's necessary so as to know which are included in the sequence of CNOTs
         # that compute the parity
         involved_qubits = []
-        for i, pauli in enumerate(pauliString):
-
-            if i > 0:
-                inverted_staircase = cnot_inversion_list[i-1]
-            else:
-                inverted_staircase = cnot_inversion_list[0]
+        for _, pauli in enumerate(pauliString):
 
             # Get the index of the qubit this Pauli operator acts on
             qubit_index = pauli[0]
             involved_qubits.append(qubit_index)
+
+            if qubit_index > 0:
+                inverted_staircase = cnot_inversion_list[qubit_index-1]
+            else:
+                inverted_staircase = cnot_inversion_list[0]
 
             # Get the Pauli operator identifier (X,Y or Z)
             pauli_operator = pauli[1]
@@ -269,6 +275,7 @@ def trotter_step(qubit_operator, time, n_qubits):
                     else:
                         # Rotate to Z basis from X basis
                         trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
+                        pass
 
                 elif pauli_operator == "Y":
                     previous_gate, index = last_gate(trotter_gates, (qubit_index,))
@@ -298,10 +305,16 @@ def trotter_step(qubit_operator, time, n_qubits):
 
         # Compute parity and store the result on the last involved qubit
         for i in range(len(involved_qubits) - 1):
-            inverted_staircase = cnot_inversion_list[i]
+
+            inverted_staircase = cnot_inversion_list[involved_qubits[i]]
 
             target = involved_qubits[i] if inverted_staircase else involved_qubits[i + 1]
             control = involved_qubits[i + 1] if inverted_staircase else involved_qubits[i]
+
+            if control < n_qubits-1 and target < n_qubits-1:
+                transition_point = cnot_inversion_list[control] != cnot_inversion_list[target]
+            else:
+                transition_point = False
 
             previous_gate, index = last_gate(trotter_gates, (control, target), ignore_z=True)
             if previous_gate.operation.name == 'cx' and np.all(previous_gate.qubits == (control, target)):
@@ -310,7 +323,8 @@ def trotter_step(qubit_operator, time, n_qubits):
                 trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
             qubit_index_sup = involved_qubits[i + 1]
-            if i < len(cnot_inversion_list)-1 and cnot_inversion_list[i] != cnot_inversion_list[i+1]:
+            #if i < len(cnot_inversion_list)-1 and cnot_inversion_list[i] != cnot_inversion_list[i+1]:
+            if i < len(cnot_inversion_list) - 1 and transition_point:
                 if not last_qubit == qubit_index_sup:
                     previous_gate, index = last_gate(trotter_gates, (qubit_index_sup,))
                     if previous_gate.operation.name == 'h':
@@ -326,28 +340,35 @@ def trotter_step(qubit_operator, time, n_qubits):
 
         # Uncompute parity
         for i in range(len(involved_qubits) - 2, -1, -1):
-            inverted_staircase = cnot_inversion_list[i]
+            inverted_staircase = cnot_inversion_list[involved_qubits[i]]
 
             qubit_index_sup = involved_qubits[i + 1]
-            if i < len(cnot_inversion_list)-1 and cnot_inversion_list[i] != cnot_inversion_list[i+1]:
-                if not last_qubit == qubit_index_sup:
-                    trotter_gates.append(CircuitInstruction(HGate(), [qubit_index_sup]))
 
             target = involved_qubits[i] if inverted_staircase else involved_qubits[i + 1]
             control = involved_qubits[i + 1] if inverted_staircase else involved_qubits[i]
+            if control < n_qubits-1 and target < n_qubits-1:
+                transition_point = cnot_inversion_list[control] != cnot_inversion_list[target]
+            else:
+                transition_point = False
+
+            if i < len(cnot_inversion_list) - 1 and transition_point:
+
+                if not last_qubit == qubit_index_sup:
+                    trotter_gates.append(CircuitInstruction(HGate(), [qubit_index_sup]))
 
             trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
 
         # Undo basis rotations
         for i, pauli in enumerate(pauliString):
 
-            if i > 0:
-                inverted_staircase = cnot_inversion_list[i-1]
-            else:
-                inverted_staircase = cnot_inversion_list[0]
-
             # Get the index of the qubit this Pauli operator acts on
             qubit_index = pauli[0]
+            involved_qubits.append(qubit_index)
+
+            if qubit_index > 0:
+                inverted_staircase = cnot_inversion_list[qubit_index - 1]
+            else:
+                inverted_staircase = cnot_inversion_list[0]
 
             # Get the Pauli operator identifier (X,Y or Z)
             pauli_operator = pauli[1]
@@ -382,7 +403,7 @@ class QiskitSimulator(SimulatorBase):
                  separate_matrix_operators=True,
                  shots=1000,
                  qiskit_optimizer=False,
-                 backend=qiskit.Aer.get_backend('aer_simulator'),
+                 backend=AerSimulator(),
                  use_estimator=False,
                  session=None,
                  ):
@@ -404,8 +425,16 @@ class QiskitSimulator(SimulatorBase):
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
 
-        if session is True:
+        if session is not None:
             self._use_estimator = True
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+            from qiskit.providers.exceptions import QiskitBackendNotFoundError
+            service = QiskitRuntimeService()
+            try:
+                self._backend = service.backend(session.backend())
+            except QiskitBackendNotFoundError:
+                pass
 
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
@@ -420,9 +449,7 @@ class QiskitSimulator(SimulatorBase):
 
         # set the same qubit order as other simulators
         circuit = circuit.reverse_bits()
-
-        backend = qiskit.Aer.get_backend('statevector_simulator')
-        result = backend.run(circuit).result()
+        result = StatevectorSimulator().run(circuit).result()
 
         return np.array(result.get_statevector())
 
@@ -451,38 +478,22 @@ class QiskitSimulator(SimulatorBase):
         :return: the expectation value of the energy
         """
 
+        if self._use_estimator is False:
+            return super()._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+
+        # get the number of qubits
         n_qubits = count_qubits(qubit_hamiltonian)
 
         # Format and group the Hamiltonian, so as to save measurements by using
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
-        if self._hamiltonian_grouping:
-            # use hamiltonian grouping
-            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
-        else:
-            # skip hamiltonian grouping
-            grouped_hamiltonian = {}
-            for pauli_string, coefficient in formatted_hamiltonian.items():
-                grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
+        expectation_value, variance = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                                          state_preparation_gates,
+                                                                          n_qubits,
+                                                                          self._session)
 
-        if self._use_estimator is False:
-            # Obtain the expectation value for each Pauli string
-            expectation_value = 0
-            for main_string, sub_hamiltonian in grouped_hamiltonian.items():
-                expectation_value += self._measure_expectation(main_string,
-                                                               sub_hamiltonian,
-                                                               state_preparation_gates,
-                                                               n_qubits)
-
-        else:
-            expectation_value = self._measure_expectation_estimator(formatted_hamiltonian,
-                                                                    state_preparation_gates,
-                                                                    n_qubits,
-                                                                    self._session)
-
-        assert expectation_value.imag < 1e-5
-        return expectation_value.real
+        return expectation_value, variance
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
@@ -524,17 +535,22 @@ class QiskitSimulator(SimulatorBase):
 
         # Get function return from measurements in Z according to sub_hamiltonian
         total_expectation_value = 0
-        for measure_string, counts in counts_total.items():
-            for sub_string, coefficient in sub_hamiltonian.items():
+        total_variance = 0
+        for sub_string, coefficient in sub_hamiltonian.items():
+            expectation_value = 0
+            for measure_string, counts in counts_total.items():
 
                 prod_function = 1
                 for i, measure_z in enumerate([str_to_bit(k) for k in measure_string[::-1]]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * coefficient * counts/self._shots
+                expectation_value += prod_function * coefficient * counts/self._shots
 
-        return total_expectation_value
+            total_variance += coefficient ** 2 - expectation_value**2
+            total_expectation_value += expectation_value
+
+        return total_expectation_value, total_variance
 
     def _measure_expectation_estimator(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
         """
@@ -558,7 +574,8 @@ class QiskitSimulator(SimulatorBase):
 
         list_strings = []
         for pauli_string, coefficient in formatted_hamiltonian.items():
-            list_strings.append((pauli_string, coefficient))
+            # print(pauli_string, coefficient)
+            list_strings.append((pauli_string[::-1], coefficient))
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
@@ -566,29 +583,37 @@ class QiskitSimulator(SimulatorBase):
         #    print('measure operator:')
         #    print(measure_op)
 
-        if self._session is None:
-            from qiskit_aer.primitives import Estimator
-            estimator = Estimator(abelian_grouping=False)
-        else:
-            from qiskit_ibm_runtime import Estimator, Options
-            options = Options(optimization_level=3)
-            estimator = Estimator(session=session, options=options)
-
         # circuit stats
         for _ in list_strings:
             self._get_circuit_stat_data(circuit)
 
-        # estimate [ <psi|H|psi)> ]
-        job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)#, abelian_grouping=True)
+        if self._session is None:
+            from qiskit_aer.primitives import Estimator
+            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
+            job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
+        else:
+            from qiskit_ibm_runtime import Estimator, Options
+            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+            pm = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+            isa_circuit = pm.run(circuit)
+
+            mapped_observables = measure_op.apply_layout(isa_circuit.layout)
+
+            # estimate [ <psi|H|psi)> ]
+            estimator = Estimator(session=session, options=Options(optimization_level=1))
+            job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
+
+        # get variance
+        variance = sum([meta['variance'] for meta in job.result().metadata])
 
         if Configuration().verbose > 1:
-            print('Expectation value: ', job.result().values[0])
-            variance = job.result().metadata[0]["variance"]
+            print('Expectation value: ', sum(job.result().values))
             std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
 
-        return job.result().values[0]
+        return sum(job.result().values), variance
 
     def _build_reference_gates(self, hf_reference_fock):
         """
@@ -658,7 +683,11 @@ class QiskitSimulator(SimulatorBase):
 
         # gates
         for gate in circuit.data:
-            self._circuit_gates[gates_name[gate[0].name]] += 1
+            try:
+                self._circuit_gates[gates_name[gate[0].name]] += 1
+            except KeyError:
+                gates_name.update({gate[0].name: gate[0].name})
+                self._circuit_gates[gates_name[gate[0].name]] += 1
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 
@@ -677,35 +706,3 @@ class QiskitSimulator(SimulatorBase):
 
     def simulator_info(self):
         return 'qiskit ' + str(qiskit.__version__)
-
-if __name__ == '__main__':
-
-    circuit = qiskit.QuantumCircuit(2)
-
-    circuit.h(0)
-    cx = Operator([[1, 0, 0, 0],
-                   [0, 0, 0, 1],
-                   [0, 0, 1, 0],
-                   [0, 1, 0, 0]
-                   ])
-
-
-    #return self.append(HGate(), [qubit], [])
-
-    list_gates = [CircuitInstruction(HGate(), [1]), CircuitInstruction(cx, [0, 1])]
-    circuit2 = qiskit.QuantumCircuit(2)
-    for gate in list_gates:
-        circuit2.append(gate)
-
-    print(circuit2)
-    exit()
-
-    for gate in circuit.data:
-        print(gate)
-
-    print('----------')
-    print(circuit.data)
-
-    #circuit = qiskit.QuantumCircuit()
-
-    print(circuit)

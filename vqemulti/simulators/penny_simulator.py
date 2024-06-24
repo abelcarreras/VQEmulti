@@ -166,17 +166,22 @@ class PennylaneSimulator(SimulatorBase):
 
         # Get function return from measurements in Z according to sub_hamiltonian
         total_expectation_value = 0
-        for measure_string, counts in circuit().items():
-            for sub_string, coefficient in sub_hamiltonian.items():
+        total_variance = 0
+        for sub_string, coefficient in sub_hamiltonian.items():
+            expectation_value = 0
+            for measure_string, counts in circuit().items():
 
                 prod_function = 1
                 for i, measure_z in enumerate([str_to_bit(k) for k in measure_string]):
                     if main_string[i] != "I":
                         prod_function *= measure_z ** int(sub_string[i])
 
-                total_expectation_value += prod_function * float(coefficient) * counts/self._shots
+                expectation_value += prod_function * float(coefficient) * counts/self._shots
 
-        return total_expectation_value
+            total_variance += coefficient ** 2 - expectation_value**2
+            total_expectation_value += expectation_value
+
+        return total_expectation_value, total_variance
 
     def _build_reference_gates(self, hf_reference_fock):
         """
@@ -230,14 +235,24 @@ class PennylaneSimulator(SimulatorBase):
             if Configuration().verbose > 1:
                 print(self._circuit_draw[-1])
 
-        # depth
-        self._circuit_count.append(specs_func()['depth']-1)
         self._shot_count.append(self._shots)
 
-        # gates
-        gates_dict = specs_func()['gate_types']
-        for k, v in gates_dict.items():
-            self._circuit_gates[k] += v
+        try:
+            # depth
+            self._circuit_count.append(specs_func()['depth']-1)
+
+            # gates
+            gates_dict = specs_func()['gate_types']
+            for k, v in gates_dict.items():
+                self._circuit_gates[k] += v
+        except KeyError:
+            # depth
+            self._circuit_count.append(specs_func()['resources'].depth - 1)
+
+            # gates
+            gates_dict = specs_func()['resources'].gate_types
+            for k, v in gates_dict.items():
+                self._circuit_gates[k] += v
 
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 

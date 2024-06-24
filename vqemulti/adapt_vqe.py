@@ -82,14 +82,20 @@ def adaptVQE(hamiltonian,
 
     print('pool size: ', len(operators_pool))
 
-    # initialize variance
+    # set variance simulator
     if energy_simulator is not None:
+        # variance_simulator = gradient_simulator if variance_simulator is None else variance_simulator
         variance_simulator = energy_simulator if variance_simulator is None else variance_simulator
-        variance = simulate_adapt_vqe_variance([], operators_pool[:0], hf_reference_fock, hamiltonian, variance_simulator)
-    else:
-        variance = 0
 
     for iteration in range(max_iterations):
+
+        # compute circuit variance
+        if variance_simulator is not None:
+            # Calculation of Hamiltonian variance
+            variance = simulate_adapt_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, variance_simulator)
+            print('Hamiltonian Variance: ', variance)
+        else:
+            variance = 0
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
@@ -196,10 +202,6 @@ def adaptVQE(hamiltonian,
                                               options=optimizer_params.options,
                                               tol=energy_threshold,
                                               )
-
-            # Calculation of Hamiltonian variance
-            variance = simulate_adapt_vqe_variance(list(results.x), ansatz, hf_reference_fock, hamiltonian, variance_simulator)
-            print('Hamiltonian Variance: ', variance)
 
         # get results
         coefficients = list(results.x)

@@ -228,7 +228,7 @@ def cobyla_mod(fun, x0, jac, args=(), **options):
               'tol': 1-4,
               'catol': 2e-4,
               'n_guess': 8,
-              'guess_range': 2}
+              'guess_range': np.pi}
 
     params.update(options)
 

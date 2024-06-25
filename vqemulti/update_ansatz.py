@@ -74,4 +74,4 @@ def update_ansatz(hf_reference_fock, hamiltonian, ansatz, coefficients, gradient
         coefficients.append(0)
         ansatz.append(max_operator)
 
-    return ansatz, coefficients, max_indices, total_norm
+    return ansatz, coefficients, max_indices

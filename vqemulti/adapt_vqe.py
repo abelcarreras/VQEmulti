@@ -1,17 +1,15 @@
-from vqemulti.energy import exact_adapt_vqe_energy, get_adapt_vqe_energy
-from vqemulti.gradient import compute_gradient_vector
+from vqemulti.energy import exact_adapt_vqe_energy
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError, Converged
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti.energy.simulation import simulate_adapt_vqe_variance, simulate_adapt_vqe_energy
-from vqemulti.gradient.simulation import simulate_vqe_energy_gradient, simulate_gradient
+from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
-from vqemulti.update_ansatz import update_ansatz
+from vqemulti.method.adapt_vanila import AdapVanilla
 import scipy
-import numpy as np
 
 
 def adaptVQE(hamiltonian,
@@ -21,12 +19,14 @@ def adaptVQE(hamiltonian,
              max_iterations=50,
              coefficients=None,
              ansatz=None,
+             method = AdapVanilla,
              energy_simulator=None,
              gradient_simulator=None,
              variance_simulator=None,
              coeff_tolerance=1e-10,
              energy_threshold=1e-4,
              gradient_threshold=1e-6,
+             diff_threshold = 0,
              operator_update_number=1,
              operator_update_max_grad=2e-1,
              reference_dm=None,
@@ -90,15 +90,16 @@ def adaptVQE(hamiltonian,
     else:
         variance = 0
 
+
     for iteration in range(max_iterations):
 
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
-
+        method_initialization = method(energy_threshold, gradient_threshold, operator_update_number, operator_update_max_grad,
+                                        gradient_simulator, diff_threshold,  hf_reference_fock, hamiltonian, ansatz, coefficients,
+                                        operators_pool, variance, iterations, energy_simulator)
         try:
-            ansatz, coefficients, max_indices, total_norm = update_ansatz(hf_reference_fock, hamiltonian, ansatz, coefficients, gradient_simulator,
-                                                 energy_threshold, operators_pool, variance, gradient_threshold, iterations,
-                                                 operator_update_number, operator_update_max_grad, energy_simulator)
+            ansatz, coefficients = method_initialization.update_ansatz()
         except Converged as c:
             print(c.message)
             return {'energy': c.energy,
@@ -137,29 +138,12 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-        # check if last coefficient is zero (likely to happen in exact optimizations)
-        if abs(results.x[-1]) < coeff_tolerance:
-            print('Converge archived due to zero valued coefficient')
-            n_operators = len(max_indices)
-            return {'energy': energy,
-                    'ansatz': ansatz[:-n_operators],
-                    'indices': ansatz.get_index(operators_pool)[:-n_operators],
-                    'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations,
-                    'variance': variance}
+        params_check_convergence = {'results_optimization': results,
+                                    'coeff_tolerance': coeff_tolerance,
+                                    'diff_threshold': diff_threshold}
 
-        # check if last iteration energy is better (likely to happen in sampled optimizations)
-        diff_threshold = 0
-        if len(iterations['energies']) > 0 and iterations['energies'][-1] - energy < diff_threshold:
+        method_initialization.check_convergence(params_check_convergence)
 
-            print('Converge archived due to not energy improvement')
-            n_operators = len(max_indices)
-            return {'energy': iterations['energies'][-1],
-                    'ansatz': ansatz[:-n_operators],
-                    'indices': ansatz.get_index(operators_pool)[:-n_operators],
-                    'coefficients': coefficients[:-n_operators],
-                    'iterations': iterations,
-                    'variance': variance}
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
@@ -182,7 +166,6 @@ def adaptVQE(hamiltonian,
         print('Ansatz Indices:', ansatz.get_index(operators_pool))
 
         iterations['energies'].append(energy)
-        iterations['norms'].append(total_norm)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
         iterations['variance'].append(variance)
@@ -212,12 +195,16 @@ if __name__ == '__main__':
 
     Configuration().verbose = True
 
+    distance = 1.5
+    basis = '3-21g'
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                          ['H', [0, 0, 0.74]]],
-                                basis='3-21g',
+                                  ['H', [0, 0, distance]],
+                                  ['H', [0, 0, 2 * distance]],
+                                  ['H', [0, 0, 3 * distance]]],
+                                basis=basis,
                                 multiplicity=1,
                                 charge=0,
-                                description='H2')
+                                description='H4')
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
@@ -227,7 +214,7 @@ if __name__ == '__main__':
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = 4  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)

@@ -138,11 +138,22 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-        params_check_convergence = {'results_optimization': results,
+        params_convergence = {'results_optimization': results,
                                     'coeff_tolerance': coeff_tolerance,
                                     'diff_threshold': diff_threshold}
-
-        method_initialization.check_convergence(params_check_convergence)
+        method_initialization.params_check_convergence(params_convergence)
+        criteria_list, params_convergence = method_initialization.get_criteria_list_convergence()
+        for criteria in criteria_list:
+            try:
+                criteria(params_convergence, iterations, ansatz, operators_pool, variance)
+            except Converged as c:
+                print(c.message)
+                return {'energy': c.energy,
+                        'ansatz': c.ansatz,
+                        'indices': c.indices,
+                        'coefficients': c.coefficients,
+                        'iterations': c.iterations,
+                        'variance': c.variance}
 
 
         print('\n{:^8}   {}'.format('coefficient', 'operator'))

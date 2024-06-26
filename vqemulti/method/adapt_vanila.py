@@ -3,8 +3,11 @@ from vqemulti.gradient import compute_gradient_vector
 from vqemulti.gradient.simulation import simulate_gradient
 from vqemulti.energy import get_adapt_vqe_energy
 from vqemulti.errors import Converged
-from vqemulti.method import zero_valued_coefficient_adaptvanilla, energy_worsening
+from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptvanilla, energy_worsening
 import numpy as np
+
+
+
 class AdapVanilla(Method):
 
     def __init__(self, energy_threshold, gradient_threshold, operator_update_number, operator_update_max_grad,
@@ -17,8 +20,12 @@ class AdapVanilla(Method):
         self.operator_update_number = operator_update_number
         self.operator_update_max_grad = operator_update_max_grad
         self.gradient_simulator = gradient_simulator
-        self.max_indices = 0
         self.diff_threshold = diff_threshold
+
+        # Convergence criteria definition for this method
+        self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
+
+
 
 
     def update_ansatz(self):
@@ -93,8 +100,9 @@ class AdapVanilla(Method):
 
         return self.ansatz, self.coefficients
 
-    def check_convergence(self, params_check_convergence):
-        params_check_convergence['max_indices'] = self.max_indices
-        params_check_convergence['diff_threshold'] = self.diff_threshold
-        criteria = [zero_valued_coefficient_adaptvanilla, energy_worsening]
-        super().check_covergence(criteria, params_check_convergence)
+    def params_check_convergence(self, params_convergence):
+        self.params_convergence = params_convergence
+        self.params_convergence['diff_threshold'] = self.diff_threshold
+        self.params_convergence['operator_update_number'] = self.operator_update_number
+
+

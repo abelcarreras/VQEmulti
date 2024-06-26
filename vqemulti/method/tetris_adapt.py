@@ -7,8 +7,33 @@ from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptv
 import numpy as np
 
 
+def operator_action(pool, index):
+    """Return a set of integers corresponding to qubit indices the qubit
+    operator acts on.
 
-class AdapVanilla(Method):
+    Returns:
+        list: Set of qubit indices.
+    """
+
+    qubit_indices = set()
+    if len(index) == 1:
+        index = int(index[0])
+        for term in pool[index].terms:
+            if term:
+                indices = list(zip(*term))[0]
+                qubit_indices.update(indices)
+
+    else:
+        for i in range(len(index)):
+            for term in pool[index[i]].terms:
+                if term:
+                    indices = list(zip(*term))[0]
+                    qubit_indices.update(indices)
+    return qubit_indices
+
+
+
+class AdapTetris(Method):
 
     def __init__(self, energy_threshold, gradient_threshold, operator_update_number, operator_update_max_grad,
                  gradient_simulator, diff_threshold, hf_reference_fock, hamiltonian, ansatz, coefficients,

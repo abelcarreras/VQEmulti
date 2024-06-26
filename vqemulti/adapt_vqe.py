@@ -9,6 +9,7 @@ from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
+from vqemulti.method.tetris_adapt import AdapTetris
 import scipy
 
 

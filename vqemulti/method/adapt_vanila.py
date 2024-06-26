@@ -26,8 +26,6 @@ class AdapVanilla(Method):
         self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
 
 
-
-
     def update_ansatz(self):
         if self.gradient_simulator is None:
             gradient_vector = compute_gradient_vector(self.reference_hf,
@@ -100,9 +98,11 @@ class AdapVanilla(Method):
 
         return self.ansatz, self.coefficients
 
-    def params_check_convergence(self, params_convergence):
+    def set_params_convergence(self, params_convergence):
         self.params_convergence = params_convergence
         self.params_convergence['diff_threshold'] = self.diff_threshold
         self.params_convergence['operator_update_number'] = self.operator_update_number
+
+
 
 

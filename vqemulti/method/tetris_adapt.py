@@ -7,25 +7,23 @@ from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptv
 import numpy as np
 
 
-def operator_action(pool, index):
-    """Return a set of integers corresponding to qubit indices the qubit
-    operator acts on.
+def qubits_operator_action(pool, indeces):
+    """Takes a list of indices of operators and return a set of integers corresponding to qubit indices the qubit
+    operators act on.
 
     Returns:
         list: Set of qubit indices.
     """
-
     qubit_indices = set()
-    if len(index) == 1:
-        index = int(index[0])
+    if len(indeces) == 1:
+        index = int(indeces[0])
         for term in pool[index].terms:
             if term:
                 indices = list(zip(*term))[0]
                 qubit_indices.update(indices)
-
     else:
-        for i in range(len(index)):
-            for term in pool[index[i]].terms:
+        for i in range(len(indeces)):
+            for term in pool[indeces[i]].terms:
                 if term:
                     indices = list(zip(*term))[0]
                     qubit_indices.update(indices)
@@ -84,14 +82,25 @@ class AdapTetris(Method):
         if total_norm < self.gradient_threshold:
             raise Converged(message='Converge archived due to gradient norm threshold')
 
-        # primary selection of operators
-        max_indices = np.argsort(gradient_vector)[-self.operator_update_number:][::-1]
+        # Order the indices depending on the size of the gradient
+        indices_sorted = np.argsort(gradient_vector)[::-1]
 
-        # refine selection to ensure all operators are relevant
+        # Start adding the operator with the largest gradient
+        max_indices = np.argsort(gradient_vector)[-1:][::-1]
+
+        # Then add the rest of operators
+        for i in range(len(indices_sorted)-1):
+            index_evaluated_op = [indices_sorted[i+1].tolist()]
+            if (qubits_operator_action(self.operators_pool, index_evaluated_op) & qubits_operator_action(self.operators_pool, max_indices)):
+                pass
+            else:
+                max_indices = np.append(max_indices, indices_sorted[i+1])
+
+        # Delete operator with too small gradient
         while True:
             max_gradients = np.array(gradient_vector)[max_indices]
             max_dev = np.max(np.std(max_gradients))
-            if max_dev / np.max(max_gradients) > self.operator_update_max_grad:
+            if max_dev/np.max(max_gradients) > self.operator_update_max_grad:
                 max_indices = max_indices[:-1]
             else:
                 break
@@ -106,7 +115,8 @@ class AdapTetris(Method):
         # check if repeated operator
         repeat_operator = len(max_indices) == len(ansatz.get_index(self.operators_pool)[-len(max_indices):]) and \
                           np.all(
-                              np.array(max_indices) == np.array(ansatz.get_index(self.operators_pool)[-len(max_indices):]))
+                              np.array(max_indices) == np.array(
+                                  ansatz.get_index(self.operators_pool)[-len(max_indices):]))
 
         # if repeat operator finish adaptVQE
         if repeat_operator:

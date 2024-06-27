@@ -30,7 +30,7 @@ def adaptVQE(hamiltonian,
              gradient_threshold=1e-6,
              diff_threshold = 0,
              operator_update_number=1,
-             operator_update_max_grad=2e-1,
+             operator_update_max_grad=2e-2,
              reference_dm=None,
              optimizer_params=None,
              ):
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 4  # molecule.n_orbitals
+    n_orbitals = 5  # molecule.n_orbitals
 
     hamiltonian = molecule.get_molecular_hamiltonian()
     hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -268,7 +268,8 @@ if __name__ == '__main__':
     result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
-                      energy_threshold=0.1,
+                      energy_threshold=0.0001,
+                      method= AdapTetris
                       # opt_qubits=True,
                       # energy_simulator=simulator,
                       # gradient_simulator=simulator

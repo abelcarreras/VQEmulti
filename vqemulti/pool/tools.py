@@ -1,7 +1,7 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
 from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit, get_string_from_fermionic_operator
-
+import openfermion
 
 class OperatorList:
 
@@ -83,6 +83,7 @@ class OperatorList:
 
     def get_operators_type(self):
         return self._type
+
 
     def get_quibits_list(self, normalize=False, reorganize=True):
         """
@@ -168,8 +169,11 @@ class OperatorList:
                     indeces.append(j)
         return indeces
 
-
-
+    def is_fermionic(self):
+        if self._type is openfermion.ops.operators.fermion_operator.FermionOperator:
+            return True
+        else:
+            return False
 
     def __mul__(self, other):
 
@@ -182,6 +186,8 @@ class OperatorList:
 
     def __rmul__(self, other):
         return self.__mul__(other)
+
+
 
 if __name__ == '__main__':
 

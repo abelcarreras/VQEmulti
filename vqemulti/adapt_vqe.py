@@ -1,3 +1,5 @@
+import openfermion.ops.operators.fermion_operator_test
+
 from vqemulti.energy import exact_adapt_vqe_energy
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
@@ -16,7 +18,6 @@ import scipy
 def adaptVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
-             opt_qubits=False,
              max_iterations=50,
              coefficients=None,
              ansatz=None,
@@ -62,7 +63,8 @@ def adaptVQE(hamiltonian,
     print('optimizer params: ', optimizer_params)
 
     # Initialize data structures
-    iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': []}
+    iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': [],
+                  'coefficients': []}
 
     # Check if initial guess
     if ansatz is None:
@@ -91,24 +93,38 @@ def adaptVQE(hamiltonian,
     else:
         variance = 0
 
+    # Initialize variables for the selected method
+    vqe_method = method(energy_threshold, gradient_threshold, operator_update_number,
+                                   operator_update_max_grad, coeff_tolerance, diff_threshold,
+                                   gradient_simulator, hf_reference_fock, hamiltonian,
+                                   operators_pool, variance, iterations, energy_simulator)
+
+    # Hartree-Fock energy calculation
+    if energy_simulator is None:
+        iterations['energies'].append(exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian))
+    else:
+        energy_simulator.update_model(precision=energy_threshold,
+                                      variance=variance,
+                                      n_coefficients=len(coefficients),
+                                      n_qubits=hamiltonian.n_qubits)
+        iterations['energies'].append(simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian,
+                                                                energy_simulator))
 
     for iteration in range(max_iterations):
 
-
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
-        method_initialization = method(energy_threshold, gradient_threshold, operator_update_number, operator_update_max_grad,
-                                        gradient_simulator, diff_threshold,  hf_reference_fock, hamiltonian, ansatz, coefficients,
-                                        operators_pool, variance, iterations, energy_simulator)
+
+        # update ansatz
         try:
-            ansatz, coefficients = method_initialization.update_ansatz()
+            ansatz, coefficients = vqe_method.update_ansatz(ansatz, coefficients)
         except Converged as c:
             print(c.message)
-            return {'energy': c.energy,
-                    'ansatz':c.ansatz,
-                    'indices': c.indices,
-                    'coefficients': c.coefficients,
-                    'iterations': c.iterations,
-                    'variance': c.variance}
+            return {'energy': iterations['energies'][-1],
+                    'ansatz': ansatz,
+                    'indices': ansatz.get_index(operators_pool),
+                    'coefficients': iterations['coefficients'][-1],
+                    'iterations': iterations,
+                    'variance': iterations['variance'][-1]}
 
         # run optimization
         if energy_simulator is None:
@@ -135,53 +151,48 @@ def adaptVQE(hamiltonian,
                                               tol=energy_threshold,
                                               )
 
-        # get results
         coefficients = list(results.x)
         energy = results.fun
 
-        params_convergence = {'results_optimization': results,
-                                    'coeff_tolerance': coeff_tolerance,
-                                    'diff_threshold': diff_threshold}
-
-        method_initialization.set_params_convergence(params_convergence)
-        criteria_list = method_initialization.get_criteria_list_convergence()
-
-        for criteria in criteria_list:
-            try:
-                criteria(iterations, ansatz, operators_pool, variance)
-            except Converged as c:
-                print(c.message)
-                return {'energy': c.energy,
-                        'ansatz': c.ansatz,
-                        'indices': c.indices,
-                        'coefficients': c.coefficients,
-                        'iterations': c.iterations,
-                        'variance': c.variance}
-
         print('\n{:^8}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
-            if opt_qubits:
-                print('{:8.5f}   {} '.format(c, op))
+            if ansatz.is_fermionic():
+                print('{:8.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
             else:
-                print('{:8.5f} {} '.format(c, get_string_from_fermionic_operator(op)))
+                print('{:8.5e} {} '.format(c, op))
         print()
 
         if reference_dm is not None:
             n_orb = len(hf_reference_fock)//2
             density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
             fidelity = density_fidelity(reference_dm, density_matrix)
-            print('fidelity: {:6.3f}'.format(fidelity))
+            print('fidelity: {:6.4e}'.format(fidelity))
             iterations['fidelity'].append(fidelity)
 
         # print iteration results
         print('Iteration energy:', energy)
-        # print('Coefficients:', coefficients)
         print('Ansatz Indices:', ansatz.get_index(operators_pool))
 
+        # Data storage
         iterations['energies'].append(energy)
         iterations['f_evaluations'].append(results.nfev)
         iterations['ansatz_size'].append(len(coefficients))
         iterations['variance'].append(variance)
+        iterations['coefficients'].append(coefficients)
+
+        # Checking criteria convergence
+        criteria_list = vqe_method.get_criteria_list_convergence()
+        for criteria in criteria_list:
+            try:
+                criteria(iterations)
+            except Converged as c:
+                print(c.message)
+                return {'energy': iterations['energies'][-1],
+                        'ansatz': ansatz,
+                        'indices': ansatz.get_index(operators_pool),
+                        'coefficients': iterations['coefficients'][-1],
+                        'iterations': iterations,
+                        'variance': iterations['variance'][-1]}
 
         if gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
@@ -270,7 +281,9 @@ if __name__ == '__main__':
     error = result['energy'] - molecule.fci_energy
     print('Error:', error)
 
-    print('Ansatz:', result['ansatz'])
+    #print('Ansatz:', result['ansatz'])
     print('Coefficients:', result['coefficients'])
     print('Operator Indices:', result['indices'])
     print('Num operators: {}'.format(len(result['ansatz'])))
+    print('ITERATIONS DICTIONARY')
+    print(result['iterations'])

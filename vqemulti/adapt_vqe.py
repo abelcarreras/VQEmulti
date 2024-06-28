@@ -12,6 +12,7 @@ from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
 from vqemulti.method.tetris_adapt import AdapTetris
+from vqemulti.method.genetic_adapt import GeneticAdapt
 import scipy
 
 
@@ -21,7 +22,7 @@ def adaptVQE(hamiltonian,
              max_iterations=50,
              coefficients=None,
              ansatz=None,
-             method = AdapVanilla,
+             method = GeneticAdapt,
              energy_simulator=None,
              gradient_simulator=None,
              variance_simulator=None,
@@ -33,6 +34,7 @@ def adaptVQE(hamiltonian,
              operator_update_max_grad=2e-2,
              reference_dm=None,
              optimizer_params=None,
+             beta = None
              ):
     """
     Perform an adaptVQE calculation
@@ -97,7 +99,7 @@ def adaptVQE(hamiltonian,
     vqe_method = method(energy_threshold, gradient_threshold, operator_update_number,
                                    operator_update_max_grad, coeff_tolerance, diff_threshold,
                                    gradient_simulator, hf_reference_fock, hamiltonian,
-                                   operators_pool, variance, iterations, energy_simulator)
+                                   operators_pool, variance, iterations, energy_simulator, beta)
 
     # Hartree-Fock energy calculation
     if energy_simulator is None:
@@ -269,7 +271,8 @@ if __name__ == '__main__':
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
                       energy_threshold=0.0001,
-                      method= AdapTetris
+                      method= GeneticAdapt,
+                      beta = 5
                       # opt_qubits=True,
                       # energy_simulator=simulator,
                       # gradient_simulator=simulator

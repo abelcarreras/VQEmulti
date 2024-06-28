@@ -294,3 +294,6 @@ if __name__ == '__main__':
     E = (-2.0843034804350298 - result['energy'])/(-2.0843034804350298)
     L = (25 - len(result['ansatz']))/25
     print(E,L)
+    import matplotlib.pyplot as plt
+    plt.plot(E,L, 'ro')
+    plt.show()

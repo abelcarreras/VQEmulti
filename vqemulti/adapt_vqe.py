@@ -271,7 +271,7 @@ if __name__ == '__main__':
                       operators_pool,  # fermionic operators
                       hf_reference_fock,
                       energy_threshold=0.0001,
-                      method= GeneticAdapt,
+                      method= AdapVanilla,
                       beta = 5
                       # opt_qubits=True,
                       # energy_simulator=simulator,
@@ -291,3 +291,6 @@ if __name__ == '__main__':
     print('Num operators: {}'.format(len(result['ansatz'])))
     print('ITERATIONS DICTIONARY')
     print(result['iterations'])
+    E = (-2.0843034804350298 - result['energy'])/(-2.0843034804350298)
+    L = (25 - len(result['ansatz']))/25
+    print(E,L)

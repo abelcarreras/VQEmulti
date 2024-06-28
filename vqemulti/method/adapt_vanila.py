@@ -11,7 +11,7 @@ class AdapVanilla(Method):
     def __init__(self, energy_threshold, gradient_threshold, operator_update_number,
                  operator_update_max_grad, coeff_tolerance, diff_threshold,
                  gradient_simulator, hf_reference_fock, hamiltonian,
-                 operators_pool, variance, iterations, energy_simulator):
+                 operators_pool, variance, iterations, energy_simulator, *args):
         super().__init__(hf_reference_fock, hamiltonian,
                   operators_pool, variance, iterations, energy_simulator)
         self.energy_threshold = energy_threshold

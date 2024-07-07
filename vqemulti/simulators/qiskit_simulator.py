@@ -430,11 +430,12 @@ class QiskitSimulator(SimulatorBase):
 
             from qiskit_ibm_runtime import QiskitRuntimeService
             from qiskit.providers.exceptions import QiskitBackendNotFoundError
-            service = QiskitRuntimeService()
             try:
-                self._backend = service.backend(session.backend())
+                # service = QiskitRuntimeService()
+                #self._backend = service.backend(session.backend())
+                self._backend = session._backend
             except QiskitBackendNotFoundError:
-                pass
+                raise Exception('Backend not found')
 
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
@@ -591,18 +592,38 @@ class QiskitSimulator(SimulatorBase):
             from qiskit_aer.primitives import Estimator
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
-        else:
-            from qiskit_ibm_runtime import Estimator, Options
-            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+            print(job.result())
 
-            pm = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+        else:
+            from qiskit_ibm_runtime import Estimator, Options, EstimatorV2
+            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+            from vqemulti.simulators.backend_opt import get_backend_opt_layout
+            layout = get_backend_opt_layout(self._backend, n_qubits)
+
+            pm = generate_preset_pass_manager(backend=self._backend,
+                                              optimization_level=1,
+                                              initial_layout=layout,
+                                              # layout_method='dense'
+                                              )
             isa_circuit = pm.run(circuit)
+            # print(isa_circuit)
+            # print('layout: ', isa_circuit.layout)
 
             mapped_observables = measure_op.apply_layout(isa_circuit.layout)
 
             # estimate [ <psi|H|psi)> ]
-            estimator = Estimator(session=session, options=Options(optimization_level=1))
+            estimator = Estimator(session=session, options=Options(optimization_level=0, resilience_level=0))
             job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
+            print(job.result())
+
+            #estimator = EstimatorV2(session=session)
+            #estimator.options.default_shots=self._shots
+            #estimator.options.resilience.zne_mitigation=False
+            #estimator.options.update(default_shots=self._shots, optimization_level=0)
+
+            # precision = 0.08762138448350106
+            # print('precision: ', precision)
+            #job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
 
         # get variance
         variance = sum([meta['variance'] for meta in job.result().metadata])
@@ -612,6 +633,11 @@ class QiskitSimulator(SimulatorBase):
             std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
+
+        #print(job.result())
+        #print(job.result()[0].data.evs)
+        #print(job.result()[0].data.stds)
+        # return job.result()[0].data.evs, job.result()[0].data.stds**2
 
         return sum(job.result().values), variance
 

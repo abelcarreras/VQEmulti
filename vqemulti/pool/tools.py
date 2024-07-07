@@ -57,7 +57,6 @@ class OperatorList:
             self._list = [normalize_operator(op) for op in self._list]
             # self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
 
-
     def __str__(self):
         return self._list.__str__()
 
@@ -186,7 +185,6 @@ class OperatorList:
 
     def __rmul__(self, other):
         return self.__mul__(other)
-
 
 
 if __name__ == '__main__':

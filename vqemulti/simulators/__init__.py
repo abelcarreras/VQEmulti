@@ -170,7 +170,7 @@ class SimulatorBase:
 
             # print('variance: {:.5f} {}'.format(energy_2 - energy**2, n_shots))
 
-        return np.sum(energy_list), np.sum(variance_list)
+        return np.sum(energy_list).real, np.sum(variance_list).real
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):
         """

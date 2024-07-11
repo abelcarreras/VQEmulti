@@ -34,7 +34,7 @@ for d in np.linspace(0.3, 3, 20):
     hamiltonian = molecule.get_molecular_hamiltonian()
 
     # Choose specific pool of operators for adapt-VQE
-    pool = get_pool_singlet_sd(n_electrons=n_electrons,
+    operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
                                n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
@@ -47,16 +47,32 @@ for d in np.linspace(0.3, 3, 20):
                           trotter_steps=1,
                           shots=1000)
 
+    from vqemulti.method.adapt_vanila import AdapVanilla
+
+    method = AdapVanilla(gradient_threshold=1e-6,
+                         diff_threshold=0,
+                         coeff_tolerance=1e-10,
+                         gradient_simulator=None,
+                         operator_update_number=1,
+                         operator_update_max_grad=2e-2,
+                         )
+
     # run adaptVQE
-    result = adaptVQE(hamiltonian,
-                      pool,
-                      hf_reference_fock,
-                      opt_qubits=False,
-                      max_iterations=10,
-                      coeff_tolerance=1e-3
-                      # energy_simulator=simulator,  # comment this line to not use sampler simulator
-                      # gradient_simulator=simulator,  # comment this line to not use sampler simulator
-                      )
+    try:
+        result = adaptVQE(hamiltonian,  # fermionic hamiltonian
+                          operators_pool,  # fermionic operators
+                          hf_reference_fock,
+                          energy_threshold=0.0001,
+                          method=method,
+                          max_iterations=20,
+                          energy_simulator=None,
+                          variance_simulator=None,
+                          reference_dm=None,
+                          optimizer_params=None
+                          )
+    except NotConvergedError as c:
+        print('Not converged :(')
+        result = c.results
 
     print("Final energy:", result["energy"])
 

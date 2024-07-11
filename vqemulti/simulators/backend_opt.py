@@ -30,7 +30,7 @@ def get_paths(parelles, N):
 
 
 def get_backend_opt_layout(backend, n_qubits, plot_data=False):
-    print('layout check')
+    # print('layout check')
 
     if isinstance(backend, str):
         from qiskit_ibm_runtime import QiskitRuntimeService
@@ -42,40 +42,59 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False):
     n_backend_qubits = backend.num_qubits
     edges = backend.coupling_map.get_edges()
 
+    decoherence_t1 = []
+    decoherence_t2 = []
+    for i in range(n_backend_qubits):
+        decoherence_t1.append(backend.qubit_properties(i).t1)
+        decoherence_t2.append(backend.qubit_properties(i).t2)
+
     # get total error
-    non_error = np.ones((n_backend_qubits))
-    for target, data in backend.target.items():
-        # print(target, data)
-        #if target != 'measure':
-        #    continue
-        for qubits, value in data.items():
-            if qubits is None:
-                break
+    two_gate_non_error = np.ones((n_backend_qubits))
+    two_gate_instructions = [op.name for op in backend.operations if op.num_qubits == 2 and isinstance(op.name, str)]
+    # print('instructions:', two_gate_instructions)
+    # print('operations: ', backend.operations)
+
+    for instruc in two_gate_instructions:
+        #print(backend.target[instruc])
+        for qubits, value in backend.target[instruc].items():
             for q in qubits:
-                if value is None or value.error is None:
-                    break
-                non_error[q] *= (1.0 - value.error)
+                two_gate_non_error[q] *= (1.0 - value.error)
+
+    # print(two_gate_non_error)
+
+    quality = two_gate_non_error/np.average(two_gate_non_error) + \
+              np.array(decoherence_t1)/np.average(decoherence_t1) + \
+              np.array(decoherence_t2)/np.average(decoherence_t2)
 
     # find optimal path
     layout = None
-    highest_non_error = 0
+    highest_quality = 0
     for path in get_paths(edges, n_qubits):
-        non_error_path = sum([non_error[j] for j in path])
-        # print(cami, error)
-        if non_error_path > highest_non_error:
-            highest_non_error = non_error_path
+        quality_path = sum([quality[j] for j in path])
+        if quality_path > highest_quality:
+            highest_quality = quality_path
             layout = path
 
     if plot_data:
         from qiskit.visualization import plot_gate_map
         import matplotlib.pyplot as plt
 
-        plt.figure()
-        plt.title('Error per qubits')
+        plt.title('Error per qubits (lower is better)')
         plt.xlabel('Qubits')
         plt.ylabel('Error')
+        plt.bar([str(i) for i in range(n_backend_qubits)], 1-two_gate_non_error)
 
-        plt.bar([str(i) for i in range(n_backend_qubits)], 1-non_error)
+        plt.figure()
+        plt.title('Decoherence time T1 (higher is better)')
+        plt.xlabel('Qubits')
+        plt.ylabel('time (s)')
+        plt.bar([str(i) for i in range(n_backend_qubits)], decoherence_t1)
+
+        plt.figure()
+        plt.title('Decoherence time T2 (higher is better)')
+        plt.xlabel('Qubits')
+        plt.ylabel('time (s)')
+        plt.bar([str(i) for i in range(n_backend_qubits)], decoherence_t2)
 
         qubit_color = []
         for i in range(n_backend_qubits):
@@ -88,7 +107,7 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False):
 
         plt.show()
 
-        print('Average error layout: ', 1-highest_non_error)
+        print('Quality layout: ', highest_quality)
 
     return layout
 

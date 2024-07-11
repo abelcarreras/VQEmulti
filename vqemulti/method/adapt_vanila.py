@@ -8,19 +8,15 @@ import numpy as np
 
 class AdapVanilla(Method):
 
-    def __init__(self, energy_threshold, gradient_threshold, operator_update_number,
-                 operator_update_max_grad, coeff_tolerance, diff_threshold,
-                 gradient_simulator, hf_reference_fock, hamiltonian,
-                 operators_pool, variance, iterations, energy_simulator, *args):
-        super().__init__(hf_reference_fock, hamiltonian,
-                  operators_pool, variance, iterations, energy_simulator)
-        self.energy_threshold = energy_threshold
+    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance, gradient_simulator,
+                operator_update_number, operator_update_max_grad):
+
         self.gradient_threshold = gradient_threshold
-        self.operator_update_number = operator_update_number
-        self.operator_update_max_grad = operator_update_max_grad
-        self.gradient_simulator = gradient_simulator
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
+        self.gradient_simulator = gradient_simulator
+        self.operator_update_number = operator_update_number
+        self.operator_update_max_grad = operator_update_max_grad
 
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]

@@ -17,23 +17,20 @@ import scipy
 def adaptVQE(hamiltonian,
              operators_pool,
              hf_reference_fock,
+             energy_threshold=0.0001,
              max_iterations=50,
              coefficients=None,
              ansatz=None,
-             method = AdapVanilla,
+             method = AdapVanilla(gradient_threshold=1e-6,
+                         diff_threshold=0,
+                         coeff_tolerance=1e-10,
+                         gradient_simulator=None,
+                         operator_update_number=1,
+                         operator_update_max_grad=2e-2),
              energy_simulator=None,
-             gradient_simulator=None,
              variance_simulator=None,
-             coeff_tolerance=1e-10,
-             energy_threshold=1e-4,
-             gradient_threshold=1e-6,
-             diff_threshold = 0,
-             operator_update_number=1,
-             operator_update_max_grad=2e-2,
              reference_dm=None,
              optimizer_params=None,
-             beta = None,
-             alpha = None
              ):
     """
     Perform an adaptVQE calculation
@@ -94,11 +91,8 @@ def adaptVQE(hamiltonian,
     else:
         variance = 0
 
-    # Initialize variables for the selected method
-    vqe_method = method(energy_threshold, gradient_threshold, operator_update_number,
-                                   operator_update_max_grad, coeff_tolerance, diff_threshold,
-                                   gradient_simulator, hf_reference_fock, hamiltonian,
-                                   operators_pool, variance, iterations, energy_simulator, beta, alpha)
+    # Initialize variables that are common for all the methods
+    method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool)
 
     # Hartree-Fock energy calculation
     if energy_simulator is None:
@@ -117,7 +111,7 @@ def adaptVQE(hamiltonian,
 
         # update ansatz
         try:
-            ansatz, coefficients = vqe_method.update_ansatz(ansatz, coefficients)
+            ansatz, coefficients = method.update_ansatz(ansatz, coefficients)
         except Converged as c:
             print(c.message)
             return {'energy': iterations['energies'][-1],
@@ -183,7 +177,7 @@ def adaptVQE(hamiltonian,
         iterations['coefficients'].append(coefficients)
 
         # Checking criteria convergence
-        criteria_list = vqe_method.get_criteria_list_convergence()
+        criteria_list = method.get_criteria_list_convergence()
         for criteria in criteria_list:
             try:
                 criteria(iterations)
@@ -197,7 +191,7 @@ def adaptVQE(hamiltonian,
                         'variance': iterations['variance'][-1],
                         'num_iterations': iteration}
 
-        if gradient_simulator is not None:
+        if method.gradient_simulator is not None:
             circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])
 
@@ -267,17 +261,31 @@ if __name__ == '__main__':
                           trotter_steps=1,
                           test_only=True,
                           shots=1000)
+
+    # Method
+    from vqemulti.method.adapt_vanila import AdapVanilla
+    #from vqemulti.method.tetris_adapt import AdapTetris
+    #from vqemulti.method.genetic_adapt import GeneticAdapt
+    #from vqemulti.method.genetic_add_adapt import Genetic_Add_Adapt
+
+    method = AdapVanilla(gradient_threshold=1e-6,
+                         diff_threshold=0,
+                         coeff_tolerance=1e-10,
+                         gradient_simulator=None,
+                         operator_update_number=1,
+                         operator_update_max_grad=2e-2,
+                         )
     try:
         result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                           operators_pool,  # fermionic operators
                           hf_reference_fock,
                           energy_threshold=0.0001,
-                          method= AdapVanilla,
-                          max_iterations= 2,
-                          beta = 10
-                          # opt_qubits=True,
-                          # energy_simulator=simulator,
-                          # gradient_simulator=simulator
+                          method = method,
+                          max_iterations = 20,
+                          energy_simulator = None,
+                          variance_simulator = None,
+                          reference_dm = None,
+                          optimizer_params = None
                           )
     except NotConvergedError as c:
         print('Not converged :(')

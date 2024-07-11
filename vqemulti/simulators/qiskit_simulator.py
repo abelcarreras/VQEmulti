@@ -592,7 +592,7 @@ class QiskitSimulator(SimulatorBase):
             from qiskit_aer.primitives import Estimator
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
-            print(job.result())
+            # print(job.result())
 
         else:
             from qiskit_ibm_runtime import Estimator, Options, EstimatorV2
@@ -614,7 +614,7 @@ class QiskitSimulator(SimulatorBase):
             # estimate [ <psi|H|psi)> ]
             estimator = Estimator(session=session, options=Options(optimization_level=0, resilience_level=0))
             job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
-            print(job.result())
+            # print(job.result())
 
             #estimator = EstimatorV2(session=session)
             #estimator.options.default_shots=self._shots

@@ -12,7 +12,7 @@ class GeneticAdapt(Method):
     def __init__(self, energy_threshold, gradient_threshold, operator_update_number,
                  operator_update_max_grad, coeff_tolerance, diff_threshold,
                  gradient_simulator, hf_reference_fock, hamiltonian,
-                 operators_pool, variance, iterations, energy_simulator, beta):
+                 operators_pool, variance, iterations, energy_simulator, beta, *args):
         super().__init__(hf_reference_fock, hamiltonian,
                   operators_pool, variance, iterations, energy_simulator)
         self.energy_threshold = energy_threshold
@@ -38,9 +38,9 @@ class GeneticAdapt(Method):
         delete_probs = []
         for coeff in coefficients:
             prob_distribution = np.exp(-abs(coeff)*self.beta)
-            delete_probs.append(prob_distribution)
+            delete_probs.append(prob_distribution/(len(coefficients)))
         # Normalize delete probability
-        normalized_delete_probs = np.array(delete_probs)/len(coefficients)
+        normalized_delete_probs = np.array(delete_probs)
         delete_probs = normalized_delete_probs.tolist()
         add_probability = 1 - np.sum(delete_probs)
         delete_probs.append(add_probability)

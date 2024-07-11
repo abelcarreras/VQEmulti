@@ -111,7 +111,7 @@ def adaptVQE(hamiltonian,
 
         # update ansatz
         try:
-            ansatz, coefficients = method.update_ansatz(ansatz, coefficients)
+            ansatz, coefficients = method.update_ansatz(ansatz, coefficients, iterations)
         except Converged as c:
             print(c.message)
             return {'energy': iterations['energies'][-1],

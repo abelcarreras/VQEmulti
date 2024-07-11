@@ -9,30 +9,23 @@ import numpy as np
 
 class Genetic_Add_Adapt(Method):
 
-    def __init__(self, energy_threshold, gradient_threshold, operator_update_number,
-                 operator_update_max_grad, coeff_tolerance, diff_threshold,
-                 gradient_simulator, hf_reference_fock, hamiltonian,
-                 operators_pool, variance, iterations, energy_simulator, beta, alpha):
-        super().__init__(hf_reference_fock, hamiltonian,
-                  operators_pool, variance, iterations, energy_simulator)
-        self.energy_threshold = energy_threshold
+    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance, gradient_simulator, beta, alpha):
+
         self.gradient_threshold = gradient_threshold
-        self.operator_update_number = 1
-        self.operator_update_max_grad = operator_update_max_grad
-        self.gradient_simulator = gradient_simulator
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
+        self.gradient_simulator = gradient_simulator
         self.beta = beta
         self.alpha = alpha
 
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla]
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
-                                   'operator_update_number': self.operator_update_number}
+                                   }
 
 
 
-    def update_ansatz(self, ansatz, coefficients):
+    def update_ansatz(self, ansatz, coefficients, iterations):
 
         # Select the mutation that is going to happen
         if self.gradient_simulator is None:
@@ -61,7 +54,7 @@ class Genetic_Add_Adapt(Method):
         if total_norm < self.gradient_threshold:
             raise Converged(message='Converge archived due to gradient norm threshold')
 
-        if len(coefficients)>2 and abs(self.iterations['energies'][-2]-self.iterations['energies'][-1])<0.001:
+        if len(coefficients)>2 and abs(iterations['energies'][-2]-iterations['energies'][-1])<self.alpha:
             add_probs = []
             for gradient in gradient_vector:
                 prob_distribution = (2 * np.arctan(abs(gradient)*self.beta))/np.pi
@@ -103,16 +96,8 @@ class Genetic_Add_Adapt(Method):
 
         else:
             # primary selection of operators
-            max_indices = np.argsort(gradient_vector)[-self.operator_update_number:][::-1]
+            max_indices = np.argsort(gradient_vector)[-1:][::-1]
 
-            # refine selection to ensure all operators are relevant
-            while True:
-                max_gradients = np.array(gradient_vector)[max_indices]
-                max_dev = np.max(np.std(max_gradients))
-                if max_dev / np.max(max_gradients) > self.operator_update_max_grad:
-                    max_indices = max_indices[:-1]
-                else:
-                    break
 
             # get gradients/operators update list
             max_gradients = np.array(gradient_vector)[max_indices]

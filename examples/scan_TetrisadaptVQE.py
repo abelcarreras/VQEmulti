@@ -3,6 +3,7 @@
 from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.errors import NotConvergedError
 from vqemulti.analysis import get_info
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
@@ -64,7 +65,7 @@ for d in np.linspace(0.3, 3, 20):
                           hf_reference_fock,
                           energy_threshold=0.0001,
                           method = method,
-                          max_iterations = 20,
+                          max_iterations = 2,
                           energy_simulator = None,
                           variance_simulator = None,
                           reference_dm = None,

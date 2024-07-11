@@ -3,6 +3,7 @@
 from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.errors import NotConvergedError
 from vqemulti.analysis import get_info
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf

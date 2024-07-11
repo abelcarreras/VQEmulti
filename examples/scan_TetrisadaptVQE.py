@@ -58,17 +58,22 @@ for d in np.linspace(0.3, 3, 20):
                          operator_update_max_grad = 0.001
                          )
     # run adaptVQE
-    result = adaptVQE(hamiltonian,     # fermionic hamiltonian
-                      operators_pool,  # fermionic operators
-                      hf_reference_fock,
-                      energy_threshold=0.0001,
-                      method = method,
-                      max_iterations = 20,
-                      energy_simulator = None,
-                      variance_simulator = None,
-                      reference_dm = None,
-                      optimizer_params = None
-                      )
+    try:
+        result = adaptVQE(hamiltonian,     # fermionic hamiltonian
+                          operators_pool,  # fermionic operators
+                          hf_reference_fock,
+                          energy_threshold=0.0001,
+                          method = method,
+                          max_iterations = 20,
+                          energy_simulator = None,
+                          variance_simulator = None,
+                          reference_dm = None,
+                          optimizer_params = None
+                          )
+    except NotConvergedError as c:
+        print('Not converged :(')
+        result = c.results
+
 
     print("Final energy:", result["energy"])
 

@@ -90,6 +90,7 @@ def adaptVQE(hamiltonian,
         print('Hamiltonian Variance: ', variance)
     else:
         variance = 0
+    iterations['variance'].append(variance)
 
     # Initialize variables that are common for all the methods
     method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool, energy_threshold)
@@ -121,7 +122,7 @@ def adaptVQE(hamiltonian,
                     'indices': iterations['indices'][-1],
                     'coefficients': iterations['coefficients'][-1],
                     'iterations': iterations,
-                    'variance': variance,
+                    'variance': iterations['variance'][-1],
                     'num_iterations': iteration}
 
         # run optimization

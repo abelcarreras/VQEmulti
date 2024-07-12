@@ -55,7 +55,7 @@ hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # Choose specific pool of operators for adapt-VQE
-pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
+operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
 
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
@@ -73,17 +73,27 @@ opt_adam = OptimizerParams(method=adam, options={'learning_rate': 0.01, 'gtol': 
 opt_rmsprop = OptimizerParams(method=rmsprop, options={'learning_rate': 0.01, 'gtol': 1e-2})
 opt_sgd = OptimizerParams(method=sgd, options={'learning_rate': 0.01, 'gtol': 1e-2})
 
+from vqemulti.method.adapt_vanila import AdapVanilla
+
+method = AdapVanilla(gradient_threshold=1e-6,
+                     diff_threshold=0,
+                     coeff_tolerance=1e-10,
+                     gradient_simulator=simulator,
+                     operator_update_number=1,
+                     operator_update_max_grad=2e-2,
+                     )
 try:
     # run adaptVQE
-    result = adaptVQE(hamiltonian,
-                      pool,
+    result = adaptVQE(hamiltonian,  # fermionic hamiltonian
+                      operators_pool,  # fermionic operators
                       hf_reference_fock,
+                      energy_threshold=0.0001,
+                      method=method,
+                      max_iterations=20,
                       energy_simulator=simulator,
-                      gradient_simulator=simulator,
-                      energy_threshold=1e-2,
-                      opt_qubits=False,  # use fermion operators
-                      max_iterations=15,  # maximum number of interations
-                      optimizer_params=opt_adam  # optimizer parameters
+                      variance_simulator=simulator,
+                      reference_dm=None,
+                      optimizer_params=None
                       )
 
 except NotConvergedError as e:

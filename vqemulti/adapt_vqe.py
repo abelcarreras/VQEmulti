@@ -62,7 +62,7 @@ def adaptVQE(hamiltonian,
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': [],
-                  'coefficients': []}
+                  'coefficients': [], 'indices': []}
 
     # Check if initial guess
     if ansatz is None:
@@ -104,6 +104,8 @@ def adaptVQE(hamiltonian,
                                       n_qubits=hamiltonian.n_qubits)
         iterations['energies'].append(simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian,
                                                                 energy_simulator))
+    iterations['coefficients'].append(coefficients)
+    iterations['indices'].append(ansatz.get_index(operators_pool))
 
     for iteration in range(max_iterations):
 
@@ -116,10 +118,10 @@ def adaptVQE(hamiltonian,
             print(c.message)
             return {'energy': iterations['energies'][-1],
                     'ansatz': ansatz,
-                    'indices': ansatz.get_index(operators_pool),
+                    'indices': iterations['indices'][-1],
                     'coefficients': iterations['coefficients'][-1],
                     'iterations': iterations,
-                    'variance': iterations['variance'][-1],
+                    'variance': variance,
                     'num_iterations': iteration}
 
         # run optimization
@@ -175,6 +177,8 @@ def adaptVQE(hamiltonian,
         iterations['ansatz_size'].append(len(coefficients))
         iterations['variance'].append(variance)
         iterations['coefficients'].append(coefficients)
+        iterations['indices'].append(ansatz.get_index(operators_pool))
+
 
         # Checking criteria convergence
         criteria_list = method.get_criteria_list_convergence()
@@ -185,7 +189,7 @@ def adaptVQE(hamiltonian,
                 print(c.message)
                 return {'energy': iterations['energies'][-1],
                         'ansatz': ansatz,
-                        'indices': ansatz.get_index(operators_pool),
+                        'indices': iterations['indices'][-1],
                         'coefficients': iterations['coefficients'][-1],
                         'iterations': iterations,
                         'variance': iterations['variance'][-1],
@@ -201,10 +205,10 @@ def adaptVQE(hamiltonian,
 
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
-                             'indices': ansatz.get_index(operators_pool),
-                             'coefficients': coefficients,
+                             'indices': iterations['indices'][-1],
+                             'coefficients': terations['coefficients'][-1],
                              'iterations': iterations,
-                             'variance': variance,
+                             'variance': iterations['variance'][-1],
                              'num_iterations': iteration})
 
 if __name__ == '__main__':

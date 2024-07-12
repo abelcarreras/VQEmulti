@@ -9,19 +9,19 @@ from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_foc
 from vqemulti.adapt_vqe import adaptVQE
 
 
-h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                      ['H', [0, 0, 0.74]]],
-                            basis='3-21g',
-                            multiplicity=1,
-                            charge=0,
-                            description='H2')
+h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
+                                       ['He', [0, 0, 1.0]]],
+                             basis='6-31g',
+                             multiplicity=1,
+                             charge=0,
+                             description='He2')
 
 # run classical calculation
 molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 2  # molecule.n_orbitals
+n_orbitals = 4  # molecule.n_orbitals
 
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
@@ -46,24 +46,42 @@ simulator = Simulator(trotter=True,
                       test_only=True,
                       shots=1000)
 
+from vqemulti.method.adapt_vanila import AdapVanilla
+
+method = AdapVanilla(gradient_threshold=1e-6,
+                     diff_threshold=0,
+                     coeff_tolerance=1e-10,
+                     gradient_simulator=None,
+                     operator_update_number=1,
+                     operator_update_max_grad=2e-2,
+                     )
 # FIRST CALCULATION
-result_first = adaptVQE(hamiltonian,
-                        operators_pool, # fermionic operators
-                        hf_reference_fock,
-                        threshold=0.1,
-                        energy_simulator=simulator,
-                        gradient_simulator=simulator)
+result_first = adaptVQE(hamiltonian,  # fermionic hamiltonian
+                          operators_pool,  # fermionic operators
+                          hf_reference_fock,
+                          energy_threshold=0.0001,
+                          method=method,
+                          max_iterations=20,
+                          energy_simulator=None,
+                          variance_simulator=None,
+                          reference_dm=None,
+                          optimizer_params=None)
 
 # SECOND (restarted) CALCULATION
 print('restarting calculation')
 result = adaptVQE(hamiltonian, # fermionic hamiltonian
                   operators_pool, # fermionic operators
                   hf_reference_fock,
-                  threshold=0.1,
+                  energy_threshold=0.0001,
+                  method=method,
+                  max_iterations=20,
+                  energy_simulator=None,
+                  variance_simulator=None,
                   coefficients=result_first['coefficients'],  # previous calculation coefficients
                   ansatz=result_first['ansatz'],  # previous calculation ansatz
-                  energy_simulator=simulator,
-                  gradient_simulator=simulator)
+                  reference_dm=None,
+                  optimizer_params=None
+                  )
 
 # FINAL RESULTS
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))

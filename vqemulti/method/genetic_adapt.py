@@ -24,8 +24,8 @@ class GeneticAdapt(Method):
 
 
 
-    def update_ansatz(self, ansatz, coefficients, iterations):
-
+    def update_ansatz(self, ansatz, iterations):
+        coefficients = deepcopy(iterations['coefficients'][-1])
         # Select the mutation that is going to happen
         # Create delete probabilities
         delete_probs = []

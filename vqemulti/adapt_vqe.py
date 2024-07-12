@@ -22,11 +22,11 @@ def adaptVQE(hamiltonian,
              coefficients=None,
              ansatz=None,
              method = AdapVanilla(gradient_threshold=1e-6,
-                         diff_threshold=0,
-                         coeff_tolerance=1e-10,
-                         gradient_simulator=None,
-                         operator_update_number=1,
-                         operator_update_max_grad=2e-2),
+                                  diff_threshold=0,
+                                  coeff_tolerance=1e-10,
+                                  gradient_simulator=None,
+                                  operator_update_number=1,
+                                  operator_update_max_grad=2e-2),
              energy_simulator=None,
              variance_simulator=None,
              reference_dm=None,
@@ -113,7 +113,7 @@ def adaptVQE(hamiltonian,
 
         # update ansatz
         try:
-            ansatz, coefficients = method.update_ansatz(ansatz, coefficients, iterations)
+            ansatz, coefficients = method.update_ansatz(ansatz, iterations)
         except Converged as c:
             print(c.message)
             return {'energy': iterations['energies'][-1],
@@ -206,10 +206,10 @@ def adaptVQE(hamiltonian,
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,
                              'indices': iterations['indices'][-1],
-                             'coefficients': terations['coefficients'][-1],
+                             'coefficients': iterations['coefficients'][-1],
                              'iterations': iterations,
                              'variance': iterations['variance'][-1],
-                             'num_iterations': iteration})
+                             'num_iterations': len(ansatz)})
 
 if __name__ == '__main__':
     from openfermion import MolecularData

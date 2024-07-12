@@ -25,8 +25,8 @@ class Genetic_Add_Adapt(Method):
 
 
 
-    def update_ansatz(self, ansatz, coefficients, iterations):
-
+    def update_ansatz(self, ansatz, iterations):
+        coefficients = deepcopy(iterations['coefficients'][-1])
         # Select the mutation that is going to happen
         if self.gradient_simulator is None:
             gradient_vector = compute_gradient_vector(self.reference_hf,

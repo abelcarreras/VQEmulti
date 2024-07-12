@@ -63,14 +63,15 @@ try:
                       method=method,
                       energy_simulator=simulator,
                       variance_simulator = None,
-                      max_iterations=15,  # maximum number of interations
+                      max_iterations=3,  # maximum number of interations
                       reference_dm=None,
                       optimizer_params=opt_cobyla # optimizer parameters
                       )
 
 except NotConvergedError as e:
     result = e.results
-
+print(result)
+exit()
 print('Final results\n-----------')
 print('HF energy:', molecule.hf_energy)
 print('Final adaptVQE energy:', result["energy"])

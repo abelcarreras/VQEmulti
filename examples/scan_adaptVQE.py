@@ -18,7 +18,7 @@ for d in np.linspace(0.3, 3, 20):
     # molecule definition
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, d]]],
-                                basis='3-21g',
+                                basis='6-31g',
                                 multiplicity=1,
                                 charge=0,
                                 description='H2')
@@ -30,7 +30,7 @@ for d in np.linspace(0.3, 3, 20):
     # get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
-    n_electrons = 2  # molecule.n_electrons
+    n_electrons = molecule.n_electrons
     n_orbitals = 2  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
 

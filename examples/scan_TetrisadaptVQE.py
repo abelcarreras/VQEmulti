@@ -16,14 +16,12 @@ energies_hf = []
 for d in np.linspace(0.3, 3, 20):
 
     # molecule definition
-    h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                  ['H', [0, 0, d]],
-                                  ['H', [0, 0, 2 * d]],
-                                  ['H', [0, 0, 3 * d]]],
-                                basis='3-21g',
-                                multiplicity=1,
-                                charge=0,
-                                description='H4')
+    h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
+                                       ['He', [0, 0, d]]],
+                             basis='6-31g',
+                             multiplicity=1,
+                             charge=0,
+                             description='He2')
 
     # run classical calculation
     molecule = run_pyscf(h2_molecule, run_fci=True)
@@ -32,7 +30,7 @@ for d in np.linspace(0.3, 3, 20):
     # get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
-    n_electrons = 4  # molecule.n_electrons
+    n_electrons = molecule.n_electrons
     n_orbitals = 4  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
 
@@ -65,7 +63,7 @@ for d in np.linspace(0.3, 3, 20):
                           hf_reference_fock,
                           energy_threshold=0.0001,
                           method = method,
-                          max_iterations = 2,
+                          max_iterations = 20,
                           energy_simulator = None,
                           variance_simulator = None,
                           reference_dm = None,

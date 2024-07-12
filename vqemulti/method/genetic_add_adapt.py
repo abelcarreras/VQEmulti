@@ -36,7 +36,7 @@ class Genetic_Add_Adapt(Method):
                                                       self.operators_pool)
         else:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                            variance=self.variance,
+                                            variance=iterations['variance'],
                                             n_coefficients=len(coefficients),
                                             n_qubits=self.hamiltonian.n_qubits)
 
@@ -136,7 +136,7 @@ class Genetic_Add_Adapt(Method):
                                                       self.operators_pool)
         else:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                            variance=self.variance,
+                                            variance=iterations['variance'],
                                             n_coefficients=len(coefficients),
                                             n_qubits=self.hamiltonian.n_qubits)
 

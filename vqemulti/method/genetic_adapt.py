@@ -24,7 +24,7 @@ class GeneticAdapt(Method):
 
 
 
-    def update_ansatz(self, ansatz, coefficients):
+    def update_ansatz(self, ansatz, coefficients, iterations):
 
         # Select the mutation that is going to happen
         # Create delete probabilities
@@ -66,7 +66,7 @@ class GeneticAdapt(Method):
                                                           self.operators_pool)
             else:
                 self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                                variance=self.variance,
+                                                variance=iterations['variance'],
                                                 n_coefficients=len(coefficients),
                                                 n_qubits=self.hamiltonian.n_qubits)
 

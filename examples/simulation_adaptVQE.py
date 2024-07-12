@@ -32,13 +32,23 @@ hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # Choose specific pool of operators for adapt-VQE
-pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
+operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
 
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # define simulator
 simulator = Simulator(trotter=False, test_only=True, hamiltonian_grouping=True, shots=250)
+
+from vqemulti.method.adapt_vanila import AdapVanilla
+
+method = AdapVanilla(gradient_threshold=1e-6,
+                     diff_threshold=0,
+                     coeff_tolerance=1e-10,
+                     gradient_simulator=simulator,
+                     operator_update_number=1,
+                     operator_update_max_grad=2e-2,
+                     )
 
 # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
 opt_bfgs = OptimizerParams(method='BFGS', options={'gtol': 1e-2})
@@ -47,13 +57,14 @@ opt_cobyla = OptimizerParams(method='COBYLA', options={'rhobeg': 0.1})
 try:
     # run adaptVQE
     result = adaptVQE(hamiltonian,
-                      pool,
+                      operators_pool,
                       hf_reference_fock,
-                      energy_simulator=simulator,
-                      gradient_simulator=simulator,
                       energy_threshold=1e-2,
-                      opt_qubits=False,  # use fermion operators
+                      method=method,
+                      energy_simulator=simulator,
+                      variance_simulator = None,
                       max_iterations=15,  # maximum number of interations
+                      reference_dm=None,
                       optimizer_params=opt_cobyla # optimizer parameters
                       )
 

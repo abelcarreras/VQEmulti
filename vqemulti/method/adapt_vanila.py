@@ -25,7 +25,7 @@ class AdapVanilla(Method):
 
 
 
-    def update_ansatz(self, ansatz, coefficients):
+    def update_ansatz(self, ansatz, coefficients, iterations):
 
         if self.gradient_simulator is None:
             gradient_vector = compute_gradient_vector(self.reference_hf,
@@ -35,7 +35,7 @@ class AdapVanilla(Method):
                                                       self.operators_pool)
         else:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                            variance=self.variance,
+                                            variance=iterations['variance'],
                                             n_coefficients=len(coefficients),
                                             n_qubits=self.hamiltonian.n_qubits)
 

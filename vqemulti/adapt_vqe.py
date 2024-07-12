@@ -92,7 +92,7 @@ def adaptVQE(hamiltonian,
         variance = 0
 
     # Initialize variables that are common for all the methods
-    method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool)
+    method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool, energy_threshold)
 
     # Hartree-Fock energy calculation
     if energy_simulator is None:
@@ -192,7 +192,7 @@ def adaptVQE(hamiltonian,
                         'num_iterations': iteration}
 
         if method.gradient_simulator is not None:
-            circuit_info = gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+            circuit_info = method.gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Gradient circuit depth: ', circuit_info['depth'])
 
         if energy_simulator is not None:

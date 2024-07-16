@@ -9,9 +9,21 @@ import numpy as np
 
 class AdapVanilla(Method):
 
-    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance, gradient_simulator,
-                operator_update_number, operator_update_max_grad):
-
+    def __init__(self,
+                 gradient_threshold=1e-6,
+                 diff_threshold=0,
+                 coeff_tolerance=1e-10,
+                 gradient_simulator=None,
+                 operator_update_number=1,
+                 operator_update_max_grad=2e-2):
+        """
+        :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
+        :param diff_threshold: missing description
+        :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
+        :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
+        :param operator_update_number: number of operators to add to the ansatz at each iteration
+        :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
+        """
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
@@ -24,8 +36,6 @@ class AdapVanilla(Method):
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
                                    'operator_update_number': self.operator_update_number}
 
-
-
     def update_ansatz(self, ansatz, iterations):
         coefficients = deepcopy(iterations['coefficients'][-1])
         if self.gradient_simulator is None:
@@ -36,9 +46,9 @@ class AdapVanilla(Method):
                                                       self.operators_pool)
         else:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                            variance=iterations['variance'][-1],
-                                            n_coefficients=len(coefficients),
-                                            n_qubits=self.hamiltonian.n_qubits)
+                                                 variance=iterations['variance'][-1],
+                                                 n_coefficients=len(coefficients),
+                                                 n_qubits=self.hamiltonian.n_qubits)
 
             gradient_vector = simulate_gradient(self.reference_hf,
                                                 self.hamiltonian,

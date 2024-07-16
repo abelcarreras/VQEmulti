@@ -606,8 +606,9 @@ class QiskitSimulator(SimulatorBase):
                                               # layout_method='dense'
                                               )
             isa_circuit = pm.run(circuit)
-            # print(isa_circuit)
-            # print('layout: ', isa_circuit.layout)
+
+            if Configuration().verbose > 1:
+                print('layout: ', layout)
 
             mapped_observables = measure_op.apply_layout(isa_circuit.layout)
 
@@ -700,7 +701,7 @@ class QiskitSimulator(SimulatorBase):
 
         # circuit drawing
         self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
-        if Configuration().verbose > 1:
+        if Configuration().verbose > 2:
             print(self._circuit_draw[-1])
 
         # depth

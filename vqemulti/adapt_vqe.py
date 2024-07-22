@@ -103,6 +103,7 @@ def adaptVQE(hamiltonian,
     for iteration in range(max_iterations):
 
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
+        num_iteration = iteration
 
         # update ansatz
         try:
@@ -202,7 +203,7 @@ def adaptVQE(hamiltonian,
                              'coefficients': iterations['coefficients'][-1],
                              'iterations': iterations,
                              'variance': iterations['variance'][-1],
-                             'num_iterations': len(ansatz)})
+                             'num_iterations': num_iteration})
 
 if __name__ == '__main__':
     from openfermion import MolecularData

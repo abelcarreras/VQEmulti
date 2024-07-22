@@ -21,12 +21,7 @@ def adaptVQE(hamiltonian,
              max_iterations=50,
              coefficients=None,
              ansatz=None,
-             method = AdapVanilla(gradient_threshold=1e-6,
-                                  diff_threshold=0,
-                                  coeff_tolerance=1e-10,
-                                  gradient_simulator=None,
-                                  operator_update_number=1,
-                                  operator_update_max_grad=2e-2),
+             method=AdapVanilla(),
              energy_simulator=None,
              variance_simulator=None,
              reference_dm=None,
@@ -35,20 +30,17 @@ def adaptVQE(hamiltonian,
     """
     Perform an adaptVQE calculation
 
-    :param operators_pool: fermionic operators pool
     :param hamiltonian: hamiltonian in fermionic operators
+    :param operators_pool: fermionic operators pool
     :param hf_reference_fock: HF reference in Fock space vector (occupations)
+    :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param max_iterations: max number of adaptVQE iterations
     :param coefficients: Initial coefficients (None if new calculation)
     :param ansatz: Initial ansatz [Should match with coefficients] (None if new calculation)
+    :param method: Method used to update the ansatz
     :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
     :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
     :param variance_simulator: Simulator object used to obtain the variance, if None use energy_simulator
-    :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
-    :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
-    :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
-    :param operator_update_number: number of operators to add to the ansatz at each iteration
-    :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
     :param reference_dm: reference density matrix (ideally from fullCI) that is used to compute the quantum fidelity
     :param optimizer_params: parameters to be used in the optimizer (OptimizerParams object)
     :return: results dictionary

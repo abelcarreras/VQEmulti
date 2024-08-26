@@ -1,7 +1,7 @@
 from openfermion import normal_ordered, FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
 from vqemulti.utils import normalize_operator, proper_order, fermion_to_qubit, get_string_from_fermionic_operator
-import openfermion
+
 
 class OperatorList:
 
@@ -161,15 +161,15 @@ class OperatorList:
             print(get_string_from_fermionic_operator(op))
 
     def get_index(self, operators_pool):
-        indeces = []
+        indices = []
         for operator in self._list:
             for j in range(len(operators_pool)):
                 if operator == operators_pool[j]:
-                    indeces.append(j)
-        return indeces
+                    indices.append(j)
+        return indices
 
     def is_fermionic(self):
-        if self._type is openfermion.ops.operators.fermion_operator.FermionOperator:
+        if self._type is FermionOperator:
             return True
         else:
             return False

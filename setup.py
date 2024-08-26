@@ -20,6 +20,7 @@ setup(name='vqemulti',
                 'vqemulti.energy',
                 'vqemulti.gradient',
                 'vqemulti.pool',
-                'vqemulti.simulators'],
+                'vqemulti.simulators',
+                'vqemulti.method'],
       install_requires=['numpy', 'scipy', 'openfermion', 'posym', 'cirq', 'pennylane', 'qiskit']
       )

@@ -145,12 +145,12 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-        print('\n{:^8}   {}'.format('coefficient', 'operator'))
+        print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
             if ansatz.is_fermionic():
-                print('{:8.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
+                print('{:12.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
             else:
-                print('{:8.5e} {} '.format(c, op))
+                print('{:12.5e} {} '.format(c, op))
         print()
 
         if reference_dm is not None:

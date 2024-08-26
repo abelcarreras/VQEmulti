@@ -40,7 +40,9 @@ def generate_unitary(n, params):
     return expm(anti_symmetric)
 
 
-def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False):
+def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False, frozen_core=0, n_orbitals=None):
+
+    #
 
     # get geometric data
     symbols = [atom[0] for atom in molecule.geometry]
@@ -48,6 +50,11 @@ def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False):
 
     # get electronic data
     mo_coefficients = molecule.canonical_orbitals
+
+    if n_orbitals is None:
+        n_orbitals = len(mo_coefficients)
+
+    mo_coefficients = mo_coefficients[:, frozen_core: n_orbitals]
 
     geom_sym = SymmetryMolecule(group, coordinates, symbols)
     print('geom_sym {} : {}'.format(group, geom_sym))
@@ -174,13 +181,14 @@ def get_pool_symmetry(pool, sym_orbitals):
     return ferm_op_list
 
 
-def get_symmetry_reduced_pool(pool, sym_orbitals):
+def get_symmetry_reduced_pool(pool, sym_orbitals, hamiltonian_sym=None, threshold=1e-2):
 
     rep = sym_orbitals[0].get_point_group().ir_labels[0]
     group = sym_orbitals[0].get_point_group().label
 
-    # assuming state symmetry is most symmetric IR
-    hamiltonian_sym = SymmetryObject(group=group, rep=rep)
+    # assuming hamiltonian symmetry is most symmetric IR
+    if hamiltonian_sym is None:
+        hamiltonian_sym = SymmetryObject(group=group, rep=rep)
 
     # assuming state symmetry is most symmetric IR
     state_sym = SymmetryObject(group=group, rep=rep)
@@ -191,7 +199,7 @@ def get_symmetry_reduced_pool(pool, sym_orbitals):
     new_pool = []
     for i, op_sym in enumerate(pool_sym):
         dot_sym = abs(sym_dot(op_sym * hamiltonian_sym, state_sym))
-        if dot_sym > 1e-2:
+        if dot_sym > threshold:
             new_pool.append(pool[i])
             print('operator {:3} : {:6.2f} {:6}  ({})'.format(i, dot_sym, str(True), op_sym))
         else:

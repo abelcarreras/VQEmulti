@@ -207,4 +207,3 @@ if __name__ == '__main__':
         sparse_operator = get_sparse_operator(op)
         exp_operator = scipy.sparse.linalg.expm(sparse_operator)
         exp_list_qubit.append(exp_operator)
-

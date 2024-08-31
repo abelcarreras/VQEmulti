@@ -592,7 +592,11 @@ class QiskitSimulator(SimulatorBase):
             from qiskit_aer.primitives import Estimator
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
-            # print(job.result())
+
+            expectation_value = sum(job.result().values)
+
+            # get variance
+            variance = sum([meta['variance'] for meta in job.result().metadata])
 
         else:
             from qiskit_ibm_runtime import Estimator, Options, EstimatorV2
@@ -601,7 +605,7 @@ class QiskitSimulator(SimulatorBase):
             layout = get_backend_opt_layout(self._backend, n_qubits)
 
             pm = generate_preset_pass_manager(backend=self._backend,
-                                              optimization_level=1,
+                                              optimization_level=3,
                                               initial_layout=layout,
                                               # layout_method='dense'
                                               )
@@ -609,38 +613,37 @@ class QiskitSimulator(SimulatorBase):
 
             if Configuration().verbose > 1:
                 print('layout: ', layout)
+                print('isa_depth: ', isa_circuit.depth())
+                #print('observable: ', measure_op)
+                print('n_observable: ', len(measure_op))
 
             mapped_observables = measure_op.apply_layout(isa_circuit.layout)
 
             # estimate [ <psi|H|psi)> ]
-            estimator = Estimator(session=session, options=Options(optimization_level=0, resilience_level=0))
-            job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
+            # estimator = Estimator(session=session, options=Options(optimization_level=0, resilience_level=0))
+            # job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
             # print(job.result())
 
-            #estimator = EstimatorV2(session=session)
-            #estimator.options.default_shots=self._shots
-            #estimator.options.resilience.zne_mitigation=False
-            #estimator.options.update(default_shots=self._shots, optimization_level=0)
+            estimator = EstimatorV2(session=session)
+            estimator.options.default_shots=self._shots
+            estimator.options.resilience.zne_mitigation=False
+            estimator.options.update(default_shots=self._shots, optimization_level=0)
 
             # precision = 0.08762138448350106
             # print('precision: ', precision)
-            #job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
+            job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
 
-        # get variance
-        variance = sum([meta['variance'] for meta in job.result().metadata])
+            std = job.result()[0].data.stds
+            variance = std**2
+            expectation_value = job.result()[0].data.evs
 
         if Configuration().verbose > 1:
-            print('Expectation value: ', sum(job.result().values))
+            print('Expectation value: ', expectation_value)
             std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
 
-        #print(job.result())
-        #print(job.result()[0].data.evs)
-        #print(job.result()[0].data.stds)
-        # return job.result()[0].data.evs, job.result()[0].data.stds**2
-
-        return sum(job.result().values), variance
+        return expectation_value, variance
 
     def _build_reference_gates(self, hf_reference_fock):
         """

@@ -2,6 +2,7 @@ from vqemulti.method import Method
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.errors import Converged
 from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptvanilla, energy_worsening
+from openfermion import count_qubits
 from copy import deepcopy
 import numpy as np
 
@@ -37,7 +38,10 @@ class AdapVanilla(Method):
                                    'operator_update_number': self.operator_update_number}
 
     def update_ansatz(self, ansatz, iterations):
+
         coefficients = deepcopy(iterations['coefficients'][-1])
+        n_qubits = count_qubits(self.hamiltonian)
+
         if self.gradient_simulator is None:
             gradient_vector = compute_gradient_vector(self.reference_hf,
                                                       self.hamiltonian,
@@ -48,7 +52,7 @@ class AdapVanilla(Method):
             self.gradient_simulator.update_model(precision=self.energy_threshold,
                                                  variance=iterations['variance'][-1],
                                                  n_coefficients=len(coefficients),
-                                                 n_qubits=self.hamiltonian.n_qubits)
+                                                 n_qubits=n_qubits)
 
             gradient_vector = simulate_gradient(self.reference_hf,
                                                 self.hamiltonian,

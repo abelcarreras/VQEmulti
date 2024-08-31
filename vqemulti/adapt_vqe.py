@@ -1,5 +1,3 @@
-import openfermion.ops.operators.fermion_operator_test
-
 from vqemulti.energy import exact_adapt_vqe_energy
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
@@ -67,8 +65,11 @@ def adaptVQE(hamiltonian,
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
-
     print('pool size: ', len(operators_pool))
+
+    # get n qubits to be used
+    n_qubits = len(hf_reference_fock)
+    print('n_qubits: ', n_qubits)
 
     # set variance simulator
     if energy_simulator is not None:
@@ -94,7 +95,7 @@ def adaptVQE(hamiltonian,
         energy_simulator.update_model(precision=energy_threshold,
                                       variance=variance,
                                       n_coefficients=len(coefficients),
-                                      n_qubits=hamiltonian.n_qubits)
+                                      n_qubits=n_qubits)
         iterations['energies'].append(simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian,
                                                                 energy_simulator))
     iterations['coefficients'].append(coefficients)
@@ -131,7 +132,7 @@ def adaptVQE(hamiltonian,
             energy_simulator.update_model(precision=energy_threshold,
                                           variance=variance,
                                           n_coefficients=len(coefficients),
-                                          n_qubits=hamiltonian.n_qubits)
+                                          n_qubits=n_qubits)
 
             results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
                                               coefficients,
@@ -240,13 +241,13 @@ if __name__ == '__main__':
     # print data
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
-    print('n_qubits:', hamiltonian.n_qubits)
+    print('n_qubits:', n_orbitals*2)
 
     # Get a pool of operators for adapt-VQE
     operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
-    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_orbitals*2)
     print('hf reference', hf_reference_fock)
 
     # Simulator

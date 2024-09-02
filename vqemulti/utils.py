@@ -644,6 +644,58 @@ def load_hamiltonian(file='hamiltonian.npz'):
 
     one_body = npzfile['arr_0']
     two_body = npzfile['arr_1']
-    constant = npzfile['arr_2']
+    constant = float(npzfile['arr_2'])
 
     return InteractionOperator(constant, one_body, two_body)
+
+
+def store_wave_function(coefficients, ansatz, filename='wf.yml'):
+    """
+    store the hamiltonian in a file
+
+    :param coefficients: list of coefficients
+    :param ansatz: list of operators
+    :param filename: filename
+    :return:
+    """
+
+    import yaml
+
+    total_terms = []
+    for op in ansatz:
+        total_terms.append(op.terms)
+
+    total_terms.append(list(coefficients))
+
+    with open(filename, 'w') as f:
+        yaml.dump(total_terms, f)
+
+
+def load_wave_function(filename='wf.yml'):
+    """
+    load wave function from file
+
+    :param filename: file name
+    :return: coefficients, ansatz(list of operators)
+    """
+
+    import yaml
+    from openfermion import FermionOperator
+    from vqemulti.pool.tools import OperatorList
+
+    op_list = []
+    with open(filename, 'r') as f:
+
+        dump = yaml.load(f, yaml.Loader)
+        coefficients = dump[-1]
+        op_data = dump[:-1]
+
+        for op_dict in op_data:
+            op_single = FermionOperator()
+            for k, v in op_dict.items():
+                op_single += v * FermionOperator(k)
+
+            op_list.append(op_single)
+
+    return coefficients, OperatorList(op_list)
+

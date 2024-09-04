@@ -2,12 +2,14 @@ from vqemulti.simulators import SimulatorBase
 from vqemulti.preferences import Configuration
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian
 from vqemulti.simulators.tools import get_cnot_inversion_mat
+from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
 from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
+from qiskit_aer.primitives import Estimator, Sampler
 import qiskit
 import numpy as np
 
@@ -406,6 +408,7 @@ class QiskitSimulator(SimulatorBase):
                  backend=AerSimulator(),
                  use_estimator=False,
                  session=None,
+                 use_ibm_runtime=False
                  ):
 
         """
@@ -418,15 +421,17 @@ class QiskitSimulator(SimulatorBase):
         :param backend: qiskit backend to run the calculations
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
         :param session: IBM runtime session to run jobs on IBM computers (estimator)
+        :param use_ibm_runtime: use ibm_runtime version of Estimator and Sampler
         """
         # backend.set_options(device='GPU')
         self._backend = backend
         self._session = session
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
+        self._use_ibm_runtime = use_ibm_runtime
 
         if session is not None:
-            self._use_estimator = True
+            self._use_ibm_runtime = True
 
             from qiskit_ibm_runtime import QiskitRuntimeService
             from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -494,6 +499,8 @@ class QiskitSimulator(SimulatorBase):
                                                                           n_qubits,
                                                                           self._session)
 
+        print('VARIANCE ESTIMATOR: ', variance)
+
         return expectation_value, variance
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
@@ -526,8 +533,13 @@ class QiskitSimulator(SimulatorBase):
 
         circuit.measure_all()
 
-        result = self._backend.run(circuit, shots=self._shots, memory=True).result()
-        # memory = result.get_memory()
+        if not self._use_ibm_runtime:
+            result = self._backend.run(circuit, shots=self._shots, memory=True).result()
+            # memory = result.get_memory()
+        else:
+            estimator = RHESampler(self._backend, n_qubits, self._session)
+            result = estimator.run(circuit, shots=self._shots, memory=True).result()
+
         counts_total = result.get_counts()
 
         # draw circuit
@@ -588,58 +600,22 @@ class QiskitSimulator(SimulatorBase):
         for _ in list_strings:
             self._get_circuit_stat_data(circuit)
 
-        if self._session is None:
-            from qiskit_aer.primitives import Estimator
+        if not self._use_ibm_runtime:
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
 
-            expectation_value = sum(job.result().values)
-
-            # get variance
-            variance = sum([meta['variance'] for meta in job.result().metadata])
-
         else:
-            from qiskit_ibm_runtime import Estimator, Options, EstimatorV2
-            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-            from vqemulti.simulators.backend_opt import get_backend_opt_layout
-            layout = get_backend_opt_layout(self._backend, n_qubits)
+            estimator = RHEstimator(self._backend, n_qubits, session=self._session)
+            job = estimator.run(circuit, measure_op, shots=self._shots)
 
-            pm = generate_preset_pass_manager(backend=self._backend,
-                                              optimization_level=3,
-                                              initial_layout=layout,
-                                              # layout_method='dense'
-                                              )
-            isa_circuit = pm.run(circuit)
+        expectation_value = sum(job.result().values)
 
-            if Configuration().verbose > 1:
-                print('layout: ', layout)
-                print('isa_depth: ', isa_circuit.depth())
-                #print('observable: ', measure_op)
-                print('n_observable: ', len(measure_op))
-
-            mapped_observables = measure_op.apply_layout(isa_circuit.layout)
-
-            # estimate [ <psi|H|psi)> ]
-            # estimator = Estimator(session=session, options=Options(optimization_level=0, resilience_level=0))
-            # job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=self._shots)
-            # print(job.result())
-
-            estimator = EstimatorV2(session=session)
-            estimator.options.default_shots=self._shots
-            estimator.options.resilience.zne_mitigation=False
-            estimator.options.update(default_shots=self._shots, optimization_level=0)
-
-            # precision = 0.08762138448350106
-            # print('precision: ', precision)
-            job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
-
-            std = job.result()[0].data.stds
-            variance = std**2
-            expectation_value = job.result()[0].data.evs
+        # get variance
+        variance = sum([meta['variance'] for meta in job.result().metadata])
+        std = np.sqrt(variance / self._shots)
 
         if Configuration().verbose > 1:
             print('Expectation value: ', expectation_value)
-            std = np.sqrt(variance / self._shots)
             print('variance: ', variance)
             print('std:', std)
 

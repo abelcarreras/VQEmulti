@@ -1,4 +1,5 @@
 from collections import defaultdict
+import warnings
 import numpy as np
 
 
@@ -37,6 +38,10 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False):
 
         service = QiskitRuntimeService()
         backend = service.backend(backend)
+
+    if backend.coupling_map is None:
+        warnings.warn('Unable to generate backend layout')
+        return None
 
     # get data
     n_backend_qubits = backend.num_qubits

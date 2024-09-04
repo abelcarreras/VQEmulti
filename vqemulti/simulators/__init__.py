@@ -121,6 +121,7 @@ class SimulatorBase:
             expectation_value += energy
             expectation_variance += variance
 
+        print('VARIANCE SAMPLER: ', expectation_variance.real)
         assert expectation_value.imag < 1e-5
         return expectation_value.real, expectation_variance.real
 

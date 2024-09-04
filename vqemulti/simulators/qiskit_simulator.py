@@ -6,7 +6,7 @@ from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
@@ -210,7 +210,7 @@ def last_gate(gates_list, qubit_indices, ignore_z=False):
         if np.any([q in gate.qubits for q in qubit_indices]):
             return gate, tot_len - index - 1
 
-    return CircuitInstruction(type('MyClass', (object,), {'name': ''})()), None
+    return CircuitInstruction(IGate(), [0], []), None
 
 
 def trotter_step(qubit_operator, time, n_qubits):
@@ -537,8 +537,8 @@ class QiskitSimulator(SimulatorBase):
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
         else:
-            estimator = RHESampler(self._backend, n_qubits, self._session)
-            result = estimator.run(circuit, shots=self._shots, memory=True).result()
+            sampler = RHESampler(self._backend, n_qubits, self._session)
+            result = sampler.run(circuit, shots=self._shots, memory=True).result()
 
         counts_total = result.get_counts()
 

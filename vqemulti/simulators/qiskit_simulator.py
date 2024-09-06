@@ -499,8 +499,6 @@ class QiskitSimulator(SimulatorBase):
                                                                           n_qubits,
                                                                           self._session)
 
-        print('VARIANCE ESTIMATOR: ', variance)
-
         return expectation_value, variance
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):

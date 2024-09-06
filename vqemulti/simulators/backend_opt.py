@@ -1,6 +1,9 @@
 from collections import defaultdict
 import warnings
 import numpy as np
+import time
+
+layouts_cache = {}
 
 
 def create_graph(parelles):
@@ -30,9 +33,16 @@ def get_paths(parelles, N):
     return tots_camins
 
 
-def get_backend_opt_layout(backend, n_qubits, plot_data=False):
-    # print('layout check')
+def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
 
+    # layout cache
+    time.time()
+    current_time = time.time()
+    if backend.name in layouts_cache:
+        if abs(layouts_cache[backend.name]['time'] - current_time) < cache_time:
+            return layouts_cache[backend.name]['layout']
+
+    # check if backend belongs to IBM runtime
     if isinstance(backend, str):
         from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -109,10 +119,13 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False):
                 qubit_color.append("#6600cc")
 
         plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
+        print('Quality layout: ', highest_quality)
 
         plt.show()
 
-        print('Quality layout: ', highest_quality)
+
+    # store layout
+    layouts_cache[backend.name] = {'time': current_time, 'layout': layout}
 
     return layout
 

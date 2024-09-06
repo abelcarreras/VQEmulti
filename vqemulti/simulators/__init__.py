@@ -41,50 +41,13 @@ class SimulatorBase:
     def get_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
 
         if self._test_only:
-            evaluation, variance = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            evaluation, std_error = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
             std_error = 0
         else:
             evaluation, std_error = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
         # make sure that main simulator class returns consistent float value
         return float(evaluation), float(std_error)
-
-    def _get_exact_state_evaluation_KILL(self, qubit_hamiltonian, state_preparation_gates):
-        """
-        Calculates the exact evaluation of a state with a given hamiltonian using matrix algebra.
-        This function is basically used to test that the Pennylane circuit is correct
-
-        :param qubit_hamiltonian: hamiltonian in qubits
-        :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :return: the expectation value of the state given the hamiltonian
-        """
-
-        n_qubits = count_qubits(qubit_hamiltonian)
-        state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
-
-        formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-        if self._hamiltonian_grouping:
-            # use hamiltonian grouping
-            grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
-            self._n_hamiltonian_terms = len(grouped_hamiltonian)
-        else:
-            self._n_hamiltonian_terms = len(formatted_hamiltonian)
-
-        # Obtain the theoretical expectation value for each Pauli string in the
-        # Hamiltonian by matrix multiplication, and perform the necessary weighed
-        # sum to obtain the energy expectation value.
-        expectation_value = 0
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            ket = np.array(state_vector, dtype=complex)
-            bra = np.conj(ket)
-
-            pauli_ket = np.matmul(string_to_matrix(pauli_string), ket)
-
-            expectation_value += coefficient * np.dot(bra, pauli_ket)
-
-        assert expectation_value.imag < 1e-5
-
-        return expectation_value.real
 
     def _get_sampled_state_evaluation(self, qubit_hamiltonian, state_preparation_gates):
         """
@@ -130,9 +93,11 @@ class SimulatorBase:
     def get_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
 
         if self._test_only:
-            energy, variance = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            energy, std_error = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
         else:
-            energy, variance = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            energy, std_error = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+
+        variance = std_error**2*self._shots
 
         # make sure that main simulator class returns consistent float value
         return float(variance)
@@ -173,7 +138,10 @@ class SimulatorBase:
 
             # print('variance: {:.5f} {}'.format(energy_2 - energy**2, n_shots))
 
-        return np.sum(energy_list).real, np.sum(variance_list).real
+        variance = np.sum(variance_list).real
+        std_error = np.sqrt(variance/self._shots)
+
+        return np.sum(energy_list).real, std_error
 
     def get_preparation_gates(self, ansatz, hf_reference_fock):
         """

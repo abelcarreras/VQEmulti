@@ -42,11 +42,12 @@ class SimulatorBase:
 
         if self._test_only:
             evaluation, variance = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            std_error = 0
         else:
-            evaluation, variance = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
+            evaluation, std_error = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
         # make sure that main simulator class returns consistent float value
-        return float(evaluation)
+        return float(evaluation), float(std_error)
 
     def _get_exact_state_evaluation_KILL(self, qubit_hamiltonian, state_preparation_gates):
         """
@@ -121,8 +122,10 @@ class SimulatorBase:
             expectation_value += energy
             expectation_variance += variance
 
+        std_error = np.sqrt(expectation_variance.real/self._shots)
+
         assert expectation_value.imag < 1e-5
-        return expectation_value.real, expectation_variance.real
+        return expectation_value.real, std_error
 
     def get_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
 

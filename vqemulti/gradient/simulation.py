@@ -67,7 +67,7 @@ def simulate_gradient(hf_reference_fock, hamiltonian, ansatz, coefficients, pool
         # get gradient as dexp(c * A) / dc = < psi | [H, A] | psi >.
         commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
 
-        sampled_gradient = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
+        sampled_gradient, variance = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
 
         # set absolute value for gradient (sign is not important, only magnitude)
         sampled_gradient = np.abs(sampled_gradient)
@@ -113,7 +113,7 @@ def simulate_vqe_energy_gradient(coefficients, ansatz, hf_reference_fock, hamilt
         # get gradient as dexp(c * A) / dc = < psi | [H, A] | psi >.
         commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
 
-        sampled_gradient = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
+        sampled_gradient, variance = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
 
         gradient_vector.append(sampled_gradient)
 

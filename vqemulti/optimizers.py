@@ -232,18 +232,24 @@ def cobyla_mod(fun, x0, jac, args=(), **options):
 
     params.update(options)
 
-    n_points = params['n_guess']
     energy_list = []
+    std_list = []
     x_range = list(np.linspace(-params['guess_range'], params['guess_range'], params['n_guess']))
     for x_test in x_range:
         x0_test = [x for x in x0]
         x0_test[-1] = x_test
-        energy_list.append(fun(x0_test, *args))
+        energy, std = fun(x0_test, *args, return_std=True)
+        energy_list.append(energy)
+        std_list.append(std)
 
     x0[-1] = x_range[np.argmin(energy_list)]
 
+    std_error = std_list[np.argmin(energy_list)]
+    tolerance = np.max([std_error, params['tol']])
+    print('tolerance: ', tolerance)
+
     result = _minimize_cobyla(fun, x0, args=args,
-                              rhobeg=params['rhobeg'], tol=params['tol'], maxiter=params['maxiter'],
+                              rhobeg=params['rhobeg'], tol=tolerance, maxiter=params['maxiter'],
                               disp=options['disp'], catol=params['catol'], callback=None)
 
     return OptimizeResult(x=result.x, fun=result.fun, jac=jac,

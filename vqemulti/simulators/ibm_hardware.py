@@ -4,7 +4,6 @@ from vqemulti.simulators.backend_opt import get_backend_opt_layout
 from vqemulti.preferences import Configuration
 
 
-
 class RHESampler:
 
     def __init__(self, backend, n_qubits, session):
@@ -45,10 +44,10 @@ class RHEstimator:
         layout = get_backend_opt_layout(backend, n_qubits)
 
         self.pm = generate_preset_pass_manager(backend=backend,
-                                          optimization_level=3,
-                                          initial_layout=layout,
-                                          # layout_method='dense'
-                                          )
+                                               optimization_level=3,
+                                               initial_layout=layout,
+                                               # layout_method='dense'
+                                               )
         self._session = session
         self._backend = backend
 
@@ -66,7 +65,7 @@ class RHEstimator:
 
         mapped_observables = measure_op.apply_layout(isa_circuit.layout)
 
-
+        """
         try:
             from qiskit_ibm_runtime import EstimatorV1, Options
             # estimate [ <psi|H|psi)> ]
@@ -81,12 +80,14 @@ class RHEstimator:
         except:
             pass
 
+        """
 
         from qiskit_ibm_runtime import EstimatorV2
 
         estimator = EstimatorV2(session=self._session)
         estimator.options.default_shots = shots
-        #estimator.options.resilience_level = 0
+        estimator.options.resilience_level = 0
+        estimator.options.optimization_level = 0
         estimator.options.dynamical_decoupling.enable = True
         estimator.options.resilience.zne_mitigation = False
         estimator.options.twirling.enable_measure = False
@@ -97,20 +98,20 @@ class RHEstimator:
         # print('precision: ', precision)
         job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
 
-        shots = 4000  # current hypotesis shots are ignored and always uses this
-        std = job.result()[0].data.stds * np.sqrt(shots)
-        variance = std ** 2
+        # shots = 4000  # current hypotesis shots are ignored and always uses this
+        std = job.result()[0].data.stds # * np.sqrt(shots)
+        variance = std**2 * np.sqrt(shots)
 
         expectation_value = job.result()[0].data.evs
-        print('expectationV2:', expectation_value)
-        print('varianceV2: ', variance, '/ ', job.result()[0].data.stds)
-        print('shots: ', shots)
+        #print('expectationV2:', expectation_value)
+        #print('varianceV2: ', variance, '/ ', job.result()[0].data.stds)
+        #print('shots: ', shots)
 
         # emulate Qiskit Estimator result interface
         class ResultData:
             def __init__(self):
                 self.values = [expectation_value]
-                self.metadata = [{'variance': variance}]
+                self.metadata = [{'std_error': std}]
 
         class Result:
             def result(self):

@@ -494,12 +494,12 @@ class QiskitSimulator(SimulatorBase):
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
-        expectation_value, variance = self._measure_expectation_estimator(formatted_hamiltonian,
-                                                                          state_preparation_gates,
-                                                                          n_qubits,
-                                                                          self._session)
+        expectation_value, std_error = self._measure_expectation_estimator(formatted_hamiltonian,
+                                                                           state_preparation_gates,
+                                                                           n_qubits,
+                                                                           self._session)
 
-        return expectation_value, variance
+        return expectation_value, std_error
 
     def _measure_expectation(self, main_string, sub_hamiltonian, state_preparation_gates, n_qubits):
         """
@@ -601,23 +601,20 @@ class QiskitSimulator(SimulatorBase):
         if not self._use_ibm_runtime:
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
-
+            variance = sum([meta['variance'] for meta in job.result().metadata])
+            std_error = np.sqrt(variance/self._shots)
         else:
             estimator = RHEstimator(self._backend, n_qubits, session=self._session)
             job = estimator.run(circuit, measure_op, shots=self._shots)
+            std_error = sum([meta['std_error'] for meta in job.result().metadata])
 
         expectation_value = sum(job.result().values)
 
-        # get variance
-        variance = sum([meta['variance'] for meta in job.result().metadata])
-        std = np.sqrt(variance / self._shots)
-
         if Configuration().verbose > 1:
             print('Expectation value: ', expectation_value)
-            print('variance: ', variance)
-            print('std:', std)
+            print('std_error:', std_error)
 
-        return expectation_value, variance
+        return expectation_value, std_error
 
     def _build_reference_gates(self, hf_reference_fock):
         """

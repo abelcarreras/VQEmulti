@@ -17,12 +17,12 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     # circuit_depth = simulator.get_circuit_depth(ansatz_qubit, hf_reference_fock)
     # print('circuit_depth', circuit_depth)
 
-    energy = simulator.get_state_evaluation(qubit_eval_operator, state_preparation_gates)
+    energy, std_error = simulator.get_state_evaluation(qubit_eval_operator, state_preparation_gates)
 
-    return energy
+    return energy, std_error
 
 
-def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, return_std=False):
     """
     Obtain the hamiltonian expectation value for a given adaptVQE state (reference + ansatz) and a hamiltonian
 
@@ -41,7 +41,10 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 
     # evaluate hamiltonian
-    energy = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
+    energy, std_error = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
+
+    if return_std:
+        return energy, std_error
 
     return energy
 

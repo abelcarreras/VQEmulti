@@ -16,7 +16,8 @@ class AdapVanilla(Method):
                  coeff_tolerance=1e-10,
                  gradient_simulator=None,
                  operator_update_number=1,
-                 operator_update_max_grad=2e-2):
+                 operator_update_max_grad=2e-2,
+                 min_iterations=0):
         """
         :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
         :param diff_threshold: missing description
@@ -35,7 +36,7 @@ class AdapVanilla(Method):
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
-                                   'operator_update_number': self.operator_update_number}
+                                   'operator_update_number': self.operator_update_number, 'min_iterations': min_iterations}
 
     def update_ansatz(self, ansatz, iterations):
 
@@ -93,6 +94,7 @@ class AdapVanilla(Method):
                               np.array(max_indices) == np.array(ansatz.get_index(self.operators_pool)[-len(max_indices):]))
 
         # if repeat operator finish adaptVQE
+        repeat_operator = False
         if repeat_operator:
             raise Converged(message='Converge archived due to repeated operator')
 

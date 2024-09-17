@@ -1,3 +1,5 @@
+import warnings
+
 from vqemulti.simulators import SimulatorBase
 from vqemulti.preferences import Configuration
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian
@@ -335,7 +337,7 @@ def trotter_step(qubit_operator, time, n_qubits):
                         trotter_gates.append(CircuitInstruction(HGate(), [qubit_index_sup]))
 
         # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
-        if not cnot_inversion_list[-1]:
+        if not cnot_inversion_list[last_qubit-1]:
             trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
         else:
             trotter_gates.append(CircuitInstruction(RXGate((2 * coefficient)), [last_qubit]))
@@ -405,10 +407,11 @@ class QiskitSimulator(SimulatorBase):
                  separate_matrix_operators=True,
                  shots=1000,
                  qiskit_optimizer=False,
-                 backend=AerSimulator(),
+                 backend=None,
                  use_estimator=False,
                  session=None,
-                 use_ibm_runtime=False
+                 use_ibm_runtime=False,
+                 noise_model=None
                  ):
 
         """
@@ -430,6 +433,9 @@ class QiskitSimulator(SimulatorBase):
         self._qiskit_optimizer = qiskit_optimizer
         self._use_ibm_runtime = use_ibm_runtime
 
+        if self._backend is None:
+            self._backend = AerSimulator(noise_model=noise_model)
+
         if session is not None:
             self._use_ibm_runtime = True
 
@@ -441,6 +447,11 @@ class QiskitSimulator(SimulatorBase):
                 self._backend = session._backend
             except QiskitBackendNotFoundError:
                 raise Exception('Backend not found')
+
+            if noise_model is not None:
+                warnings.warn('noise model will not be used in session')
+
+        self._noise_model = noise_model
 
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
@@ -561,6 +572,10 @@ class QiskitSimulator(SimulatorBase):
             total_variance += coefficient ** 2 - expectation_value**2
             total_expectation_value += expectation_value
 
+            if Configuration().verbose > 1:
+                print('variance: ', float(coefficient ** 2 - expectation_value**2))
+                print('expectation: ', float(expectation_value))
+
         return total_expectation_value, total_variance
 
     def _measure_expectation_estimator(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
@@ -599,7 +614,7 @@ class QiskitSimulator(SimulatorBase):
             self._get_circuit_stat_data(circuit)
 
         if not self._use_ibm_runtime:
-            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping)
+            estimator = Estimator(abelian_grouping=self._hamiltonian_grouping, backend_options=dict(noise_model=self._noise_model))
             job = estimator.run(circuits=[circuit], observables=[measure_op], shots=self._shots)
             variance = sum([meta['variance'] for meta in job.result().metadata])
             std_error = np.sqrt(variance/self._shots)

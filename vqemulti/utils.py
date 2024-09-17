@@ -61,7 +61,7 @@ def ansatz_to_matrix(ansatz, n_qubits):
 
     for operator in ansatz:
         # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator_openfermion(operator, n_qubits)
+        operator_matrix = get_sparse_operator(operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)
         matrix = scipy.sparse.linalg.expm(operator_matrix) * matrix
@@ -81,7 +81,7 @@ def ansatz_to_matrix_list(ansatz, n_qubits):
     matrix_list = []
     for operator in ansatz:
         # Get corresponding the operator matrix (exponent)
-        operator_matrix = get_sparse_operator_openfermion(operator, n_qubits)
+        operator_matrix = get_sparse_operator(operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)
         matrix_list.append(scipy.sparse.linalg.expm(operator_matrix))

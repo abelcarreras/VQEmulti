@@ -4,7 +4,7 @@ import numpy as np
 import scipy
 
 
-def exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
+def exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, return_std=False):
     """
     Calculates the energy of the state prepared by applying an ansatz (of the
     type of the Adapt VQE protocol) to a reference state.
@@ -38,6 +38,9 @@ def exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
     # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
     bra = ket.transpose().conj()
     energy = np.sum(bra * sparse_hamiltonian * ket).real
+
+    if return_std:
+        return energy, 0.0
 
     return energy
 

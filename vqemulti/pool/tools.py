@@ -54,7 +54,7 @@ class OperatorList:
                     self._list.append(anti_hermitian_fermion)
 
         if normalize:
-            self._list = [normalize_operator(op) for op in self._list]
+            self._list = [normalize_operator(op, phase_sign=True) for op in self._list]
             # self._list = [op/c for op, c in zip(operators, self.operators_prefactors())]
 
     def __str__(self):

@@ -454,21 +454,39 @@ def get_hf_energy_core(mol_h2, n_core_orb=0):
     print('HF Test  Electronic (effective): {:12.8f}'.format(energy))
 
 
-def normalize_operator(operator):
-    """
-    normalize an operator
-
-    :param operator:
-    :return: the normalized operator
-    """
+def get_norm_operator(operator):
 
     coeff = 0
     for t in operator.terms:
         coeff_t = operator.terms[t]
         coeff += np.conj(coeff_t) * coeff_t
 
+    return np.sqrt(coeff)
+
+
+def normalize_operator(operator, phase_sign=False):
+    """
+    normalize an operator
+
+    :param operator:
+    :param phase_sign:
+    :return: the normalized operator
+    """
+
+    coeff = 0
+    sum_coeff = 0
+    for t in operator.terms:
+        coeff_t = operator.terms[t]
+        coeff += np.conj(coeff_t) * coeff_t
+        sum_coeff += coeff_t
+
+    if phase_sign:
+        sign = np.sign(sum_coeff)
+    else:
+        sign = 1
+
     if operator.many_body_order() > 0:
-        return operator / np.sqrt(coeff)
+        return operator / np.sqrt(coeff)*sign
 
     raise Exception('Cannot normalize 0 operator')
 
@@ -671,16 +689,17 @@ def store_wave_function(coefficients, ansatz, filename='wf.yml'):
         yaml.dump(total_terms, f)
 
 
-def load_wave_function(filename='wf.yml'):
+def load_wave_function(filename='wf.yml', qubit_op=False):
     """
     load wave function from file
 
     :param filename: file name
+    :param qubit_op: True if loading QubitOperators, False if loading FermionOperators
     :return: coefficients, ansatz(list of operators)
     """
 
     import yaml
-    from openfermion import FermionOperator
+    from openfermion import FermionOperator, QubitOperator
     from vqemulti.pool.tools import OperatorList
 
     op_list = []
@@ -691,9 +710,12 @@ def load_wave_function(filename='wf.yml'):
         op_data = dump[:-1]
 
         for op_dict in op_data:
-            op_single = FermionOperator()
+            op_single = QubitOperator() if qubit_op else FermionOperator()
             for k, v in op_dict.items():
-                op_single += v * FermionOperator(k)
+                if qubit_op:
+                    op_single += v * QubitOperator(k)
+                else:
+                    op_single += v * FermionOperator(k)
 
             op_list.append(op_single)
 

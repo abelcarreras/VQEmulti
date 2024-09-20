@@ -208,12 +208,113 @@ def get_symmetry_reduced_pool(pool, sym_orbitals, hamiltonian_sym=None, threshol
     return OperatorList(new_pool, antisymmetrize=False)
 
 
+def compare_operators(operator1, operator2):
+
+    def apply_rotation(p):
+        rot_p = list(p)
+        for i, qubit in enumerate(rot_p):
+            if qubit[1] == 'Y':
+                rot_p[i] = (qubit[0], 'Z')
+            if qubit[1] == 'Z':
+                rot_p[i] = (qubit[0], 'Y')
+        yield tuple(rot_p)
+
+        rot_p = list(p)
+        for i, qubit in enumerate(rot_p):
+            if qubit[1] == 'Z':
+                rot_p[i] = (qubit[0], 'Y')
+            if qubit[1] == 'Z':
+                rot_p[i] = (qubit[0], 'Y')
+        yield tuple(rot_p)
+
+        rot_p = list(p)
+        for i, qubit in enumerate(rot_p):
+            if qubit[1] == 'X':
+                rot_p[i] = (qubit[0], 'Y')
+            if qubit[1] == 'Y':
+                rot_p[i] = (qubit[0], 'X')
+        yield tuple(rot_p)
+
+    for (k1, v1), (k2, v2) in zip(operator1.terms.items(), operator2.terms.items()):
+        for ki in apply_rotation(k1):
+            if ki == k2:
+                return True
+
+    return False
+
+
+def get_pauli_symmetry_reduced_pool(pool):
+
+    print('\npool commutation')
+    new_pool = []
+    for i, op_1 in enumerate(pool):
+
+        included = False
+        for op_2 in new_pool:
+            included = included or compare_operators(op_1, op_2)
+
+        if not included:
+            new_pool.append(op_1)
+
+    return OperatorList(new_pool, antisymmetrize=False)
+
+
 if __name__ == '__main__':
 
     from openfermionpyscf import prepare_pyscf_molecule
-    from openfermion import MolecularData
+    from openfermion import MolecularData, hermitian_conjugated
     from openfermionpyscf import run_pyscf
     import matplotlib.pyplot as plt
+
+    from openfermion import QubitOperator
+
+
+    def compare_operators(operator1, operator2):
+
+        def apply_rotation(p):
+            rot_p = list(p)
+            for i, qubit in enumerate(rot_p):
+                if qubit[1] == 'Y':
+                    rot_p[i] = (qubit[0], 'Z')
+                if qubit[1] == 'Z':
+                    rot_p[i] = (qubit[0], 'Y')
+            yield tuple(rot_p)
+
+            rot_p = list(p)
+            for i, qubit in enumerate(rot_p):
+                if qubit[1] == 'Z':
+                    rot_p[i] = (qubit[0], 'Y')
+                if qubit[1] == 'Z':
+                    rot_p[i] = (qubit[0], 'Y')
+            yield tuple(rot_p)
+
+            rot_p = list(p)
+            for i, qubit in enumerate(rot_p):
+                if qubit[1] == 'X':
+                    rot_p[i] = (qubit[0], 'Y')
+                if qubit[1] == 'Y':
+                    rot_p[i] = (qubit[0], 'X')
+            yield tuple(rot_p)
+
+        for (k1, v1), (k2, v2) in zip(operator1.terms.items(), operator2.terms.items()):
+            for ki in apply_rotation(k1):
+                if ki == k2:
+                    return True
+
+        return False
+
+    pauli_1 = QubitOperator('X0 Y1 Y2 Y3')
+    pauli_2 = QubitOperator('Y0 X1 X2 X3')
+
+
+
+    print(compare_operators(pauli_1, pauli_2))
+
+    # print(pauli_1 + hermitian_conjugated(pauli_2))
+    # print(pauli_1 - hermitian_conjugated(pauli_2))
+
+
+    exit()
 
     def square_h4_mol(distance, basis='sto-3g'):
         mol = MolecularData(geometry=[['H', [0, 0, 0]],

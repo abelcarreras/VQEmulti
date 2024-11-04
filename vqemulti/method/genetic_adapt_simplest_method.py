@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 
 
-class GeneticAdaptComparisonExp(Method):
+class GeneticAdaptSimple(Method):
 
     def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance,
                  gradient_simulator, beta, restriction):
@@ -31,26 +31,11 @@ class GeneticAdaptComparisonExp(Method):
         for i in range(len(coefficients)):
             if i == 0 and len(coefficients) == 1:
                 break
-            if i == 0:
-                mean_differences = abs(abs(coefficients[i])-abs(coefficients[i+1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences *self.beta)
-                delete_probs.append(prob_distribution / (len(coefficients)))
-                continue
-            if i > 0 and i == len(coefficients)-1:
-                mean_differences = abs(abs(coefficients[i])-abs(coefficients[i-1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
-                delete_probs.append(prob_distribution / (len(coefficients)))
-                continue
-            else:
-                mean_differences = (abs(abs(coefficients[i])-abs(coefficients[i-1]))+abs(abs(coefficients[i])-abs(coefficients[i+1])))/2
-                #prob_distribution =  1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
-                print('difs', mean_differences, 'prob', prob_distribution, 'after dividing', prob_distribution/(len(coefficients)))
-                delete_probs.append(prob_distribution/(len(coefficients)))
-                if abs(coefficients[i]) > abs(coefficients[i-1]) and abs(coefficients[i]) > abs(coefficients[i+1]):
-                    delete_probs[i] = 0
+            positiion_coeff = (abs(coefficients[i])*len(coefficients))/i
+            prob_distribution = 1 - np.exp(-positiion_coeff *self.beta)
+            delete_probs.append(prob_distribution / (len(coefficients)))
+            print('prob', prob_distribution, 'after dividing', delete_probs[-1])
+
         # Normalize delete probability
         #total_sum = np.sum(delete_probs)
         #normalized_delete_probs = np.array(delete_probs)/total_sum

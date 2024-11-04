@@ -1,3 +1,4 @@
+from sympy.codegen import Print
 from vqemulti.method import Method
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.errors import Converged
@@ -6,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 
 
-class GeneticAdaptComparisonExp(Method):
+class GeneticAdaptComparisonExp_20(Method):
 
     def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance,
                  gradient_simulator, beta, restriction):
@@ -27,30 +28,48 @@ class GeneticAdaptComparisonExp(Method):
         # Select the mutation that is going to happen
         # Create delete probabilities
         delete_probs = []
+        # First count the number of operators eligible for erasing
+        intial_number = len(coefficients)
+        for i in range(1, intial_number - 1, 1):
+            if abs(coefficients[i]) > abs(coefficients[i - 1]) and abs(coefficients[i]) > abs(coefficients[i + 1]):
+                intial_number -= 1
+        intial_number = intial_number - 2
+        print('we have', intial_number, 'ops to erase')
 
         for i in range(len(coefficients)):
             if i == 0 and len(coefficients) == 1:
                 break
             if i == 0:
                 mean_differences = abs(abs(coefficients[i])-abs(coefficients[i+1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences *self.beta)
-                delete_probs.append(prob_distribution / (len(coefficients)))
+                prob_distribution = 1 - np.exp(-mean_differences *self.beta)/abs(coefficients[i])
+                if intial_number == 0:
+                    delete_probs.append(0)
+                else:
+                    delete_probs.append(prob_distribution /len(coefficients))
                 continue
             if i > 0 and i == len(coefficients)-1:
                 mean_differences = abs(abs(coefficients[i])-abs(coefficients[i-1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
-                delete_probs.append(prob_distribution / (len(coefficients)))
+                prob_distribution = 1 - np.exp(-mean_differences *self.beta)/abs(coefficients[i])
+                if intial_number == 0:
+                    delete_probs.append(0)
+                else:
+                    delete_probs.append(prob_distribution /len(coefficients))
                 continue
             else:
-                mean_differences = (abs(abs(coefficients[i])-abs(coefficients[i-1]))+abs(abs(coefficients[i])-abs(coefficients[i+1])))/2
-                #prob_distribution =  1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
-                print('difs', mean_differences, 'prob', prob_distribution, 'after dividing', prob_distribution/(len(coefficients)))
-                delete_probs.append(prob_distribution/(len(coefficients)))
-                if abs(coefficients[i]) > abs(coefficients[i-1]) and abs(coefficients[i]) > abs(coefficients[i+1]):
-                    delete_probs[i] = 0
+                L1 = (abs(coefficients[i - 1]) + abs(coefficients[i])) / 2
+                L2 = (abs(coefficients[i + 1]) + abs(coefficients[i])) / 2
+                a = abs(coefficients[i - 1]) - abs(coefficients[i])
+                b = abs(coefficients[i + 1]) - abs(coefficients[i])
+                mean_differences = (a / L1 + b / L2) / 2
+                if mean_differences < 0:
+                    delete_probs.append(0)
+                    continue
+                prob_distribution = 1 - np.exp((-mean_differences * self.beta) / (i))
+                delete_probs.append(prob_distribution/len(coefficients))
+
+                print('difs', mean_differences, 'prob', prob_distribution, 'after dividing',
+                      delete_probs[-1])
+
         # Normalize delete probability
         #total_sum = np.sum(delete_probs)
         #normalized_delete_probs = np.array(delete_probs)/total_sum

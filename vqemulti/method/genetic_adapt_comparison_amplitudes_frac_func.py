@@ -6,15 +6,16 @@ from copy import deepcopy
 import numpy as np
 
 
-class GeneticAdaptComparisonExp(Method):
+class GeneticAdaptComparisonFrac(Method):
 
     def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance,
-                 gradient_simulator, beta, restriction):
+                 gradient_simulator, a_val, b_val, restriction):
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
         self.gradient_simulator = gradient_simulator
-        self.beta = beta
+        self.a_val = a_val
+        self.b_val = b_val
         self.restriction = restriction
 
         # Convergence criteria definition for this method
@@ -33,24 +34,27 @@ class GeneticAdaptComparisonExp(Method):
                 break
             if i == 0:
                 mean_differences = abs(abs(coefficients[i])-abs(coefficients[i+1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences *self.beta)
+                prob_distribution = mean_differences ** self.a_val / (mean_differences ** self.a_val + self.b_val)
                 delete_probs.append(prob_distribution / (len(coefficients)))
                 continue
             if i > 0 and i == len(coefficients)-1:
                 mean_differences = abs(abs(coefficients[i])-abs(coefficients[i-1]))
-                #prob_distribution = 1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
+                #prob_distribution = 1*(1-np.exp(-mean_differences*self.beta))
+                prob_distribution = mean_differences ** self.a_val / (mean_differences ** self.a_val + self.b_val)
+
                 delete_probs.append(prob_distribution / (len(coefficients)))
                 continue
             else:
                 mean_differences = (abs(abs(coefficients[i])-abs(coefficients[i-1]))+abs(abs(coefficients[i])-abs(coefficients[i+1])))/2
-                #prob_distribution =  1-np.exp(-mean_differences*self.beta)
-                prob_distribution = 1 - np.exp(-mean_differences * self.beta)
+
+
+
+                #prob_distribution =  1 *(1-np.exp(-mean_differences*self.beta))
+                prob_distribution = mean_differences ** self.a_val / (mean_differences ** self.a_val + self.b_val)
                 print('difs', mean_differences, 'prob', prob_distribution, 'after dividing', prob_distribution/(len(coefficients)))
                 delete_probs.append(prob_distribution/(len(coefficients)))
                 if abs(coefficients[i]) > abs(coefficients[i-1]) and abs(coefficients[i]) > abs(coefficients[i+1]):
-                    delete_probs[i] = 0
+                    delete_probs[-1] = 0
         # Normalize delete probability
         #total_sum = np.sum(delete_probs)
         #normalized_delete_probs = np.array(delete_probs)/total_sum
@@ -75,7 +79,6 @@ class GeneticAdaptComparisonExp(Method):
 
         wheel = makeWheel(all_probs)
         print(wheel)
-        print('prob', wheel[-1][0])
         # Here we generate the random position of the first pointer
         r = np.random.rand()
         print('number', r)
@@ -148,6 +151,5 @@ class GeneticAdaptComparisonExp(Method):
             second_half_coeffs = coefficients[selected+1:]
             coefficients = first_half_coeffs + second_half_coeffs
 
-        print('len', len(ansatz))
         return ansatz, coefficients
 

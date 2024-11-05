@@ -35,6 +35,7 @@ class SimulatorBase:
         self._hamiltonian_grouping = hamiltonian_grouping
         self._separate_matrix_operators = separate_matrix_operators
         self._n_hamiltonian_terms = None
+        self.cnot_max = 0
 
     def set_shots_model(self, shots_model):
         self._shots_model = shots_model
@@ -112,14 +113,10 @@ class SimulatorBase:
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :return: the expectation value of the state given the hamiltonian
         """
-        print('HAMILTONIAN', qubit_hamiltonian)
         n_qubits = count_qubits(qubit_hamiltonian)
         state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
 
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-        print('-----------------------------')
-        print(formatted_hamiltonian)
-        exit()
         # Obtain the theoretical expectation value for each Pauli string in the
         # Hamiltonian by matrix multiplication, and perform the necessary weighed
         # sum to obtain the energy expectation value.
@@ -207,6 +204,7 @@ class SimulatorBase:
         print('Circuit evaluations: {}'.format(len(self._circuit_count)))
         print('Total circuit depth: {}'.format(sum(self._circuit_count)))
         print('Maximum circuit depth: {}'.format(np.max(self._circuit_count)))
+        print('Maximum number of CNOTS: {}'.format(self.cnot_max))
         print('Average circuit depth: {:.2f}'.format(np.average(self._circuit_count)))
         print('Gate counts:')
         for k, v in self._circuit_gates.items():

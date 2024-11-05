@@ -699,8 +699,6 @@ class QiskitSimulator(SimulatorBase):
         self._shot_count.append(self._shots)
 
         # gates
-        print('--------------------------------')
-        print('separating the circuit')
         separated_list = defaultdict(int)
         for gate in circuit.data:
             try:
@@ -709,8 +707,8 @@ class QiskitSimulator(SimulatorBase):
             except KeyError:
                 gates_name.update({gate[0].name: gate[0].name})
                 self._circuit_gates[gates_name[gate[0].name]] += 1
-        print(separated_list)
-        print('--------------------------------')
+        if separated_list['CNOT'] > self.cnot_max:
+            self.cnot_max = separated_list['CNOT']
     def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
 
         ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)

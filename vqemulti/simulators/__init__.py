@@ -1,3 +1,4 @@
+from h5py.h5p import PropDCID
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix, ansatz_to_matrix_list
 from openfermion.utils import count_qubits
 from collections import defaultdict
@@ -111,11 +112,14 @@ class SimulatorBase:
         :param state_preparation_gates: list of gates in simulation library format that represents the state
         :return: the expectation value of the state given the hamiltonian
         """
-
+        print('HAMILTONIAN', qubit_hamiltonian)
         n_qubits = count_qubits(qubit_hamiltonian)
         state_vector = self._get_state_vector(state_preparation_gates, n_qubits)
 
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
+        print('-----------------------------')
+        print(formatted_hamiltonian)
+        exit()
         # Obtain the theoretical expectation value for each Pauli string in the
         # Hamiltonian by matrix multiplication, and perform the necessary weighed
         # sum to obtain the energy expectation value.
@@ -211,6 +215,8 @@ class SimulatorBase:
 
     def print_circuits(self):
         print('Total circuits: {}'.format(len(self._circuit_draw)))
+        # self._circuit_draw stores all the circuits but ready to be drawed, this is done
+        # inside each simulator in function _get_circuit_stat_data
         for i, c in enumerate(self._circuit_draw):
             print('\n Circuit {}\n'.format(i+1) + c)
 

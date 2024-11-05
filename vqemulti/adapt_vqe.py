@@ -24,6 +24,7 @@ def adaptVQE(hamiltonian,
              variance_simulator=None,
              reference_dm=None,
              optimizer_params=None,
+             print_circuits = False,
              ):
     """
     Perform an adaptVQE calculation
@@ -196,6 +197,9 @@ def adaptVQE(hamiltonian,
         if energy_simulator is not None:
             circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
             print('Energy circuit depth: ', circuit_info['depth'])
+            energy_simulator.print_statistics()
+            if print_circuits is not False:
+                energy_simulator.print_circuits()
 
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': ansatz,

@@ -504,7 +504,7 @@ class QiskitSimulator(SimulatorBase):
         # Format and group the Hamiltonian, so as to save measurements by using
         # the same data for Pauli strings that only differ by identities
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
-
+        print('-------------USING ESTIMATOR---------------')
         expectation_value, std_error = self._measure_expectation_estimator(formatted_hamiltonian,
                                                                            state_preparation_gates,
                                                                            n_qubits,

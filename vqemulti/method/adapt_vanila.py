@@ -102,7 +102,6 @@ class AdapVanilla(Method):
         for max_index, max_operator in zip(max_indices, max_operators):
             coefficients.append(0)
             ansatz.append(max_operator)
-
         return ansatz, coefficients
 
 

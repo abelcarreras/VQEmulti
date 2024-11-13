@@ -9,7 +9,6 @@ class RHESampler:
     def __init__(self, backend, n_qubits, session):
 
         layout = get_backend_opt_layout(backend, n_qubits)
-
         self._pm = generate_preset_pass_manager(backend=backend,
                                                 optimization_level=3,
                                                 initial_layout=layout,
@@ -47,7 +46,6 @@ class RHEstimator:
     def __init__(self, backend, n_qubits, session, limit_hw=50000):
 
         layout = get_backend_opt_layout(backend, n_qubits)
-
         self.pm = generate_preset_pass_manager(backend=backend,
                                                optimization_level=3,
                                                initial_layout=layout,
@@ -71,6 +69,11 @@ class RHEstimator:
         if Configuration().verbose > 1:
             print('depth: ', circuit.depth())
             print('isa_depth: ', isa_circuit.depth())
+            cnot_count = 0
+            for i in range(len(isa_circuit.data)):
+                if isa_circuit.data[i][0].num_qubits == 2:
+                    cnot_count += 1
+            print('isa_cnots: ', cnot_count)
             # print('observable: ', measure_op)
             print('n_observable: ', len(measure_op))
             print('n_chunks: ', n_chunks)
@@ -99,10 +102,11 @@ class RHEstimator:
         estimator.options.default_shots = shots
         estimator.options.resilience_level = 2
         # estimator.options.optimization_level = 0
-        # estimator.options.dynamical_decoupling.enable = False
+        # estimator.options.dynamical_decoupling.enable = True
         # estimator.options.resilience.zne_mitigation = False
-        estimator.options.twirling.enable_measure = False
-        estimator.options.twirling.enable_gates = False
+        # estimator.options.resilience.pec_mitigation = True
+        estimator.options.twirling.enable_measure = True
+        estimator.options.twirling.enable_gates = True
         # estimator.options.update(default_shots=shots, optimization_level=0)
 
         variance = 0

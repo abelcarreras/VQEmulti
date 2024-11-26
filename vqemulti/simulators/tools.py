@@ -43,6 +43,7 @@ def get_cnot_inversion_mat(ordered_terms, n_qubits):
             else:
                 m_row[i] = 0
 
+    control_val = np.sum(np.abs(mat))
     while np.sum(np.abs(mat)) < n_col * n_row:
         for i, m_row in enumerate(mat):
             for j, element in enumerate(m_row):
@@ -68,6 +69,11 @@ def get_cnot_inversion_mat(ordered_terms, n_qubits):
                             mat[i, j] = 1
                         else:
                             mat[i, j] = -1
+
+        if control_val == np.sum(np.abs(mat)):
+            break
+
+        control_val = np.sum(np.abs(mat))
 
     bool_mat = []
     for row in mat:

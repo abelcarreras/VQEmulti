@@ -8,7 +8,7 @@ from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp, Operator
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
@@ -215,11 +215,81 @@ def last_gate(gates_list, qubit_indices, ignore_z=False):
     return CircuitInstruction(IGate(), [0], []), None
 
 
-def trotter_step(qubit_operator, time, n_qubits):
+def add_cnot(gate_list, pair, inverse=False):
+    if inverse:
+        for j in [0, 1]:
+            previous_gate, index = last_gate(gate_list, (pair[j],))
+            if previous_gate.operation.name == 'h':
+                del gate_list[index]
+            else:
+                gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
+
+        previous_gate, index = last_gate(gate_list, pair[::-1])
+        if previous_gate.operation.name == 'cx' and previous_gate.qubits == tuple(pair[::-1]):
+            del gate_list[index]
+        elif previous_gate.operation.name == 'cx' and previous_gate.qubits == tuple(pair):
+            del gate_list[index]
+            gate_list.append(CircuitInstruction(SwapGate(), pair))
+        else:
+            gate_list.append(CircuitInstruction(MCXGate(1), pair[::-1]))
+
+        for j in [0, 1]:
+            gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
+
+    else:
+        previous_gate, index = last_gate(gate_list, pair)
+        if previous_gate.operation.name == 'cx' and previous_gate.qubits == tuple(pair):
+            del gate_list[index]
+        elif previous_gate.operation.name == 'cx' and previous_gate.qubits == tuple(pair[::-1]):
+            del gate_list[index]
+            gate_list.append(CircuitInstruction(SwapGate(), pair))
+        else:
+            gate_list.append(CircuitInstruction(MCXGate(1), pair))
+
+
+def add_rotation(gate_list, qubit, angle):
+    previous_gate, index = last_gate(gate_list, (qubit,))
+    if previous_gate.operation.name == 'h':
+        del gate_list[index]
+        gate_list.append(CircuitInstruction(RXGate((angle)), [qubit]))
+        gate_list.append(CircuitInstruction(HGate(), [qubit]))
+    else:
+        gate_list.append(CircuitInstruction(RZGate((angle)), [qubit]))
+
+
+def add_basis_change_gates(gate_list, pauliString, inverse=False):
+    # Perform necessary basis rotations
+
+    for pauli in pauliString:
+
+        # Get the index of the qubit this Pauli operator acts on
+        qubit_index = pauli[0]
+
+        # Get the Pauli operator identifier (X,Y or Z)
+        pauli_operator = pauli[1]
+
+        if pauli_operator == "X":
+            # Rotate to X basis
+            previous_gate, index = last_gate(gate_list, (qubit_index,))
+            if previous_gate.operation.name == 'h':
+                del gate_list[index]
+            else:
+                gate_list.append(CircuitInstruction(HGate(), [qubit_index]))
+
+        if pauli_operator == "Y":
+            # Rotate to Y Basis
+            if inverse:
+                gate_list.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+            else:
+                gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
+
+
+
+def trotter_step(qubit_operator, time, n_qubits, with_phase=True):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
-    The implementation is done using combined original/inverse staircase algorithm
+    The implementation is done using standard staircase algorithm
 
     :param qubit_operator: qubit operator
     :param time: the evolution time
@@ -233,166 +303,59 @@ def trotter_step(qubit_operator, time, n_qubits):
     # trotter_operator_grouping function (sorted keys) for consistency.
     ordered_terms = sorted(list(qubit_operator.terms.keys()))
 
+    # Add to trotter_gates the gates necessary to simulate each Pauli string,
+    # going through them by the defined order
+
     # define order of algorithm
     cnot_inversion_matrix = get_cnot_inversion_mat(ordered_terms, n_qubits)
 
-    # Add to trotter_gates the gates necessary to simulate each Pauli string,
-    # going through them by the defined order
-    for pauliString, cnot_inversion_list in zip(ordered_terms, cnot_inversion_matrix):
-        # print(pauliString)
-        if len(pauliString) == 0:
-            continue
-
-        # handle first qubit in pauli string
-        first_qubit_index = pauliString[0][0]
-        if first_qubit_index > 0:
-            cnot_inversion_list[first_qubit_index-1] = cnot_inversion_list[first_qubit_index]
-
-        # Get real part of the coefficient (the immaginary one can't be simulated,
+    for pauliString, order_cnot_base in zip(ordered_terms, cnot_inversion_matrix):
+        # Get real part of the coefficient (the imaginary one can't be simulated,
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
         coefficient = float(np.real(qubit_operator.terms[pauliString])) * time
 
-        # Keep track of the qubit indices involved in this particular Pauli string.
-        # It's necessary so as to know which are included in the sequence of CNOTs
-        # that compute the parity
-        involved_qubits = []
-        for _, pauli in enumerate(pauliString):
+        # check if operator is all identity
+        if len(pauliString) == 0:
+            if not with_phase:
+                continue
 
-            # Get the index of the qubit this Pauli operator acts on
-            qubit_index = pauli[0]
-            involved_qubits.append(qubit_index)
+            for i in range(n_qubits - 1):
+                trotter_gates.append(CircuitInstruction(MCXGate(1), [i, i + 1]))
 
-            if qubit_index > 0:
-                inverted_staircase = cnot_inversion_list[qubit_index-1]
-            else:
-                inverted_staircase = cnot_inversion_list[0]
+            trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [n_qubits - 1]))
+            trotter_gates.append(CircuitInstruction(U1Gate((-2 * coefficient)), [n_qubits - 1]))
 
-            # Get the Pauli operator identifier (X,Y or Z)
-            pauli_operator = pauli[1]
+            for i in range(n_qubits - 1, 0, -1):
+                trotter_gates.append(CircuitInstruction(MCXGate(1), [i - 1, i]))
 
-            if not inverted_staircase:
-                if pauli_operator == "X":
-                    previous_gate, index = last_gate(trotter_gates, (qubit_index,))
-                    if previous_gate.operation.name == 'h':
-                        del trotter_gates[index]
-                    else:
-                        # Rotate to Z basis from X basis
-                        trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
-                        pass
+            continue
 
-                elif pauli_operator == "Y":
-                    previous_gate, index = last_gate(trotter_gates, (qubit_index,))
-                    if previous_gate.operation.name == 'rx':
-                        del trotter_gates[index]
-                    else:
-                        # Rotate to Y Basis
-                        trotter_gates.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
-            else:
-                if pauli_operator == "Z":
-                    previous_gate, index = last_gate(trotter_gates, (qubit_index,))
-                    if previous_gate.operation.name == 'h':
-                        del trotter_gates[index]
-                    else:
-                        # Rotate to Z basis from X basis
-                        trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
+        # determine cnot positions and inversion
+        cnot_qbits = []
+        cnot_qbits_order = []
 
-                if pauli_operator == "Y":
-                    # Rotate to Y Basis
-                    previous_gate, index = last_gate(trotter_gates, (qubit_index,))
-                    if previous_gate.operation.name == 'rz':
-                        del trotter_gates[index]
-                    else:
-                        trotter_gates.append(CircuitInstruction(RZGate(-np.pi / 2), [qubit_index]))
+        last = pauliString[0][0]
+        for p in pauliString[1:]:
+            cnot_qbits_order.append(order_cnot_base[last])
+            cnot_qbits.append([last, p[0]])
+            last = p[0]
 
-        last_qubit = max(involved_qubits) if len(involved_qubits) != 0 else 0
+        qubit_rotation = cnot_qbits[-1][-1] if len(cnot_qbits_order) > 0 else last
 
-        # Compute parity and store the result on the last involved qubit
-        for i in range(len(involved_qubits) - 1):
+        assert len(cnot_qbits_order) == len(cnot_qbits)
 
-            inverted_staircase = cnot_inversion_list[involved_qubits[i]]
+        add_basis_change_gates(trotter_gates, pauliString, inverse=True)
 
-            target = involved_qubits[i] if inverted_staircase else involved_qubits[i + 1]
-            control = involved_qubits[i + 1] if inverted_staircase else involved_qubits[i]
+        for cnot_pair, cnot_order in zip(cnot_qbits, cnot_qbits_order):
+            add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
-            if control < n_qubits-1 and target < n_qubits-1:
-                transition_point = cnot_inversion_list[control] != cnot_inversion_list[target]
-            else:
-                transition_point = False
+        add_rotation(trotter_gates, qubit_rotation, 2 * coefficient)
 
-            previous_gate, index = last_gate(trotter_gates, (control, target), ignore_z=True)
-            if previous_gate.operation.name == 'cx' and np.all(previous_gate.qubits == (control, target)):
-                del trotter_gates[index]
-            else:
-                trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
+        for cnot_pair, cnot_order in zip(cnot_qbits[::-1], cnot_qbits_order[::-1]):
+            add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
-            qubit_index_sup = involved_qubits[i + 1]
-            #if i < len(cnot_inversion_list)-1 and cnot_inversion_list[i] != cnot_inversion_list[i+1]:
-            if i < len(cnot_inversion_list) - 1 and transition_point:
-                if not last_qubit == qubit_index_sup:
-                    previous_gate, index = last_gate(trotter_gates, (qubit_index_sup,))
-                    if previous_gate.operation.name == 'h':
-                        del trotter_gates[index]
-                    else:
-                        trotter_gates.append(CircuitInstruction(HGate(), [qubit_index_sup]))
-
-        # Apply e^(-i*Z*coefficient) = Rz(coefficient*2) to the last involved qubit
-        if not cnot_inversion_list[last_qubit-1]:
-            trotter_gates.append(CircuitInstruction(RZGate((2 * coefficient)), [last_qubit]))
-        else:
-            trotter_gates.append(CircuitInstruction(RXGate((2 * coefficient)), [last_qubit]))
-
-        # Uncompute parity
-        for i in range(len(involved_qubits) - 2, -1, -1):
-            inverted_staircase = cnot_inversion_list[involved_qubits[i]]
-
-            qubit_index_sup = involved_qubits[i + 1]
-
-            target = involved_qubits[i] if inverted_staircase else involved_qubits[i + 1]
-            control = involved_qubits[i + 1] if inverted_staircase else involved_qubits[i]
-            if control < n_qubits-1 and target < n_qubits-1:
-                transition_point = cnot_inversion_list[control] != cnot_inversion_list[target]
-            else:
-                transition_point = False
-
-            if i < len(cnot_inversion_list) - 1 and transition_point:
-
-                if not last_qubit == qubit_index_sup:
-                    trotter_gates.append(CircuitInstruction(HGate(), [qubit_index_sup]))
-
-            trotter_gates.append(CircuitInstruction(MCXGate(1), [control, target]))
-
-        # Undo basis rotations
-        for i, pauli in enumerate(pauliString):
-
-            # Get the index of the qubit this Pauli operator acts on
-            qubit_index = pauli[0]
-            involved_qubits.append(qubit_index)
-
-            if qubit_index > 0:
-                inverted_staircase = cnot_inversion_list[qubit_index - 1]
-            else:
-                inverted_staircase = cnot_inversion_list[0]
-
-            # Get the Pauli operator identifier (X,Y or Z)
-            pauli_operator = pauli[1]
-
-            if not inverted_staircase:
-                if pauli_operator == "X":
-                    # Rotate to Z basis from X basis
-                    trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
-
-                elif pauli_operator == "Y":
-                    # Rotate to Z basis from Y Basis
-                    trotter_gates.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
-            else:
-                if pauli_operator == "Z":
-                    # Rotate to Z basis from X basis
-                    trotter_gates.append(CircuitInstruction(HGate(), [qubit_index]))
-
-                elif pauli_operator == "Y":
-                    # Rotate to X basis from Y Basis
-                    trotter_gates.append(CircuitInstruction(RZGate(np.pi / 2), [qubit_index]))
+        add_basis_change_gates(trotter_gates, pauliString, inverse=False)
 
     return trotter_gates
 

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.f2py.crackfortran import endifs
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from vqemulti.simulators.backend_opt import get_backend_opt_layout
 from vqemulti.preferences import Configuration
@@ -46,11 +47,17 @@ class RHEstimator:
     def __init__(self, backend, n_qubits, session, limit_hw=50000):
 
         layout = get_backend_opt_layout(backend, n_qubits)
+        import time
+        start = time.time()
         self.pm = generate_preset_pass_manager(backend=backend,
                                                optimization_level=3,
                                                initial_layout=layout,
                                                # layout_method='dense'
                                                )
+        end = time.time()
+        print('*********************')
+        print('TIME IS FOR PM:', end - start)
+        print('*********************')
         self._session = session
         self._backend = backend
         self._limit_hw = limit_hw
@@ -59,8 +66,13 @@ class RHEstimator:
             print('layout: ', layout)
 
     def run(self, circuit, measure_op, shots=10000):
-
+        import time
+        start = time.time()
         isa_circuit = self.pm.run(circuit)
+        end = time.time()
+        print('*********************')
+        print('TIME IS', end - start)
+        print('*********************')
 
         n_chunks = max([1, isa_circuit.depth() * len(measure_op) // self._limit_hw])
         n_chunks = min([n_chunks, len(measure_op)])

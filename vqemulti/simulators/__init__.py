@@ -160,10 +160,15 @@ class SimulatorBase:
 
             trotter_ansatz = []
             # Go through the operators in the ansatz
+            import time
+            start = time.time()
             for operator in ansatz:
                 # Add the gates corresponding to this operator to the ansatz gate list
                 trotter_ansatz += self._trotterize_operator(operator, n_qubits)
-
+            end = time.time()
+            print('***********************')
+            print('EXTRA TIME TROTTER', end - start)
+            print('***********************')
             # Initialize the state preparation gates with the reference state preparation gates
             state_preparation_gates = self._build_reference_gates(hf_reference_fock)
 

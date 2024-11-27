@@ -611,8 +611,11 @@ class QiskitSimulator(SimulatorBase):
 
         # circuit stats
         print('FILLING FROM ESTIMATOR')
+        '''
         for _ in list_strings:
             self._get_circuit_stat_data(circuit)
+        '''
+        print('1')
 
         if not self._use_ibm_runtime:
             estimator = Estimator(abelian_grouping=self._hamiltonian_grouping, backend_options=dict(noise_model=self._noise_model))
@@ -620,7 +623,9 @@ class QiskitSimulator(SimulatorBase):
             variance = sum([meta['variance'] for meta in job.result().metadata])
             std_error = np.sqrt(variance/self._shots)
         else:
+            print('2')
             estimator = RHEstimator(self._backend, n_qubits, session=self._session)
+            print('3')
             job = estimator.run(circuit, measure_op, shots=self._shots)
             std_error = sum([meta['std_error'] for meta in job.result().metadata])
 
@@ -672,9 +677,9 @@ class QiskitSimulator(SimulatorBase):
 
         trotter_gates = []
         for step in range(1, self._trotter_steps + 1):
-            # trotter_gates += trotter_step_standard(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
+            trotter_gates += trotter_step_standard(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
             # trotter_gates += trotter_step_inverse(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
-            trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
+            # trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
 
         return trotter_gates
 
@@ -686,9 +691,10 @@ class QiskitSimulator(SimulatorBase):
                       'unitary': 'QubitUnitary'}
 
         # circuit optimization using qiskit
+        #print('AQUI?')
         if self._qiskit_optimizer:
             circuit = transpile(circuit, optimization_level=3, basis_gates=['x', 'cx', 'rx', 'ry', 'rz', 'h'])
-
+        #print('Aqui :)')
         # circuit drawing
         self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
         if Configuration().verbose > 2:

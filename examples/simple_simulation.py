@@ -49,15 +49,15 @@ method = AdapVanilla(gradient_threshold=1e-6,
 
 # run adaptVQE
 result = adaptVQE(hamiltonian,  # fermionic hamiltonian
-                      operators_pool,  # fermionic operators
-                      hf_reference_fock,
-                      energy_threshold=0.0001,
-                      method=method,
-                      max_iterations=20,
-                      energy_simulator=simulator,
-                      variance_simulator=simulator,
-                      reference_dm=None,
-                      optimizer_params=None)
+                  operators_pool,  # fermionic operators
+                  hf_reference_fock,
+                  energy_threshold=0.0001,
+                  method=method,
+                  max_iterations=20,
+                  energy_simulator=simulator,
+                  variance_simulator=simulator,
+                  reference_dm=None,
+                  optimizer_params=None)
 
 print("HF energy:", molecule.hf_energy)
 print("VQE energy:", result["energy"])

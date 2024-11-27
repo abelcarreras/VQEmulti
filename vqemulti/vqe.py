@@ -12,7 +12,6 @@ def vqe(hamiltonian,
         ansatz,
         hf_reference_fock,
         coefficients=None,
-        opt_qubits=False,
         energy_simulator=None,
         energy_threshold=1e-4,
         optimizer_params=None
@@ -37,11 +36,7 @@ def vqe(hamiltonian,
     print('optimizer params: ', optimizer_params)
 
     # transform to qubit hamiltonian
-    ansatz = OperatorList(ansatz, antisymmetrize=True, normalize=True)
-
-    if opt_qubits:
-        # transform to qubit ansatz
-        ansatz = ansatz.get_quibits_list(normalize=True)
+    ansatz = OperatorList(ansatz)
 
     # initial guess
     n_terms = len(ansatz)

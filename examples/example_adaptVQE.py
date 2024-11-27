@@ -42,7 +42,6 @@ try:
     result = adaptVQE(hamiltonian,
                       pool,
                       hf_reference_fock,
-                      opt_qubits=False,  # use fermion operators
                       max_iterations=15  # maximum number of interations
                       )
 
@@ -73,6 +72,7 @@ plt.ylabel('Hartree')
 
 plt.figure()
 
+print(result['iterations']['norms'])
 plt.plot(result['iterations']['norms'])
 plt.title('Gradient')
 plt.ylabel('Hartree')

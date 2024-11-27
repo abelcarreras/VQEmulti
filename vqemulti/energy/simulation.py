@@ -76,7 +76,7 @@ def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, ha
     return energy_square
 
 
-def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, return_std=False):
     """
     Obtain the hamiltonian expectation value for a given VQE state (reference + ansatz) and a hamiltonian
 
@@ -95,7 +95,10 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, si
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=True)
 
     # evaluate hamiltonian
-    energy = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
+    energy, std_error = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
+
+    if return_std:
+        return energy, std_error
 
     return energy
 

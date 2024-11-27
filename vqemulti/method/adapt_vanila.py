@@ -63,6 +63,7 @@ class AdapVanilla(Method):
                                                 self.gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
+        iterations['norms'].append(total_norm)
 
         print("\nTotal gradient norm: {:12.6f}".format(total_norm))
 
@@ -104,6 +105,7 @@ class AdapVanilla(Method):
             ansatz.append(max_operator)
 
         return ansatz, coefficients
+
 
 
 

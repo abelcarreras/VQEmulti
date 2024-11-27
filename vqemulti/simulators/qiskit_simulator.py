@@ -285,7 +285,7 @@ def add_basis_change_gates(gate_list, pauliString, inverse=False):
 
 
 
-def trotter_step(qubit_operator, time, n_qubits, with_phase=True):
+def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.

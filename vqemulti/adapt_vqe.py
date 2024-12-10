@@ -145,6 +145,35 @@ def adaptVQE(hamiltonian,
 
         coefficients = list(results.x)
         energy = results.fun
+        factor_deleting = []
+        coeffs_abs = []
+        import numpy as np
+        for i in range(len(coefficients)):
+            coeffs_abs.append(abs(coefficients[i]))
+        for i in range(len(coeffs_abs)):
+            #factor_deleting.append(coeffs_abs[i]*((np.exp(i/len(coeffs_abs)))-1))
+            factor_deleting.append(coeffs_abs[i] * (i / len(coeffs_abs)))
+        print('FACTORS', factor_deleting)
+        for i in range(len(factor_deleting)):
+            if abs(factor_deleting[i]) < 0.001 and i != 0:
+                if i == len(coefficients)-1:
+                    print('Not erasing the last one sorry')
+                    break
+                print('Operator in position', i, 'has been deleted')
+                new_ansatz = ansatz[:i]
+                for operator in ansatz[i+1:]:
+                    new_ansatz.append(operator)
+                ansatz = new_ansatz
+                coefficients.pop(i)
+                print('The new ansatz has legth', len(ansatz))
+                print('The previous energy was', energy)
+                energy = exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock,
+                                                   hamiltonian)
+                print('The energy now is', energy)
+
+                break
+
+
 
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):

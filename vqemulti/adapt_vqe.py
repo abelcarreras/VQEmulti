@@ -146,6 +146,61 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
+
+        factor_deleting = []
+        coeffs_abs = []
+        import numpy as np
+        for i in range(len(coefficients)):
+            coeffs_abs.append(abs(coefficients[i]))
+        alpha = 6
+        n = 2
+        for i in range(len(coeffs_abs)):
+            position_contribution = np.exp(-alpha * i / len(coeffs_abs))
+            coeff_contribution = 1 / (coeffs_abs[i] ** n)
+            factor_deleting.append(position_contribution*coeff_contribution)
+        factor_deleting_normalized = []
+        sumas = np.sum(factor_deleting)
+        for i in range(len(factor_deleting)):
+            factor_deleting_normalized.append(factor_deleting[i] / sumas)
+        print('FACTORS', factor_deleting_normalized)
+
+        def makeWheel(all_probs):
+            wheel = []
+            init_point = 0
+            for i in range(len(all_probs)):
+                f = all_probs[i]
+                wheel.append((init_point, init_point + f, i))
+                init_point += f
+            return wheel
+
+        wheel = makeWheel(factor_deleting_normalized)
+        # Here we generate the random position of the first pointer
+        r = np.random.rand()
+        for j in range(len(wheel)):
+            if wheel[j][0] <= r < wheel[j][1]:
+                selected = wheel[j][2]
+
+        if coeffs_abs[selected]<0.01:
+            print('The selected operator is the one in positiion',
+                  selected, 'with factor', factor_deleting_normalized[selected],
+                  'it is going to be REMOVED')
+            new_ansatz = ansatz[:selected]
+            for operator in ansatz[selected + 1:]:
+                new_ansatz.append(operator)
+            ansatz = new_ansatz
+            coefficients.pop(selected)
+            print('The new ansatz has legth', len(ansatz))
+            print('The previous energy was', energy)
+            energy = exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock,
+                                            hamiltonian)
+            print('The energy now is', energy)
+
+        else:
+            print('The selected operator is the one in positiion',
+                  selected, 'with factor', factor_deleting_normalized[selected],
+                  'it is not going to be removed')
+
+
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
             if ansatz.is_fermionic():

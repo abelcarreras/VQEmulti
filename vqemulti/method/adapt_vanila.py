@@ -34,7 +34,8 @@ class AdapVanilla(Method):
         self.operator_update_max_grad = operator_update_max_grad
 
         # Convergence criteria definition for this method
-        self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
+        #self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
+        self.criteria_list = [zero_valued_coefficient_adaptvanilla]
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
                                    'operator_update_number': self.operator_update_number, 'min_iterations': min_iterations}
 

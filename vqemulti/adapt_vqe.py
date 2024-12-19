@@ -1,3 +1,5 @@
+from select import select
+
 from vqemulti.energy import exact_adapt_vqe_energy
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
@@ -9,6 +11,7 @@ from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
+import numpy as np
 import scipy
 
 
@@ -152,7 +155,7 @@ def adaptVQE(hamiltonian,
         import numpy as np
         for i in range(len(coefficients)):
             coeffs_abs.append(abs(coefficients[i]))
-        alpha = 6
+        alpha = 11
         n = 2
         for i in range(len(coeffs_abs)):
             position_contribution = np.exp(-alpha * i / len(coeffs_abs))
@@ -163,7 +166,7 @@ def adaptVQE(hamiltonian,
         for i in range(len(factor_deleting)):
             factor_deleting_normalized.append(factor_deleting[i] / sumas)
         print('FACTORS', factor_deleting_normalized)
-
+        '''
         def makeWheel(all_probs):
             wheel = []
             init_point = 0
@@ -179,11 +182,15 @@ def adaptVQE(hamiltonian,
         for j in range(len(wheel)):
             if wheel[j][0] <= r < wheel[j][1]:
                 selected = wheel[j][2]
-
-        if coeffs_abs[selected]<0.01:
-            print('The selected operator is the one in positiion',
-                  selected, 'with factor', factor_deleting_normalized[selected],
-                  'it is going to be REMOVED')
+        '''
+        biggest_one = max(factor_deleting_normalized)
+        selected = factor_deleting_normalized.index(biggest_one)
+        print('THE THRESHOLD NOW IS', 0.1*np.mean(coeffs_abs[-4:]))
+        if coeffs_abs[selected]<0.1*np.mean(coeffs_abs[-4:]):
+        #if coeffs_abs[selected]<0.002:
+            print('Selected operator positiion',
+                  selected, 'w/factor', factor_deleting_normalized[selected],'and coeff',
+                  coefficients[selected],'REMOVED')
             new_ansatz = ansatz[:selected]
             for operator in ansatz[selected + 1:]:
                 new_ansatz.append(operator)
@@ -196,9 +203,9 @@ def adaptVQE(hamiltonian,
             print('The energy now is', energy)
 
         else:
-            print('The selected operator is the one in positiion',
-                  selected, 'with factor', factor_deleting_normalized[selected],
-                  'it is not going to be removed')
+            print('Selected operator positiion',
+                  selected, 'w/factor', factor_deleting_normalized[selected],'and coeff',
+                  coefficients[selected],'not removed')
 
 
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
@@ -227,7 +234,7 @@ def adaptVQE(hamiltonian,
         iterations['variance'].append(variance)
         iterations['coefficients'].append(coefficients)
         iterations['indices'].append(ansatz.get_index(operators_pool))
-
+        print(iterations['coefficients'])
 
         # Checking criteria convergence
         criteria_list = method.get_criteria_list_convergence()

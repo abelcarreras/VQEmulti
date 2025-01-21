@@ -149,7 +149,7 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-
+        '''
         factor_deleting = []
         coeffs_abs = []
         import numpy as np
@@ -166,23 +166,7 @@ def adaptVQE(hamiltonian,
         for i in range(len(factor_deleting)):
             factor_deleting_normalized.append(factor_deleting[i] / sumas)
         print('FACTORS', factor_deleting_normalized)
-        '''
-        def makeWheel(all_probs):
-            wheel = []
-            init_point = 0
-            for i in range(len(all_probs)):
-                f = all_probs[i]
-                wheel.append((init_point, init_point + f, i))
-                init_point += f
-            return wheel
 
-        wheel = makeWheel(factor_deleting_normalized)
-        # Here we generate the random position of the first pointer
-        r = np.random.rand()
-        for j in range(len(wheel)):
-            if wheel[j][0] <= r < wheel[j][1]:
-                selected = wheel[j][2]
-        '''
         biggest_one = max(factor_deleting_normalized)
         selected = factor_deleting_normalized.index(biggest_one)
         print('THE THRESHOLD NOW IS', 0.1*np.mean(coeffs_abs[-4:]))
@@ -206,7 +190,7 @@ def adaptVQE(hamiltonian,
             print('Selected operator positiion',
                   selected, 'w/factor', factor_deleting_normalized[selected],'and coeff',
                   coefficients[selected],'not removed')
-
+        '''
 
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):

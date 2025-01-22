@@ -95,7 +95,11 @@ class RHEstimator:
 
         from qiskit_ibm_runtime import EstimatorV2
 
-        estimator = EstimatorV2(session=self._session)
+        try:
+            estimator = EstimatorV2(session=self._session)
+        except:
+            estimator = EstimatorV2()
+
         estimator.options.default_shots = shots
         estimator.options.resilience_level = 2
         # estimator.options.optimization_level = 0

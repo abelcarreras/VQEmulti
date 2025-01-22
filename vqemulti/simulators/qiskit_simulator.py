@@ -234,7 +234,11 @@ def add_cnot(gate_list, pair, inverse=False):
             gate_list.append(CircuitInstruction(MCXGate(1), pair[::-1]))
 
         for j in [0, 1]:
-            gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
+            previous_gate, index = last_gate(gate_list, (pair[j],))
+            if previous_gate.operation.name == 'h':
+                del gate_list[index]
+            else:
+                gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
 
     else:
         previous_gate, index = last_gate(gate_list, pair)
@@ -257,10 +261,19 @@ def add_rotation(gate_list, qubit, angle):
         gate_list.append(CircuitInstruction(RZGate((angle)), [qubit]))
 
 
-def add_basis_change_gates(gate_list, pauliString, inverse=False):
+def add_basis_change_gates(gate_list, pauliString, order_cnot_base, inverse=False):
     # Perform necessary basis rotations
 
-    for pauli in pauliString:
+    # print('input: ', order_cnot_base)
+    order_cnot_base = [order_cnot_base[0]] + list(order_cnot_base)
+    #order_cnot_base = list(order_cnot_base) + [order_cnot_base[-1]]
+
+    # print('output: ', order_cnot_base)
+    #assert len(pauliString) == len(order_cnot_base)
+
+    for pauli, _ in zip(pauliString, order_cnot_base):
+        # º print('**', pauli[0], pauli[1], order)
+        order = order_cnot_base[pauli[0]]
 
         # Get the index of the qubit this Pauli operator acts on
         qubit_index = pauli[0]
@@ -278,10 +291,21 @@ def add_basis_change_gates(gate_list, pauliString, inverse=False):
 
         if pauli_operator == "Y":
             # Rotate to Y Basis
+            previous_gate, index = last_gate(gate_list, (qubit_index,))
             if inverse:
-                gate_list.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+                if order:  # not directly equivalent but overall works
+                    gate_list.append(CircuitInstruction(RZGate(-np.pi / 2), [qubit_index]))
+                    gate_list.append(CircuitInstruction(HGate(), [qubit_index]))
+                else:
+                    gate_list.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+
             else:
-                gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
+                if order:  # not directly equivalent but overall works
+                    del gate_list[index]
+                    gate_list.append(CircuitInstruction(RZGate(np.pi / 2), [qubit_index]))
+                    # gate_list.append(CircuitInstruction(HGate(), [qubit_index]))
+                else:
+                    gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
 
 
 
@@ -314,6 +338,9 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
         coefficient = float(np.real(qubit_operator.terms[pauliString])) * time
+        # order_cnot_base = [True]*8
+        # print(order_cnot_base)
+        # exit()
 
         # check if operator is all identity
         if len(pauliString) == 0:
@@ -345,7 +372,7 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
 
         assert len(cnot_qbits_order) == len(cnot_qbits)
 
-        add_basis_change_gates(trotter_gates, pauliString, inverse=True)
+        add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=True)
 
         for cnot_pair, cnot_order in zip(cnot_qbits, cnot_qbits_order):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
@@ -355,7 +382,7 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
         for cnot_pair, cnot_order in zip(cnot_qbits[::-1], cnot_qbits_order[::-1]):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
-        add_basis_change_gates(trotter_gates, pauliString, inverse=False)
+        add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=False)
 
     return trotter_gates
 

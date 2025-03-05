@@ -11,6 +11,7 @@ from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
+from vqemulti import prune_adapt
 import numpy as np
 import scipy
 
@@ -23,6 +24,7 @@ def adaptVQE(hamiltonian,
              coefficients=None,
              ansatz=None,
              method=AdapVanilla(),
+             prune = None,
              energy_simulator=None,
              variance_simulator=None,
              reference_dm=None,
@@ -149,48 +151,10 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-        '''
-        factor_deleting = []
-        coeffs_abs = []
-        import numpy as np
-        for i in range(len(coefficients)):
-            coeffs_abs.append(abs(coefficients[i]))
-        alpha = 11
-        n = 2
-        for i in range(len(coeffs_abs)):
-            position_contribution = np.exp(-alpha * i / len(coeffs_abs))
-            coeff_contribution = 1 / (coeffs_abs[i] ** n)
-            factor_deleting.append(position_contribution*coeff_contribution)
-        factor_deleting_normalized = []
-        sumas = np.sum(factor_deleting)
-        for i in range(len(factor_deleting)):
-            factor_deleting_normalized.append(factor_deleting[i] / sumas)
-        print('FACTORS', factor_deleting_normalized)
-
-        biggest_one = max(factor_deleting_normalized)
-        selected = factor_deleting_normalized.index(biggest_one)
-        print('THE THRESHOLD NOW IS', 0.1*np.mean(coeffs_abs[-4:]))
-        if coeffs_abs[selected]<0.1*np.mean(coeffs_abs[-4:]):
-        #if coeffs_abs[selected]<0.002:
-            print('Selected operator positiion',
-                  selected, 'w/factor', factor_deleting_normalized[selected],'and coeff',
-                  coefficients[selected],'REMOVED')
-            new_ansatz = ansatz[:selected]
-            for operator in ansatz[selected + 1:]:
-                new_ansatz.append(operator)
-            ansatz = new_ansatz
-            coefficients.pop(selected)
-            print('The new ansatz has legth', len(ansatz))
-            print('The previous energy was', energy)
-            energy = exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock,
-                                            hamiltonian)
-            print('The energy now is', energy)
-
-        else:
-            print('Selected operator positiion',
-                  selected, 'w/factor', factor_deleting_normalized[selected],'and coeff',
-                  coefficients[selected],'not removed')
-        '''
+        if prune is not None:
+            prune_method = prune
+            prune_method.load_values(coefficients, hf_reference_fock, hamiltonian, energy)
+            energy, coefficients, ansatz = prune_method.run_pruning(ansatz)
 
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):

@@ -11,7 +11,6 @@ from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
 from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
-from vqemulti import prune_adapt
 import numpy as np
 import scipy
 
@@ -24,7 +23,6 @@ def adaptVQE(hamiltonian,
              coefficients=None,
              ansatz=None,
              method=AdapVanilla(),
-             prune = None,
              energy_simulator=None,
              variance_simulator=None,
              reference_dm=None,
@@ -151,11 +149,10 @@ def adaptVQE(hamiltonian,
         coefficients = list(results.x)
         energy = results.fun
 
-        if prune is not None:
-            prune_method = prune
-            prune_method.load_values(coefficients, hf_reference_fock, hamiltonian, energy)
-            energy, coefficients, ansatz = prune_method.run_pruning(ansatz)
 
+        ansatz, coefficients, energy = method.prune_ansatz(coefficients, ansatz, hf_reference_fock, hamiltonian, energy,
+                                                           operators_pool)
+        '''
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(coefficients, ansatz):
             if ansatz.is_fermionic():
@@ -163,6 +160,7 @@ def adaptVQE(hamiltonian,
             else:
                 print('{:12.5e} {} '.format(c, op))
         print()
+        '''
 
         if reference_dm is not None:
             n_orb = len(hf_reference_fock)//2
@@ -182,7 +180,7 @@ def adaptVQE(hamiltonian,
         iterations['variance'].append(variance)
         iterations['coefficients'].append(coefficients)
         iterations['indices'].append(ansatz.get_index(operators_pool))
-        print(iterations['coefficients'])
+        #print(iterations['coefficients'])
 
         # Checking criteria convergence
         criteria_list = method.get_criteria_list_convergence()

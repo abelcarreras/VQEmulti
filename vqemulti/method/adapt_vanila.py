@@ -2,6 +2,7 @@ from vqemulti.method import Method
 from vqemulti.gradient import compute_gradient_vector, simulate_gradient
 from vqemulti.errors import Converged
 from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptvanilla, energy_worsening
+from vqemulti.energy import exact_adapt_vqe_energy
 from openfermion import count_qubits
 from copy import deepcopy
 import numpy as np
@@ -17,7 +18,11 @@ class AdapVanilla(Method):
                  gradient_simulator=None,
                  operator_update_number=1,
                  operator_update_max_grad=2e-2,
-                 min_iterations=0):
+                 min_iterations=0,
+                 prune = False,
+                 weight_coeffs = 2,
+                 ops_account_for_thres = 4,
+                 weight_position = 11):
         """
         :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
         :param diff_threshold: missing description
@@ -32,10 +37,16 @@ class AdapVanilla(Method):
         self.gradient_simulator = gradient_simulator
         self.operator_update_number = operator_update_number
         self.operator_update_max_grad = operator_update_max_grad
+        self.weight_coeffs = weight_coeffs
+        self.weight_position = weight_position
+        self.ops_account_for_thres = ops_account_for_thres
+        self.prune = prune
 
         # Convergence criteria definition for this method
-        self.criteria_list = [zero_valued_coefficient_adaptvanilla]
-        #self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
+        if prune is not False:
+            self.criteria_list = [zero_valued_coefficient_adaptvanilla]
+        else:
+            self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
 
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
                                    'operator_update_number': self.operator_update_number, 'min_iterations': min_iterations}
@@ -107,6 +118,52 @@ class AdapVanilla(Method):
             ansatz.append(max_operator)
 
         return ansatz, coefficients
+
+
+    def prune_ansatz(self, coefficients, ansatz, hf_reference_fock, hamiltonian, energy, operators_pool):
+        if self.prune is not False:
+            # Get the coefficients absolute value
+            absolute_value_coeffs = [abs(coeff) for coeff in coefficients]
+
+            # Calculate the decision factor for each operator
+            decision_factor = []
+            for i in range(len(absolute_value_coeffs)):
+                position_contribution = np.exp(-self.weight_position * i / len(absolute_value_coeffs))
+                coeff_contribution = 1 / (absolute_value_coeffs[i] ** self.weight_coeffs)
+                decision_factor.append(position_contribution * coeff_contribution)
+            decision_factor_normalized = []
+            for i in range(len(decision_factor)):
+                decision_factor_normalized.append(decision_factor[i] / np.sum(decision_factor))
+
+            chosen_operator_factor = max(decision_factor_normalized)
+            selected_operator_position = decision_factor_normalized.index(chosen_operator_factor)
+
+            # Threshold calculation
+            threshold = 0.1 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
+
+            if absolute_value_coeffs[selected_operator_position] < threshold:
+                # Update the ansatz
+                print('Selected operator position',
+                      selected_operator_position, 'w/factor', decision_factor_normalized[selected_operator_position],
+                      'w/index', ansatz.get_index(operators_pool)[selected_operator_position],
+                      'and coeff', coefficients[selected_operator_position], ' IS REMOVED')
+                new_ansatz = ansatz[:selected_operator_position]
+                for operator in ansatz[selected_operator_position + 1:]:
+                    new_ansatz.append(operator)
+                ansatz = new_ansatz
+                coefficients.pop(selected_operator_position)
+                energy = exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
+
+
+                return ansatz, coefficients, energy
+
+            else:
+                print('Selected operator positiion',
+                      selected_operator_position, 'w/factor', decision_factor_normalized[selected_operator_position],
+                      'and coeff', coefficients[selected_operator_position], 'not removed')
+                return ansatz, coefficients, energy
+        else:
+            return ansatz, coefficients, energy
 
 
 

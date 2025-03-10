@@ -2,7 +2,6 @@
 from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.adapt_vqe import adaptVQE
-from vqemulti.prune_adapt import Prune_adapt
 from vqemulti import NotConvergedError
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
@@ -39,15 +38,24 @@ pool = get_pool_singlet_sd(n_electrons=n_electrons,
 
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
-pruning_adapt = Prune_adapt(2,11)
+from vqemulti.method.adapt_vanila import AdapVanilla
 
+method = AdapVanilla(gradient_threshold=1e-6,
+                           diff_threshold=0,
+                           coeff_tolerance=1e-10,
+                           gradient_simulator=None,
+                           prune = True,
+                           weight_coeffs = 2,  # the bigger the more weight
+                           weight_position = 11, # the bigger the more weight
+                           ops_account_for_thres=4 # number of ops that we use to calculate thres last 4 etc
+                           )
 try:
     # run adaptVQE
     result = adaptVQE(hamiltonian,
                       pool,
                       hf_reference_fock,
                       max_iterations=100,  # maximum number of interations
-                      prune= pruning_adapt
+                      method=method
                       )
 
 except NotConvergedError as e:
@@ -65,7 +73,7 @@ error = result['energy'] - molecule.fci_energy
 print('Error:', error)
 
 # run results
-print('Ansatz:', result['ansatz'])
+#print('Ansatz:', result['ansatz'])
 print('Indices:', result['indices'])
 print('Coefficients:', result['coefficients'])
 print('Num operators: {}'.format(len(result['ansatz'])))

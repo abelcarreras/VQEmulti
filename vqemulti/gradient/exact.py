@@ -78,15 +78,15 @@ def compute_gradient_vector(hf_reference_fock, hamiltonian, ansatz, coefficients
 
     # Calculate and print gradients
     # print('pool size: ', len(pool))
-    print("\nNon-Zero Gradients (exact)")
+    #print("\nNon-Zero Gradients (exact)")
     gradient_vector = []
     for i, operator in enumerate(pool):
         sparse_operator = get_sparse_operator(operator, n_qubits)
         gradient = calculate_gradient(sparse_operator, sparse_state, sparse_hamiltonian)
-
+        '''
         if gradient > 1e-5:
             print("Operator {}: {:.6f}".format(i, gradient))
-
+        '''
         gradient_vector.append(gradient)
 
     return gradient_vector

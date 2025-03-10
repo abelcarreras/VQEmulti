@@ -14,7 +14,8 @@ class Method():
             self.new_criteria_list.append(newfunction)
         return self.new_criteria_list
 
-
+    def prune_ansatz(self, *args, **kwargs):
+        return
 
 
 

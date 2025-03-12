@@ -185,6 +185,11 @@ def get_cnot_inversion_mat(ordered_terms, n_qubits, iterations=1000):
 
     c_not_mat = np.ones((n_row, n_col-1), dtype=int)
 
+    # enable previous operator connection
+    if len(previous_row) == n_col:
+        mat = np.vstack((previous_row, mat))
+        c_not_mat = np.ones((n_row+1, n_col-1), dtype=int)
+
     value_1 = cost_function(mat, c_not_mat)
     value_2 = cost_function(mat, -1 * c_not_mat)
     if value_1 > value_2:
@@ -204,5 +209,12 @@ def get_cnot_inversion_mat(ordered_terms, n_qubits, iterations=1000):
         if new_value > value:
             value = new_value
             c_not_mat = new_cnot_mat
+
+
+    # enable previous operator connection
+    if len(previous_row) == n_col:
+        c_not_mat = c_not_mat[1:, :]
+
+    set_previous_row(mat[-1])
 
     return c_not_mat == -1

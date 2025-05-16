@@ -51,7 +51,8 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
 
 def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """
-    Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference
+    Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
+    Only compatible with JW mapping!!
 
     :param coefficients: adaptVQE coefficients
     :param ansatz: ansatz expressed in qubit/fermion operators
@@ -60,6 +61,11 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     :param simulator: simulation object
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
+
+    from vqemulti.preferences import Configuration
+
+    if Configuration().mapping != 'jw':
+        raise Exception('SQD is only compatible with JW mapping')
 
     from qiskit_addon_sqd.fermion import bitstring_matrix_to_ci_strs, solve_fermion
     from qiskit_addon_sqd.counts import generate_counts_uniform
@@ -70,7 +76,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
 
     samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
     # samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
-    print('samples', len(samples), samples)
+    # print('samples', len(samples), samples)
 
     up_list = []
     down_list = []
@@ -97,7 +103,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     inv = np.argsort((0, 2, 3, 1))
     two_body_tensor_restored = hamiltonian.two_body_tensor.transpose(inv)*2
 
-    print('n_configurations: ', len(up))
+    print('Number of SQD configurations:', len(up))
 
     energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
                                                            hamiltonian.one_body_tensor,

@@ -291,6 +291,9 @@ def generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=0):
     frozen_spin_orbitals = frozen_core * 2
     n_spin_orbitals = n_orbitals * 2
 
+    print('n_orbitals: ', n_orbitals)
+    print('n_spin_orbitals: ', n_spin_orbitals)
+
     reduced_one = hamiltonian.one_body_tensor[frozen_spin_orbitals: n_spin_orbitals,
                                               frozen_spin_orbitals: n_spin_orbitals]
     reduced_two = hamiltonian.two_body_tensor[frozen_spin_orbitals: n_spin_orbitals,
@@ -341,6 +344,8 @@ def get_uccsd_operators(n_electrons, n_orbitals, frozen_core=0):
 
     n_occupied = int(np.ceil(n_electrons / 2)) - frozen_core
     n_virtual = n_orbitals - n_occupied - frozen_core
+
+    # print('UCCSD info: ', n_occupied, n_virtual)
 
     singles = []
     doubles_1 = []

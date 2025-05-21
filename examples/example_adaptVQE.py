@@ -25,7 +25,7 @@ molecule = run_pyscf(he2_molecule, run_fci=True, nat_orb=True, guess_mix=False)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = molecule.n_orbitals
+n_orbitals = molecule.n_orbitals_active
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 

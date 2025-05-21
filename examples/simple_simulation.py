@@ -24,7 +24,7 @@ molecule = run_pyscf(h2_molecule, run_fci=True)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = molecule.n_orbitals
+n_orbitals = molecule.n_orbitals_active
 hamiltonian = molecule.get_molecular_hamiltonian()
 
 # Choose specific pool of operators for adapt-VQE

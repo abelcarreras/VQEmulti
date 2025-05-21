@@ -6,9 +6,9 @@ from vqemulti.utils import convert_hamiltonian, group_hamiltonian
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
-from qiskit.quantum_info import SparsePauliOp, Operator
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
@@ -308,6 +308,38 @@ def add_basis_change_gates(gate_list, pauliString, order_cnot_base, inverse=Fals
                     gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
 
 
+def entanglement_cascade(entangled_gates):
+
+    # select qubits associated to the rotation gate
+    qubit_rotation = entangled_gates[-1]
+
+    # setup cascade structure
+    cnot_qubits = []
+    for i, j in zip(entangled_gates, entangled_gates[1:]):
+        cnot_qubits.append([i, j])
+
+    return cnot_qubits, qubit_rotation
+
+
+def entanglement_fan(entangled_gates):
+
+    # select qubits associated to the rotation gate
+    qubit_rotation = entangled_gates[len(entangled_gates)//2]
+
+    # setup fan structure
+    cnot_qubits = []
+    for i, j in zip(entangled_gates, entangled_gates[1:]):
+        if i == qubit_rotation:
+            break
+        cnot_qubits.append([i, j])
+
+    for i, j in zip(entangled_gates[::-1], entangled_gates[::-1][1:]):
+        if i == qubit_rotation:
+            break
+        cnot_qubits.append([i, j])
+
+    return cnot_qubits, qubit_rotation
+
 
 def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
     """
@@ -359,27 +391,31 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
             continue
 
         # determine cnot positions and inversion
-        cnot_qbits = []
         cnot_qbits_order = []
-
         last = pauliString[0][0]
         for p in pauliString[1:]:
             cnot_qbits_order.append(order_cnot_base[last])
-            cnot_qbits.append([last, p[0]])
             last = p[0]
 
-        qubit_rotation = cnot_qbits[-1][-1] if len(cnot_qbits_order) > 0 else last
+        # get entangled qubits
+        entangled_qubits = []
+        for p in pauliString:
+            entangled_qubits.append(p[0])
 
-        assert len(cnot_qbits_order) == len(cnot_qbits)
+        # cnot_qubits, qubit_rotation = entanglement_cascade(entangled_qubits)  # use cascade structure
+        cnot_qubits, qubit_rotation = entanglement_fan(entangled_qubits)  # use fan structure
 
         add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=True)
 
-        for cnot_pair, cnot_order in zip(cnot_qbits, cnot_qbits_order):
+        # entangler
+        for cnot_pair, cnot_order in zip(cnot_qubits, cnot_qbits_order):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
+        # apply rotation with parameter
         add_rotation(trotter_gates, qubit_rotation, 2 * coefficient)
 
-        for cnot_pair, cnot_order in zip(cnot_qbits[::-1], cnot_qbits_order[::-1]):
+        # disentangler
+        for cnot_pair, cnot_order in zip(cnot_qubits[::-1], cnot_qbits_order[::-1]):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
         add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=False)
@@ -470,7 +506,7 @@ class QiskitSimulator(SimulatorBase):
 
         # Append the ansatz directly as a matrix
         for matrix in matrix_list:
-            matrix_gate = Operator(np.real(matrix.toarray()))
+            matrix_gate = UnitaryGate(np.real(matrix.toarray()))
             state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
 
         return state_preparation_gates

@@ -41,7 +41,7 @@ molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = molecule.n_orbitals
+n_orbitals = molecule.n_orbitals_active
 
 print('n_electrons: ', n_electrons)
 print('n_orbitals: ', n_orbitals)
@@ -92,21 +92,20 @@ from openfermionpyscf import run_pyscf
 from vqemulti.adapt_vqe import adaptVQE
 from vqemulti.utils import generate_reduced_hamiltonian
 
-
 # molecule definition
 he2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                                        ['He', [0, 0, 1.0]]],
-                            basis='3-21g',
-                            multiplicity=1,
-                            charge=0,
-                            description='He2')
+                             basis='3-21g',
+                             multiplicity=1,
+                             charge=0,
+                             description='He2')
 
 # run classical calculation
 molecule = run_pyscf(he2_molecule)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = molecule.n_orbitals
+n_orbitals = molecule.n_orbitals_active
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
@@ -129,10 +128,7 @@ simulator = Simulator(trotter=False,
 result = adaptVQE(hamiltonian,
                   operators_pool,
                   hf_reference_fock,
-                  opt_qubits=False,
-                  threshold=0.002,
                   energy_simulator=simulator,
-                  gradient_simulator=simulator,
                   )
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))

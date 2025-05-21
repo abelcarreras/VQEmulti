@@ -43,7 +43,7 @@ def get_info(molecule, check_HF_data=False):
     print('HF energy', molecule.hf_energy)
 
     n_electron = molecule.n_electrons
-    n_orbitals = molecule.n_orbitals
+    n_orbitals = molecule.n_orbitals_active
     n_qubits = molecule.n_qubits
 
     print('n_orbitals: ', n_orbitals)

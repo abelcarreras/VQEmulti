@@ -151,7 +151,7 @@ def adaptVQE(hamiltonian,
             if ansatz.is_fermionic():
                 print('{:12.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
             else:
-                print('{:12.5e} {} '.format(c, op))
+                print('{:12.5e} {} '.format(c, str(op).replace('\n', '')))
         print()
 
         if reference_dm is not None:

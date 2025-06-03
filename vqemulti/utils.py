@@ -631,7 +631,7 @@ def get_string_from_fermionic_operator(operator):
             spins_term += str(ti[0] % 2)
 
         operator_string += ')'
-        if coefficient > 0:
+        if np.linalg.norm(coefficient) > 0:
             total_spins_string += spins_term + ' '
         else:
             total_spins_string += '[' + spins_term + '] '

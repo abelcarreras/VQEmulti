@@ -3,6 +3,13 @@ from openfermion import QubitOperator
 import numpy as np
 
 
+def _not_in_list(op, operator_list):
+    return True
+    for op1 in operator_list:
+        if str(op1-op) == '0':
+            return False
+    return True
+
 
 def get_pool_qubit_sd(n_electrons, n_orbitals, frozen_core=0):
     """
@@ -34,8 +41,10 @@ def get_pool_qubit_sd(n_electrons, n_orbitals, frozen_core=0):
             term_bb = QubitOperator('X{0} Y{1}'.format(ib, ab), 0.5) - \
                       QubitOperator('Y{0} X{1}'.format(ib, ab), 0.5)
 
-            operators_list.append(term_aa)
-            operators_list.append(term_bb)
+            operators_list.append(1.j * term_aa)
+            operators_list.append(1.j * term_bb)
+
+    operators_list_2e = []
 
     for i in range(0,n_occ):
         ia = 2*i
@@ -53,23 +62,27 @@ def get_pool_qubit_sd(n_electrons, n_orbitals, frozen_core=0):
                     ba = 2*n_occ + 2*b
                     bb = 2*n_occ + 2*b+1
 
-                    term_aaaa = QubitOperator('X{0} Y{1} X{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
-                                QubitOperator('Y{0} X{1} X{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
-                                QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
-                                QubitOperator('Y{0} Y{1} X{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
-                                QubitOperator('X{0} X{1} Y{2} X{3}'.format(ia, ja, aa, ba), 0.125) - \
-                                QubitOperator('X{0} X{1} X{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
-                                QubitOperator('Y{0} X{1} Y{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
-                                QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(ia, ja, aa, ba), 0.125)
+                    if ia != ja and aa != ba:
+                        term_aaaa = QubitOperator('X{0} Y{1} X{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
+                                    QubitOperator('Y{0} X{1} X{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
+                                    QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(ia, ja, aa, ba), 0.125) + \
+                                    QubitOperator('Y{0} Y{1} X{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
+                                    QubitOperator('X{0} X{1} Y{2} X{3}'.format(ia, ja, aa, ba), 0.125) - \
+                                    QubitOperator('X{0} X{1} X{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
+                                    QubitOperator('Y{0} X{1} Y{2} Y{3}'.format(ia, ja, aa, ba), 0.125) - \
+                                    QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(ia, ja, aa, ba), 0.125)
+                        operators_list_2e.append(1.j * term_aaaa)
 
-                    term_bbbb = QubitOperator('X{0} Y{1} X{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
-                                QubitOperator('Y{0} X{1} X{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
-                                QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
-                                QubitOperator('Y{0} Y{1} X{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
-                                QubitOperator('X{0} X{1} Y{2} X{3}'.format(ib, jb, ab, bb), 0.125) - \
-                                QubitOperator('X{0} X{1} X{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
-                                QubitOperator('Y{0} X{1} Y{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
-                                QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(ib, jb, ab, bb), 0.125)
+                    if ib != jb and ab != bb:
+                        term_bbbb = QubitOperator('X{0} Y{1} X{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
+                                    QubitOperator('Y{0} X{1} X{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
+                                    QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(ib, jb, ab, bb), 0.125) + \
+                                    QubitOperator('Y{0} Y{1} X{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
+                                    QubitOperator('X{0} X{1} Y{2} X{3}'.format(ib, jb, ab, bb), 0.125) - \
+                                    QubitOperator('X{0} X{1} X{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
+                                    QubitOperator('Y{0} X{1} Y{2} Y{3}'.format(ib, jb, ab, bb), 0.125) - \
+                                    QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(ib, jb, ab, bb), 0.125)
+                        operators_list_2e.append(1.j * term_bbbb)
 
                     term_abab = QubitOperator('X{0} Y{1} X{2} X{3}'.format(ia, jb, aa, bb), 0.125) + \
                                 QubitOperator('Y{0} X{1} X{2} X{3}'.format(ia, jb, aa, bb), 0.125) + \
@@ -107,16 +120,27 @@ def get_pool_qubit_sd(n_electrons, n_orbitals, frozen_core=0):
                                 QubitOperator('Y{0} X{1} Y{2} Y{3}'.format(ib, ja, aa, bb), 0.125) - \
                                 QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(ib, ja, aa, bb), 0.125)
 
-                    operators_list.append(term_aaaa)
-                    operators_list.append(term_bbbb)
-                    operators_list.append(term_abab)
-                    operators_list.append(term_baba)
-                    operators_list.append(term_abba)
-                    operators_list.append(term_baab)
+                    operators_list_2e.append(1.j * term_abab)
+                    operators_list_2e.append(1.j * term_baba)
+                    operators_list_2e.append(1.j * term_abba)
+                    operators_list_2e.append(1.j * term_baab)
+
+    # TODO: improve this pool to not need to remove redundant operators
+    # remove redundant operators
+    unique_2e_list = []
+    for i, op1 in enumerate(operators_list_2e):
+        count = 0
+        for op2 in unique_2e_list:
+            if str(op1-op2) == '0':
+                count += 1
+        if count == 0:
+            unique_2e_list.append(op1)
+
+    operators_list = operators_list + unique_2e_list
 
     return OperatorList(operators_list, antisymmetrize=False)
 
 
 if __name__ == '__main__':
-    pool = get_pool_qubit_sd(n_electrons=2, n_orbitals=4, frozen_core=0)
-    print(pool)
+    pool = get_pool_qubit_sd(n_electrons=2, n_orbitals=3, frozen_core=0)
+    # print(pool)

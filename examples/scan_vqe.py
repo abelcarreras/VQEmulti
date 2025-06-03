@@ -14,7 +14,7 @@ hf_energies = []
 energies_fullci = []
 energies_ccsd = []
 for d in np.linspace(0.3, 3, n_points):
-
+    d = 3
     # molecule definition
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                                           ['H', [0, 0, d]]],

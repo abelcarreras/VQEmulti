@@ -17,21 +17,24 @@ for d in np.linspace(0.3, 3, 20):
 
     # molecule definition
     h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                          ['H', [0, 0, d]]],
-                                basis='6-31g',
+                                          ['H', [0, 0, 1]],
+                                          ['H', [0, 0, 2]],
+                                          ['H', [0, 0, 3]]],
+                                basis='sto-3g',
                                 multiplicity=1,
                                 charge=0,
-                                description='H2')
+                                description='H4')
 
     # run classical calculation
-    molecule = run_pyscf(h2_molecule, run_fci=True)
+    molecule = run_pyscf(h2_molecule, run_fci=True, nat_orb=False)
+
 
     # get additional info about electronic structure properties
     # get_info(molecule, check_HF_data=False)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = 4  # molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
 
     # Choose specific pool of operators for adapt-VQE

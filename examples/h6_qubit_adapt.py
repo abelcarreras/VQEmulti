@@ -5,22 +5,22 @@ from vqemulti.adapt_vqe import adaptVQE
 from vqemulti import NotConvergedError
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
-import matplotlib.pyplot as plt
 
 # molecule definition
-basis = '3-21g'
-distance = 3
-h4_lin_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
-                                      ['H', [0, 0, distance]],
-                                      ['H', [0, 0, 2*distance]],
-                                      ['H', [0, 0, 3*distance]]],
-                            basis=basis,
-                            multiplicity=1,
-                            charge=0,
-                            description='H4')
+h6_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
+                                       ['H', [0, 0, 3.0]],
+                                      ['H', [0, 0, 6.0]],
+                                      ['H', [0, 0, 9.0]],
+                                      ['H', [0, 0, 12.0]],
+                                      ['H', [0, 0, 15.0]]],
+                             basis='sto-3g',
+                             # basis='sto-3g',
+                             multiplicity=1,
+                             charge=0,
+                             description='H6')
 
 # run classical calculation
-molecule = run_pyscf(h4_lin_molecule, run_fci=True, nat_orb=False, guess_mix=False)
+molecule = run_pyscf(h6_molecule, run_fci=False, nat_orb=False, guess_mix=False)
 
 # get additional info about electronic structure properties
 # from vqemulti.analysis import get_info
@@ -28,9 +28,8 @@ molecule = run_pyscf(h4_lin_molecule, run_fci=True, nat_orb=False, guess_mix=Fal
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 8
+n_orbitals = molecule.n_orbitals
 hamiltonian = molecule.get_molecular_hamiltonian()
-exit()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # Choose specific pool of operators for adapt-VQE
@@ -45,18 +44,15 @@ method = AdapVanilla(gradient_threshold=1e-6,
                            diff_threshold=0,
                            coeff_tolerance=1e-10,
                            gradient_simulator=None,
-                           prune = True,
-                           weight_coeffs = 2,  # the bigger the more weight
-                           weight_position = 11, # the bigger the more weight
-                           ops_account_for_thres=4 # number of ops that we use to calculate thres last 4 etc
-                           )
+                           prune = False,
+                          )
+
 try:
     # run adaptVQE
     result = adaptVQE(hamiltonian,
                       pool,
                       hf_reference_fock,
-                      max_iterations=100,  # maximum number of interations
-                      method=method
+                      max_iterations=150  # maximum number of interations
                       )
 
 except NotConvergedError as e:
@@ -74,19 +70,7 @@ error = result['energy'] - molecule.fci_energy
 print('Error:', error)
 
 # run results
-#print('Ansatz:', result['ansatz'])
+print('Ansatz:', result['ansatz'])
 print('Indices:', result['indices'])
 print('Coefficients:', result['coefficients'])
 print('Num operators: {}'.format(len(result['ansatz'])))
-
-
-plt.plot(result['iterations']['energies'])
-plt.title('Energy')
-plt.ylabel('Hartree')
-
-plt.figure()
-
-plt.plot(result['iterations']['norms'])
-plt.title('Gradient')
-plt.ylabel('Hartree')
-plt.show()

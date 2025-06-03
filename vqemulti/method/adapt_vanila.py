@@ -47,6 +47,7 @@ class AdapVanilla(Method):
             self.criteria_list = [zero_valued_coefficient_adaptvanilla]
         else:
             self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
+            #self.criteria_list = [ energy_worsening]
 
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
                                    'operator_update_number': self.operator_update_number, 'min_iterations': min_iterations}
@@ -139,21 +140,22 @@ class AdapVanilla(Method):
             selected_operator_position = decision_factor_normalized.index(chosen_operator_factor)
 
             # Threshold calculation
-            threshold = 0.1 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
-
+            threshold = 0.01 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
+            print('Threshold', threshold)
             if absolute_value_coeffs[selected_operator_position] < threshold:
                 # Update the ansatz
                 print('Selected operator position',
                       selected_operator_position, 'w/factor', decision_factor_normalized[selected_operator_position],
                       'w/index', ansatz.get_index(operators_pool)[selected_operator_position],
                       'and coeff', coefficients[selected_operator_position], ' IS REMOVED')
+                print(ansatz[selected_operator_position])
                 new_ansatz = ansatz[:selected_operator_position]
                 for operator in ansatz[selected_operator_position + 1:]:
                     new_ansatz.append(operator)
                 ansatz = new_ansatz
                 coefficients.pop(selected_operator_position)
                 energy = exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
-
+                print('Coeffs', coefficients)
 
                 return ansatz, coefficients, energy
 
@@ -161,6 +163,7 @@ class AdapVanilla(Method):
                 print('Selected operator positiion',
                       selected_operator_position, 'w/factor', decision_factor_normalized[selected_operator_position],
                       'and coeff', coefficients[selected_operator_position], 'not removed')
+                print('Coeffs', coefficients)
                 return ansatz, coefficients, energy
         else:
             return ansatz, coefficients, energy

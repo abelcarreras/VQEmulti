@@ -24,7 +24,7 @@ class RHESampler:
         isa_circuit = self._pm.run(circuit)
 
         from qiskit_ibm_runtime import SamplerV2
-        sampler = SamplerV2(session=self._session)
+        sampler = SamplerV2(mode=self._session)
         job = sampler.run([isa_circuit], shots=shots)
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
@@ -71,6 +71,8 @@ class RHEstimator:
         if Configuration().verbose > 1:
             print('depth: ', circuit.depth())
             print('isa_depth: ', isa_circuit.depth())
+            print('circuit gate count: ', dict(circuit.count_ops()))
+            print('isa_circuit gate count: ', dict(isa_circuit.count_ops()))
             # print('observable: ', measure_op)
             print('n_observable: ', len(measure_op))
             print('n_chunks: ', n_chunks)
@@ -95,7 +97,11 @@ class RHEstimator:
 
         from qiskit_ibm_runtime import EstimatorV2
 
-        estimator = EstimatorV2(session=self._session)
+        try:
+            estimator = EstimatorV2(session=self._session)
+        except:
+            estimator = EstimatorV2()
+
         estimator.options.default_shots = shots
         estimator.options.resilience_level = 2
         # estimator.options.optimization_level = 0

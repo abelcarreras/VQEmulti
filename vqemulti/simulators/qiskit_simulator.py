@@ -6,9 +6,9 @@ from vqemulti.utils import convert_hamiltonian, group_hamiltonian
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
-from qiskit.quantum_info import SparsePauliOp, Operator
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
@@ -234,7 +234,11 @@ def add_cnot(gate_list, pair, inverse=False):
             gate_list.append(CircuitInstruction(MCXGate(1), pair[::-1]))
 
         for j in [0, 1]:
-            gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
+            previous_gate, index = last_gate(gate_list, (pair[j],))
+            if previous_gate.operation.name == 'h':
+                del gate_list[index]
+            else:
+                gate_list.append(CircuitInstruction(HGate(), [pair[j]]))
 
     else:
         previous_gate, index = last_gate(gate_list, pair)
@@ -257,10 +261,19 @@ def add_rotation(gate_list, qubit, angle):
         gate_list.append(CircuitInstruction(RZGate((angle)), [qubit]))
 
 
-def add_basis_change_gates(gate_list, pauliString, inverse=False):
+def add_basis_change_gates(gate_list, pauliString, order_cnot_base, inverse=False):
     # Perform necessary basis rotations
 
-    for pauli in pauliString:
+    # print('input: ', order_cnot_base)
+    order_cnot_base = [order_cnot_base[0]] + list(order_cnot_base)
+    #order_cnot_base = list(order_cnot_base) + [order_cnot_base[-1]]
+
+    # print('output: ', order_cnot_base)
+    #assert len(pauliString) == len(order_cnot_base)
+
+    for pauli, _ in zip(pauliString, order_cnot_base):
+        # º print('**', pauli[0], pauli[1], order)
+        order = order_cnot_base[pauli[0]]
 
         # Get the index of the qubit this Pauli operator acts on
         qubit_index = pauli[0]
@@ -278,14 +291,57 @@ def add_basis_change_gates(gate_list, pauliString, inverse=False):
 
         if pauli_operator == "Y":
             # Rotate to Y Basis
+            previous_gate, index = last_gate(gate_list, (qubit_index,))
             if inverse:
-                gate_list.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+                if order:  # not directly equivalent but overall works
+                    gate_list.append(CircuitInstruction(RZGate(-np.pi / 2), [qubit_index]))
+                    gate_list.append(CircuitInstruction(HGate(), [qubit_index]))
+                else:
+                    gate_list.append(CircuitInstruction(RXGate(np.pi / 2), [qubit_index]))
+
             else:
-                gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
+                if order:  # not directly equivalent but overall works
+                    del gate_list[index]
+                    gate_list.append(CircuitInstruction(RZGate(np.pi / 2), [qubit_index]))
+                    # gate_list.append(CircuitInstruction(HGate(), [qubit_index]))
+                else:
+                    gate_list.append(CircuitInstruction(RXGate(-np.pi / 2), [qubit_index]))
 
 
+def entanglement_cascade(entangled_gates):
 
-def trotter_step(qubit_operator, time, n_qubits, with_phase=True):
+    # select qubits associated to the rotation gate
+    qubit_rotation = entangled_gates[-1]
+
+    # setup cascade structure
+    cnot_qubits = []
+    for i, j in zip(entangled_gates, entangled_gates[1:]):
+        cnot_qubits.append([i, j])
+
+    return cnot_qubits, qubit_rotation
+
+
+def entanglement_fan(entangled_gates):
+
+    # select qubits associated to the rotation gate
+    qubit_rotation = entangled_gates[len(entangled_gates)//2]
+
+    # setup fan structure
+    cnot_qubits = []
+    for i, j in zip(entangled_gates, entangled_gates[1:]):
+        if i == qubit_rotation:
+            break
+        cnot_qubits.append([i, j])
+
+    for i, j in zip(entangled_gates[::-1], entangled_gates[::-1][1:]):
+        if i == qubit_rotation:
+            break
+        cnot_qubits.append([i, j])
+
+    return cnot_qubits, qubit_rotation
+
+
+def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
@@ -314,6 +370,9 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=True):
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
         coefficient = float(np.real(qubit_operator.terms[pauliString])) * time
+        # order_cnot_base = [True]*8
+        # print(order_cnot_base)
+        # exit()
 
         # check if operator is all identity
         if len(pauliString) == 0:
@@ -332,30 +391,34 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=True):
             continue
 
         # determine cnot positions and inversion
-        cnot_qbits = []
         cnot_qbits_order = []
-
         last = pauliString[0][0]
         for p in pauliString[1:]:
             cnot_qbits_order.append(order_cnot_base[last])
-            cnot_qbits.append([last, p[0]])
             last = p[0]
 
-        qubit_rotation = cnot_qbits[-1][-1] if len(cnot_qbits_order) > 0 else last
+        # get entangled qubits
+        entangled_qubits = []
+        for p in pauliString:
+            entangled_qubits.append(p[0])
 
-        assert len(cnot_qbits_order) == len(cnot_qbits)
+        # cnot_qubits, qubit_rotation = entanglement_cascade(entangled_qubits)  # use cascade structure
+        cnot_qubits, qubit_rotation = entanglement_fan(entangled_qubits)  # use fan structure
 
-        add_basis_change_gates(trotter_gates, pauliString, inverse=True)
+        add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=True)
 
-        for cnot_pair, cnot_order in zip(cnot_qbits, cnot_qbits_order):
+        # entangler
+        for cnot_pair, cnot_order in zip(cnot_qubits, cnot_qbits_order):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
+        # apply rotation with parameter
         add_rotation(trotter_gates, qubit_rotation, 2 * coefficient)
 
-        for cnot_pair, cnot_order in zip(cnot_qbits[::-1], cnot_qbits_order[::-1]):
+        # disentangler
+        for cnot_pair, cnot_order in zip(cnot_qubits[::-1], cnot_qbits_order[::-1]):
             add_cnot(trotter_gates, cnot_pair, inverse=cnot_order)
 
-        add_basis_change_gates(trotter_gates, pauliString, inverse=False)
+        add_basis_change_gates(trotter_gates, pauliString, order_cnot_base, inverse=False)
 
     return trotter_gates
 
@@ -443,7 +506,7 @@ class QiskitSimulator(SimulatorBase):
 
         # Append the ansatz directly as a matrix
         for matrix in matrix_list:
-            matrix_gate = Operator(np.real(matrix.toarray()))
+            matrix_gate = UnitaryGate(np.real(matrix.toarray()))
             state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
 
         return state_preparation_gates
@@ -593,6 +656,38 @@ class QiskitSimulator(SimulatorBase):
             print('std_error:', std_error)
 
         return expectation_value, std_error
+
+    def get_sampling(self, ansatz_qubit, hf_reference_fock):
+        """
+        get sampling of the state in the computational basis using the Qiskit simulator.
+        By construction, all the expectation values of the strings in subHamiltonian can be
+        obtained from the same measurement array. This reduces quantum computer simulations
+
+        :return: expectation value
+        """
+
+        n_qubits = len(hf_reference_fock)
+        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+
+        # Initialize circuit and apply hamiltonian gates according to main string
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        self._get_circuit_stat_data(circuit)
+
+        circuit.measure_all()
+
+        if not self._use_ibm_runtime:
+            result = self._backend.run(circuit, shots=self._shots, memory=True).result()
+            # memory = result.get_memory()
+        else:
+            sampler = RHESampler(self._backend, n_qubits, self._session)
+            result = sampler.run(circuit, shots=self._shots, memory=True).result()
+
+        counts_total = result.get_counts()
+
+        return counts_total
 
     def _build_reference_gates(self, hf_reference_fock):
         """

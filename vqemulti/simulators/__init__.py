@@ -159,6 +159,8 @@ class SimulatorBase:
 
             trotter_ansatz = []
             # Go through the operators in the ansatz
+            from vqemulti.simulators.tools import set_previous_row
+            set_previous_row([])
             for operator in ansatz:
                 # Add the gates corresponding to this operator to the ansatz gate list
                 trotter_ansatz += self._trotterize_operator(operator, n_qubits)
@@ -228,6 +230,9 @@ class SimulatorBase:
 
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):
+        raise NotImplementedError()
+
+    def get_sampling(self, *args):
         raise NotImplementedError()
 
     def _measure_expectation_variance(self, *args):

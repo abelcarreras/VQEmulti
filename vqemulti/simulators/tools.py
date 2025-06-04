@@ -167,6 +167,8 @@ def get_cnot_inversion_mat(ordered_terms, n_qubits, iterations=1000):
     n_row = len(ordered_terms)
     n_col = n_qubits
 
+
+
     gate_matrix = np.chararray((n_row, n_col))
     gate_matrix[:] = 'I'
 

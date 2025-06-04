@@ -365,7 +365,9 @@ def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
     # define order of algorithm
     cnot_inversion_matrix = get_cnot_inversion_mat(ordered_terms, n_qubits)
 
+
     for pauliString, order_cnot_base in zip(ordered_terms, cnot_inversion_matrix):
+
         # Get real part of the coefficient (the imaginary one can't be simulated,
         # as the exponent would be real and the operation would not be unitary).
         # Multiply by time to get the full multiplier of the Pauli string.
@@ -729,9 +731,9 @@ class QiskitSimulator(SimulatorBase):
 
         trotter_gates = []
         for step in range(1, self._trotter_steps + 1):
-            # trotter_gates += trotter_step_standard(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
+            trotter_gates += trotter_step_standard(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
             # trotter_gates += trotter_step_inverse(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
-            trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
+            # trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
 
         return trotter_gates
 

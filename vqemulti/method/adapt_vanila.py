@@ -140,7 +140,7 @@ class AdapVanilla(Method):
             selected_operator_position = decision_factor_normalized.index(chosen_operator_factor)
 
             # Threshold calculation
-            threshold = 0.01 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
+            threshold = 0.1 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
             print('Threshold', threshold)
             if absolute_value_coeffs[selected_operator_position] < threshold:
                 # Update the ansatz

@@ -13,6 +13,8 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     """
 
     state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+    return state_preparation_gates
+    '''
 
     # circuit_depth = simulator.get_circuit_depth(ansatz_qubit, hf_reference_fock)
     # print('circuit_depth', circuit_depth)
@@ -20,6 +22,7 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     energy, std_error = simulator.get_state_evaluation(qubit_eval_operator, state_preparation_gates)
 
     return energy, std_error
+    '''
 
 
 def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, return_std=False):

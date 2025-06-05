@@ -1,6 +1,7 @@
 from openfermion.utils import count_qubits
 from openfermion.ops.representations import InteractionOperator
-from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, binary_code_transform, get_fermion_operator
+from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, binary_code_transform
+from openfermion.transforms import reorder, get_interaction_operator, get_fermion_operator
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
 from vqemulti.preferences import Configuration
 import openfermion
@@ -726,3 +727,51 @@ def load_wave_function(filename='wf.yml', qubit_op=False):
 
     return coefficients, OperatorList(op_list)
 
+
+def reorder_qubits(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
+    """
+    reorder hamiltonian, reference and pool (optional)
+
+    :param orbitals_order: list of indices of the new orbitals order
+    :param hamiltonian: hamiltonian operator
+    :param hf_reference_fock: reference in Fock space
+    :param pool: pool of operators
+    :return: reordered Hamiltonian, reference and pool
+    """
+
+    n_qubits = len(hf_reference_fock)
+
+    # define reorder function
+    def order_function(mode_idx, num_modes):
+        spin = mode_idx % 2
+        spatial_idx = mode_idx // 2
+        new_spatial_idx = orbitals_order.index(spatial_idx)
+        return 2 * new_spatial_idx + spin
+
+    # reorder hamiltonian
+    if isinstance(hamiltonian, InteractionOperator):
+        hamiltonian = get_fermion_operator(hamiltonian)
+        reordered_hamiltonian = reorder(hamiltonian, order_function)
+        reordered_hamiltonian = get_interaction_operator(reordered_hamiltonian)
+    else:
+        reordered_hamiltonian = reorder(hamiltonian, order_function)
+
+    # reorder reference
+    reordered_reference = [0] * n_qubits
+    for old_idx in range(n_qubits):
+        new_idx = order_function(old_idx, n_qubits)
+        reordered_reference[new_idx] = hf_reference_fock[old_idx]
+
+    if pool is not None:
+        from vqemulti.pool.tools import OperatorList
+
+        # reorder operator pool
+        reordered_pool = []
+        for op in pool:
+            reordered_pool.append(reorder(op, order_function))
+
+        reordered_pool = OperatorList(reordered_pool, normalize=False, antisymmetrize=False, spin_symmetry=False)
+
+        return reordered_hamiltonian, hf_reference_fock, reordered_pool
+
+    return reordered_hamiltonian, hf_reference_fock

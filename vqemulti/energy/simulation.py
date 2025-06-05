@@ -71,6 +71,12 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     from qiskit_addon_sqd.counts import generate_counts_uniform
     import numpy as np
 
+    # transform operator
+    from openfermion.transforms import get_interaction_operator
+    from openfermion.ops.representations import InteractionOperator
+    if isinstance(hamiltonian, InteractionOperator):
+        hamiltonian = get_interaction_operator(hamiltonian)
+
     # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 

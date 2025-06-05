@@ -107,8 +107,8 @@ class RHEstimator:
         # estimator.options.optimization_level = 0
         # estimator.options.dynamical_decoupling.enable = False
         # estimator.options.resilience.zne_mitigation = False
-        estimator.options.twirling.enable_measure = False
-        estimator.options.twirling.enable_gates = False
+        # estimator.options.twirling.enable_measure = False
+        # estimator.options.twirling.enable_gates = False
         # estimator.options.update(default_shots=shots, optimization_level=0)
 
         variance = 0

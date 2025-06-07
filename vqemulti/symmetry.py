@@ -70,8 +70,8 @@ def symmetrize_molecular_orbitals(molecule, group, skip_first=0, skip=False, fro
         orb = build_orbital(basis_set, orbital_vect)
 
         sym_orb = SymmetryGaussianLinear(group, orb,
-                                         orientation_angles=geom_sym.orientation_angles,
-                                         center=geom_sym.center
+                                         # orientation_angles=geom_sym.orientation_angles,
+                                         # center=geom_sym.center
                                          )
         values = sym_orb.get_ir_representation().values
         cost = cost_fuction(values)

@@ -84,7 +84,7 @@ def get_pool_qubit_gsd(n_orbitals, frozen_core=0):
                                     QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(pb, qb, rb, sb), 0.125)
                         operators_list_2e.append(1.j * term_bbbb)
 
-                    if pa != ra and qb != sb:
+                    if len({pa, qb, ra, sb}) == 4:
                         term_abab = QubitOperator('X{0} Y{1} X{2} X{3}'.format(pa, qb, ra, sb), 0.125) + \
                                     QubitOperator('Y{0} X{1} X{2} X{3}'.format(pa, qb, ra, sb), 0.125) + \
                                     QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(pa, qb, ra, sb), 0.125) + \
@@ -95,7 +95,7 @@ def get_pool_qubit_gsd(n_orbitals, frozen_core=0):
                                     QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(pa, qb, ra, sb), 0.125)
                         operators_list_2e.append(1.j * term_abab)
 
-                    if pb != rb and qa != sa:
+                    if len({pb, qa, rb, sa}) == 4:
                         term_baba = QubitOperator('X{0} Y{1} X{2} X{3}'.format(pb, qa, rb, sa), 0.125) + \
                                     QubitOperator('Y{0} X{1} X{2} X{3}'.format(pb, qa, rb, sa), 0.125) + \
                                     QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(pb, qa, rb, sa), 0.125) + \
@@ -106,7 +106,7 @@ def get_pool_qubit_gsd(n_orbitals, frozen_core=0):
                                     QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(pb, qa, rb, sa), 0.125)
                         operators_list_2e.append(1.j * term_baba)
 
-                    if pa != sa and qb != rb:
+                    if len({pa, qb, rb, sa}) == 4:
                         term_abba = QubitOperator('X{0} Y{1} X{2} X{3}'.format(pa, qb, rb, sa), 0.125) + \
                                     QubitOperator('Y{0} X{1} X{2} X{3}'.format(pa, qb, rb, sa), 0.125) + \
                                     QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(pa, qb, rb, sa), 0.125) + \
@@ -117,7 +117,7 @@ def get_pool_qubit_gsd(n_orbitals, frozen_core=0):
                                     QubitOperator('X{0} Y{1} Y{2} Y{3}'.format(pa, qb, rb, sa), 0.125)
                         operators_list_2e.append(1.j * term_abba)
 
-                    if pb != sb and qa != ra:
+                    if len({pb, qa, ra, sb}) == 4:
                         term_baab = QubitOperator('X{0} Y{1} X{2} X{3}'.format(pb, qa, ra, sb), 0.125) + \
                                     QubitOperator('Y{0} X{1} X{2} X{3}'.format(pb, qa, ra, sb), 0.125) + \
                                     QubitOperator('Y{0} Y{1} Y{2} X{3}'.format(pb, qa, ra, sb), 0.125) + \

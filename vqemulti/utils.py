@@ -772,6 +772,67 @@ def reorder_qubits(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
 
         reordered_pool = OperatorList(reordered_pool, normalize=False, antisymmetrize=False, spin_symmetry=False)
 
-        return reordered_hamiltonian, hf_reference_fock, reordered_pool
+        return reordered_hamiltonian, reordered_reference, reordered_pool
 
-    return reordered_hamiltonian, hf_reference_fock
+    return reordered_hamiltonian, reordered_reference
+
+
+def build_interaction_matrix(hamiltonian, show_plot=False):
+    n_spatial_orbitals = count_qubits(hamiltonian)//2
+
+    # hamiltonian = get_fermion_operator(hamiltonian)
+    # get Interaction hamiltonian
+    if not isinstance(hamiltonian, InteractionOperator):
+        hamiltonian = get_interaction_operator(hamiltonian)
+
+    interaction_matrix = np.zeros((n_spatial_orbitals, n_spatial_orbitals))
+
+    # For spin orbitals indexing: 2*i + spin (0=alpha,1=beta)
+    for i in range(n_spatial_orbitals):
+        for j in range(n_spatial_orbitals):
+            # Sum over spins
+            for spin_i in [0,1]:
+                for spin_j in [0,1]:
+                    p = 2 * i + spin_i
+                    q = 2 * j + spin_j
+
+                    # One-body terms h_{pq}
+                    interaction_matrix[i,j] += abs(hamiltonian.one_body_tensor[p, q])
+
+                    # Two-body terms h_{pqrs} - simplified summation (example)
+                    for r in range(2*n_spatial_orbitals):
+                        for s in range(2*n_spatial_orbitals):
+                             interaction_matrix[i,j] += abs(hamiltonian.two_body_tensor[p, q, r, s])
+    if show_plot:
+        # plot interaction matrix
+        import matplotlib.pyplot as plt
+        plt.imshow(interaction_matrix, cmap='hot', interpolation='nearest')
+        plt.colorbar(label='Interaction strength')
+        plt.xlabel('Orbital index')
+        plt.ylabel('Orbital index')
+        plt.title('Interaction matrix heatmap')
+        plt.show()
+
+    return interaction_matrix
+
+
+def get_clustering_order(interaction_matrix, show_plot=False):
+
+    from scipy.spatial.distance import squareform
+    from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
+
+    d_condensed = squareform(np.max(interaction_matrix) - interaction_matrix, checks=False)
+
+    Z = linkage(d_condensed, method='average')
+    order = leaves_list(Z)
+
+    print("Optimal clustering order:", order)
+
+    if show_plot:
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(6,4))
+        dendrogram(Z, labels=np.arange(len(interaction_matrix)))
+        plt.title('Orbital clustering dendrogram')
+        plt.xlabel('Orbital')
+        plt.ylabel('Distance')
+        plt.show()

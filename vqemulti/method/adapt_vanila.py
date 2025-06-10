@@ -22,7 +22,8 @@ class AdapVanilla(Method):
                  prune = False,
                  weight_coeffs = 2,
                  ops_account_for_thres = 4,
-                 weight_position = 11):
+                 weight_position = 11,
+                 thres_percentage = 0.1):
         """
         :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
         :param diff_threshold: missing description
@@ -40,6 +41,7 @@ class AdapVanilla(Method):
         self.weight_coeffs = weight_coeffs
         self.weight_position = weight_position
         self.ops_account_for_thres = ops_account_for_thres
+        self.thres_prencentage = thres_percentage
         self.prune = prune
 
         # Convergence criteria definition for this method
@@ -140,8 +142,8 @@ class AdapVanilla(Method):
             selected_operator_position = decision_factor_normalized.index(chosen_operator_factor)
 
             # Threshold calculation
-            threshold = 0.1 * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
-            print('Threshold', threshold)
+            threshold = self.thres_prencentage * np.mean(absolute_value_coeffs[-self.ops_account_for_thres:])
+            print('Threshold', threshold, 'with perc used', self.thres_prencentage)
             if absolute_value_coeffs[selected_operator_position] < threshold:
                 # Update the ansatz
                 print('Selected operator position',

@@ -3,7 +3,9 @@ from vqemulti.errors import Converged
 
 def zero_valued_coefficient_adaptvanilla(params_convergence, iterations):
     if abs(iterations['coefficients'][-1][-1]) < params_convergence['coeff_tolerance']:
-        raise Converged(message='Converge archived due to zero valued coefficient')
+        min_iterations = params_convergence['min_iterations']
+        if len(iterations['energies']) > min_iterations:
+            raise Converged(message='Converge archived due to zero valued coefficient')
 
 
 def energy_worsening(params_convergence, iterations):

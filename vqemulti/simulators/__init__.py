@@ -162,6 +162,8 @@ class SimulatorBase:
             from vqemulti.simulators.tools import set_previous_row
             set_previous_row([])
             for operator in ansatz:
+                if len(operator.terms) == 0:
+                    continue
                 # Add the gates corresponding to this operator to the ansatz gate list
                 trotter_ansatz += self._trotterize_operator(operator, n_qubits)
 

@@ -49,7 +49,7 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
     return energy
 
 
-def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, generate_random=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -63,31 +63,39 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     """
 
     from vqemulti.preferences import Configuration
+    from vqemulti.utils import get_fock_space_vector
 
-    if Configuration().mapping != 'jw':
-        raise Exception('SQD is only compatible with JW mapping')
+    #if Configuration().mapping != 'jw':
+    #    raise Exception('SQD is only compatible with JW mapping')
 
     from qiskit_addon_sqd.fermion import bitstring_matrix_to_ci_strs, solve_fermion
     from qiskit_addon_sqd.counts import generate_counts_uniform
     import numpy as np
 
-    # transform operator
-    from openfermion.transforms import get_interaction_operator
     from openfermion.ops.representations import InteractionOperator
-    if isinstance(hamiltonian, InteractionOperator):
-        hamiltonian = get_interaction_operator(hamiltonian)
+    if not isinstance(hamiltonian, InteractionOperator):
+        # transform operator
+        # from openfermion.transforms import get_interaction_operator
+        # hamiltonian = get_interaction_operator(hamiltonian)
+        raise Exception('Hamiltonian must be a InteractionOperator')
 
     # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
     ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
 
-    samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
-    # samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
+    if generate_random:
+        samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
+    else:
+        samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
+    #
     # print('samples', len(samples), samples)
 
     up_list = []
     down_list = []
 
     for bitstring in samples.keys():
+
+        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring])
+        bitstring = ''.join(str(bit) for bit in fock_vector)
 
         up_str = ''.join(
             '0' if i % 2 == 0 else bit

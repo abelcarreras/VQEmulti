@@ -90,15 +90,98 @@ def ansatz_to_matrix_list(ansatz, n_qubits):
     return matrix_list
 
 
+def should_include_in_parity(qubit_idx, fermion_idx):
+    """
+    Determine if fermion_idx should be included in the parity calculation for qubit_idx.
+    This implements the Fenwick tree structure for BK transformation.
+    """
+    # Convert to 1-indexed for easier bit manipulation
+    i = qubit_idx + 1
+    j = fermion_idx + 1
+
+    # Check if j is in the "update set" of i in Fenwick tree
+    # This happens when j is in the subtree rooted at i
+
+    # First check: j must be <= i
+    if j > i:
+        return False
+
+    # Get the binary representations
+    # For BK transformation, we need to check if j is in the Fenwick update set of i
+
+    # Find the rightmost set bit of i (this determines the range)
+    rightmost_bit = i & (-i)  # LSB operation
+
+    # j is included if it's in the range [i - rightmost_bit + 1, i]
+    return (i - rightmost_bit + 1) <= j <= i
+
+
 def fock_to_bk(fock_vector):
-    bk_vector = []
-    for i, occ in enumerate(fock_vector):
-        if np.mod(i, 2) == 0:
-            bk_vector.append(occ)
-        else:
-            bk_vector.append(int(np.mod(np.sum(fock_vector[:i + 1]), 2)))
+    """
+    Convert Fock state vector to Bravyi-Kitaev encoded vector.
+
+    The BK transformation uses a Fenwick tree structure where:
+    - Some qubits store occupation numbers directly
+    - Others store parities of specific subsets determined by binary tree structure
+
+    :param fock_vector: List of occupation numbers (0 or 1)
+    :return: List representing BK encoded state
+    """
+    n = len(fock_vector)
+    bk_vector = [0] * n
+
+    for i in range(n):
+        # Calculate the parity for qubit i
+        parity = 0
+
+        # Get the set of fermionic modes that contribute to qubit i
+        # This follows the Fenwick tree structure
+        for j in range(n):
+            if should_include_in_parity(i, j):
+                parity ^= fock_vector[j]
+
+        bk_vector[i] = parity
 
     return bk_vector
+
+
+
+
+def bk_to_fock(bk_vector):
+    """
+    Convert Bravyi-Kitaev encoded vector back to Fock state vector.
+
+    This is the inverse of the BK transformation. We reconstruct the original
+    occupation numbers by using the Fenwick tree structure in reverse.
+
+    :param bk_vector: List representing BK encoded state
+    :return: List of occupation numbers (0 or 1) in Fock basis
+    """
+    n = len(bk_vector)
+    fock_vector = [0] * n
+
+    # Process from left to right (lowest to highest index)
+    for i in range(n):
+        # To find fock_vector[i], we need to determine what value
+        # would produce the observed bk_vector[i] given the current
+        # partial fock_vector
+
+        # Calculate what the parity should be at position i
+        # based on the already determined fock values
+        current_parity = 0
+
+        # Calculate parity from fermionic modes that contribute to qubit i
+        # but exclude the current mode i itself
+        for j in range(i):  # Only consider already processed modes
+            if should_include_in_parity(i, j):
+                current_parity ^= fock_vector[j]
+
+        # The occupation at position i is determined by:
+        # bk_vector[i] = current_parity XOR fock_vector[i]
+        # Therefore: fock_vector[i] = bk_vector[i] XOR current_parity
+        fock_vector[i] = bk_vector[i] ^ current_parity
+
+    return fock_vector
 
 
 def fock_to_parity(fock_vector):
@@ -107,6 +190,16 @@ def fock_to_parity(fock_vector):
         parity_vector.append(int(np.mod(np.sum(fock_vector[:i + 1]), 2)))
 
     return parity_vector
+
+
+def parity_to_fock(parity_vector):
+    parity_vector = np.array(parity_vector, dtype=int)
+    fock_vector = np.zeros_like(parity_vector)
+
+    fock_vector[0] = parity_vector[0]
+    fock_vector[1:] = np.bitwise_xor(parity_vector[1:], parity_vector[:-1])
+
+    return fock_vector.tolist()
 
 
 def get_sparse_ket_from_fock(fock_vector):
@@ -150,6 +243,22 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
         hf_reference = fock_to_parity(hf_reference)
 
     return list(hf_reference)
+
+
+def get_fock_space_vector(vector):
+    """
+    get vector in Fock space from mapped vector
+
+    :param vector: mapped vector
+    :return: vector in Fock space
+    """
+
+    if Configuration().mapping == 'bk':
+        vector = bk_to_fock(vector)
+    if Configuration().mapping == 'pc':
+        vector = parity_to_fock(vector)
+
+    return list(vector)
 
 
 def find_sub_strings(mainString, hamiltonian, checked=()):
@@ -505,6 +614,7 @@ def fermion_to_qubit(operator):
     :return: qubit operator
     """
 
+    print('print', Configuration().mapping)
     if Configuration().mapping == 'jw':
         return jordan_wigner(operator)
     elif Configuration().mapping == 'bk':
@@ -573,8 +683,8 @@ def cache_operator(func):
         if len(kwargs) > 1:
             hash_key = (hash_key, frozenset(kwargs.items()))
 
-        if hash_key in cache_dict:
-            return cache_dict[hash_key]
+        #if hash_key in cache_dict:
+        #    return cache_dict[hash_key]
 
         cache_dict[hash_key] = func(*args, **kwargs)
         return cache_dict[hash_key]

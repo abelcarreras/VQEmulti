@@ -94,8 +94,8 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
 
     for bitstring in samples.keys():
 
-        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring])
-        bitstring = ''.join(str(bit) for bit in fock_vector)
+        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
+        bitstring = ''.join(str(bit) for bit in fock_vector[::-1])
 
         up_str = ''.join(
             '0' if i % 2 == 0 else bit
@@ -117,7 +117,8 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     inv = np.argsort((0, 2, 3, 1))
     two_body_tensor_restored = hamiltonian.two_body_tensor.transpose(inv)*2
 
-    print('Number of SQD configurations:', len(up))
+    if Configuration().verbose:
+        print('Number of SQD configurations:', len(up))
 
     energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
                                                            hamiltonian.one_body_tensor,

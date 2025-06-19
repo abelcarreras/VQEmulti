@@ -614,7 +614,6 @@ def fermion_to_qubit(operator):
     :return: qubit operator
     """
 
-    print('print', Configuration().mapping)
     if Configuration().mapping == 'jw':
         return jordan_wigner(operator)
     elif Configuration().mapping == 'bk':

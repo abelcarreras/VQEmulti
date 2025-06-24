@@ -61,6 +61,8 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     :param hf_reference_fock: reference HF in fock vspace vector
     :param hamiltonian: hamiltonian in InteractionOperator
     :param simulator: simulation object
+    :param alpha_electrons: number of alpha electrons
+    :param beta_electrons: number of beta electrons
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 

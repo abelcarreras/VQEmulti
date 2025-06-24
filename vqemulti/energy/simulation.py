@@ -49,7 +49,9 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
     return energy
 
 
-def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, generate_random=False):
+def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator,
+                                  alpha_electrons, beta_electrons,
+                                  generate_random=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -107,7 +109,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
             for i, bit in enumerate(bitstring)
         )
 
-        if up_str.count('1') == 2 and down_str.count('1') == 2:
+        if up_str.count('1') == alpha_electrons and down_str.count('1') == beta_electrons:
             up_list.append(int(up_str, 2))
             down_list.append(int(down_str, 2))
 

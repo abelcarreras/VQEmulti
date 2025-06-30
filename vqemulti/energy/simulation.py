@@ -49,8 +49,8 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
     return energy
 
 
-def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator,
-                                  alpha_electrons, beta_electrons,
+def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
+                                  multiplicity=0,
                                   generate_random=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
@@ -61,18 +61,29 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     :param hf_reference_fock: reference HF in fock vspace vector
     :param hamiltonian: hamiltonian in InteractionOperator
     :param simulator: simulation object
-    :param alpha_electrons: number of alpha electrons
-    :param beta_electrons: number of beta electrons
+    :param n_electrons: number of electrons
+    :param multiplicity: multiplicity
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
     from vqemulti.preferences import Configuration
-    from vqemulti.utils import get_fock_space_vector
+    from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
 
-    #if Configuration().mapping != 'jw':
-    #    raise Exception('SQD is only compatible with JW mapping')
+    #multiplicity = alpha_electrons - beta_electrons
+    #n_electrons = alpha_electrons + beta_electrons
 
-    from qiskit_addon_sqd.fermion import bitstring_matrix_to_ci_strs, solve_fermion
+    alpha_electrons = (multiplicity + n_electrons)//2
+    beta_electrons = (n_electrons - multiplicity)//2
+
+    print('electrons: ', alpha_electrons, beta_electrons)
+
+
+    #configuration_list = [hf_reference_fock, [1, 1, 1, 0, 0, 1, 0, 0, 0, 0]]
+    #energy_1 = get_selected_ci_energy_dice(configuration_list, hamiltonian)
+    #energy_2 = get_selected_ci_energy_qiskit(configuration_list, hamiltonian)
+    #print(energy_1, energy_2)
+
+    # from qiskit_addon_sqd.fermion import bitstring_matrix_to_ci_strs, solve_fermion
     from qiskit_addon_sqd.counts import generate_counts_uniform
     import numpy as np
 
@@ -90,48 +101,21 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
         samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
     else:
         samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
-    #
-    # print('samples', len(samples), samples)
 
-    up_list = []
-    down_list = []
+    print('samples', len(samples), samples)
 
+    configurations = []
     for bitstring in samples.keys():
-
         fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
-        bitstring = ''.join(str(bit) for bit in fock_vector[::-1])
+        if np.sum(fock_vector[::2]) == alpha_electrons and np.sum(fock_vector[1::2]) == beta_electrons:
+            # print(fock_vector)
+            configurations.append(fock_vector)
 
-        up_str = ''.join(
-            '0' if i % 2 == 0 else bit
-            for i, bit in enumerate(bitstring)
-        )
+    print('dice: ', get_selected_ci_energy_dice(configurations, hamiltonian))
+    print('qiskit: ', get_selected_ci_energy_qiskit(configurations, hamiltonian))
 
-        down_str = ''.join(
-            bit if i % 2 == 0 else '0'
-            for i, bit in enumerate(bitstring)
-        )
-
-        if up_str.count('1') == alpha_electrons and down_str.count('1') == beta_electrons:
-            up_list.append(int(up_str, 2))
-            down_list.append(int(down_str, 2))
-
-    up = np.array(up_list, dtype=np.uint32)
-    down = np.array(down_list, dtype=np.uint32)
-
-    inv = np.argsort((0, 2, 3, 1))
-    two_body_tensor_restored = hamiltonian.two_body_tensor.transpose(inv)*2
-
-    if Configuration().verbose:
-        print('Number of SQD configurations:', len(up))
-
-    energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
-                                                           hamiltonian.one_body_tensor,
-                                                           two_body_tensor_restored,
-                                                           open_shell=True,
-                                                           # spin_sq=0,
-    )
-
-    return energy_sci + hamiltonian.constant
+    return get_selected_ci_energy_dice(configurations, hamiltonian)
+    # return get_selected_ci_energy_qiskit(configurations, hamiltonian)
 
 
 def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):

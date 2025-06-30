@@ -945,3 +945,259 @@ def get_clustering_order(interaction_matrix, show_plot=False):
         plt.xlabel('Orbital')
         plt.ylabel('Distance')
         plt.show()
+
+
+def spinorbital_to_spatial_1e(h1_spin):
+    n_spin = h1_spin.shape[0]
+    n_orb = n_spin // 2
+    h1_spatial = np.zeros((n_orb, n_orb))
+    for i in range(n_orb):
+        for j in range(n_orb):
+            # average over spin blocks (alpha-alpha and beta-beta)
+            h1_spatial[i, j] = 0.5 * (h1_spin[2*i, 2*j] + h1_spin[2*i+1, 2*j+1])
+    return h1_spatial
+
+
+def spinorbital_to_spatial_2e(two_body_spin, n_orb):
+    """
+    Convert two-electron integrals from spin-orbitals to spatial orbitals.
+
+    Args:
+        two_body_spin (np.ndarray): (2n, 2n, 2n, 2n) tensor of integrals in spin-orbital basis.
+        n_orb (int): number of spatial orbitals (n).
+
+    Returns:
+        np.ndarray: (n, n, n, n) tensor of integrals in spatial orbital basis.
+    """
+    two_body_spatial = np.zeros((n_orb, n_orb, n_orb, n_orb))
+
+    for i in range(n_orb):
+        for j in range(n_orb):
+            for k in range(n_orb):
+                for l in range(n_orb):
+                    # Sum over spin indices: s_p, s_q, s_r, s_s ∈ {0,1}
+                    # delta(sp, sr) and delta(sq, ss) => s_p == s_r and s_q == s_s
+                    val = 0.0
+                    for sp in (0, 1):
+                        for sq in (0, 1):
+                            sr = sp
+                            ss = sq
+                            p = 2 * i + sp
+                            q = 2 * j + sq
+                            r = 2 * k + sr
+                            s = 2 * l + ss
+                            val += two_body_spin[p, q, r, s]
+                    two_body_spatial[i, j, k, l] = val
+    # Optional: divide by 2 to average over spins, depèn de la definició
+    # Per la majoria dels formats FCIDUMP es fa així:
+    return two_body_spatial / 2
+
+
+def create_fcidump_file(hamiltonian, filename='FCIDUMP'):
+    """
+    write FCIDUMP file from an openFermion Hamiltonian using pyscf tools
+
+    :param hamiltonian: InterationOperator
+    :param filename: custom file name for FCIDUMP file
+    """
+
+    from pyscf.tools import fcidump
+
+    # 1-e integrals
+    h1 = hamiltonian.one_body_tensor
+    h1 = spinorbital_to_spatial_1e(h1)
+
+    norb = h1.shape[0]
+
+    # 2-e integrals
+    inv = np.argsort((0, 2, 3, 1))
+    # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
+    h2 = hamiltonian.two_body_tensor.transpose(inv)*2
+    h2 = spinorbital_to_spatial_2e(h2, norb)
+    norb = h1.shape[0]
+
+    # effective nuclear potential (nuc-nuc + effective core electrons)
+    nuc = hamiltonian.constant
+
+    fcidump.from_integrals(
+        filename,
+        h1,
+        h2,
+        norb,
+        nelec=4,  # total electrons
+        ms=0,  # spin multiplicity
+        # orbsym=None,
+        # tol=1e-8,
+        nuc=nuc
+    )
+
+
+def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDUMP'):
+
+    nelec = np.sum(configuration_list[0])
+    n_orb = len(configuration_list[0])//2
+    ms2 = 0
+
+    def all_even_indices(index_list):
+        return all(i % 2 == 0 for i in index_list)
+
+    with open(filename, "w") as f:
+        f.write(f" &FCI NORB={n_orb}, NELEC={nelec}, MS2={ms2}, \nISYM=1, \n &END\n")
+        for key in hamiltonian:
+            indices = [ind[0] for ind in key]
+
+            if all_even_indices(indices):
+                indices = [i//2+1 for i in indices]
+            else:
+                continue
+
+            if len(indices) == 4:
+                value = 0
+                for sp in (0, 1):
+                    for sq in (0, 1):
+                        sr = sp
+                        ss = sq
+                        p = indices[0] + sp
+                        q = indices[1] + sq
+                        r = indices[2] + sr
+                        s = indices[3] + ss
+
+                        key = ((p, 1), (q, 1), (r, 0), (s, 0))
+
+                        value += hamiltonian[key]
+
+                # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
+                # f.write('{:25.20e} '.format(hamiltonian[key]*2) + '{} {} {} {}\n'.format(*indices))
+                f.write('{:25.20e} '.format(value*2) + '{} {} {} {}\n'.format(*indices))
+
+            if len(indices) == 2:
+                f.write('{:25.20e} '.format(hamiltonian[key]) + '{} {}  0  0\n'.format(*indices))
+
+            if len(indices) == 0:
+                f.write('{:25.20e} '.format(hamiltonian[key]) + '0  0  0  0\n')
+
+def create_input_file(configuration_list, davidsontol=1e-8, dE=1e-10, filename='input.dat'):
+    n_orbs = len(configuration_list[0]) // 2
+    n_electrons = np.sum(configuration_list[0])
+
+    def get_num_conf(conf):
+        final_conf = []
+        for i, c in enumerate(conf):
+            if c == 1:
+                final_conf.append(str(i))
+        return final_conf
+
+    with open(filename, 'w') as f:
+        #f.write(f"orbitals FCIDUMP\n")
+
+        # diagonalization parameters
+        f.write(f"davidsontol {davidsontol}\n")
+        f.write(f"dE {dE}\n")
+        f.write(f"nroots 1\n")
+        f.write(f"noio\n")  # no intermediate files
+
+        # active orbital range
+        f.write(f"ncore 0\n")
+        f.write(f"nact {n_orbs}\n")
+
+        # schedule
+        f.write(f"schedule\n")
+        f.write(f"0 1e20\n")
+        f.write(f"end\n")
+
+        # perturbation
+        f.write(f"maxiter 1\n")
+        f.write(f"epsilon2 1e20\n")
+        f.write(f"nPTiter 0\n")
+        f.write(f"sampleN 200\n")
+
+        # configurations
+        # f.write(f"sampleN 200\n")
+        f.write(f"nocc {n_electrons}\n")
+        for configuration in configuration_list:
+            # f.write(f"0 1 2 3\n")  # TODO arreglar aixo
+            f.write(' '.join(get_num_conf(configuration)) + '\n')
+        f.write(f"end\n")
+
+
+def get_selected_ci_energy_dice(configuration_list, hamiltonian):
+    import tempfile
+    from subprocess import Popen, PIPE
+
+    dice_path = '/Users/abel/bin/Dice'
+    data_dir = 'temp_dir/'
+    mpirun_options = None
+
+    # create input files
+    create_fcidump_file(hamiltonian, filename=data_dir + 'FCIDUMP')
+    create_input_file(configuration_list, filename=data_dir + 'input.dat')
+
+    # run Dice
+    if mpirun_options:
+        if isinstance(mpirun_options, str):
+            mpirun_options = mpirun_options.split()
+        dice_call = ["mpirun"] + list(mpirun_options) + [dice_path]
+    else:
+        dice_call = ["mpirun", dice_path]
+
+    qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_dir)
+    (output, err) = qchem_process.communicate()
+    qchem_process.wait()
+    output = output.decode(errors='ignore')
+    err = err.decode()
+
+    print(err)
+    print(output)
+
+    enum = output.find('Variational calculation result')
+    #print(output[enum: enum+500].split()[7])
+    sci_energy = float(output[enum: enum+500].split()[7])
+
+    # print('final parsed energy: ', sci_energy)
+    return sci_energy
+
+
+def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
+
+    from qiskit_addon_sqd.fermion import solve_fermion
+
+    up_list = []
+    down_list = []
+    for fock_vector in configuration_list:
+        # print(fock_vector)
+        bitstring = ''.join(str(bit) for bit in fock_vector[::-1])
+
+        up_str = ''.join(
+            '0' if i % 2 == 0 else bit
+            for i, bit in enumerate(bitstring)
+        )
+
+        down_str = ''.join(
+            bit if i % 2 == 0 else '0'
+            for i, bit in enumerate(bitstring)
+        )
+
+        # if up_str.count('1') == alpha_electrons and down_str.count('1') == beta_electrons:
+        up_list.append(int(up_str, 2))
+        down_list.append(int(down_str, 2))
+
+    up = np.array(up_list, dtype=np.uint32)
+    down = np.array(down_list, dtype=np.uint32)
+
+    inv = np.argsort((0, 2, 3, 1))
+    # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
+    two_body_tensor_restored = hamiltonian.two_body_tensor.transpose(inv) * 2
+
+    if Configuration().verbose:
+        print('Number of SQD configurations:', len(up))
+
+    # print(up)
+    # print(down)
+    energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
+                                                           hamiltonian.one_body_tensor,
+                                                           two_body_tensor_restored,
+                                                           open_shell=True,
+                                                           # spin_sq=0,
+                                                           )
+
+    return energy_sci + hamiltonian.constant

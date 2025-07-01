@@ -51,7 +51,8 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
 
 def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
                                   multiplicity=0,
-                                  generate_random=False):
+                                  generate_random=False,
+                                  backend='dice'):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -69,8 +70,6 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     from vqemulti.preferences import Configuration
     from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
 
-    #multiplicity = alpha_electrons - beta_electrons
-    #n_electrons = alpha_electrons + beta_electrons
 
     alpha_electrons = (multiplicity + n_electrons)//2
     beta_electrons = (n_electrons - multiplicity)//2
@@ -111,11 +110,13 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
             # print(fock_vector)
             configurations.append(fock_vector)
 
-    print('dice: ', get_selected_ci_energy_dice(configurations, hamiltonian))
-    print('qiskit: ', get_selected_ci_energy_qiskit(configurations, hamiltonian))
+    # print('dice: ', get_selected_ci_energy_dice(configurations, hamiltonian))
+    # print('qiskit: ', get_selected_ci_energy_qiskit(configurations, hamiltonian))
 
-    return get_selected_ci_energy_dice(configurations, hamiltonian)
-    # return get_selected_ci_energy_qiskit(configurations, hamiltonian)
+    if backend.lower() == 'dice':
+        return get_selected_ci_energy_dice(configurations, hamiltonian)
+    else:
+        return get_selected_ci_energy_qiskit(configurations, hamiltonian)
 
 
 def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):

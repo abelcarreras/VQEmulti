@@ -1076,7 +1076,8 @@ def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDU
             if len(indices) == 0:
                 f.write('{:25.20e} '.format(hamiltonian[key]) + '0  0  0  0\n')
 
-def create_input_file(configuration_list, davidsontol=1e-8, dE=1e-10, filename='input.dat'):
+
+def create_input_file_dice(configuration_list, davidsontol=1e-8, dE=1e-10, filename='input.dat'):
     n_orbs = len(configuration_list[0]) // 2
     n_electrons = np.sum(configuration_list[0])
 
@@ -1130,7 +1131,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian):
 
     # create input files
     create_fcidump_file(hamiltonian, filename=data_dir + 'FCIDUMP')
-    create_input_file(configuration_list, filename=data_dir + 'input.dat')
+    create_input_file_dice(configuration_list, filename=data_dir + 'input.dat')
 
     # run Dice
     if mpirun_options:
@@ -1157,7 +1158,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian):
     return sci_energy
 
 
-def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
+def get_selected_ci_energy_qiskit_alternative(configuration_list, hamiltonian):
 
     from qiskit_addon_sqd.fermion import solve_fermion
 
@@ -1191,8 +1192,6 @@ def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
     if Configuration().verbose:
         print('Number of SQD configurations:', len(up))
 
-    # print(up)
-    # print(down)
     energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
                                                            hamiltonian.one_body_tensor,
                                                            two_body_tensor_restored,
@@ -1201,3 +1200,107 @@ def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
                                                            )
 
     return energy_sci + hamiltonian.constant
+
+
+def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
+
+    from qiskit_addon_sqd.fermion import solve_fermion
+
+    # 1-e integrals
+    h1 = hamiltonian.one_body_tensor
+    h1 = spinorbital_to_spatial_1e(h1)
+
+    norb = h1.shape[0]
+
+    # 2-e integrals
+    inv = np.argsort((0, 2, 3, 1))
+    # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
+    h2 = hamiltonian.two_body_tensor.transpose(inv)*2
+    h2 = spinorbital_to_spatial_2e(h2, norb)
+
+    # setup configurations
+    up_list = []
+    down_list = []
+    for fock_vector in configuration_list:
+        bitstring = ''.join(str(bit) for bit in fock_vector[::-1])
+        up_list.append(int(bitstring[::2], 2))
+        down_list.append(int(bitstring[1::2], 2))
+
+    up = np.array(up_list, dtype=np.uint32)
+    down = np.array(down_list, dtype=np.uint32)
+
+    if Configuration().verbose:
+        print('Number of SQD configurations:', len(up))
+
+    energy_sci, coeffs_sci, avg_occs, spin = solve_fermion((up, down),
+                                                           h1,
+                                                           h2,
+                                                           open_shell=False,
+                                                           # spin_sq=0,
+                                                           )
+
+    return energy_sci + hamiltonian.constant
+
+
+def get_dmrg_energy(hamiltonian,
+                    n_electrons,
+                    symmetry=None,
+                    spin=0,
+                    maxM=500,
+                    schedule='default',
+                    maxiter=200):
+
+    import tempfile
+    from subprocess import Popen, PIPE
+
+    dice_path = '/Users/abel/bin/block2main'
+    data_dir = 'temp_dir/'
+    mpirun_options = None
+
+    # create input files
+    create_fcidump_file(hamiltonian, filename=data_dir + 'FCIDUMP')
+
+    with open(data_dir + 'dmrg.conf', 'w') as f:
+
+        if symmetry is not None:
+            f.write(f"sym d2h {symmetry}\n")
+
+        f.write(f"orbitals FCIDUMP\n")
+        f.write(f"nelec {n_electrons}\n")
+        f.write(f"spin {spin}\n")
+
+        # f.write(f"irrep 1\n")
+        f.write(f"hf_occ integral\n")
+
+        # schedule
+        f.write(f"schedule {schedule}\n")
+        f.write(f"maxM {maxM}\n")
+
+        # perturbation
+        f.write(f"maxiter {maxiter}\n")
+        f.write(f"onepdm\n")
+        f.write(f"irrep_reorder\n")
+
+    # run block2
+    if mpirun_options:
+        if isinstance(mpirun_options, str):
+            mpirun_options = mpirun_options.split()
+        dice_call = ["mpirun"] + list(mpirun_options) + [dice_path, 'dmrg.conf']
+    else:
+        dice_call = [dice_path, 'dmrg.conf']
+
+    qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_dir)
+    (output, err) = qchem_process.communicate()
+    qchem_process.wait()
+    output = output.decode(errors='ignore')
+    err = err.decode()
+
+    # print(err)
+    # print(output)
+
+    enum = output.find('Final canonical form')
+    # print(output[enum: enum+500].split())
+    sci_energy = float(output[enum: enum+500].split()[9])
+
+    # print('final parsed energy: ', sci_energy)
+    return sci_energy

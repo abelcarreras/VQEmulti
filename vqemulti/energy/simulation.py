@@ -69,7 +69,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
 
     from vqemulti.preferences import Configuration
     from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
-
+    from vqemulti.utils import get_dmrg_energy
 
     alpha_electrons = (multiplicity + n_electrons)//2
     beta_electrons = (n_electrons - multiplicity)//2
@@ -110,8 +110,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
             # print(fock_vector)
             configurations.append(fock_vector)
 
-    # print('dice: ', get_selected_ci_energy_dice(configurations, hamiltonian))
-    # print('qiskit: ', get_selected_ci_energy_qiskit(configurations, hamiltonian))
+    # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
 
     if backend.lower() == 'dice':
         return get_selected_ci_energy_dice(configurations, hamiltonian)

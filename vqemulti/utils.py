@@ -993,13 +993,16 @@ def spinorbital_to_spatial_2e(two_body_spin, n_orb):
     return two_body_spatial / 2
 
 
-def create_fcidump_file(hamiltonian, filename='FCIDUMP'):
+def create_fcidump_file(hamiltonian, filename='FCIDUMP', overwrite=False):
     """
     write FCIDUMP file from an openFermion Hamiltonian using pyscf tools
 
     :param hamiltonian: InterationOperator
     :param filename: custom file name for FCIDUMP file
     """
+    import os
+    if os.path.exists(filename) and not overwrite:
+        return
 
     from pyscf.tools import fcidump
 
@@ -1033,6 +1036,13 @@ def create_fcidump_file(hamiltonian, filename='FCIDUMP'):
 
 
 def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDUMP'):
+    """
+    create a FCIDUMP file from a hamiltonian
+
+    :param hamiltonian: hamiltonian as openFermion InteractionOperator
+    :param configuration_list: list of initial guess configurations
+    :param filename: file name
+    """
 
     nelec = np.sum(configuration_list[0])
     n_orb = len(configuration_list[0])//2
@@ -1077,7 +1087,27 @@ def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDU
                 f.write('{:25.20e} '.format(hamiltonian[key]) + '0  0  0  0\n')
 
 
-def create_input_file_dice(configuration_list, davidsontol=1e-8, dE=1e-10, filename='input.dat'):
+def create_input_file_dice(configuration_list,
+                           davidson_tol=1e-8,
+                           variational_tol=1e-10,
+                           schedule=None,
+                           epsilon2=1e-2,
+                           max_iterations=1,
+                           n_samples=200,
+                           filename='input.dat'):
+    """
+    create input for DICE software
+
+    :param configuration_list: list of initial guess configurations
+    :param davidson_tol: energy tolerance for Davidson algorithm (last step)
+    :param variational_tol: energy tolerance for the HCI variational part
+    :param schedule: None or [(step_1, tolerance_1), (step_2, tolerance_2)]
+    :param epsilon2: tolerance for perturbation part
+    :param max_iterations: maximum number of iterations in the variational part (HCI)
+    :param n_samples: number of stochastic samples for SHCI
+    :param filename: input filename
+    :return:
+    """
     n_orbs = len(configuration_list[0]) // 2
     n_electrons = np.sum(configuration_list[0])
 
@@ -1092,8 +1122,8 @@ def create_input_file_dice(configuration_list, davidsontol=1e-8, dE=1e-10, filen
         #f.write(f"orbitals FCIDUMP\n")
 
         # diagonalization parameters
-        f.write(f"davidsontol {davidsontol}\n")
-        f.write(f"dE {dE}\n")
+        f.write(f"davidsontol {davidson_tol}\n")
+        f.write(f"dE {variational_tol}\n")
         f.write(f"nroots 1\n")
         f.write(f"noio\n")  # no intermediate files
 
@@ -1102,15 +1132,23 @@ def create_input_file_dice(configuration_list, davidsontol=1e-8, dE=1e-10, filen
         f.write(f"nact {n_orbs}\n")
 
         # schedule
+        # schedule = [(0, 1e-3), (100, 1e-6)]
         f.write(f"schedule\n")
-        f.write(f"0 1e20\n")
+        if schedule is None:
+            f.write(f"0 1e20\n")
+        else:
+            for i, line in enumerate(schedule):
+                f.write(f"{' '.join([str(s) for s in line])}\n")
+                if line[0] > max_iterations:
+                    max_iterations = line[0]
+
         f.write(f"end\n")
 
         # perturbation
-        f.write(f"maxiter 1\n")
-        f.write(f"epsilon2 1e20\n")
+        f.write(f"maxiter {max_iterations}\n")
+        f.write(f"epsilon2 {epsilon2}\n")
         f.write(f"nPTiter 0\n")
-        f.write(f"sampleN 200\n")
+        f.write(f"sampleN {n_samples}\n")
 
         # configurations
         # f.write(f"sampleN 200\n")
@@ -1121,17 +1159,35 @@ def create_input_file_dice(configuration_list, davidsontol=1e-8, dE=1e-10, filen
         f.write(f"end\n")
 
 
-def get_selected_ci_energy_dice(configuration_list, hamiltonian):
-    import tempfile
-    from subprocess import Popen, PIPE
+def get_selected_ci_energy_dice(configuration_list, hamiltonian,
+                                dice_path='/Users/abel/bin/Dice',
+                                data_dir='temp_dir',
+                                mpirun_options=None,
+                                stream_output=False
+                                ):
+    """
+    get selected CI energy using Dice software
 
-    dice_path = '/Users/abel/bin/Dice'
-    data_dir = 'temp_dir/'
-    mpirun_options = None
+    :param configuration_list: list of configurations
+    :param hamiltonian: hamiltonian in openFermion InterationOperator form
+    :param dice_path: path to Dice binary
+    :param data_dir: workpath for temporal data
+    :param mpirun_options: mpi options
+    :param stream_output: if True stream output on screen
+    :return: SCI energy
+    """
+
+    from pathlib import Path
+    from subprocess import Popen, PIPE, STDOUT
+
+    data_path = Path(data_dir)
+
+    # create dir and input files
+    data_path.mkdir(parents=True, exist_ok=True)
 
     # create input files
-    create_fcidump_file(hamiltonian, filename=data_dir + 'FCIDUMP')
-    create_input_file_dice(configuration_list, filename=data_dir + 'input.dat')
+    create_fcidump_file(hamiltonian, filename=str(data_path / 'FCIDUMP'))
+    create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'))
 
     # run Dice
     if mpirun_options:
@@ -1141,24 +1197,36 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian):
     else:
         dice_call = ["mpirun", dice_path]
 
-    qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_dir)
-    (output, err) = qchem_process.communicate()
-    qchem_process.wait()
-    output = output.decode(errors='ignore')
-    err = err.decode()
+    if stream_output:
+        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=STDOUT, cwd=data_path, text=True, bufsize=1)
+        output = ''
+        for line in qchem_process.stdout:
+            print(line, end='')  # Print output as generated
+            output += line
+        qchem_process.wait()
+    else:
+        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_path)
+        (output, err) = qchem_process.communicate()
+        qchem_process.wait()
+        output = output.decode(errors='ignore')
+        #err = err.decode()
+        # print(err)
 
-    print(err)
-    print(output)
-
+    # print(output)
     enum = output.find('Variational calculation result')
-    #print(output[enum: enum+500].split()[7])
     sci_energy = float(output[enum: enum+500].split()[7])
 
-    # print('final parsed energy: ', sci_energy)
     return sci_energy
 
 
 def get_selected_ci_energy_qiskit_alternative(configuration_list, hamiltonian):
+    """
+    get selected-CI energy using qiskit modules (Alternative version using spinorbital hamiltonian)
+
+    :param configuration_list: configuration list
+    :param hamiltonian: hamiltonian in openFermion InteractionOperator
+    :return: SCI energy
+    """
 
     from qiskit_addon_sqd.fermion import solve_fermion
 
@@ -1203,6 +1271,13 @@ def get_selected_ci_energy_qiskit_alternative(configuration_list, hamiltonian):
 
 
 def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
+    """
+    get selected-CI energy using qiskit modules
+
+    :param configuration_list: configuration list
+    :param hamiltonian: hamiltonian in openFermion InteractionOperator
+    :return: SCI energy
+    """
 
     from qiskit_addon_sqd.fermion import solve_fermion
 
@@ -1245,62 +1320,142 @@ def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
 def get_dmrg_energy(hamiltonian,
                     n_electrons,
                     symmetry=None,
-                    spin=0,
-                    maxM=500,
+                    spin=None, # 0
+                    occupations=None,
+                    start_bond_dimension=250,
+                    max_bond_dimension=500,
                     schedule='default',
-                    maxiter=200):
+                    max_solver_iterations=200,
+                    sample=None, # 0.02
+                    stream_output=False,
+                    block2_path='/Users/abel/bin/block2main',
+                    data_dir='temp_dir',
+                    mpirun_options=None
+                    ):
+    """
+    get energy from DMRG computed with BLOCK2
 
-    import tempfile
-    from subprocess import Popen, PIPE
+    :param hamiltonian: OpenFermion InteractionOperator
+    :param n_electrons: number of electrons
+    :param symmetry: symmetry group
+    :param spin: state spin (if None use DET else CSF)
+    :param occupations: initial guess occupations
+    :param max_bond_dimension: maximum local bond dimension
+    :param schedule: convergence schedule list [(iteration_n_1, tolerance_1, 2), (iteration_n_2, tolerance_1, 2)]
+    :param max_solver_iterations: maximum number of Davidson steps
+    :param sample: if not None compute and return sampled configurations from MPS
+    :param stream_output: if True stream output on screen
+    :return: energy, [configurations list]
+    """
 
-    dice_path = '/Users/abel/bin/block2main'
-    data_dir = 'temp_dir/'
-    mpirun_options = None
+    from subprocess import Popen, PIPE, STDOUT
+    from pathlib import Path
 
-    # create input files
-    create_fcidump_file(hamiltonian, filename=data_dir + 'FCIDUMP')
 
-    with open(data_dir + 'dmrg.conf', 'w') as f:
+    data_path = Path(data_dir)
+
+
+    # create dir and input files
+    data_path.mkdir(parents=True, exist_ok=True)
+
+    create_fcidump_file(hamiltonian, filename=str(data_path / 'FCIDUMP'))
+
+    # schedule_example = [(100, 1e-4, 2), (200, 1e-5, 2)]
+    with (data_path / 'dmrg.conf').open('w') as f:
 
         if symmetry is not None:
-            f.write(f"sym d2h {symmetry}\n")
+            f.write(f"sym {symmetry}\n")
 
         f.write(f"orbitals FCIDUMP\n")
         f.write(f"nelec {n_electrons}\n")
-        f.write(f"spin {spin}\n")
+        if spin is None:
+            f.write(f"nonspinadapted\n")
+        else:
+            f.write(f"spin {spin}\n")
 
         # f.write(f"irrep 1\n")
-        f.write(f"hf_occ integral\n")
+        # f.write(f"hf_occ integral\n") # compatibility with stackblock (old version)
+
+        if occupations is not None:
+            f.write(f"warmup occ\n")
+            f.write(f"occ {' '.join([str(s) for s in occupations])}\n")
 
         # schedule
-        f.write(f"schedule {schedule}\n")
-        f.write(f"maxM {maxM}\n")
+        if isinstance(schedule, str):
+            f.write(f"schedule {schedule}\n")
+        else:
+            f.write(f"schedule\n")
+            for i, line in enumerate(schedule):
+                f.write(f" {i} {' '.join([str(s) for s in line])}\n")
+            f.write(f"end\n")
+
+        # bond dimension
+        if start_bond_dimension > max_bond_dimension:
+            start_bond_dimension = max_bond_dimension
+
+        f.write(f"startM {start_bond_dimension}\n")
+        f.write(f"maxM {max_bond_dimension}\n")
 
         # perturbation
-        f.write(f"maxiter {maxiter}\n")
+        f.write(f"maxiter {max_solver_iterations}\n")
         f.write(f"onepdm\n")
-        f.write(f"irrep_reorder\n")
+        # f.write(f"irrep_reorder\n")  # reorder sites acording to irrep
+
+        if sample is not None:
+            f.write(f"sample {sample}\n")
 
     # run block2
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
-        dice_call = ["mpirun"] + list(mpirun_options) + [dice_path, 'dmrg.conf']
+        dice_call = ["mpirun"] + list(mpirun_options) + [block2_path, 'dmrg.conf']
     else:
-        dice_call = [dice_path, 'dmrg.conf']
+        dice_call = [block2_path, 'dmrg.conf']
 
-    qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_dir)
-    (output, err) = qchem_process.communicate()
-    qchem_process.wait()
-    output = output.decode(errors='ignore')
-    err = err.decode()
-
-    # print(err)
-    # print(output)
+    if stream_output:
+        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=STDOUT, cwd=data_path, text=True, bufsize=1)
+        output = ''
+        for line in qchem_process.stdout:
+            print(line, end='')  # Print output as generated
+            output += line
+        qchem_process.wait()
+    else:
+        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_path)
+        (output, err) = qchem_process.communicate()
+        qchem_process.wait()
+        output = output.decode(errors='ignore')
+        # err = err.decode()
+        # print(err)
 
     enum = output.find('Final canonical form')
-    # print(output[enum: enum+500].split())
     sci_energy = float(output[enum: enum+500].split()[9])
 
-    # print('final parsed energy: ', sci_energy)
+    if sample is not None:
+        conf_array = np.load(str(data_path / 'nodex' / 'sample-dets.npy'), allow_pickle=False)
+
+        configurations = []
+        for conf_vect in conf_array:
+            configuration = []
+            for orbital in conf_vect[::-1]:
+                if orbital == 0:
+                    configuration += [0, 0]
+                elif orbital == 1:
+                    configuration += [1, 0]
+                elif orbital == 2:
+                    configuration += [0, 1]
+                elif orbital == 3:
+                    configuration += [1, 1]
+
+            configurations.append(configuration)
+
+        # get amplitudes
+        amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)
+        print(amplitude_array)
+
+        if spin is not None:
+            import warnings
+            warnings.warn('Returned CSF are written as determinants')
+
+        return sci_energy, configurations
+
     return sci_energy

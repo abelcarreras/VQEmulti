@@ -4,10 +4,11 @@ from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, bi
 from openfermion.transforms import reorder, get_interaction_operator, get_fermion_operator
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
 from vqemulti.preferences import Configuration
+from subprocess import Popen, PIPE, STDOUT
+import os, pathlib, warnings
 import openfermion
 import numpy as np
 import scipy
-import warnings
 
 
 def string_to_matrix(pauli_string):
@@ -1160,27 +1161,28 @@ def create_input_file_dice(configuration_list,
 
 
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
-                                dice_path='/Users/abel/bin/Dice',
                                 data_dir='temp_dir',
                                 mpirun_options=None,
                                 stream_output=False
                                 ):
     """
-    get selected CI energy using Dice software
+    get selected CI energy using Dice software.
+    Use $DICE_PATH to define the path to Dice binary
 
     :param configuration_list: list of configurations
     :param hamiltonian: hamiltonian in openFermion InterationOperator form
     :param dice_path: path to Dice binary
-    :param data_dir: workpath for temporal data
+    :param data_dir: path to store temporal files
     :param mpirun_options: mpi options
     :param stream_output: if True stream output on screen
     :return: SCI energy
     """
 
-    from pathlib import Path
-    from subprocess import Popen, PIPE, STDOUT
+    data_path = pathlib.Path(data_dir)
 
-    data_path = Path(data_dir)
+    dice_path = os.environ.get('DICE_PATH')
+    if dice_path is None:
+        dice_path = 'Dice'
 
     # create dir and input files
     data_path.mkdir(parents=True, exist_ok=True)
@@ -1320,20 +1322,20 @@ def get_selected_ci_energy_qiskit(configuration_list, hamiltonian):
 def get_dmrg_energy(hamiltonian,
                     n_electrons,
                     symmetry=None,
-                    spin=None, # 0
+                    spin=None,  # 0
                     occupations=None,
                     start_bond_dimension=250,
                     max_bond_dimension=500,
                     schedule='default',
                     max_solver_iterations=200,
-                    sample=None, # 0.02
+                    sample=None,  # 0.02
                     stream_output=False,
-                    block2_path='/Users/abel/bin/block2main',
                     data_dir='temp_dir',
                     mpirun_options=None
                     ):
     """
-    get energy from DMRG computed with BLOCK2
+    get energy from DMRG computed with BLOCK2.
+    Use BLOCK2_PATH to define the path to block2 binary (block2main)
 
     :param hamiltonian: OpenFermion InteractionOperator
     :param n_electrons: number of electrons
@@ -1345,15 +1347,14 @@ def get_dmrg_energy(hamiltonian,
     :param max_solver_iterations: maximum number of Davidson steps
     :param sample: if not None compute and return sampled configurations from MPS
     :param stream_output: if True stream output on screen
+    :param data_dir: path to store temporal files
     :return: energy, [configurations list]
     """
 
-    from subprocess import Popen, PIPE, STDOUT
-    from pathlib import Path
-
-
-    data_path = Path(data_dir)
-
+    data_path = pathlib.Path(data_dir)
+    block2_path = os.environ.get('BLOCK2_PATH')
+    if block2_path is None:
+        block2_path = 'block2main'
 
     # create dir and input files
     data_path.mkdir(parents=True, exist_ok=True)
@@ -1428,7 +1429,10 @@ def get_dmrg_energy(hamiltonian,
         # print(err)
 
     enum = output.find('Final canonical form')
-    sci_energy = float(output[enum: enum+500].split()[9])
+    try:
+        sci_energy = float(output[enum: enum+500].split()[9])
+    except IndexError:
+        raise Exception('Block2 {}'.format(output.split('\n')[-2]))
 
     if sample is not None:
         conf_array = np.load(str(data_path / 'nodex' / 'sample-dets.npy'), allow_pickle=False)

@@ -74,15 +74,8 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     alpha_electrons = (multiplicity + n_electrons)//2
     beta_electrons = (n_electrons - multiplicity)//2
 
-    print('electrons: ', alpha_electrons, beta_electrons)
+    # print('electrons: ', alpha_electrons, beta_electrons)
 
-
-    #configuration_list = [hf_reference_fock, [1, 1, 1, 0, 0, 1, 0, 0, 0, 0]]
-    #energy_1 = get_selected_ci_energy_dice(configuration_list, hamiltonian)
-    #energy_2 = get_selected_ci_energy_qiskit(configuration_list, hamiltonian)
-    #print(energy_1, energy_2)
-
-    # from qiskit_addon_sqd.fermion import bitstring_matrix_to_ci_strs, solve_fermion
     from qiskit_addon_sqd.counts import generate_counts_uniform
     import numpy as np
 
@@ -101,7 +94,7 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     else:
         samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
 
-    print('samples', len(samples), samples)
+    # print('samples', len(samples), samples)
 
     configurations = []
     for bitstring in samples.keys():

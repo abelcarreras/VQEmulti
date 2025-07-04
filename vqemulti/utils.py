@@ -1324,6 +1324,7 @@ def get_dmrg_energy(hamiltonian,
                     symmetry=None,
                     spin=None,  # 0
                     occupations=None,
+                    reorder_sites=True,
                     start_bond_dimension=250,
                     max_bond_dimension=500,
                     schedule='default',
@@ -1342,6 +1343,7 @@ def get_dmrg_energy(hamiltonian,
     :param symmetry: symmetry group
     :param spin: state spin (if None use DET else CSF)
     :param occupations: initial guess occupations
+    :param reorder_sites: reorder sites using Fiedler method
     :param max_bond_dimension: maximum local bond dimension
     :param schedule: convergence schedule list [(iteration_n_1, tolerance_1, 2), (iteration_n_2, tolerance_1, 2)]
     :param max_solver_iterations: maximum number of Davidson steps
@@ -1376,6 +1378,9 @@ def get_dmrg_energy(hamiltonian,
 
         # f.write(f"irrep 1\n")
         # f.write(f"hf_occ integral\n") # compatibility with stackblock (old version)
+
+        if not reorder_sites:
+            f.write(f"noreorder\n")
 
         if occupations is not None:
             f.write(f"warmup occ\n")
@@ -1435,12 +1440,17 @@ def get_dmrg_energy(hamiltonian,
         raise Exception('Block2 {}'.format(output.split('\n')[-2]))
 
     if sample is not None:
+
+        # get site order
+        order = np.load(str(data_path / 'nodex' / 'orbital_reorder.npy'))
+        permutation = np.argsort(order)
+
         conf_array = np.load(str(data_path / 'nodex' / 'sample-dets.npy'), allow_pickle=False)
 
         configurations = []
         for conf_vect in conf_array:
             configuration = []
-            for orbital in conf_vect[::-1]:
+            for orbital in conf_vect[permutation]:
                 if orbital == 0:
                     configuration += [0, 0]
                 elif orbital == 1:
@@ -1453,8 +1463,8 @@ def get_dmrg_energy(hamiltonian,
             configurations.append(configuration)
 
         # get amplitudes
-        amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)
-        print(amplitude_array)
+        # amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)
+        # print(amplitude_array)
 
         if spin is not None:
             import warnings

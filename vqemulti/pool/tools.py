@@ -73,7 +73,7 @@ class OperatorList:
             self._type = type(operator)
         else:
             if self._type != type(operator):
-                raise Exception('Operator not compatible with this list')
+                raise Exception('Operator not compatible with this list of {}'.format(self._type))
 
         if join:
             self._list += [op for op in operator]

@@ -49,10 +49,12 @@ def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltoni
     return energy
 
 
-def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
-                                  multiplicity=0,
-                                  generate_random=False,
-                                  backend='dice'):
+def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
+                        multiplicity=0,
+                        generate_random=False,
+                        backend='dice',
+                        adapt=False,
+                        return_samples=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -64,6 +66,9 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     :param simulator: simulation object
     :param n_electrons: number of electrons
     :param multiplicity: multiplicity
+    :param generate_random: generate random configuration distribution instead of simulation
+    :param backend: backend to use for selected-CI  (dice, qiskit)
+    :param adapt: True if adaptVQE False if VQE
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
@@ -86,15 +91,16 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
         # hamiltonian = get_interaction_operator(hamiltonian)
         raise Exception('Hamiltonian must be a InteractionOperator')
 
-    # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
+    # transform ansatz to qubit for VQE/adaptVQE
+    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not adapt)
 
     if generate_random:
         samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
     else:
         samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
 
-    # print('samples', len(samples), samples)
+    if Configuration().verbose:
+        print('samples', len(samples), samples)
 
     configurations = []
     for bitstring in samples.keys():
@@ -106,10 +112,14 @@ def simulate_adapt_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamil
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
 
     if backend.lower() == 'dice':
-        return get_selected_ci_energy_dice(configurations, hamiltonian)
+        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
     else:
-        return get_selected_ci_energy_qiskit(configurations, hamiltonian)
+        sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
 
+    if return_samples:
+        return sqd_energy, samples
+
+    return sqd_energy
 
 def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """

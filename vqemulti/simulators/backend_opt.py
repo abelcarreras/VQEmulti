@@ -129,6 +129,66 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
 
     return layout
 
+
+def accumulated_errors(backend, circuit, print_data=False):
+    """Compute accumulated gate and readout errors for a given circuit on a specific backend."""
+
+    # Initializing quantities
+    acc_single_qubit_error = 0
+    acc_two_qubit_error = 0
+    single_qubit_gate_count = 0
+    two_qubit_gate_count = 0
+    acc_readout_error = 0
+
+        # Defining useful variables
+    properties = backend.properties()
+    qubit_layout = list(circuit.layout.initial_layout.get_physical_bits().keys())#[:n]
+
+    # Define readout error (only for qubits in qubit_layout) using `properties.readout_error`
+    for q in qubit_layout:
+        acc_readout_error+= properties.readout_error(q)
+
+    # Define two qubit gates for the different backends using `backend.configuration()`
+    config = backend.configuration()
+    if "ecr" in config.basis_gates:
+        two_qubit_gate = "ecr"
+    elif "cz" in config.basis_gates:
+        two_qubit_gate = "cz"
+    # Loop over the instructions in `circuit.data` to account for the single and two-qubit errors and single and two qubit gate counts
+    for instruction, qargs, _ in circuit.data:
+        # print(instruction)
+        qubit_indices = [circuit.find_bit(q).index for q in qargs]
+        # print(qubit_indices)
+
+        if instruction.name == 'measure':
+            continue
+        if instruction.num_qubits == 1: # Count and add errors for one qubit gates
+            acc_single_qubit_error += properties.gate_error(instruction.name, qubit_indices)
+            single_qubit_gate_count += 1
+        elif instruction.num_qubits == 2: # Count and add errors for two qubit gates
+            acc_two_qubit_error += properties.gate_error(instruction.name, qubit_indices)
+            two_qubit_gate_count += 1
+
+    acc_total_error = acc_two_qubit_error + acc_single_qubit_error + acc_readout_error
+
+    if print_data:
+        print(f'Backend {backend.name}')
+        print(f'Accumulated two-qubit error of {two_qubit_gate_count} gates: {acc_two_qubit_error:.3f}')
+        print(f'Accumulated one-qubit error of {single_qubit_gate_count} gates: {acc_single_qubit_error:.3f}')
+        print(f'Accumulated readout error: {acc_readout_error:.3f}')
+        print(f'Accumulated total error: {acc_total_error:.3f}\n')
+
+    results = [
+        acc_total_error,
+        acc_two_qubit_error,
+        acc_single_qubit_error,
+        acc_readout_error,
+        single_qubit_gate_count,
+        two_qubit_gate_count,
+    ]
+    return results
+
+
 if __name__ == '__main__':
 
     # fake backend

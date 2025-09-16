@@ -1,6 +1,6 @@
 import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from vqemulti.simulators.backend_opt import get_backend_opt_layout
+from vqemulti.simulators.backend_opt import get_backend_opt_layout, accumulated_errors
 from vqemulti.preferences import Configuration
 
 
@@ -18,6 +18,7 @@ class RHESampler:
 
         self._session = session
         self.num_qubits = n_qubits
+        self._backend = backend
 
     def run(self, circuit, shots=1000, memory=True):
 
@@ -32,6 +33,7 @@ class RHESampler:
         if Configuration().verbose > 1:
             print('depth: ', circuit.depth())
             print('isa_depth: ', isa_circuit.depth())
+            accumulated_errors(self._backend, isa_circuit, print_data=True)
 
 
         # emulate Qiskit Sampler result interface
@@ -77,6 +79,7 @@ class RHEstimator:
             print('n_observable: ', len(measure_op))
             print('n_chunks: ', n_chunks)
             print('chunck_size: ', chunck_size)
+            accumulated_errors(self._backend, isa_circuit, print_data=True)
 
         """
         try:

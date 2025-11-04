@@ -1478,3 +1478,18 @@ def get_dmrg_energy(hamiltonian,
         return sci_energy, configurations
 
     return sci_energy
+
+
+def commutativity_value(A, B):
+    """
+    Return a numeric measure of non-commutativity between two operators A and B
+
+    :arg A: operator A
+    :arg B: operator A
+    :return norm of the commutator
+    """
+
+    comm = A * B - B * A
+    # Euclidian norm
+    norm = np.sqrt(sum(abs(c)**2 for c in comm.terms.values()))
+    return norm

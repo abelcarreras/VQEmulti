@@ -308,8 +308,6 @@ if __name__ == '__main__':
 
     print('\nJASTROW ansatz\n==============')
 
-
-
     ccsd = molecule._pyscf_data.get('ccsd', None)
     t2 = force_local_amplitudes(ccsd.t2, distance=1)
     coefficients, ansatz = get_ucj_ansatz(t2, full_trotter=True, use_qubit=True)
@@ -324,10 +322,6 @@ if __name__ == '__main__':
     print(simulator.get_circuits()[-1])
 
     print('energy: ', energy)
-
-    from vqemulti.energy.simulation import simulate_energy_sqd
-
-    # energy = simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons)
 
     n_particle = get_adapt_vqe_energy(coefficients,
                                       ansatz,
@@ -350,3 +344,9 @@ if __name__ == '__main__':
     print('n_particles: {:8.4f}'.format(n_particle))
     print('Sz: {:8.4f}'.format(spin_z))
     print('S2: {:8.4f}'.format(spin_square))
+
+    # SQD
+    from vqemulti.energy.simulation import simulate_energy_sqd
+
+    energy = simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons, adapt=True)
+    print('SQD energy', energy)

@@ -78,7 +78,7 @@ def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):
     return get_ucc_ansatz(kappa, None, full_amplitudes=True, tolerance=tolerance, use_qubit=use_qubit)
 
 
-def get_ucj_ansatz(t2, t1=None, tolerance=1e-20):
+def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20):
     """
     Get unitary coupled Jastrow ansatz from 1-excitation and 2-excitation CC amplitudes
 
@@ -116,31 +116,44 @@ def get_ucj_ansatz(t2, t1=None, tolerance=1e-20):
     for diag, U in zip(diag_coulomb_mats, orbital_rotations):
         for U_i, diag_i in zip(U, diag):
 
-            z_mat = np.zeros((norb, norb, norb, norb), dtype=complex)
+            j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)
             for i in range(norb):
                 for j in range(norb):
-                    z_mat[i, i, j, j] = -1j * diag_i[i, j]  # a_i^ a_j a_k^ a_l
+                    j_mat[i, i, j, j] = -1j * diag_i[i, j]  # a_i^ a_j a_k^ a_l
 
-            # jastrow
-            spin_jastrow = get_t2_spinorbitals_absolute_full(z_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
-            coefficients_j, ansatz_j = get_ucc_ansatz(None, spin_jastrow, full_amplitudes=True)
+            if full_trotter:
 
-            # basis change
-            U_spin = get_spin_matrix(U_i.T)
-            coefficients_u, ansatz_u = get_basis_change_exp(U_spin)  # a_i^ a_j
+                # jastrow
+                spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
+                coefficients_j, ansatz_j = get_ucc_ansatz(None, spin_jastrow, full_amplitudes=True)
 
-            # add to ansatz
-            coefficients += [c for c in coefficients_u]
-            operators += [op for op in ansatz_u]
+                # basis change
+                U_spin = get_spin_matrix(U_i.T)
+                coefficients_u, ansatz_u = get_basis_change_exp(U_spin)  # a_i^ a_j
 
-            coefficients += coefficients_j
-            operators += [op for op in ansatz_j]
+                # add to ansatz
+                coefficients += [-c for c in coefficients_u]
+                operators += [op for op in ansatz_u]
 
-            coefficients += [-c for c in coefficients_u]
-            operators += [op for op in ansatz_u]
+                coefficients += coefficients_j
+                operators += [op for op in ansatz_j]
 
-    operators = operators[::-1]
-    coefficients = coefficients[::-1]
+                coefficients += [c for c in coefficients_u]
+                operators += [op for op in ansatz_u]
+
+            else:
+
+                from jastrow.rotation import change_of_basis_orbitals
+                orb_t2 = change_of_basis_orbitals(None, j_mat, U_i.T)[1]  # a_i^ a_j a_k^ a_l
+                spin_t2 = get_t2_spinorbitals_absolute_full(orb_t2)
+                coefficients_c, ansatz_c = get_ucc_ansatz(None, spin_t2, full_amplitudes=True)
+
+                coefficients += coefficients_c
+                operators += [op for op in ansatz_c]
+
+            #operators = operators[::-1]
+            #coefficients = coefficients[::-1]
+
     ansatz = OperatorList(operators, normalize=False, antisymmetrize=False)
 
     return coefficients, ansatz
@@ -188,7 +201,7 @@ if __name__ == '__main__':
     hf_energy = get_vqe_energy([], [], hf_reference_fock, hamiltonian, None)
     print('energy HF: ', hf_energy)
 
-    coefficients, ansatz = get_ucc_ansatz(molecule.ccsd_single_amps, molecule.ccsd_double_amps)
+    coefficients, ansatz = get_ucc_ansatz(None, molecule.ccsd_double_amps)
 
     # simulator = None
     energy = get_adapt_vqe_energy(coefficients,
@@ -201,7 +214,7 @@ if __name__ == '__main__':
     print('UCC ANSATZ energy: ', energy)
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
-    coefficients, ansatz = get_ucj_ansatz(ccsd.t2, t1=ccsd.t1)
+    coefficients, ansatz = get_ucj_ansatz(ccsd.t2)
 
     energy = get_adapt_vqe_energy(coefficients,
                                   ansatz,

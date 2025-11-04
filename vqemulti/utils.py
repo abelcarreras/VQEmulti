@@ -706,6 +706,10 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
 
     :return:
     """
+    if n_qubits is None:
+        n_qubits = count_qubits(operator)
+        print('n_qubits_inside', n_qubits)
+
     if Configuration().mapping == 'bk':
         if isinstance(operator, (openfermion.FermionOperator, openfermion.InteractionOperator)):
             operator = bravyi_kitaev(operator)
@@ -994,15 +998,22 @@ def spinorbital_to_spatial_2e(two_body_spin, n_orb):
     return two_body_spatial / 2
 
 
-def create_fcidump_file(hamiltonian, filename='FCIDUMP', overwrite=False):
+def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True):
     """
     write FCIDUMP file from an openFermion Hamiltonian using pyscf tools
 
     :param hamiltonian: InterationOperator
     :param filename: custom file name for FCIDUMP file
+    :param overwrite: overwrite existing file
     """
+
     import os
     if os.path.exists(filename) and not overwrite:
+        return
+
+    from openfermion import FermionOperator
+    if isinstance(hamiltonian, FermionOperator):
+        create_fcidump_file_fermion(hamiltonian, n_elec, filename=filename)
         return
 
     from pyscf.tools import fcidump
@@ -1028,34 +1039,34 @@ def create_fcidump_file(hamiltonian, filename='FCIDUMP', overwrite=False):
         h1,
         h2,
         norb,
-        nelec=4,  # total electrons
-        ms=0,  # spin multiplicity
+        nelec=n_elec,  # total electrons
+        ms=0,          # spin multiplicity
         # orbsym=None,
         # tol=1e-8,
-        nuc=nuc
+        nuc=nuc,
     )
 
 
-def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDUMP'):
+def create_fcidump_file_fermion(hamiltonian, n_elec, filename='FCIDUMP'):
     """
-    create a FCIDUMP file from a hamiltonian
+    create a FCIDUMP file from a hamiltonian as FermionOperator
 
     :param hamiltonian: hamiltonian as openFermion InteractionOperator
     :param configuration_list: list of initial guess configurations
     :param filename: file name
     """
 
-    nelec = np.sum(configuration_list[0])
-    n_orb = len(configuration_list[0])//2
+    n_orb = count_qubits(hamiltonian)//2
     ms2 = 0
+    print('norb: ', n_orb)
 
     def all_even_indices(index_list):
         return all(i % 2 == 0 for i in index_list)
 
     with open(filename, "w") as f:
-        f.write(f" &FCI NORB={n_orb}, NELEC={nelec}, MS2={ms2}, \nISYM=1, \n &END\n")
-        for key in hamiltonian:
-            indices = [ind[0] for ind in key]
+        f.write(f" &FCI NORB={n_orb}, NELEC={n_elec}, MS2={ms2}, \nORBSYM=1,1 \nISYM=1, \n &END\n")
+        for key, h_val in hamiltonian.terms.items():
+            indices = [ind[0] for ind in key] if len(key) > 0 else []
 
             if all_even_indices(indices):
                 indices = [i//2+1 for i in indices]
@@ -1063,29 +1074,21 @@ def create_fcidump_file_fermion(hamiltonian, configuration_list, filename='FCIDU
                 continue
 
             if len(indices) == 4:
-                value = 0
-                for sp in (0, 1):
-                    for sq in (0, 1):
-                        sr = sp
-                        ss = sq
-                        p = indices[0] + sp
-                        q = indices[1] + sq
-                        r = indices[2] + sr
-                        s = indices[3] + ss
+                if indices[0] >= indices[1] and indices[2] >= indices[3] and indices[0] >= indices[2]:
+                    if indices[0] == indices[2] and indices[1] < indices[3]:
+                        continue
 
-                        key = ((p, 1), (q, 1), (r, 0), (s, 0))
-
-                        value += hamiltonian[key]
-
-                # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
-                # f.write('{:25.20e} '.format(hamiltonian[key]*2) + '{} {} {} {}\n'.format(*indices))
-                f.write('{:25.20e} '.format(value*2) + '{} {} {} {}\n'.format(*indices))
+                    # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
+                    # f.write('{:25.20e} '.format(hamiltonian[key]*2) + '{} {} {} {}\n'.format(*indices))
+                    # indices = np.array(indices)[[1, 2, 3, 0]]
+                    f.write('{:25.20e} '.format(h_val*2) + '{} {} {} {}\n'.format(*indices))
 
             if len(indices) == 2:
-                f.write('{:25.20e} '.format(hamiltonian[key]) + '{} {}  0  0\n'.format(*indices))
+                if indices[0] >= indices[1]:
+                    f.write('{:25.20e} '.format(h_val) + '{} {}  0  0\n'.format(*indices))
 
             if len(indices) == 0:
-                f.write('{:25.20e} '.format(hamiltonian[key]) + '0  0  0  0\n')
+                f.write('{:25.20e} '.format(h_val) + '0  0  0  0\n')
 
 
 def create_input_file_dice(configuration_list,
@@ -1188,8 +1191,10 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     data_path.mkdir(parents=True, exist_ok=True)
 
     # create input files
-    create_fcidump_file(hamiltonian, filename=str(data_path / 'FCIDUMP'))
-    create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'))
+    n_electrons = np.sum(configuration_list[0])
+    create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
+    create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
+                           schedule=[(0, 1e-3),(100, 1e-6)])
 
     # run Dice
     if mpirun_options:
@@ -1361,7 +1366,7 @@ def get_dmrg_energy(hamiltonian,
     # create dir and input files
     data_path.mkdir(parents=True, exist_ok=True)
 
-    create_fcidump_file(hamiltonian, filename=str(data_path / 'FCIDUMP'))
+    create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
 
     # schedule_example = [(100, 1e-4, 2), (200, 1e-5, 2)]
     with (data_path / 'dmrg.conf').open('w') as f:

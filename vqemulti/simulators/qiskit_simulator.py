@@ -506,7 +506,7 @@ class QiskitSimulator(SimulatorBase):
 
         # Append the ansatz directly as a matrix
         for matrix in matrix_list:
-            matrix_gate = UnitaryGate(np.real(matrix.toarray()))
+            matrix_gate = UnitaryGate(matrix.toarray())
             state_preparation_gates.append(CircuitInstruction(matrix_gate, list(range(n_qubits-1, -1, -1))))
 
         return state_preparation_gates

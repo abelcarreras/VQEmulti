@@ -230,6 +230,10 @@ class SimulatorBase:
 
         return param_dict['precision']
 
+    def copy(self):
+        from copy import deepcopy
+        return deepcopy(self)
+
     # mock methods (to be implemented in subclasses)
     def _measure_expectation(self, *args):
         raise NotImplementedError()

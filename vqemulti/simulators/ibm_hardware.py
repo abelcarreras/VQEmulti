@@ -25,7 +25,8 @@ class RHESampler:
         isa_circuit = self._pm.run(circuit)
 
         from qiskit_ibm_runtime import SamplerV2
-        sampler = SamplerV2(mode=self._session)
+        mode = self._backend if self._session is None else self._session
+        sampler = SamplerV2(mode=mode)
         job = sampler.run([isa_circuit], shots=shots)
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
@@ -81,29 +82,14 @@ class RHEstimator:
             print('chunck_size: ', chunck_size)
             accumulated_errors(self._backend, isa_circuit, print_data=True)
 
-        """
-        try:
-            from qiskit_ibm_runtime import EstimatorV1, Options
-            # estimate [ <psi|H|psi)> ]
-            estimator = EstimatorV1(session=self._session, options=Options(optimization_level=0, resilience_level=0))
-            job = estimator.run(circuits=[isa_circuit], observables=[mapped_observables], shots=shots)
-            # print(job.result())
-            variance_v1 = sum([meta['variance'] for meta in job.result().metadata])
-            expectation_value = sum(job.result().values)
-
-            print('expectationV1: ', expectation_value)
-            print('varianceV1: ', variance_v1)
-        except:
-            pass
-
-        """
-
         from qiskit_ibm_runtime import EstimatorV2
 
         try:
+            # old version of qiskit
             estimator = EstimatorV2(session=self._session)
         except:
-            estimator = EstimatorV2()
+            mode = self._backend if self._session is None else self._session
+            estimator = EstimatorV2(mode=mode)
 
         estimator.options.default_shots = shots
         estimator.options.resilience_level = 2

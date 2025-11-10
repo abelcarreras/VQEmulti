@@ -1,5 +1,6 @@
 from openfermion import FermionOperator
 from vqemulti.utils import fermion_to_qubit
+from functools import reduce
 
 
 def n_particles_operator(n_orbitals, to_pauli=False):
@@ -51,3 +52,19 @@ def spin_z_operator(n_orbitals, to_pauli=False):
     if to_pauli:
         sz = fermion_to_qubit(sz)
     return sz
+
+
+def configuration_projector_operator(configuration, to_pauli=False):
+
+    ops = []
+    for i, occ in enumerate(configuration):
+        if occ == 1:
+            ops.append(FermionOperator(f"{i}^ {i}"))
+        else:
+            ops.append(FermionOperator('') - FermionOperator(f"{i}^ {i}"))  # 1 - n_i
+
+    proj = reduce(lambda a, b: a * b, ops)
+
+    if to_pauli:
+        proj = fermion_to_qubit(proj)
+    return proj

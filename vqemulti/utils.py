@@ -614,6 +614,10 @@ def fermion_to_qubit(operator):
     :param operator: fermion operator
     :return: qubit operator
     """
+    from openfermion import QubitOperator
+    if isinstance(operator, QubitOperator):
+        warnings.warn('Already Qubit operator. Returning as is')
+        return operator
 
     if Configuration().mapping == 'jw':
         return jordan_wigner(operator)
@@ -1493,3 +1497,20 @@ def commutativity_value(A, B):
     # Euclidian norm
     norm = np.sqrt(sum(abs(c)**2 for c in comm.terms.values()))
     return norm
+
+
+def configuration_generator(n, k):
+    """
+    generates configuration vectors of length n and k occupations
+
+    :param n: number of sites (orbitals)
+    :param k: number of occupied sites (electrons)
+    :return: vector (in Fock space) of 1 and 0
+    """
+    import itertools
+    for positions in itertools.combinations(range(n), k):
+        vector = [0] * n
+        for pos in positions:
+            vector[pos] = 1
+        yield vector
+

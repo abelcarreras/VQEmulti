@@ -142,6 +142,9 @@ def accumulated_errors(backend, circuit, print_data=False):
 
         # Defining useful variables
     properties = backend.properties()
+    if properties is None:
+        warnings.warn('Unable to compute accumulated errors with this backend')
+        return
     qubit_layout = list(circuit.layout.initial_layout.get_physical_bits().keys())#[:n]
 
     # Define readout error (only for qubits in qubit_layout) using `properties.readout_error`

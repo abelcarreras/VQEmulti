@@ -100,7 +100,7 @@ def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, si
         samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
 
     if Configuration().verbose:
-        print('samples', len(samples), samples)
+        print('samples ({}):'.format(len(samples)), samples)
 
     configurations = []
     for bitstring in samples.keys():

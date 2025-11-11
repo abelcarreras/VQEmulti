@@ -1,0 +1,145 @@
+- ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - c16
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Z
+  - !!python/tuple
+    - 2
+    - Z
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Z
+  - !!python/tuple
+    - 6
+    - Z
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - &id002 !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - &id003 !!python/tuple
+    - 6
+    - X
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - Z
+  - *id002
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Z
+  - *id003
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAD////////vPw==
+- - !!python/object/apply:numpy.core.multiarray.scalar
+    - &id004 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      6h9Q+HGgxL8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      0995UIUnxL8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      FGjhGlD8ur8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      sb9HEyxHur8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      hV97cs4Jsb8=

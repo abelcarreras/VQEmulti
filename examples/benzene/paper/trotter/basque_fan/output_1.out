@@ -1,0 +1,461 @@
+[-2.984342653589793]
+[1j [X2 X3 Y4 X5]]
+H terms 233
+N electrons 4
+N Orbitals 4
+backend:  ibm_basquecountry
+Initialize Single point
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89585632633435
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89585632633435
+Expectation value:  -227.89585632633435
+std_error: 0.007052708857650975
+energy final:  -227.89585632633435
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.90227172756485
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.90227172756485
+Expectation value:  -227.90227172756485
+std_error: 0.005954536281933898
+energy final:  -227.90227172756485
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8990422327564
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8990422327564
+Expectation value:  -227.8990422327564
+std_error: 0.007713655000727365
+energy final:  -227.8990422327564
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.9033963256891
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9033963256891
+Expectation value:  -227.9033963256891
+std_error: 0.007756681553180578
+energy final:  -227.9033963256891
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.9004719161919
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9004719161919
+Expectation value:  -227.9004719161919
+std_error: 0.00721205928446943
+energy final:  -227.9004719161919
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8966748199204
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8966748199204
+Expectation value:  -227.8966748199204
+std_error: 0.007081167335121732
+energy final:  -227.8966748199204
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.9006660984391
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9006660984391
+Expectation value:  -227.9006660984391
+std_error: 0.005396449262039214
+energy final:  -227.9006660984391
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8993352451299
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8993352451299
+Expectation value:  -227.8993352451299
+std_error: 0.006043164675966164
+energy final:  -227.8993352451299
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89354254096872
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89354254096872
+Expectation value:  -227.89354254096872
+std_error: 0.009014131519201123
+energy final:  -227.89354254096872
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8984671558802
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8984671558802
+Expectation value:  -227.8984671558802
+std_error: 0.006916450864703881
+energy final:  -227.8984671558802
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89886872981816
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89886872981816
+Expectation value:  -227.89886872981816
+std_error: 0.012205770207682085
+energy final:  -227.89886872981816
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8955187621509
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8955187621509
+Expectation value:  -227.8955187621509
+std_error: 0.012467620731095398
+energy final:  -227.8955187621509
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89339593098518
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89339593098518
+Expectation value:  -227.89339593098518
+std_error: 0.012785029939006468
+energy final:  -227.89339593098518
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.9018401834963
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9018401834963
+Expectation value:  -227.9018401834963
+std_error: 0.008371415982776366
+energy final:  -227.9018401834963
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8964066723396
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8964066723396
+Expectation value:  -227.8964066723396
+std_error: 0.0077210390626117585
+energy final:  -227.8964066723396
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89943136805735
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89943136805735
+Expectation value:  -227.89943136805735
+std_error: 0.005190667079265623
+energy final:  -227.89943136805735
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.8970139272628
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8970139272628
+Expectation value:  -227.8970139272628
+std_error: 0.006265002115656703
+energy final:  -227.8970139272628
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89942551476375
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89942551476375
+Expectation value:  -227.89942551476375
+std_error: 0.004841774724268399
+energy final:  -227.89942551476375
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.89871035012285
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89871035012285
+Expectation value:  -227.89871035012285
+std_error: 0.0077615718446639795
+energy final:  -227.89871035012285
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.90320150714743
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.90320150714743
+Expectation value:  -227.90320150714743
+std_error: 0.007644694692652207
+energy final:  -227.90320150714743
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936
+
+1 / 1
+partial expectation:  -227.9016203467031
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9016203467031
+Expectation value:  -227.9016203467031
+std_error: 0.008070271314523083
+energy final:  -227.9016203467031
+layout:  [18, 11, 12, 13, 14, 15, 19, 35]
+depth:  8
+isa_depth:  19
+circuit gate count:  {'cx': 6, 'x': 4, 'rz': 2, 'rx': 1}
+isa_circuit gate count:  {'rz': 10, 'sx': 8, 'cz': 6, 'x': 3}
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+Backend ibm_basquecountry
+Accumulated two-qubit error of 6 gates: 0.007
+Accumulated one-qubit error of 21 gates: 0.003
+Accumulated readout error: 1.926
+Accumulated total error: 1.936

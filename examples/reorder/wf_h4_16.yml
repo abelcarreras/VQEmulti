@@ -1,0 +1,1251 @@
+- &id003
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+- &id002
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.5j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.5j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  : !!python/complex '0.5j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  : !!python/complex '-0.5j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - Y
+  - !!python/tuple
+    - 2
+    - Y
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 6
+    - X
+  : !!python/complex '0.125j'
+- &id001
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '-0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  - !!python/tuple
+    - 7
+    - Y
+  : !!python/complex '0.125j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 3
+    - Y
+  - !!python/tuple
+    - 5
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/complex '0.125j'
+- ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 5
+    - Y
+  : !!python/complex '0.5j'
+  ? !!python/tuple
+  - !!python/tuple
+    - 1
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/complex '-0.5j'
+- *id001
+- *id002
+- *id003
+- - !!python/object/apply:numpy.core.multiarray.scalar
+    - &id004 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      5oYktflq0r8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      oPnL2R8A0L8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      Va2/FhZ/xr8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      ZClFcJfhzr8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      +atq0wow2b8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      6bmc/ybe178=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      kYJ8PWjn5j8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      azy7ZN0G7D8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      myXV05ei0D8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      9/fszxUhc78=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      N3zii4aGwb8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      Q4NOuiId2L8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      /JwAymw10L8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      4ogviQfBzj8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      9VpuZHBAsL8=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id004
+    - !!binary |
+      3VQgkCljvj8=

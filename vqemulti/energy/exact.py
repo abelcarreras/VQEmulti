@@ -16,11 +16,11 @@ def exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian,
     :return: exact energy
     """
 
-    # Transform Hamiltonian to matrix representation
-    sparse_hamiltonian = get_sparse_operator(hamiltonian)
-
     # Find the number of qubits of the system (2**n_qubit = dimension)
-    n_qubit = count_qubits(hamiltonian)
+    n_qubit = len(hf_reference_fock)
+
+    # Transform Hamiltonian to matrix representation
+    sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubit)
 
     # Transform reference vector into a Compressed Sparse Column matrix
     ket = get_sparse_ket_from_fock(hf_reference_fock)
@@ -57,11 +57,11 @@ def exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian):
     :return: exact energy
     """
 
-    # Transform Hamiltonian to matrix representation
-    sparse_hamiltonian = get_sparse_operator(hamiltonian)
-
     # Find the number of qubits of the system (2**n_qubit = dimension)
-    n_qubit = count_qubits(hamiltonian)
+    n_qubit = len(hf_reference_fock)
+
+    # get sparse hamiltonian
+    sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubit)
 
     # Transform reference vector into a Compressed Sparse Column matrix
     ket = get_sparse_ket_from_fock(hf_reference_fock)

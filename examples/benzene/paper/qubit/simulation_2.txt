@@ -1,0 +1,5003 @@
+----------------------
+UHF calculation with stabilization, then finding NOs 
+Not using guessed mixed
+----------------------
+Starting stability analysis
+Rotating orbitals to find stable solution: attempt 1.
+mo_diff: 2.097266e+00 S^2: 0.000  2S+1: 1.000
+Rotating orbitals to find stable solution: attempt 2.
+mo_diff: 0.000000e+00 S^2: 0.918  2S+1: 2.162
+SCF solution is internally stable.
+The spin of the wavefuction is S^2: 0.918  2S+1: 2.162
+----------------------
+ENERGY UHF CALCULATED -227.9095138203351
+RESTRICTED Hartree-Fock energy for H6-C6_sto-3g_singlet_molecule (42 electrons) is -227.89048126100332.
+CASCI E = -227.944402237874  E(CI) = -3.00371042019165  S^2 = 0.0000000
+H terms (not compress) 1057
+H terms (compress) 233
+lowest eigenvalues: [-227.94308835+0.j -227.75075914+0.j -227.75075914+0.j -227.75075914+0.j]
+N electrons 4
+N Orbitals 4
+geom_sym D6h : A1g
+
+MO symmetry (initial)
+orbital   0:   0.00 (0.5 E1g)
+orbital   1:   0.00 (0.5 E1g)
+orbital   2:   0.00 (0.5 E2u)
+orbital   3:   0.00 (0.5 E2u)
+
+pool symmetry
+operator   0 :   0.00 False   (2 B1u + E1u)
+operator   1 :   0.00 False   (2 B2u + E1u)
+operator   2 :   0.00 False   (2 B2u + E1u)
+operator   3 :   0.00 False   (2 B1u + E1u)
+operator   4 :   0.75 True    (0.75 A1g + 0.62 E2g)
+operator   5 :   0.00 False   (1.5 A2g + 1.25 E2g)
+operator   6 :   0.75 True    (0.75 A1g + 0.62 E2g)
+operator   7 :   0.00 False   (1.5 A2g + 1.25 E2g)
+operator   8 :   4.50 True    (4.5 A1g + 3.75 E2g)
+operator   9 :   3.00 True    (3 A1g + 2.5 E2g)
+operator  10 :   0.00 False   (1.5 A2g + 1.25 E2g)
+operator  11 :   0.75 True    (0.75 A1g + 0.62 E2g)
+operator  12 :   0.00 False   (1.5 A2g + 1.25 E2g)
+operator  13 :   0.75 True    (0.75 A1g + 0.62 E2g)
+len pool 80
+
+pool commutation
+len pool 40
+
+ADAPT_VQE POOL
+---------------------------
+             (0022) : 0101 
+             (0022) : 0101 
+             (0022) : 0101 
+             (0022) : 0101 
+             (0033) : 0101 
+             (0033) : 0101 
+             (0033) : 0101 
+             (0033) : 0101 
+           (001223) : 010010 
+           (001223) : 010010 
+           (001223) : 010010 
+           (001223) : 010010 
+           (011233) : 101101 
+           (011233) : 101101 
+           (011233) : 101101 
+           (011233) : 101101 
+         (00112233) : 01010101 
+         (00112233) : 01010101 
+         (00112233) : 01010101 
+         (00112233) : 01010101 
+             (0123) : 1010 
+             (0123) : 1010 
+             (0123) : 1010 
+             (0123) : 1010 
+           (012233) : 100101 
+           (012233) : 100101 
+           (012233) : 100101 
+           (012233) : 100101 
+           (001123) : 010110 
+           (001123) : 010110 
+           (001123) : 010110 
+           (001123) : 010110 
+             (1122) : 0101 
+             (1122) : 0101 
+             (1122) : 0101 
+             (1122) : 0101 
+             (1133) : 0101 
+             (1133) : 0101 
+             (1133) : 0101 
+             (1133) : 0101 
+backend:  aer_simulator
+Initialize VQE
+precision 0.001
+optimizer params:  <function cobyla_mod at 0x125e550d0> / {'rhobeg': 0.01, 'n_guess': 8, 'guess_range': 3.141592653589793, 'disp': 2}
+pool size:  40
+n_qubits:  8
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89100842138555
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -227.89100842138555
+Expectation value:  -227.89100842138555
+std_error: 0.0015086696012126296
+Hamiltonian Variance:  0.02276083965623075
+Expectation value:  -227.889693110168
+std_error: 0.0009656143721398523
+
+*** Adapt Iteration 1 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10707889162081481
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10707889162081481
+Expectation value:  -0.10707889162081481
+std_error: 0.010729960430995925
+Operator 0: 0.107079
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11019434803149548
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11019434803149548
+Expectation value:  0.11019434803149548
+std_error: 0.010730019674787428
+Operator 1: 0.110194
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.12223734819852337
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.12223734819852337
+Expectation value:  0.12223734819852337
+std_error: 0.010729255920952155
+Operator 2: 0.122237
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11053125264365134
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11053125264365134
+Expectation value:  0.11053125264365134
+std_error: 0.010728869734241087
+Operator 3: 0.110531
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1964655681839613
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1964655681839613
+Expectation value:  -0.1964655681839613
+std_error: 0.010188077461374989
+Operator 4: 0.196466
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.18880653744994916
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.18880653744994916
+Expectation value:  0.18880653744994916
+std_error: 0.010187583586744693
+Operator 5: 0.188807
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.18758844069387512
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.18758844069387512
+Expectation value:  0.18758844069387512
+std_error: 0.010186622576292189
+Operator 6: 0.187588
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19581301197482187
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19581301197482187
+Expectation value:  0.19581301197482187
+std_error: 0.01018769447011331
+Operator 7: 0.195813
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09650252981485254
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09650252981485254
+Expectation value:  -0.09650252981485254
+std_error: 0.011589110651003461
+Operator 8: 0.096503
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0952153381487847
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0952153381487847
+Expectation value:  0.0952153381487847
+std_error: 0.011587390866024536
+Operator 9: 0.095215
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10621008468508501
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10621008468508501
+Expectation value:  0.10621008468508501
+std_error: 0.011590086125445173
+Operator 10: 0.106210
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11735443706648734
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11735443706648734
+Expectation value:  0.11735443706648734
+std_error: 0.01158894971016018
+Operator 11: 0.117354
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11025082971751067
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11025082971751067
+Expectation value:  -0.11025082971751067
+std_error: 0.011589217202668046
+Operator 12: 0.110251
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10545019641020908
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10545019641020908
+Expectation value:  0.10545019641020908
+std_error: 0.011590039059255122
+Operator 13: 0.105450
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11126229412889556
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11126229412889556
+Expectation value:  0.11126229412889556
+std_error: 0.011589391684908659
+Operator 14: 0.111262
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1119907231352297
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1119907231352297
+Expectation value:  0.1119907231352297
+std_error: 0.011588549233387957
+Operator 15: 0.111991
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09894024155824753
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09894024155824753
+Expectation value:  -0.09894024155824753
+std_error: 0.010764537890439331
+Operator 16: 0.098940
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10502924538968132
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10502924538968132
+Expectation value:  0.10502924538968132
+std_error: 0.010765081201024937
+Operator 17: 0.105029
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09521134761610701
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09521134761610701
+Expectation value:  0.09521134761610701
+std_error: 0.01076425163188496
+Operator 18: 0.095211
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11135065401735589
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11135065401735589
+Expectation value:  0.11135065401735589
+std_error: 0.01076393227087823
+Operator 19: 0.111351
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1036646560224016
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1036646560224016
+Expectation value:  -0.1036646560224016
+std_error: 0.010764289897297536
+Operator 20: 0.103665
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10420804374264597
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10420804374264597
+Expectation value:  0.10420804374264597
+std_error: 0.010765272367069888
+Operator 21: 0.104208
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10613260393558188
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10613260393558188
+Expectation value:  0.10613260393558188
+std_error: 0.010764947505252772
+Operator 22: 0.106133
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10424814045051471
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10424814045051471
+Expectation value:  0.10424814045051471
+std_error: 0.010763443937943398
+Operator 23: 0.104248
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00473507990761289
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00473507990761289
+Expectation value:  0.00473507990761289
+std_error: 0.011113846465106917
+Operator 24: 0.004735
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.010126298018770493
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.010126298018770493
+Expectation value:  -0.010126298018770493
+std_error: 0.011113427385391731
+Operator 25: 0.010126
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.003492438282379383
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.003492438282379383
+Expectation value:  -0.003492438282379383
+std_error: 0.011113794822554406
+Operator 26: 0.003492
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0005072506325471746
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0005072506325471746
+Expectation value:  -0.0005072506325471746
+std_error: 0.011113217939440733
+Operator 27: 0.000507
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0009175342699505583
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0009175342699505583
+Expectation value:  -0.0009175342699505583
+std_error: 0.0111135253872495
+Operator 28: 0.000918
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.004237889592769348
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.004237889592769348
+Expectation value:  -0.004237889592769348
+std_error: 0.011112954224844795
+Operator 29: 0.004238
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.004011940180326457
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.004011940180326457
+Expectation value:  0.004011940180326457
+std_error: 0.0111127031322332
+Operator 30: 0.004012
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.004128038597976883
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.004128038597976883
+Expectation value:  0.004128038597976883
+std_error: 0.011113884378333319
+Operator 31: 0.004128
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.19692837963201762
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.19692837963201762
+Expectation value:  -0.19692837963201762
+std_error: 0.010187215168823652
+Operator 32: 0.196928
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19594512434165498
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19594512434165498
+Expectation value:  0.19594512434165498
+std_error: 0.01018702272719157
+Operator 33: 0.195945
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19069976964475283
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19069976964475283
+Expectation value:  0.19069976964475283
+std_error: 0.010187176243903182
+Operator 34: 0.190700
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.20904869092588985
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.20904869092588985
+Expectation value:  0.20904869092588985
+std_error: 0.01018223663097096
+Operator 35: 0.209049
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10702451071393419
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10702451071393419
+Expectation value:  -0.10702451071393419
+std_error: 0.010730267946412755
+Operator 36: 0.107025
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11154478169041994
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11154478169041994
+Expectation value:  0.11154478169041994
+std_error: 0.010730453796956384
+Operator 37: 0.111545
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11707578773980541
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11707578773980541
+Expectation value:  0.11707578773980541
+std_error: 0.010730183460062924
+Operator 38: 0.117076
+layout:  None
+depth:  1
+isa_depth:  1
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11614958251376649
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11614958251376649
+Expectation value:  0.11614958251376649
+std_error: 0.010729301383529783
+Operator 39: 0.116150
+
+Total gradient norm:     0.764671
+Selected: 35 (norm 0.209049)
+Expectation value:  -227.891602913053
+std_error: 0.0009655632745064649
+Expectation value:  -227.43489925895756
+std_error: 0.0032584449076212634
+Expectation value:  -227.36337478104528
+std_error: 0.001669367373662909
+Expectation value:  -227.8553268242061
+std_error: 0.0026696890950560948
+Expectation value:  -227.70051539591864
+std_error: 0.002689234287292867
+Expectation value:  -227.28171455898257
+std_error: 0.0016863765580821402
+Expectation value:  -227.62044396913407
+std_error: 0.0032545422645163377
+Expectation value:  -227.89140254884575
+std_error: 0.0009656107833934376
+tolerance:  0.001
+Expectation value:  -227.8909646221582
+std_error: 0.0009656195129955873
+Expectation value:  -227.8874824019797
+std_error: 0.0009680779394685832
+Expectation value:  -227.89158987390323
+std_error: 0.0009703689431481667
+Expectation value:  -227.8951559574564
+std_error: 0.0009751368253992847
+Expectation value:  -227.8938760311191
+std_error: 0.0009852321201712214
+Expectation value:  -227.89352967212028
+std_error: 0.0009823599476235343
+Expectation value:  -227.89271521639708
+std_error: 0.000972869657908178
+Expectation value:  -227.896024350587
+std_error: 0.000981381959651649
+Expectation value:  -227.89458190642128
+std_error: 0.0009708356667904246
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =    9   F =-2.278946E+02    MAXCV = 0.000000E+00
+   X =-3.163593E+00
+
+coefficient    operator
+-3.16359e+00 1j [X2 Y3 X4 X5] 
+
+Iteration energy: -227.89458190642128
+Ansatz Indices: [35]
+Gradient circuit depth:  10
+Energy circuit depth:  10
+
+*** Adapt Iteration 2 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10843040912815403
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10843040912815403
+Expectation value:  -0.10843040912815403
+std_error: 0.010729966678260504
+Operator 0: 0.108430
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10361544790134891
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10361544790134891
+Expectation value:  0.10361544790134891
+std_error: 0.01072974752343113
+Operator 1: 0.103615
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10682010937847956
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10682010937847956
+Expectation value:  0.10682010937847956
+std_error: 0.010729769380264917
+Operator 2: 0.106820
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10791666662875554
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10791666662875554
+Expectation value:  0.10791666662875554
+std_error: 0.0107298929018553
+Operator 3: 0.107917
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.18198776186636084
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.18198776186636084
+Expectation value:  -0.18198776186636084
+std_error: 0.010186670756706737
+Operator 4: 0.181988
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19906913450914793
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19906913450914793
+Expectation value:  0.19906913450914793
+std_error: 0.010187299485506124
+Operator 5: 0.199069
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1923462875717194
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1923462875717194
+Expectation value:  0.1923462875717194
+std_error: 0.01018847164875448
+Operator 6: 0.192346
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19017957853630632
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19017957853630632
+Expectation value:  0.19017957853630632
+std_error: 0.010187930849050716
+Operator 7: 0.190180
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10173207803506917
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10173207803506917
+Expectation value:  -0.10173207803506917
+std_error: 0.011589342986630015
+Operator 8: 0.101732
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10387383631908322
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10387383631908322
+Expectation value:  0.10387383631908322
+std_error: 0.011589663831818581
+Operator 9: 0.103874
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09595993620950782
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09595993620950782
+Expectation value:  0.09595993620950782
+std_error: 0.011589178897548102
+Operator 10: 0.095960
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11929885094655414
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11929885094655414
+Expectation value:  0.11929885094655414
+std_error: 0.011587766637755547
+Operator 11: 0.119299
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10448166779709853
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10448166779709853
+Expectation value:  -0.10448166779709853
+std_error: 0.011590088642464117
+Operator 12: 0.104482
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09851560641742596
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09851560641742596
+Expectation value:  0.09851560641742596
+std_error: 0.011588730605718287
+Operator 13: 0.098516
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1128647193714161
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1128647193714161
+Expectation value:  0.1128647193714161
+std_error: 0.011588838785964707
+Operator 14: 0.112865
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09855933528736384
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09855933528736384
+Expectation value:  0.09855933528736384
+std_error: 0.01158911032119304
+Operator 15: 0.098559
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10681964829845743
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10681964829845743
+Expectation value:  -0.10681964829845743
+std_error: 0.010765171225165413
+Operator 16: 0.106820
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10167622870006476
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10167622870006476
+Expectation value:  0.10167622870006476
+std_error: 0.010764251290329836
+Operator 17: 0.101676
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10354433125182715
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10354433125182715
+Expectation value:  0.10354433125182715
+std_error: 0.010764907832467
+Operator 18: 0.103544
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10164587767131325
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10164587767131325
+Expectation value:  0.10164587767131325
+std_error: 0.010765036021936077
+Operator 19: 0.101646
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10303504577432712
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10303504577432712
+Expectation value:  -0.10303504577432712
+std_error: 0.010764645859689458
+Operator 20: 0.103035
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11093377219638074
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11093377219638074
+Expectation value:  0.11093377219638074
+std_error: 0.010764662615154325
+Operator 21: 0.110934
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10497904447625751
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10497904447625751
+Expectation value:  0.10497904447625751
+std_error: 0.010765492697646754
+Operator 22: 0.104979
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10355433596635594
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10355433596635594
+Expectation value:  0.10355433596635594
+std_error: 0.010762696903983538
+Operator 23: 0.103554
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.006821168391073971
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.006821168391073971
+Expectation value:  -0.006821168391073971
+std_error: 0.011111421536778819
+Operator 24: 0.006821
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.001006810671787035
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.001006810671787035
+Expectation value:  0.001006810671787035
+std_error: 0.011113873833056512
+Operator 25: 0.001007
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.006203915255942202
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.006203915255942202
+Expectation value:  -0.006203915255942202
+std_error: 0.011113063275341796
+Operator 26: 0.006204
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0028380714625975446
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0028380714625975446
+Expectation value:  0.0028380714625975446
+std_error: 0.011113917845400183
+Operator 27: 0.002838
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0009937775052695278
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0009937775052695278
+Expectation value:  0.0009937775052695278
+std_error: 0.011110993968224507
+Operator 28: 0.000994
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.018634210123838316
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.018634210123838316
+Expectation value:  -0.018634210123838316
+std_error: 0.011111214340780573
+Operator 29: 0.018634
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0028421299777453136
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0028421299777453136
+Expectation value:  -0.0028421299777453136
+std_error: 0.011112926224494864
+Operator 30: 0.002842
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.004343835193442819
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.004343835193442819
+Expectation value:  -0.004343835193442819
+std_error: 0.011112181352792377
+Operator 31: 0.004344
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1663494573123591
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1663494573123591
+Expectation value:  -0.1663494573123591
+std_error: 0.010176980882704254
+Operator 32: 0.166349
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.16302937686228003
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.16302937686228003
+Expectation value:  0.16302937686228003
+std_error: 0.010172672981338424
+Operator 33: 0.163029
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1731974809783509
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1731974809783509
+Expectation value:  0.1731974809783509
+std_error: 0.010182620356787015
+Operator 34: 0.173197
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1622877392879076
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1622877392879076
+Expectation value:  0.1622877392879076
+std_error: 0.010173533052770276
+Operator 35: 0.162288
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10866784918191073
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10866784918191073
+Expectation value:  -0.10866784918191073
+std_error: 0.010730576703035562
+Operator 36: 0.108668
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10896567377522406
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10896567377522406
+Expectation value:  0.10896567377522406
+std_error: 0.01073028505263064
+Operator 37: 0.108966
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10144490163585124
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10144490163585124
+Expectation value:  0.10144490163585124
+std_error: 0.01072986789642423
+Operator 38: 0.101445
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10660824959228309
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10660824959228309
+Expectation value:  0.10660824959228309
+std_error: 0.010730414444404018
+Operator 39: 0.106608
+
+Total gradient norm:     0.723173
+Selected: 5 (norm 0.199069)
+Expectation value:  -227.89407652596498
+std_error: 0.000978096060592303
+Expectation value:  -227.4346857284828
+std_error: 0.0032533346369257115
+Expectation value:  -227.37045100961254
+std_error: 0.0016996389404022737
+Expectation value:  -227.85961644826116
+std_error: 0.0026712000411074645
+Expectation value:  -227.7094663592492
+std_error: 0.002661821093764049
+Expectation value:  -227.28482840825498
+std_error: 0.0016852568457639576
+Expectation value:  -227.6245072214143
+std_error: 0.0032608511068047603
+Expectation value:  -227.8949431945656
+std_error: 0.0009725333159818106
+tolerance:  0.001
+Expectation value:  -227.89490887009367
+std_error: 0.0009782783857397908
+Expectation value:  -227.89157795393942
+std_error: 0.0009705839633457389
+Expectation value:  -227.89301152362154
+std_error: 0.0009794797994438903
+Expectation value:  -227.89471697552082
+std_error: 0.0009911278407079113
+Expectation value:  -227.89290882165744
+std_error: 0.000978975708620744
+Expectation value:  -227.89493292045736
+std_error: 0.0009747891321162194
+Expectation value:  -227.89456045286437
+std_error: 0.0009732639864259203
+Expectation value:  -227.89479611487747
+std_error: 0.0009739855817928068
+Expectation value:  -227.89346436878517
+std_error: 0.0009733229556557914
+Expectation value:  -227.89451055297295
+std_error: 0.0009737281681781313
+Expectation value:  -227.8951602005363
+std_error: 0.0009713346847617799
+Expectation value:  -227.8936584143475
+std_error: 0.0009724580097506013
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   12   F =-2.278937E+02    MAXCV = 0.000000E+00
+   X =-3.162801E+00   3.140960E+00
+
+coefficient    operator
+-3.16280e+00 1j [X2 Y3 X4 X5] 
+ 3.14096e+00 1j [Y0 Y1 Y6 X7] 
+
+Iteration energy: -227.8936584143475
+Ansatz Indices: [35, 5]
+Gradient circuit depth:  10
+Energy circuit depth:  10
+
+*** Adapt Iteration 3 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10158958883417478
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10158958883417478
+Expectation value:  -0.10158958883417478
+std_error: 0.010729535853472185
+Operator 0: 0.101590
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11564119361532996
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11564119361532996
+Expectation value:  0.11564119361532996
+std_error: 0.010728577007699542
+Operator 1: 0.115641
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10376200736034741
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10376200736034741
+Expectation value:  0.10376200736034741
+std_error: 0.010729153983522675
+Operator 2: 0.103762
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10940738975466618
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10940738975466618
+Expectation value:  0.10940738975466618
+std_error: 0.010729092969528271
+Operator 3: 0.109407
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.19612561456277924
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.19612561456277924
+Expectation value:  -0.19612561456277924
+std_error: 0.010186610962626401
+Operator 4: 0.196126
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.18777810497854688
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.18777810497854688
+Expectation value:  0.18777810497854688
+std_error: 0.010188384712107154
+Operator 5: 0.187778
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.19246086447118685
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.19246086447118685
+Expectation value:  0.19246086447118685
+std_error: 0.01018806763799242
+Operator 6: 0.192461
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1908989624923156
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1908989624923156
+Expectation value:  0.1908989624923156
+std_error: 0.010187827459455177
+Operator 7: 0.190899
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10826776019026227
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10826776019026227
+Expectation value:  -0.10826776019026227
+std_error: 0.011588638519912587
+Operator 8: 0.108268
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11252767229464397
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11252767229464397
+Expectation value:  0.11252767229464397
+std_error: 0.011589474782553896
+Operator 9: 0.112528
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09710675574406401
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09710675574406401
+Expectation value:  0.09710675574406401
+std_error: 0.011589677751332036
+Operator 10: 0.097107
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09242622384248504
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09242622384248504
+Expectation value:  0.09242622384248504
+std_error: 0.011587085671174524
+Operator 11: 0.092426
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1165020142274812
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1165020142274812
+Expectation value:  -0.1165020142274812
+std_error: 0.011587824702983376
+Operator 12: 0.116502
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10223838492515344
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10223838492515344
+Expectation value:  0.10223838492515344
+std_error: 0.011589509121191634
+Operator 13: 0.102238
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11628798319244141
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11628798319244141
+Expectation value:  0.11628798319244141
+std_error: 0.011589014894360547
+Operator 14: 0.116288
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10070235474422483
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10070235474422483
+Expectation value:  0.10070235474422483
+std_error: 0.01158853474141487
+Operator 15: 0.100702
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10431633784581644
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10431633784581644
+Expectation value:  -0.10431633784581644
+std_error: 0.010764046251782912
+Operator 16: 0.104316
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10389629223003748
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10389629223003748
+Expectation value:  0.10389629223003748
+std_error: 0.010763940238105726
+Operator 17: 0.103896
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10920148797559624
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10920148797559624
+Expectation value:  0.10920148797559624
+std_error: 0.010764634394452367
+Operator 18: 0.109201
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10683116208104658
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10683116208104658
+Expectation value:  0.10683116208104658
+std_error: 0.010763750400579591
+Operator 19: 0.106831
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1063613952107633
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1063613952107633
+Expectation value:  -0.1063613952107633
+std_error: 0.01076454134931143
+Operator 20: 0.106361
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10178854609895698
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10178854609895698
+Expectation value:  0.10178854609895698
+std_error: 0.010764966042976274
+Operator 21: 0.101789
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10585423862430239
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10585423862430239
+Expectation value:  0.10585423862430239
+std_error: 0.010764826180692216
+Operator 22: 0.105854
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10721127420649033
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10721127420649033
+Expectation value:  0.10721127420649033
+std_error: 0.01076515166712686
+Operator 23: 0.107211
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.003180274316193044
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.003180274316193044
+Expectation value:  0.003180274316193044
+std_error: 0.01111246764385481
+Operator 24: 0.003180
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.009397822399374334
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.009397822399374334
+Expectation value:  -0.009397822399374334
+std_error: 0.0111135430576286
+Operator 25: 0.009398
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.007341115853993408
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.007341115853993408
+Expectation value:  -0.007341115853993408
+std_error: 0.011113148399614298
+Operator 26: 0.007341
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.012509807998355937
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.012509807998355937
+Expectation value:  0.012509807998355937
+std_error: 0.011111095112053708
+Operator 27: 0.012510
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00318585580671891
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00318585580671891
+Expectation value:  0.00318585580671891
+std_error: 0.01111312355921962
+Operator 28: 0.003186
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.021715511109735415
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.021715511109735415
+Expectation value:  0.021715511109735415
+std_error: 0.011109852842718159
+Operator 29: 0.021716
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  3.46617593231565e-05
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  3.46617593231565e-05
+Expectation value:  3.46617593231565e-05
+std_error: 0.01111339332233741
+Operator 30: 0.000035
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.006830281015567153
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.006830281015567153
+Expectation value:  0.006830281015567153
+std_error: 0.011113056434420057
+Operator 31: 0.006830
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1730436827665546
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1730436827665546
+Expectation value:  -0.1730436827665546
+std_error: 0.010181127687188941
+Operator 32: 0.173044
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.17522804094314395
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.17522804094314395
+Expectation value:  0.17522804094314395
+std_error: 0.010182638506753319
+Operator 33: 0.175228
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1778799238027541
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1778799238027541
+Expectation value:  0.1778799238027541
+std_error: 0.010182984948231867
+Operator 34: 0.177880
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.16686884375234604
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.16686884375234604
+Expectation value:  0.16686884375234604
+std_error: 0.010175243511824564
+Operator 35: 0.166869
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11043647399093548
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11043647399093548
+Expectation value:  -0.11043647399093548
+std_error: 0.010730055215095038
+Operator 36: 0.110436
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11490422722764507
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11490422722764507
+Expectation value:  0.11490422722764507
+std_error: 0.01072929762553885
+Operator 37: 0.114904
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1053518741038619
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1053518741038619
+Expectation value:  0.1053518741038619
+std_error: 0.010729372236488604
+Operator 38: 0.105352
+layout:  None
+depth:  10
+isa_depth:  9
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1135257083799951
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1135257083799951
+Expectation value:  0.1135257083799951
+std_error: 0.01073003469381058
+Operator 39: 0.113526
+
+Total gradient norm:     0.737178
+Selected: 4 (norm 0.196126)
+Expectation value:  -227.89393069196396
+std_error: 0.000977005666323599
+Expectation value:  -227.62336102107102
+std_error: 0.003253953358221584
+Expectation value:  -227.28576097500212
+std_error: 0.0016952439272367454
+Expectation value:  -227.70825075118748
+std_error: 0.002670698500694395
+Expectation value:  -227.85862069619787
+std_error: 0.0026738353203579353
+Expectation value:  -227.36890526773112
+std_error: 0.0016858562469865236
+Expectation value:  -227.43710337764801
+std_error: 0.0032590781504865177
+Expectation value:  -227.89388056073184
+std_error: 0.0009745586593444432
+tolerance:  0.001
+Expectation value:  -227.8923748118478
+std_error: 0.0009775415985206935
+Expectation value:  -227.89125021034482
+std_error: 0.0009707185635455803
+Expectation value:  -227.88911741614828
+std_error: 0.000980009727116065
+Expectation value:  -227.895522489664
+std_error: 0.0009783449793080512
+Expectation value:  -227.89931224813847
+std_error: 0.0009868625336879675
+Expectation value:  -227.90203945711195
+std_error: 0.0010077832310108473
+Expectation value:  -227.9030873776105
+std_error: 0.0010127885691819654
+Expectation value:  -227.903025370884
+std_error: 0.001028886096556618
+Expectation value:  -227.90561776076382
+std_error: 0.0010280438202177966
+Expectation value:  -227.9069276720918
+std_error: 0.001072841366596768
+Expectation value:  -227.9083256059983
+std_error: 0.0010813576963535957
+Expectation value:  -227.91018038023049
+std_error: 0.0010970848876115892
+Expectation value:  -227.90938909430565
+std_error: 0.0011061309710783311
+Expectation value:  -227.90893170588973
+std_error: 0.0011071654121296843
+Expectation value:  -227.90773796322682
+std_error: 0.0010889901096971686
+Expectation value:  -227.9095794248603
+std_error: 0.0011190090617900343
+Expectation value:  -227.90633701195344
+std_error: 0.0011042248712188607
+Expectation value:  -227.90891545605479
+std_error: 0.0011000320479884948
+Expectation value:  -227.90939710316098
+std_error: 0.0010923796032081788
+Expectation value:  -227.90807217725774
+std_error: 0.0010869916804717062
+Expectation value:  -227.910144037501
+std_error: 0.0011084734262265647
+Expectation value:  -227.9078397593295
+std_error: 0.0011042192319580734
+Expectation value:  -227.90875706905558
+std_error: 0.0010924445954575376
+Expectation value:  -227.90957569015245
+std_error: 0.0011028340142878578
+Expectation value:  -227.90919092623486
+std_error: 0.0010970954960118752
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   25   F =-2.279092E+02    MAXCV = 0.000000E+00
+   X =-3.197984E+00   3.134318E+00  -3.089980E+00
+
+coefficient    operator
+-3.19798e+00 1j [X2 Y3 X4 X5] 
+ 3.13432e+00 1j [Y0 Y1 Y6 X7] 
+-3.08998e+00 1j [X0 X1 Y6 X7] 
+
+Iteration energy: -227.90919092623486
+Ansatz Indices: [35, 5, 4]
+Gradient circuit depth:  17
+Energy circuit depth:  17
+
+*** Adapt Iteration 4 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1121251143495069
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1121251143495069
+Expectation value:  -0.1121251143495069
+std_error: 0.010730335578431737
+Operator 0: 0.112125
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10859213369486724
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10859213369486724
+Expectation value:  0.10859213369486724
+std_error: 0.010729270109864861
+Operator 1: 0.108592
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10860592438063138
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10860592438063138
+Expectation value:  0.10860592438063138
+std_error: 0.010730001526784083
+Operator 2: 0.108606
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10308356879701087
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10308356879701087
+Expectation value:  0.10308356879701087
+std_error: 0.010730747041974692
+Operator 3: 0.103084
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.12043483476021116
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.12043483476021116
+Expectation value:  -0.12043483476021116
+std_error: 0.010115049068618959
+Operator 4: 0.120435
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.12096544717301494
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.12096544717301494
+Expectation value:  0.12096544717301494
+std_error: 0.010120192971557291
+Operator 5: 0.120965
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1154370169405416
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1154370169405416
+Expectation value:  0.1154370169405416
+std_error: 0.010113110680046828
+Operator 6: 0.115437
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11825096046982937
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11825096046982937
+Expectation value:  0.11825096046982937
+std_error: 0.010116624631413032
+Operator 7: 0.118251
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.094155134716192
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.094155134716192
+Expectation value:  -0.094155134716192
+std_error: 0.011589426855161847
+Operator 8: 0.094155
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09201335435973526
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09201335435973526
+Expectation value:  0.09201335435973526
+std_error: 0.011589377078565579
+Operator 9: 0.092013
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0980001603215426
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0980001603215426
+Expectation value:  0.0980001603215426
+std_error: 0.011590419156510186
+Operator 10: 0.098000
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10477691219785852
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10477691219785852
+Expectation value:  0.10477691219785852
+std_error: 0.011589660914966281
+Operator 11: 0.104777
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10326825179058567
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10326825179058567
+Expectation value:  -0.10326825179058567
+std_error: 0.011589586444358325
+Operator 12: 0.103268
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.109026257776351
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.109026257776351
+Expectation value:  0.109026257776351
+std_error: 0.011589077380175528
+Operator 13: 0.109026
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10211167398352777
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10211167398352777
+Expectation value:  0.10211167398352777
+std_error: 0.011589786126519673
+Operator 14: 0.102112
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10508667970052114
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10508667970052114
+Expectation value:  0.10508667970052114
+std_error: 0.01159043916471052
+Operator 15: 0.105087
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10963817143155216
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10963817143155216
+Expectation value:  -0.10963817143155216
+std_error: 0.01076513198429437
+Operator 16: 0.109638
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11063434339521734
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11063434339521734
+Expectation value:  0.11063434339521734
+std_error: 0.010765571365472728
+Operator 17: 0.110634
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1156418779856715
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1156418779856715
+Expectation value:  0.1156418779856715
+std_error: 0.01076502967368702
+Operator 18: 0.115642
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10718282558006516
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10718282558006516
+Expectation value:  0.10718282558006516
+std_error: 0.010765291599059675
+Operator 19: 0.107183
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10497504778476074
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10497504778476074
+Expectation value:  -0.10497504778476074
+std_error: 0.010764003707740378
+Operator 20: 0.104975
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10486695855012577
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10486695855012577
+Expectation value:  0.10486695855012577
+std_error: 0.010764879855812705
+Operator 21: 0.104867
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11299093844664744
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11299093844664744
+Expectation value:  0.11299093844664744
+std_error: 0.010761332015012226
+Operator 22: 0.112991
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10998502004229718
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10998502004229718
+Expectation value:  0.10998502004229718
+std_error: 0.010765712466080532
+Operator 23: 0.109985
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00842470852609933
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00842470852609933
+Expectation value:  0.00842470852609933
+std_error: 0.011111997366996312
+Operator 24: 0.008425
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.006678520549433412
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.006678520549433412
+Expectation value:  -0.006678520549433412
+std_error: 0.01111380171739406
+Operator 25: 0.006679
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.005242288683343152
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.005242288683343152
+Expectation value:  0.005242288683343152
+std_error: 0.011109942330410256
+Operator 26: 0.005242
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.012173407830795653
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.012173407830795653
+Expectation value:  -0.012173407830795653
+std_error: 0.011113329808489149
+Operator 27: 0.012173
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00926424141975002
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00926424141975002
+Expectation value:  0.00926424141975002
+std_error: 0.011113142251370712
+Operator 28: 0.009264
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.004731961898905874
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.004731961898905874
+Expectation value:  -0.004731961898905874
+std_error: 0.011113730321863826
+Operator 29: 0.004732
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00031567295008464645
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00031567295008464645
+Expectation value:  0.00031567295008464645
+std_error: 0.01111337226106981
+Operator 30: 0.000316
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.008185787668379626
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.008185787668379626
+Expectation value:  -0.008185787668379626
+std_error: 0.011111845858871082
+Operator 31: 0.008186
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.12059915190595272
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.12059915190595272
+Expectation value:  -0.12059915190595272
+std_error: 0.010118435691855858
+Operator 32: 0.120599
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1213531498289044
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1213531498289044
+Expectation value:  0.1213531498289044
+std_error: 0.010115863372593015
+Operator 33: 0.121353
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.12176920911161251
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.12176920911161251
+Expectation value:  0.12176920911161251
+std_error: 0.01011816244877575
+Operator 34: 0.121769
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.12089953870158118
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.12089953870158118
+Expectation value:  0.12089953870158118
+std_error: 0.010121589871717398
+Operator 35: 0.120900
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10263702717127987
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10263702717127987
+Expectation value:  -0.10263702717127987
+std_error: 0.01073005646772133
+Operator 36: 0.102637
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10414370943179085
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10414370943179085
+Expectation value:  0.10414370943179085
+std_error: 0.010730473471703372
+Operator 37: 0.104144
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10887253776406604
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10887253776406604
+Expectation value:  0.10887253776406604
+std_error: 0.010728551001596932
+Operator 38: 0.108873
+layout:  None
+depth:  17
+isa_depth:  14
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10650481092995463
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10650481092995463
+Expectation value:  0.10650481092995463
+std_error: 0.010729363267917453
+Operator 39: 0.106505
+
+Total gradient norm:     0.620425
+Selected: 34 (norm 0.121769)
+Expectation value:  -227.9099385867977
+std_error: 0.0010928176512711909
+Expectation value:  -227.47716855123844
+std_error: 0.003317242808058849
+Expectation value:  -227.35214124530924
+std_error: 0.0014793206265598577
+Expectation value:  -227.84601899494515
+std_error: 0.0028729975076447175
+Expectation value:  -227.74525411202407
+std_error: 0.002459526857762299
+Expectation value:  -227.2976000765504
+std_error: 0.002000570703476517
+Expectation value:  -227.5943293502569
+std_error: 0.003165175324797901
+Expectation value:  -227.9097721153388
+std_error: 0.001102425252999898
+tolerance:  0.0010928176512711909
+Expectation value:  -227.90904724096754
+std_error: 0.0010878067475520333
+Expectation value:  -227.90737704573857
+std_error: 0.0010737929168381259
+Expectation value:  -227.90759696206052
+std_error: 0.001087766098841893
+Expectation value:  -227.90911271512135
+std_error: 0.001131214840274339
+Expectation value:  -227.90887229046052
+std_error: 0.0010932646338089168
+Expectation value:  -227.91331227757388
+std_error: 0.0011396672023251191
+Expectation value:  -227.91305667996716
+std_error: 0.0011917766185191902
+Expectation value:  -227.91187804944656
+std_error: 0.001150640316228728
+Expectation value:  -227.91110460216046
+std_error: 0.0011410034427687336
+Expectation value:  -227.91283659634152
+std_error: 0.0011730488160492816
+Expectation value:  -227.91053794650313
+std_error: 0.001175314853099843
+Expectation value:  -227.91270055790446
+std_error: 0.0011299106864411915
+Expectation value:  -227.9099356411996
+std_error: 0.0011479337324706935
+Expectation value:  -227.9122982872006
+std_error: 0.0011675653309799873
+Expectation value:  -227.9134864056793
+std_error: 0.0011377870485753051
+Expectation value:  -227.9113684018702
+std_error: 0.0011471350096564736
+Expectation value:  -227.91056109791177
+std_error: 0.0011750536208562105
+Expectation value:  -227.91449367002906
+std_error: 0.0011589550570438065
+Expectation value:  -227.91081859243292
+std_error: 0.0011678570911508289
+Expectation value:  -227.91094110563336
+std_error: 0.001158589854490381
+Expectation value:  -227.91074189615497
+std_error: 0.0011579021235541573
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   21   F =-2.279107E+02    MAXCV = 0.000000E+00
+   X =-3.206213E+00   3.128261E+00  -3.078244E+00  -3.142190E+00
+
+coefficient    operator
+-3.20621e+00 1j [X2 Y3 X4 X5] 
+ 3.12826e+00 1j [Y0 Y1 Y6 X7] 
+-3.07824e+00 1j [X0 X1 Y6 X7] 
+-3.14219e+00 1j [Y2 X3 X4 X5] 
+
+Iteration energy: -227.91074189615497
+Ansatz Indices: [35, 5, 4, 34]
+Gradient circuit depth:  18
+Energy circuit depth:  18
+
+*** Adapt Iteration 5 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10363666382790802
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10363666382790802
+Expectation value:  -0.10363666382790802
+std_error: 0.010729701593596262
+Operator 0: 0.103637
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09815941070925839
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09815941070925839
+Expectation value:  0.09815941070925839
+std_error: 0.010731056004443799
+Operator 1: 0.098159
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11329806255886071
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11329806255886071
+Expectation value:  0.11329806255886071
+std_error: 0.010729314515711288
+Operator 2: 0.113298
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09442706360773498
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09442706360773498
+Expectation value:  0.09442706360773498
+std_error: 0.010728428722950063
+Operator 3: 0.094427
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11039272251958959
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11039272251958959
+Expectation value:  -0.11039272251958959
+std_error: 0.010101754734798754
+Operator 4: 0.110393
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10567929235427598
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10567929235427598
+Expectation value:  0.10567929235427598
+std_error: 0.010094248207177308
+Operator 5: 0.105679
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10935987364698813
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10935987364698813
+Expectation value:  0.10935987364698813
+std_error: 0.010090505845773978
+Operator 6: 0.109360
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09170816828872388
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09170816828872388
+Expectation value:  0.09170816828872388
+std_error: 0.010058421096332785
+Operator 7: 0.091708
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09989248712629467
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09989248712629467
+Expectation value:  -0.09989248712629467
+std_error: 0.011589255853199157
+Operator 8: 0.099892
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1016508773951802
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1016508773951802
+Expectation value:  0.1016508773951802
+std_error: 0.011589892905166224
+Operator 9: 0.101651
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09085153634008626
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09085153634008626
+Expectation value:  0.09085153634008626
+std_error: 0.01158925063304493
+Operator 10: 0.090852
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10044732675927977
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10044732675927977
+Expectation value:  0.10044732675927977
+std_error: 0.011590031480727172
+Operator 11: 0.100447
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1061363369018893
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1061363369018893
+Expectation value:  -0.1061363369018893
+std_error: 0.011589591859703029
+Operator 12: 0.106136
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10178331223933902
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10178331223933902
+Expectation value:  0.10178331223933902
+std_error: 0.011588669646472186
+Operator 13: 0.101783
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10434053426091633
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10434053426091633
+Expectation value:  0.10434053426091633
+std_error: 0.011589706714121337
+Operator 14: 0.104341
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10031865805102821
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10031865805102821
+Expectation value:  0.10031865805102821
+std_error: 0.01158965515499349
+Operator 15: 0.100319
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11083009469883506
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11083009469883506
+Expectation value:  -0.11083009469883506
+std_error: 0.010765771339497947
+Operator 16: 0.110830
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10945495323530817
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10945495323530817
+Expectation value:  0.10945495323530817
+std_error: 0.010764255038079604
+Operator 17: 0.109455
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11262516991741435
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11262516991741435
+Expectation value:  0.11262516991741435
+std_error: 0.010765217956151152
+Operator 18: 0.112625
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11185553441968374
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11185553441968374
+Expectation value:  0.11185553441968374
+std_error: 0.010765284103054487
+Operator 19: 0.111856
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11602852144582401
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11602852144582401
+Expectation value:  -0.11602852144582401
+std_error: 0.01076442737251941
+Operator 20: 0.116029
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10476590019232154
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10476590019232154
+Expectation value:  0.10476590019232154
+std_error: 0.01076471668873935
+Operator 21: 0.104766
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10817549979667071
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10817549979667071
+Expectation value:  0.10817549979667071
+std_error: 0.010765562657760037
+Operator 22: 0.108175
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1132625285384111
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1132625285384111
+Expectation value:  0.1132625285384111
+std_error: 0.010765276665458358
+Operator 23: 0.113263
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.012162883422794974
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.012162883422794974
+Expectation value:  0.012162883422794974
+std_error: 0.011113232383721675
+Operator 24: 0.012163
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.009908773231666584
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.009908773231666584
+Expectation value:  -0.009908773231666584
+std_error: 0.011111779615845788
+Operator 25: 0.009909
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.009750384809450091
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.009750384809450091
+Expectation value:  -0.009750384809450091
+std_error: 0.011112882407817949
+Operator 26: 0.009750
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.013830836398604022
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.013830836398604022
+Expectation value:  -0.013830836398604022
+std_error: 0.01111277377082811
+Operator 27: 0.013831
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0005555807763818704
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0005555807763818704
+Expectation value:  -0.0005555807763818704
+std_error: 0.011109536296257772
+Operator 28: 0.000556
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.008751381662565746
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.008751381662565746
+Expectation value:  -0.008751381662565746
+std_error: 0.011111862122194087
+Operator 29: 0.008751
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.004342388395094092
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.004342388395094092
+Expectation value:  -0.004342388395094092
+std_error: 0.011112495756754994
+Operator 30: 0.004342
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.01525418586032207
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.01525418586032207
+Expectation value:  -0.01525418586032207
+std_error: 0.011112478478192103
+Operator 31: 0.015254
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11527092021725947
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11527092021725947
+Expectation value:  -0.11527092021725947
+std_error: 0.010102592459469564
+Operator 32: 0.115271
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11823723598781374
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11823723598781374
+Expectation value:  0.11823723598781374
+std_error: 0.010107671905212152
+Operator 33: 0.118237
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11454244015062406
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11454244015062406
+Expectation value:  0.11454244015062406
+std_error: 0.010108482538323063
+Operator 34: 0.114542
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1162752907970653
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1162752907970653
+Expectation value:  0.1162752907970653
+std_error: 0.010111229828885368
+Operator 35: 0.116275
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11145748030886385
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11145748030886385
+Expectation value:  -0.11145748030886385
+std_error: 0.010730788919309958
+Operator 36: 0.111457
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10253597473787678
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10253597473787678
+Expectation value:  0.10253597473787678
+std_error: 0.010730820640129453
+Operator 37: 0.102536
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10173361910449442
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10173361910449442
+Expectation value:  0.10173361910449442
+std_error: 0.010729242876925284
+Operator 38: 0.101734
+layout:  None
+depth:  18
+isa_depth:  15
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10329428520469967
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10329428520469967
+Expectation value:  0.10329428520469967
+std_error: 0.010730943913463251
+Operator 39: 0.103294
+
+Total gradient norm:     0.603520
+Selected: 33 (norm 0.118237)
+Expectation value:  -227.91064672877488
+std_error: 0.0011615255199524104
+Expectation value:  -227.47945330865983
+std_error: 0.0033266067635422205
+Expectation value:  -227.35176242936478
+std_error: 0.0014498693041778983
+Expectation value:  -227.8392850606896
+std_error: 0.002923999920155839
+Expectation value:  -227.75056121706635
+std_error: 0.0024446223572077356
+Expectation value:  -227.3019116886885
+std_error: 0.002052422582753111
+Expectation value:  -227.5877006518531
+std_error: 0.003154453308422813
+Expectation value:  -227.9108476287502
+std_error: 0.0011628534581251849
+tolerance:  0.0011628534581251849
+Expectation value:  -227.91273190574327
+std_error: 0.0011548932963033906
+Expectation value:  -227.91064009604727
+std_error: 0.0011328716570380454
+Expectation value:  -227.91071887204632
+std_error: 0.0011310339162785247
+Expectation value:  -227.91335213840622
+std_error: 0.0011799404327998669
+Expectation value:  -227.91194305269264
+std_error: 0.0011655039981194795
+Expectation value:  -227.90930820103364
+std_error: 0.0011628520414038242
+Expectation value:  -227.9142668598047
+std_error: 0.0012265200919002867
+Expectation value:  -227.9164911789605
+std_error: 0.0012233548885894304
+Expectation value:  -227.91540354134182
+std_error: 0.0012145530030425477
+Expectation value:  -227.91411363074135
+std_error: 0.0012726924539826607
+Expectation value:  -227.91389902397714
+std_error: 0.0012239611382475573
+Expectation value:  -227.91226274005777
+std_error: 0.0012450283787965686
+Expectation value:  -227.91580342742384
+std_error: 0.0012097196843686739
+Expectation value:  -227.9140695650948
+std_error: 0.0012386468337287695
+Expectation value:  -227.91361830303364
+std_error: 0.001221223225484956
+Expectation value:  -227.91611157775878
+std_error: 0.0012445113678987737
+Expectation value:  -227.9140928594118
+std_error: 0.0012169850620801475
+Expectation value:  -227.9132343233142
+std_error: 0.0012312390403378852
+Expectation value:  -227.91570247283227
+std_error: 0.0012451766811222423
+Expectation value:  -227.91636959458248
+std_error: 0.0012416781457773743
+Expectation value:  -227.9137610951503
+std_error: 0.00123671400194304
+Expectation value:  -227.916098617373
+std_error: 0.0012286824943461558
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   22   F =-2.279161E+02    MAXCV = 0.000000E+00
+   X =-3.201453E+00   3.122309E+00  -3.065329E+00  -3.146168E+00   3.129367E+00
+
+coefficient    operator
+-3.20145e+00 1j [X2 Y3 X4 X5] 
+ 3.12231e+00 1j [Y0 Y1 Y6 X7] 
+-3.06533e+00 1j [X0 X1 Y6 X7] 
+-3.14617e+00 1j [Y2 X3 X4 X5] 
+ 3.12937e+00 1j [Y2 Y3 Y4 X5] 
+
+Iteration energy: -227.916098617373
+Ansatz Indices: [35, 5, 4, 34, 33]
+Gradient circuit depth:  27
+Energy circuit depth:  27
+
+*** Adapt Iteration 6 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.11505363540577083
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.11505363540577083
+Expectation value:  -0.11505363540577083
+std_error: 0.010728326855236373
+Operator 0: 0.115054
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0844971720632139
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0844971720632139
+Expectation value:  0.0844971720632139
+std_error: 0.010728027965966192
+Operator 1: 0.084497
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09269473663047899
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09269473663047899
+Expectation value:  0.09269473663047899
+std_error: 0.010728767120229597
+Operator 2: 0.092695
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0947044938717139
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0947044938717139
+Expectation value:  0.0947044938717139
+std_error: 0.01073116088292981
+Operator 3: 0.094704
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.08033548187970646
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.08033548187970646
+Expectation value:  -0.08033548187970646
+std_error: 0.01001961597095358
+Operator 4: 0.080335
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.08524421847439616
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.08524421847439616
+Expectation value:  0.08524421847439616
+std_error: 0.010037173836937235
+Operator 5: 0.085244
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.06949093504582352
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.06949093504582352
+Expectation value:  0.06949093504582352
+std_error: 0.009993437422586553
+Operator 6: 0.069491
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07770428663356542
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07770428663356542
+Expectation value:  0.07770428663356542
+std_error: 0.010016749853284776
+Operator 7: 0.077704
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10490240328607134
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10490240328607134
+Expectation value:  -0.10490240328607134
+std_error: 0.011590540568337858
+Operator 8: 0.104902
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10183374952568813
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10183374952568813
+Expectation value:  0.10183374952568813
+std_error: 0.011590028968415166
+Operator 9: 0.101834
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10023867708593047
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10023867708593047
+Expectation value:  0.10023867708593047
+std_error: 0.011590991716961997
+Operator 10: 0.100239
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09682565609252415
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09682565609252415
+Expectation value:  0.09682565609252415
+std_error: 0.011589902557625757
+Operator 11: 0.096826
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09802017136839884
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09802017136839884
+Expectation value:  -0.09802017136839884
+std_error: 0.011590633156110424
+Operator 12: 0.098020
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10317948320855767
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10317948320855767
+Expectation value:  0.10317948320855767
+std_error: 0.011588335614156578
+Operator 13: 0.103179
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10861403748438193
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10861403748438193
+Expectation value:  0.10861403748438193
+std_error: 0.011589931596780092
+Operator 14: 0.108614
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10855280991086963
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10855280991086963
+Expectation value:  0.10855280991086963
+std_error: 0.011590520027767165
+Operator 15: 0.108553
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1109600775416814
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1109600775416814
+Expectation value:  -0.1109600775416814
+std_error: 0.01076567103543415
+Operator 16: 0.110960
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11628008901160831
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11628008901160831
+Expectation value:  0.11628008901160831
+std_error: 0.010765510149336535
+Operator 17: 0.116280
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11396076819694044
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11396076819694044
+Expectation value:  0.11396076819694044
+std_error: 0.010765672775920224
+Operator 18: 0.113961
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1202653555594094
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1202653555594094
+Expectation value:  0.1202653555594094
+std_error: 0.010764898356599412
+Operator 19: 0.120265
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1165611875632293
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1165611875632293
+Expectation value:  -0.1165611875632293
+std_error: 0.010763380355904035
+Operator 20: 0.116561
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10897575475323598
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10897575475323598
+Expectation value:  0.10897575475323598
+std_error: 0.010763549610326911
+Operator 21: 0.108976
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11457699110064996
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11457699110064996
+Expectation value:  0.11457699110064996
+std_error: 0.010764430428323975
+Operator 22: 0.114577
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11894992483152891
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11894992483152891
+Expectation value:  0.11894992483152891
+std_error: 0.010764176068660983
+Operator 23: 0.118950
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00987846263610108
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00987846263610108
+Expectation value:  0.00987846263610108
+std_error: 0.01111211723301208
+Operator 24: 0.009878
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.006329873925189815
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.006329873925189815
+Expectation value:  -0.006329873925189815
+std_error: 0.011112641290807915
+Operator 25: 0.006330
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.011513063976618481
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.011513063976618481
+Expectation value:  -0.011513063976618481
+std_error: 0.011112837550461776
+Operator 26: 0.011513
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.003419407617006839
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.003419407617006839
+Expectation value:  -0.003419407617006839
+std_error: 0.011112301829152777
+Operator 27: 0.003419
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.010400328654082323
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.010400328654082323
+Expectation value:  0.010400328654082323
+std_error: 0.011111670521596725
+Operator 28: 0.010400
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.014756557533555365
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.014756557533555365
+Expectation value:  -0.014756557533555365
+std_error: 0.011112552534092336
+Operator 29: 0.014757
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.009437573585800298
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.009437573585800298
+Expectation value:  -0.009437573585800298
+std_error: 0.011112923122133979
+Operator 30: 0.009438
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.015888700518757737
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.015888700518757737
+Expectation value:  -0.015888700518757737
+std_error: 0.01111201109069302
+Operator 31: 0.015889
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0955553369096426
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0955553369096426
+Expectation value:  -0.0955553369096426
+std_error: 0.010062921173018451
+Operator 32: 0.095555
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1073955840786229
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1073955840786229
+Expectation value:  0.1073955840786229
+std_error: 0.010099682836463798
+Operator 33: 0.107396
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09762359729165494
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09762359729165494
+Expectation value:  0.09762359729165494
+std_error: 0.010071774276061936
+Operator 34: 0.097624
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09739326640381699
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09739326640381699
+Expectation value:  0.09739326640381699
+std_error: 0.010077459137567843
+Operator 35: 0.097393
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10861212606334267
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10861212606334267
+Expectation value:  -0.10861212606334267
+std_error: 0.010730632861346382
+Operator 36: 0.108612
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10539638307510807
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10539638307510807
+Expectation value:  0.10539638307510807
+std_error: 0.01073124590413147
+Operator 37: 0.105396
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09702241619965693
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09702241619965693
+Expectation value:  0.09702241619965693
+std_error: 0.01073113208495372
+Operator 38: 0.097022
+layout:  None
+depth:  27
+isa_depth:  21
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09491476157010298
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09491476157010298
+Expectation value:  0.09491476157010298
+std_error: 0.010730674623463454
+Operator 39: 0.094915
+
+Total gradient norm:     0.578911
+Selected: 19 (norm 0.120265)
+Expectation value:  -227.91326039772812
+std_error: 0.0012345280529057457
+Expectation value:  -227.53726660548693
+std_error: 0.003472536405817759
+Expectation value:  -227.4374957967979
+std_error: 0.001898848985273272
+Expectation value:  -227.85811553757944
+std_error: 0.0028914111412161082
+Expectation value:  -227.77150837200807
+std_error: 0.0028734895384786687
+Expectation value:  -227.3864154353338
+std_error: 0.0019127840768300866
+Expectation value:  -227.64550572705397
+std_error: 0.00346717010634609
+Expectation value:  -227.91735051721625
+std_error: 0.0012267355402738058
+tolerance:  0.0012267355402738058
+Expectation value:  -227.91591117596778
+std_error: 0.0012294139833289865
+Expectation value:  -227.9135536156914
+std_error: 0.001201088858466901
+Expectation value:  -227.91261384149973
+std_error: 0.0012197445181630201
+Expectation value:  -227.91456422191084
+std_error: 0.0012656338944522145
+Expectation value:  -227.91472447308558
+std_error: 0.0012024689413201268
+Expectation value:  -227.91293849160843
+std_error: 0.0012048399980529448
+Expectation value:  -227.91313615785845
+std_error: 0.0012453920035152466
+Expectation value:  -227.91646723761286
+std_error: 0.0012666679280209329
+Expectation value:  -227.91680862101748
+std_error: 0.0012757226341899447
+Expectation value:  -227.9174300837796
+std_error: 0.001271349403657446
+Expectation value:  -227.91744269554871
+std_error: 0.0012845495074578763
+Expectation value:  -227.91569958121767
+std_error: 0.0012743881294724712
+Expectation value:  -227.9158708498791
+std_error: 0.0012988927676836942
+Expectation value:  -227.91717330615998
+std_error: 0.0012678478396045425
+Expectation value:  -227.91762318876692
+std_error: 0.0012711187939089671
+Expectation value:  -227.9181839163983
+std_error: 0.0012812552861431023
+Expectation value:  -227.91421801109615
+std_error: 0.0012984572772375648
+Expectation value:  -227.91841431326603
+std_error: 0.0012760146062358324
+Expectation value:  -227.91894873565454
+std_error: 0.0012800119795697187
+Expectation value:  -227.91732092220468
+std_error: 0.0012912220766836127
+Expectation value:  -227.91713315493658
+std_error: 0.0012828437025148023
+Expectation value:  -227.91771633347972
+std_error: 0.0012986971594002208
+Expectation value:  -227.917323608745
+std_error: 0.0013005112274786829
+Expectation value:  -227.91737170375526
+std_error: 0.0012826318531177323
+Expectation value:  -227.91842227574034
+std_error: 0.0012975222230636296
+Expectation value:  -227.91626720085205
+std_error: 0.001290193295094726
+Expectation value:  -227.9175299666086
+std_error: 0.0013030951400406824
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   27   F =-2.279175E+02    MAXCV = 0.000000E+00
+   X =-3.214080E+00   3.122236E+00  -3.070377E+00  -3.149265E+00   3.122296E+00
+       3.128860E+00
+
+coefficient    operator
+-3.21408e+00 1j [X2 Y3 X4 X5] 
+ 3.12224e+00 1j [Y0 Y1 Y6 X7] 
+-3.07038e+00 1j [X0 X1 Y6 X7] 
+-3.14926e+00 1j [Y2 X3 X4 X5] 
+ 3.12230e+00 1j [Y2 Y3 Y4 X5] 
+ 3.12886e+00 1j [X0 Z1 Z2 Y3 X4 Z5 Z6 X7] 
+
+Iteration energy: -227.9175299666086
+Ansatz Indices: [35, 5, 4, 34, 33, 19]
+Gradient circuit depth:  49
+Energy circuit depth:  49
+
+*** Adapt Iteration 7 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09653527411400845
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09653527411400845
+Expectation value:  -0.09653527411400845
+std_error: 0.010729554259525077
+Operator 0: 0.096535
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10519376038098321
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10519376038098321
+Expectation value:  0.10519376038098321
+std_error: 0.010730409833470955
+Operator 1: 0.105194
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.08819410463074273
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.08819410463074273
+Expectation value:  0.08819410463074273
+std_error: 0.010730720084799132
+Operator 2: 0.088194
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09723677304070764
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09723677304070764
+Expectation value:  0.09723677304070764
+std_error: 0.010726236564379623
+Operator 3: 0.097237
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.07652870965236289
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.07652870965236289
+Expectation value:  -0.07652870965236289
+std_error: 0.010021207989410509
+Operator 4: 0.076529
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0817730731832848
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0817730731832848
+Expectation value:  0.0817730731832848
+std_error: 0.010029860779444419
+Operator 5: 0.081773
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09159913682350074
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09159913682350074
+Expectation value:  0.09159913682350074
+std_error: 0.010054303049894363
+Operator 6: 0.091599
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0820750009838122
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0820750009838122
+Expectation value:  0.0820750009838122
+std_error: 0.010028134775680167
+Operator 7: 0.082075
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0955326742541108
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0955326742541108
+Expectation value:  -0.0955326742541108
+std_error: 0.01159005539024862
+Operator 8: 0.095533
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09071395601333135
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09071395601333135
+Expectation value:  0.09071395601333135
+std_error: 0.011588259460091838
+Operator 9: 0.090714
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10623355105283037
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10623355105283037
+Expectation value:  0.10623355105283037
+std_error: 0.011589815950631193
+Operator 10: 0.106234
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09355150071952904
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09355150071952904
+Expectation value:  0.09355150071952904
+std_error: 0.011589791742790602
+Operator 11: 0.093552
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10363734469418706
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10363734469418706
+Expectation value:  -0.10363734469418706
+std_error: 0.01158934236022473
+Operator 12: 0.103637
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09551444913387575
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09551444913387575
+Expectation value:  0.09551444913387575
+std_error: 0.011588949910497089
+Operator 13: 0.095514
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11004803624844603
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11004803624844603
+Expectation value:  0.11004803624844603
+std_error: 0.011589121881554662
+Operator 14: 0.110048
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10182729512180826
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10182729512180826
+Expectation value:  0.10182729512180826
+std_error: 0.011589417709505914
+Operator 15: 0.101827
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10714249373014054
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10714249373014054
+Expectation value:  -0.10714249373014054
+std_error: 0.01076469228115419
+Operator 16: 0.107142
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09340923313321116
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09340923313321116
+Expectation value:  0.09340923313321116
+std_error: 0.010760736502709551
+Operator 17: 0.093409
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09358044650489408
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09358044650489408
+Expectation value:  0.09358044650489408
+std_error: 0.0107597415304927
+Operator 18: 0.093580
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0999222882795157
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0999222882795157
+Expectation value:  0.0999222882795157
+std_error: 0.010763462873757899
+Operator 19: 0.099922
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.10961621261019835
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.10961621261019835
+Expectation value:  -0.10961621261019835
+std_error: 0.010765371051458262
+Operator 20: 0.109616
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10733115727973432
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10733115727973432
+Expectation value:  0.10733115727973432
+std_error: 0.010765550044212544
+Operator 21: 0.107331
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.1108954245422003
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.1108954245422003
+Expectation value:  0.1108954245422003
+std_error: 0.010765851340463956
+Operator 22: 0.110895
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.11579794808013144
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.11579794808013144
+Expectation value:  0.11579794808013144
+std_error: 0.01076498468353665
+Operator 23: 0.115798
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0114720050510034
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0114720050510034
+Expectation value:  0.0114720050510034
+std_error: 0.011112965935228272
+Operator 24: 0.011472
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.012398901968249366
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.012398901968249366
+Expectation value:  -0.012398901968249366
+std_error: 0.01111312082050315
+Operator 25: 0.012399
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.005710058429509991
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.005710058429509991
+Expectation value:  -0.005710058429509991
+std_error: 0.011113297221255923
+Operator 26: 0.005710
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.013172632400504244
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.013172632400504244
+Expectation value:  -0.013172632400504244
+std_error: 0.011112716321366458
+Operator 27: 0.013173
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.00121458071769468
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.00121458071769468
+Expectation value:  0.00121458071769468
+std_error: 0.01111149744600408
+Operator 28: 0.001215
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.008322605440857578
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.008322605440857578
+Expectation value:  -0.008322605440857578
+std_error: 0.011110315097685973
+Operator 29: 0.008323
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.020637173327767815
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.020637173327767815
+Expectation value:  -0.020637173327767815
+std_error: 0.011111842805927398
+Operator 30: 0.020637
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.020408033275415752
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.020408033275415752
+Expectation value:  -0.020408033275415752
+std_error: 0.011111810220823729
+Operator 31: 0.020408
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.07752459298724845
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.07752459298724845
+Expectation value:  -0.07752459298724845
+std_error: 0.010013952192115505
+Operator 32: 0.077525
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07465265699662313
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07465265699662313
+Expectation value:  0.07465265699662313
+std_error: 0.01000508069649828
+Operator 33: 0.074653
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07001903469424789
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07001903469424789
+Expectation value:  0.07001903469424789
+std_error: 0.009989768936006449
+Operator 34: 0.070019
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07234259714693549
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07234259714693549
+Expectation value:  0.07234259714693549
+std_error: 0.01000431364256291
+Operator 35: 0.072343
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09883645886237333
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09883645886237333
+Expectation value:  -0.09883645886237333
+std_error: 0.010729161102095356
+Operator 36: 0.098836
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10632583298551491
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10632583298551491
+Expectation value:  0.10632583298551491
+std_error: 0.010730405179151992
+Operator 37: 0.106326
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10948703194812234
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10948703194812234
+Expectation value:  0.10948703194812234
+std_error: 0.01072875558604268
+Operator 38: 0.109487
+layout:  None
+depth:  49
+isa_depth:  43
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10026355310921044
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10026355310921044
+Expectation value:  0.10026355310921044
+std_error: 0.010729336708989278
+Operator 39: 0.100264
+
+Total gradient norm:     0.547221
+Selected: 23 (norm 0.115798)
+Expectation value:  -227.91615097281243
+std_error: 0.0012856648797117856
+Expectation value:  -227.5452352325687
+std_error: 0.003486071511513509
+Expectation value:  -227.43895683991934
+std_error: 0.0019330854439641785
+Expectation value:  -227.86327351535394
+std_error: 0.002903557766699897
+Expectation value:  -227.77244775208678
+std_error: 0.0029013441447150084
+Expectation value:  -227.3865425183045
+std_error: 0.001916162801358765
+Expectation value:  -227.6511618585338
+std_error: 0.0034856628438012286
+Expectation value:  -227.91771449353914
+std_error: 0.0012775437176700268
+tolerance:  0.0012775437176700268
+Expectation value:  -227.91716303824012
+std_error: 0.0012876493599437628
+Expectation value:  -227.91762107354285
+std_error: 0.001261951170908829
+Expectation value:  -227.91594095228845
+std_error: 0.0012316054742891687
+Expectation value:  -227.91734610700027
+std_error: 0.0012815225324505051
+Expectation value:  -227.9166789770155
+std_error: 0.0012280877327766277
+Expectation value:  -227.91715663855936
+std_error: 0.0012326794929509873
+Expectation value:  -227.91485582074813
+std_error: 0.0012783755684726602
+Expectation value:  -227.91439417800504
+std_error: 0.0012524510868055084
+Expectation value:  -227.91900290200795
+std_error: 0.0012680593554712542
+Expectation value:  -227.91880388614615
+std_error: 0.0013163274049472812
+Expectation value:  -227.9198735609656
+std_error: 0.0013032048289818314
+Expectation value:  -227.92230381632592
+std_error: 0.0013070240150779983
+Expectation value:  -227.92289886984418
+std_error: 0.0013274714255085706
+Expectation value:  -227.92318803873852
+std_error: 0.0013413670679570504
+Expectation value:  -227.9211666631938
+std_error: 0.001352330418899264
+Expectation value:  -227.92139905250855
+std_error: 0.0013156278475366357
+Expectation value:  -227.92381193050915
+std_error: 0.0013635330968818963
+Expectation value:  -227.92217803127804
+std_error: 0.0013952281290642715
+Expectation value:  -227.9216799411286
+std_error: 0.0013901343245606849
+Expectation value:  -227.9226748721279
+std_error: 0.0013641588332479594
+Expectation value:  -227.9240310453901
+std_error: 0.0013651054963418154
+Expectation value:  -227.92343394975967
+std_error: 0.0013757885644272024
+Expectation value:  -227.92164547431918
+std_error: 0.001387967172617523
+Expectation value:  -227.92171007319672
+std_error: 0.0013668638723101478
+Expectation value:  -227.92176701864688
+std_error: 0.0013789634798817172
+Expectation value:  -227.9233154714259
+std_error: 0.0013658265873474496
+Expectation value:  -227.92146975219407
+std_error: 0.001393249274384779
+Expectation value:  -227.9223868589037
+std_error: 0.0013870503431293133
+Expectation value:  -227.9218450573334
+std_error: 0.0013545408517210127
+Expectation value:  -227.92200064175728
+std_error: 0.0013931075182166486
+Expectation value:  -227.923966564609
+std_error: 0.0013679139383224945
+Expectation value:  -227.92169894595793
+std_error: 0.0013712240697884887
+Expectation value:  -227.91990203327057
+std_error: 0.0013924126800945417
+Expectation value:  -227.92219493640772
+std_error: 0.001393284085762898
+Expectation value:  -227.92375935355943
+std_error: 0.001390783102270142
+Expectation value:  -227.92293536531324
+std_error: 0.0013730250712587458
+Expectation value:  -227.9227792161734
+std_error: 0.0013717250365447655
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   37   F =-2.279228E+02    MAXCV = 0.000000E+00
+   X =-3.207055E+00   3.106052E+00  -3.080529E+00  -3.166834E+00   3.115262E+00
+       3.122491E+00   3.109424E+00
+
+coefficient    operator
+-3.20706e+00 1j [X2 Y3 X4 X5] 
+ 3.10605e+00 1j [Y0 Y1 Y6 X7] 
+-3.08053e+00 1j [X0 X1 Y6 X7] 
+-3.16683e+00 1j [Y2 X3 X4 X5] 
+ 3.11526e+00 1j [Y2 Y3 Y4 X5] 
+ 3.12249e+00 1j [X0 Z1 Z2 Y3 X4 Z5 Z6 X7] 
+ 3.10942e+00 1j [X1 Y2 X5 X6] 
+
+Iteration energy: -227.9227792161734
+Ansatz Indices: [35, 5, 4, 34, 33, 19, 23]
+Gradient circuit depth:  57
+Energy circuit depth:  57
+
+*** Adapt Iteration 8 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.1035322257295203
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.1035322257295203
+Expectation value:  -0.1035322257295203
+std_error: 0.010730283203057958
+Operator 0: 0.103532
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09182158979867983
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09182158979867983
+Expectation value:  0.09182158979867983
+std_error: 0.01073164967699536
+Operator 1: 0.091822
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.08920432842639008
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.08920432842639008
+Expectation value:  0.08920432842639008
+std_error: 0.01073149443534461
+Operator 2: 0.089204
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0901661560600931
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0901661560600931
+Expectation value:  0.0901661560600931
+std_error: 0.010730934318045489
+Operator 3: 0.090166
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.08311887151664889
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.08311887151664889
+Expectation value:  -0.08311887151664889
+std_error: 0.010029355806269461
+Operator 4: 0.083119
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07148676143899665
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07148676143899665
+Expectation value:  0.07148676143899665
+std_error: 0.010003486693920639
+Operator 5: 0.071487
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07703601494269269
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07703601494269269
+Expectation value:  0.07703601494269269
+std_error: 0.01000819412645844
+Operator 6: 0.077036
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07256112492861347
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07256112492861347
+Expectation value:  0.07256112492861347
+std_error: 0.010001750441133479
+Operator 7: 0.072561
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.08383280376039873
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.08383280376039873
+Expectation value:  -0.08383280376039873
+std_error: 0.011589222128912913
+Operator 8: 0.083833
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10004512010964349
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10004512010964349
+Expectation value:  0.10004512010964349
+std_error: 0.011590049936665797
+Operator 9: 0.100045
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10365861603190811
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10365861603190811
+Expectation value:  0.10365861603190811
+std_error: 0.011589487525608825
+Operator 10: 0.103659
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09268524897699293
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09268524897699293
+Expectation value:  0.09268524897699293
+std_error: 0.011590961608933048
+Operator 11: 0.092685
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09886037610217026
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09886037610217026
+Expectation value:  -0.09886037610217026
+std_error: 0.011590209159991817
+Operator 12: 0.098860
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09919468753283187
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09919468753283187
+Expectation value:  0.09919468753283187
+std_error: 0.011590426522559863
+Operator 13: 0.099195
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09276001753169323
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09276001753169323
+Expectation value:  0.09276001753169323
+std_error: 0.011590086586350863
+Operator 14: 0.092760
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0977723882939144
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0977723882939144
+Expectation value:  0.0977723882939144
+std_error: 0.011589621151567038
+Operator 15: 0.097772
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09661934235739364
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09661934235739364
+Expectation value:  -0.09661934235739364
+std_error: 0.010759535452288123
+Operator 16: 0.096619
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10100519817488948
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10100519817488948
+Expectation value:  0.10100519817488948
+std_error: 0.010764642594146535
+Operator 17: 0.101005
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09541744555119473
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09541744555119473
+Expectation value:  0.09541744555119473
+std_error: 0.010758497878321447
+Operator 18: 0.095417
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09978265514980826
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09978265514980826
+Expectation value:  0.09978265514980826
+std_error: 0.010760148834182288
+Operator 19: 0.099783
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0755352665489405
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0755352665489405
+Expectation value:  -0.0755352665489405
+std_error: 0.010747560670824347
+Operator 20: 0.075535
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0771254117110561
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0771254117110561
+Expectation value:  0.0771254117110561
+std_error: 0.010738513265138574
+Operator 21: 0.077125
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.08045135923801322
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.08045135923801322
+Expectation value:  0.08045135923801322
+std_error: 0.010748357885529764
+Operator 22: 0.080451
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.07744552304395563
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.07744552304395563
+Expectation value:  0.07744552304395563
+std_error: 0.010739836358051917
+Operator 23: 0.077446
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.00013839868544077594
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.00013839868544077594
+Expectation value:  -0.00013839868544077594
+std_error: 0.011112506148505915
+Operator 24: 0.000138
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.003050236470748909
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.003050236470748909
+Expectation value:  0.003050236470748909
+std_error: 0.011111739249603157
+Operator 25: 0.003050
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.003166977672676575
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.003166977672676575
+Expectation value:  -0.003166977672676575
+std_error: 0.011112046243831135
+Operator 26: 0.003167
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0054794335689846195
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0054794335689846195
+Expectation value:  -0.0054794335689846195
+std_error: 0.011112179159729552
+Operator 27: 0.005479
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.004269228005011428
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.004269228005011428
+Expectation value:  0.004269228005011428
+std_error: 0.01111249126522382
+Operator 28: 0.004269
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.0004932229094480435
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.0004932229094480435
+Expectation value:  -0.0004932229094480435
+std_error: 0.01111129906035137
+Operator 29: 0.000493
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.016323127741127805
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.016323127741127805
+Expectation value:  -0.016323127741127805
+std_error: 0.011112791404958767
+Operator 30: 0.016323
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.0023335952528253275
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.0023335952528253275
+Expectation value:  0.0023335952528253275
+std_error: 0.011112835313365418
+Operator 31: 0.002334
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.048851939471532074
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.048851939471532074
+Expectation value:  -0.048851939471532074
+std_error: 0.009922036397047912
+Operator 32: 0.048852
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.04735327754947399
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.04735327754947399
+Expectation value:  0.04735327754947399
+std_error: 0.009914288954822537
+Operator 33: 0.047353
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.058848390756638586
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.058848390756638586
+Expectation value:  0.058848390756638586
+std_error: 0.00996260507111838
+Operator 34: 0.058848
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.057379773578056084
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.057379773578056084
+Expectation value:  0.057379773578056084
+std_error: 0.009940328296751476
+Operator 35: 0.057380
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  -0.09170346233736529
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  -0.09170346233736529
+Expectation value:  -0.09170346233736529
+std_error: 0.01073040037897512
+Operator 36: 0.091703
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.10071724673503311
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.10071724673503311
+Expectation value:  0.10071724673503311
+std_error: 0.010731426519942933
+Operator 37: 0.100717
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09487896797267453
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09487896797267453
+Expectation value:  0.09487896797267453
+std_error: 0.010731299153647372
+Operator 38: 0.094879
+layout:  None
+depth:  57
+isa_depth:  51
+n_observable:  46
+n_chunks:  1
+chunck_size:  46
+1 / 1
+partial expectation:  0.09541417492354608
+metadata:  {'target_precision': 0.015625}
+Final Estimator value:  0.09541417492354608
+Expectation value:  0.09541417492354608
+std_error: 0.010731376027547854
+Operator 39: 0.095414
+
+Total gradient norm:     0.493672
+Selected: 10 (norm 0.103659)
+Expectation value:  -227.9211397911037
+std_error: 0.0013828925364636276
+Expectation value:  -227.4683646747407
+std_error: 0.003746060705777476
+Expectation value:  -227.30360497750013
+std_error: 0.002076659184736345
+Expectation value:  -227.83301897986357
+std_error: 0.003123789744685973
+Expectation value:  -227.7559256798514
+std_error: 0.003104745988837657
+Expectation value:  -227.2606347801156
+std_error: 0.0020910250344082877
+Expectation value:  -227.56383836091894
+std_error: 0.003740786354031018
+Expectation value:  -227.9237665788485
+std_error: 0.0013555338050451283
+tolerance:  0.0013555338050451283
+Expectation value:  -227.92515032492588
+std_error: 0.0013727106921891266
+Expectation value:  -227.92281050942373
+std_error: 0.0013375225426406315
+Expectation value:  -227.9236054249982
+std_error: 0.0013463590586860052
+Expectation value:  -227.9222712775466
+std_error: 0.001414623095411961
+Expectation value:  -227.92198892961179
+std_error: 0.0013423514388896003
+Expectation value:  -227.92475794208465
+std_error: 0.0013311782431294525
+Expectation value:  -227.9241206381226
+std_error: 0.001370234051299675
+Expectation value:  -227.92208852569792
+std_error: 0.0013746445789721779
+Expectation value:  -227.92219047032353
+std_error: 0.0013746530219263561
+Expectation value:  -227.92391474943093
+std_error: 0.0014154290367521427
+Expectation value:  -227.9232668616276
+std_error: 0.0013826204585952032
+Expectation value:  -227.92404850910276
+std_error: 0.0013567000472374355
+Expectation value:  -227.92334147538023
+std_error: 0.0013579723634902124
+Expectation value:  -227.9234113607339
+std_error: 0.0013967355180804374
+Expectation value:  -227.9227472171384
+std_error: 0.0013726541371316514
+Expectation value:  -227.9224384931524
+std_error: 0.0013621928331824025
+Expectation value:  -227.9252876608222
+std_error: 0.0013460982873210062
+Expectation value:  -227.923207980068
+std_error: 0.0013743795679146463
+Expectation value:  -227.92278678062786
+std_error: 0.001398640276891732
+Expectation value:  -227.9215685224863
+std_error: 0.0013892969746213217
+Expectation value:  -227.92132930949552
+std_error: 0.0013807394452138141
+Expectation value:  -227.92364378906774
+std_error: 0.0013678975385895838
+Expectation value:  -227.92127510815217
+std_error: 0.0014076834286471406
+Expectation value:  -227.92201520338725
+std_error: 0.001380675924346858
+Expectation value:  -227.92223334953854
+std_error: 0.0013979666933588738
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   25   F =-2.279222E+02    MAXCV = 0.000000E+00
+   X =-3.206405E+00   3.105821E+00  -3.081022E+00  -3.167340E+00   3.115242E+00
+       3.123760E+00   3.108462E+00   3.142325E+00
+
+coefficient    operator
+-3.20641e+00 1j [X2 Y3 X4 X5] 
+ 3.10582e+00 1j [Y0 Y1 Y6 X7] 
+-3.08102e+00 1j [X0 X1 Y6 X7] 
+-3.16734e+00 1j [Y2 X3 X4 X5] 
+ 3.11524e+00 1j [Y2 Y3 Y4 X5] 
+ 3.12376e+00 1j [X0 Z1 Z2 Y3 X4 Z5 Z6 X7] 
+ 3.10846e+00 1j [X1 Y2 X5 X6] 
+ 3.14233e+00 0.9999999999999999j [Y0 Z1 X2 X4 Z5 X6] 
+
+Iteration energy: -227.92223334953854
+Ansatz Indices: [35, 5, 4, 34, 33, 19, 23, 10]
+Converge archived due to not energy improvement
+simulation energy
+
+
+Sampled evaluation (one evaluation per hamiltonian term)
+------------------------------------
+version: qiskit 1.0.2
+Shots per evaluation: 10000
+Total shots: 216270000
+Circuit evaluations: 21627
+Total circuit depth: 788006
+Maximum circuit depth: 70
+Average circuit depth: 36.44
+Gate counts:
+ PauliX         : 86508
+ RZ             : 340692
+ CNOT           : 738878
+ RX             : 113653
+ Hadamard       : 132432
+------------------------------------
+
+simulation gradient
+
+
+Sampled evaluation (one evaluation per hamiltonian term)
+------------------------------------
+version: qiskit 1.0.2
+Shots per evaluation: 10000
+Total shots: 148090000
+Circuit evaluations: 14809
+Total circuit depth: 347849
+Maximum circuit depth: 57
+Average circuit depth: 23.49
+Gate counts:
+ PauliX         : 59236
+ RZ             : 169280
+ CNOT           : 338560
+ RX             : 51520
+ Hadamard       : 44160
+------------------------------------
+
+HF energy: -227.89048126100332
+Final adaptVQE energy: -227.92223334953854
+CASCI energy: -227.94440223787416
+Error (respect to CASCI):  2.217e-02
+{'energy': -227.92223334953854, 'ansatz': <vqemulti.pool.tools.OperatorList object at 0x13409e4f0>, 'indices': [35, 5, 4, 34, 33, 19, 23, 10], 'coefficients': [-3.2064054769743686, 3.1058207238693294, -3.081021679471185, -3.1673398872585965, 3.11524189762562, 3.123760427963521, 3.108462002047524, 3.1423253664196404], 'iterations': {'energies': [-227.889693110168, -227.89458190642128, -227.8936584143475, -227.90919092623486, -227.91074189615497, -227.916098617373, -227.9175299666086, -227.9227792161734, -227.92223334953854], 'norms': [], 'f_evaluations': [17, 20, 33, 29, 30, 35, 45, 33], 'ansatz_size': [1, 2, 3, 4, 5, 6, 7, 8], 'variance': [0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075, 0.02276083965623075], 'fidelity': [], 'coefficients': [[], [-3.1635926535897925], [-3.1628008176886406, 3.140959872014302], [-3.1979841968480156, 3.134318471433586, -3.089980201332771], [-3.2062126877755066, 3.128261158923673, -3.078244020743762, -3.142190305318299], [-3.20145345212924, 3.122309464316256, -3.0653294855429416, -3.146168389177976, 3.12936658382963], [-3.2140798997876456, 3.1222357476737597, -3.0703774202626004, -3.149264616950269, 3.122295859191285, 3.1288602437873374], [-3.207055444100606, 3.106052460628656, -3.08052914731717, -3.1668337498209094, 3.115262352335737, 3.1224906348755472, 3.10942439908343], [-3.2064054769743686, 3.1058207238693294, -3.081021679471185, -3.1673398872585965, 3.11524189762562, 3.123760427963521, 3.108462002047524, 3.1423253664196404]], 'indices': [[], [35], [35, 5], [35, 5, 4], [35, 5, 4, 34], [35, 5, 4, 34, 33], [35, 5, 4, 34, 33, 19], [35, 5, 4, 34, 33, 19, 23], [35, 5, 4, 34, 33, 19, 23, 10]]}, 'variance': 0.02276083965623075, 'num_iterations': 7}
+dict_keys(['energy', 'ansatz', 'indices', 'coefficients', 'iterations', 'variance', 'num_iterations'])
+[1, 1, 1, 1, 0, 0, 0, 0]
+Expectation value:  -227.92519285538884
+std_error: 0.0013859697724421624
+Energy restart: -227.92519285538884

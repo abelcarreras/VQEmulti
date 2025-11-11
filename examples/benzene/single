@@ -1,0 +1,419 @@
+N electrons 4
+N Orbitals 4
+backend:  ibm_torino
+Initialize Single point
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.10817003993424
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.10676643393182
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.10209591695863
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.10209591695863
+Expectation value:  -227.10209591695863
+std_error: 0.00847401147479013
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1152948587288
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11267108909405
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.10444055943586
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.10444055943586
+Expectation value:  -227.10444055943586
+std_error: 0.008469449363781573
+
+
+ -227.10209591695863 0.6455841527309408
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.0792866366495
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.07862076174513
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.07051154872815
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.07051154872815
+Expectation value:  -227.07051154872815
+std_error: 0.008507096798012776
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.10360288645415
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.09922620148242
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.0832101926076
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.0832101926076
+Expectation value:  -227.0832101926076
+std_error: 0.00848037762863161
+
+
+ -227.07051154872815 0.6472512425177593
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1025610529912
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.0995374459843
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.08481443610393
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.08481443610393
+Expectation value:  -227.08481443610393
+std_error: 0.008481782441506042
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.11565073936856
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11238871253352
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.10141810767897
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.10141810767897
+Expectation value:  -227.10141810767897
+std_error: 0.008471470694226341
+
+
+ -227.08481443610393 0.6458923415082215
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.11279638977211
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11008488855634
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.09421359478117
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.09421359478117
+Expectation value:  -227.09421359478117
+std_error: 0.008468307218480447
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1179436449704
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11588599151506
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.09963733735782
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.09963733735782
+Expectation value:  -227.09963733735782
+std_error: 0.008463796668247403
+
+
+ -227.09421359478117 0.6447226863729225
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.10621928189533
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.10333650670694
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.09836259632624
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.09836259632624
+Expectation value:  -227.09836259632624
+std_error: 0.008479525420744705
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.09968919187241
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.09265642692853
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.08932130704758
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.08932130704758
+Expectation value:  -227.08932130704758
+std_error: 0.008478438475757624
+
+
+ -227.09836259632624 0.6469552708848654
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.11351885353585
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11393664499604
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.10874779831053
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.10874779831053
+Expectation value:  -227.10874779831053
+std_error: 0.008475472867719719
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1012796340706
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.09869688234363
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.08970681460266
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.08970681460266
+Expectation value:  -227.08970681460266
+std_error: 0.008483574425117678
+
+
+ -227.10874779831053 0.6477393152385966
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.12023867004459
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11929505122862
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.11598856224364
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.11598856224364
+Expectation value:  -227.11598856224364
+std_error: 0.008467320998037988
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.11291951078547
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.1083108478663
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.10086497492696
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.10086497492696
+Expectation value:  -227.10086497492696
+std_error: 0.008476129224079088
+
+
+ -227.11598856224364 0.6466028996095879
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1080712330128
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.10911626819097
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.08796300576526
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.08796300576526
+Expectation value:  -227.08796300576526
+std_error: 0.008473700148087274
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.11503256984312
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11065693042238
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.0900221059005
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.0900221059005
+Expectation value:  -227.0900221059005
+std_error: 0.008472975895807183
+
+
+ -227.08796300576526 0.6461218847783657
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.08870753234163
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.08859598993777
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.0684724753547
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.0684724753547
+Expectation value:  -227.0684724753547
+std_error: 0.00848381592223731
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.1047090532515
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.10053822587355
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.0828965513979
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.0828965513979
+Expectation value:  -227.0828965513979
+std_error: 0.008477347675406534
+
+
+ -227.0684724753547 0.6467888124874852
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.08930851896417
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.08836893144635
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.06848664565274
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.06848664565274
+Expectation value:  -227.06848664565274
+std_error: 0.008487198168185274
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.10643288991702
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.10651662145324
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.08850786249917
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.08850786249917
+Expectation value:  -227.08850786249917
+std_error: 0.008475031003074248
+
+
+ -227.06848664565274 0.6464353545276272
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+0 / 3
+partial expectation:  -227.10932440803418
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+1 / 3
+partial expectation:  -227.11049529193602
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+2 / 3
+partial expectation:  -227.09388814032866
+metadata:  {'shots': 9000, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'num_randomizations': 1}
+Final Estimator value:  -227.09388814032866
+Expectation value:  -227.09388814032866
+std_error: 0.008474472692948579
+layout:  [65, 66, 67, 74, 86, 87, 88, 94]
+depth:  839
+isa_depth:  1694
+n_observable:  89
+n_chunks:  3
+chunck_size:  30
+

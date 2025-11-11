@@ -1,0 +1,68 @@
+- ? !!python/tuple
+  - !!python/tuple
+    - 2
+    - X
+  - !!python/tuple
+    - 3
+    - X
+  - !!python/tuple
+    - 4
+    - Y
+  - !!python/tuple
+    - 5
+    - X
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - c16
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- ? !!python/tuple
+  - !!python/tuple
+    - 0
+    - X
+  - !!python/tuple
+    - 1
+    - X
+  - !!python/tuple
+    - 6
+    - Y
+  - !!python/tuple
+    - 7
+    - X
+  : !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAAAAAAAAADwPw==
+- - !!python/object/apply:numpy.core.multiarray.scalar
+    - &id002 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      asEo6ALiB8A=
+  - !!python/object/apply:numpy.core.multiarray.scalar
+    - *id002
+    - !!binary |
+      lSi78p7gB8A=

@@ -1,0 +1,429 @@
+[-2.984342653589793]
+[1j [X2 X3 Y4 X5]]
+N electrons 4
+N Orbitals 4
+backend:  ibm_torino
+Initialize Single point
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89472545810602
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89472545810602
+Expectation value:  -227.89472545810602
+std_error: 0.07683297075317942
+energy:  -227.89472545810602
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89130962676157
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89130962676157
+Expectation value:  -227.89130962676157
+std_error: 0.07802367267807506
+energy:  -227.89130962676157
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8868984036886
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8868984036886
+Expectation value:  -227.8868984036886
+std_error: 0.07798906439922733
+energy:  -227.8868984036886
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8957777000116
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8957777000116
+Expectation value:  -227.8957777000116
+std_error: 0.07741491268621457
+energy:  -227.8957777000116
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.91245887086882
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.91245887086882
+Expectation value:  -227.91245887086882
+std_error: 0.07763225159903271
+energy:  -227.91245887086882
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8814383920456
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8814383920456
+Expectation value:  -227.8814383920456
+std_error: 0.06855378688574171
+energy:  -227.8814383920456
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89353604748487
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89353604748487
+Expectation value:  -227.89353604748487
+std_error: 0.06848371384721026
+energy:  -227.89353604748487
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.87081188260018
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.87081188260018
+Expectation value:  -227.87081188260018
+std_error: 0.07439464185760288
+energy:  -227.87081188260018
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.88343325858077
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.88343325858077
+Expectation value:  -227.88343325858077
+std_error: 0.07077591218437101
+energy:  -227.88343325858077
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8915193927161
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8915193927161
+Expectation value:  -227.8915193927161
+std_error: 0.07876487267304448
+energy:  -227.8915193927161
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.9002872529844
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9002872529844
+Expectation value:  -227.9002872529844
+std_error: 0.08184118509916395
+energy:  -227.9002872529844
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.87662405245408
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.87662405245408
+Expectation value:  -227.87662405245408
+std_error: 0.0714875889304338
+energy:  -227.87662405245408
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89097110042528
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89097110042528
+Expectation value:  -227.89097110042528
+std_error: 0.08050918521273535
+energy:  -227.89097110042528
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8894066961679
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8894066961679
+Expectation value:  -227.8894066961679
+std_error: 0.07570020484774692
+energy:  -227.8894066961679
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.9006036937186
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.9006036937186
+Expectation value:  -227.9006036937186
+std_error: 0.07538190726621923
+energy:  -227.9006036937186
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89472957847488
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89472957847488
+Expectation value:  -227.89472957847488
+std_error: 0.06996338904449768
+energy:  -227.89472957847488
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.88217459917604
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.88217459917604
+Expectation value:  -227.88217459917604
+std_error: 0.06474499427879621
+energy:  -227.88217459917604
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.88576192612047
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.88576192612047
+Expectation value:  -227.88576192612047
+std_error: 0.06840584130168702
+energy:  -227.88576192612047
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89680729712495
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89680729712495
+Expectation value:  -227.89680729712495
+std_error: 0.06891284266873396
+energy:  -227.89680729712495
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.90839162858782
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.90839162858782
+Expectation value:  -227.90839162858782
+std_error: 0.0803886108205772
+energy:  -227.90839162858782
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8952612788367
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8952612788367
+Expectation value:  -227.8952612788367
+std_error: 0.08315088035327839
+energy:  -227.8952612788367
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8987346777189
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8987346777189
+Expectation value:  -227.8987346777189
+std_error: 0.0910980397695261
+energy:  -227.8987346777189
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89505930060733
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89505930060733
+Expectation value:  -227.89505930060733
+std_error: 0.0676446121444835
+energy:  -227.89505930060733
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8896460197046
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8896460197046
+Expectation value:  -227.8896460197046
+std_error: 0.06889239553276415
+energy:  -227.8896460197046
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89306925048135
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89306925048135
+Expectation value:  -227.89306925048135
+std_error: 0.07387098705795009
+energy:  -227.89306925048135
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89348553868808
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89348553868808
+Expectation value:  -227.89348553868808
+std_error: 0.07640087719331959
+energy:  -227.89348553868808
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8850003284345
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8850003284345
+Expectation value:  -227.8850003284345
+std_error: 0.07384997082681925
+energy:  -227.8850003284345
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.8955823102964
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.8955823102964
+Expectation value:  -227.8955823102964
+std_error: 0.08278213319151884
+energy:  -227.8955823102964
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.86637892332573
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.86637892332573
+Expectation value:  -227.86637892332573
+std_error: 0.07031546071241065
+energy:  -227.86637892332573
+layout:  [90, 89, 88, 94, 107, 108, 109, 113]
+depth:  8
+isa_depth:  24
+n_observable:  89
+n_chunks:  1
+chunck_size:  89
+1 / 1
+partial expectation:  -227.89328183484272
+metadata:  {'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {'zne': {'extrapolator': 'multiple'}}, 'num_randomizations': 32}
+Final Estimator value:  -227.89328183484272
+Expectation value:  -227.89328183484272
+std_error: 0.08078333334690677
+energy:  -227.89328183484272
+
+Energy list
+-227.89472545810602
+-227.89130962676157
+-227.8868984036886
+-227.8957777000116
+-227.91245887086882
+-227.8814383920456
+-227.89353604748487
+-227.87081188260018
+-227.88343325858077
+-227.8915193927161
+-227.9002872529844
+-227.87662405245408
+-227.89097110042528
+-227.8894066961679
+-227.9006036937186
+-227.89472957847488
+-227.88217459917604
+-227.88576192612047
+-227.89680729712495
+-227.90839162858782
+-227.8952612788367
+-227.8987346777189
+-227.89505930060733
+-227.8896460197046
+-227.89306925048135
+-227.89348553868808
+-227.8850003284345
+-227.8955823102964
+-227.86637892332573
+-227.89328183484272
+ave:  -227.89110554403447

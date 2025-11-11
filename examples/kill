@@ -1,0 +1,113 @@
+backend:  ibm_nazca
+n_blocks:  20
+n_operators:  1
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.025646841778947212, stds=0.025220502516555242, ensemble_standard_error=0.0230088247341937), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.025646841778947212
+variance:  0.0006360737471875693
+std:  0.025220502516555242
+n_blocks:  20
+n_operators:  11
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=0.021420033468802294, stds=0.07731122303877942, ensemble_standard_error=0.08041172895269634), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  0.021420033468802294
+variance:  0.0059770252077518985
+std:  0.07731122303877942
+n_blocks:  20
+n_operators:  21
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.12111292962356791, stds=0.11800396614483145, ensemble_standard_error=0.1188603759597456), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.12111292962356791
+variance:  0.013924936025910528
+std:  0.11800396614483145
+n_blocks:  20
+n_operators:  31
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.07791509180221118, stds=0.11484890956230341, ensemble_standard_error=0.1198733118831291), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.07791509180221118
+variance:  0.013190272027650147
+std:  0.11484890956230341
+n_blocks:  20
+n_operators:  41
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=0.4035151466214488, stds=0.12896805614422852, ensemble_standard_error=0.13107654200984434), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  0.4035151466214488
+variance:  0.01663275950562088
+std:  0.12896805614422852
+n_blocks:  20
+n_operators:  51
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.37890841813135984, stds=0.16478391646278429, ensemble_standard_error=0.16753889047881595), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.37890841813135984
+variance:  0.02715373912481387
+std:  0.16478391646278429
+n_blocks:  20
+n_operators:  61
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.010861603873019262, stds=0.2048005873202099, ensemble_standard_error=0.21239542537749817), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.010861603873019262
+variance:  0.04194328056670292
+std:  0.2048005873202099
+n_blocks:  20
+n_operators:  71
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=0.07933645870897946, stds=0.1912215959928685, ensemble_standard_error=0.19259054001191778), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  0.07933645870897946
+variance:  0.036565698774059824
+std:  0.1912215959928685
+n_blocks:  20
+n_operators:  81
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.005210594876248297, stds=0.25101553746732314, ensemble_standard_error=0.24775826620702568), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.005210594876248297
+variance:  0.06300880005000911
+std:  0.25101553746732314
+n_blocks:  20
+n_operators:  91
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.28937284900165805, stds=0.20144115197354928, ensemble_standard_error=0.20216805306285657), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.28937284900165805
+variance:  0.040578537708430576
+std:  0.20144115197354928
+n_blocks:  20
+n_operators:  101
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=0.16530388001769486, stds=0.21190761453999415, ensemble_standard_error=0.2181040483807244), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  0.16530388001769486
+variance:  0.044904837100030744
+std:  0.21190761453999415
+n_blocks:  20
+n_operators:  111
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.023326803043418824, stds=0.23828374765454344, ensemble_standard_error=0.24343635244815984), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.023326803043418824
+variance:  0.05677914439629413
+std:  0.23828374765454344
+n_blocks:  20
+n_operators:  121
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.06959118425109967, stds=0.26524117525910124, ensemble_standard_error=0.2716036301046206), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.06959118425109967
+variance:  0.07035288105282926
+std:  0.26524117525910124
+n_blocks:  20
+n_operators:  131
+layout:  [63, 62, 61, 60, 53, 41, 40, 39]
+depth:  1940
+PrimitiveResult([PubResult(data=DataBin<>(evs=-0.10173636585962345, stds=0.2780163998184786, ensemble_standard_error=0.2838972188205438), metadata={'shots': 9024, 'target_precision': 0.010540925533894598, 'circuit_metadata': {}, 'resilience': {}, 'num_randomizations': 32})], metadata={'dynamical_decoupling': {'enable': False, 'sequence_type': 'XX', 'extra_slack_distribution': 'middle', 'scheduling_method': 'alap'}, 'twirling': {'enable_gates': False, 'enable_measure': True, 'num_randomizations': 'auto', 'shots_per_randomization': 'auto', 'interleave_randomizations': True, 'strategy': 'active-accum'}, 'resilience': {'measure_mitigation': True, 'zne_mitigation': False, 'pec_mitigation': False}, 'version': 2})
+expectation:  -0.10173636585962345
+variance:  0.07729311856802815
+std:  0.2780163998184786

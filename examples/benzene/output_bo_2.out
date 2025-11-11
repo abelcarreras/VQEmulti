@@ -1,0 +1,680 @@
+/Users/abel/.virtualenvs/VQEmulti_new/bin/python /Users/abel/PycharmProjects/VQEmulti/examples/benzene/hamiltonian_VQE.py
+----------------------
+UHF calculation with stabilization, then finding NOs 
+Not using guessed mixed
+----------------------
+Starting stability analysis
+Rotating orbitals to find stable solution: attempt 1.
+mo_diff: 2.097266e+00 S^2: 0.000  2S+1: 1.000
+Rotating orbitals to find stable solution: attempt 2.
+mo_diff: 0.000000e+00 S^2: 0.918  2S+1: 2.162
+SCF solution is internally stable.
+The spin of the wavefuction is S^2: 0.918  2S+1: 2.162
+----------------------
+ENERGY UHF CALCULATED -227.9095138203347
+RESTRICTED Hartree-Fock energy for H6-C6_sto-3g_singlet_molecule (42 electrons) is -227.89048126100337.
+CASCI E = -227.944402237874  E(CI) = -3.00371042019168  S^2 = 0.0000000
+lowest eigenvalues: [-227.94308835+0.j -227.75075914+0.j -227.75075914+0.j -227.75075914+0.j]
+N electrons 4
+N Orbitals 4
+
+ADAPT_VQE POOL
+---------------------------
+           (0' 2  ) : 00 11 [00] [11] 
+           (0' 3  ) : 00 11 [00] [11] 
+           (1' 2  ) : 00 11 [00] [11] 
+           (1' 3  ) : 00 11 [00] [11] 
+     (0' 0' 2  2  ) : 1010 [1010] 
+     (0' 0' 3  2  ) : 1010 [0110] [1010] 1001 
+     (0' 0' 3  3  ) : 1010 [1010] 
+     (1' 0' 2  2  ) : 1010 [1001] [1010] 0110 
+     (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001] 
+     (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001 
+     (1' 0' 3  3  ) : 1010 [1001] [1010] 0110 
+     (1' 1' 2  2  ) : 1010 [1010] 
+     (1' 1' 3  2  ) : 1010 [0110] [1010] 1001 
+     (1' 1' 3  3  ) : 1010 [1010] 
+backend:  aer_simulator
+Initialize VQE
+precision 0.001
+optimizer params:  <function cobyla_mod at 0x12b088040> / {'rhobeg': 0.1, 'n_guess': 8, 'guess_range': 3.141592653589793, 'disp': 2}
+pool size:  14
+n_qubits:  8
+Hamiltonian Variance:  0.009324947219705833
+Expectation value:  -227.89056111172073
+std_error: 0.0009655938522571015
+
+*** Adapt Iteration 1 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.078520
+Operator 6: 0.136563
+Operator 8: 0.127501
+Operator 9: 0.073613
+Operator 11: 0.136582
+Operator 13: 0.078521
+
+Total gradient norm:     0.267041
+Selected: 11 (norm 0.136582)
+Expectation value:  -227.60290147686987
+std_error: 0.0032225481920072152
+Expectation value:  -227.29837026760472
+std_error: 0.0009701576900960363
+Expectation value:  -227.3985333466158
+std_error: 0.003156764209543737
+Expectation value:  -227.77363858120245
+std_error: 0.0021122159014183837
+Expectation value:  -227.89021144564774
+std_error: 0.0021148689541411947
+Expectation value:  -227.58422817231082
+std_error: 0.0031594497830588707
+Expectation value:  -227.29128902787184
+std_error: 0.000970171494899849
+Expectation value:  -227.42038479167533
+std_error: 0.003221106628969116
+tolerance:  0.0021148689541411947
+Expectation value:  -227.88705950749102
+std_error: 0.0021160565732798063
+Expectation value:  -227.87259037376845
+std_error: 0.002432604667362108
+Expectation value:  -227.9003054129547
+std_error: 0.0017795639779624268
+Expectation value:  -227.90770620731652
+std_error: 0.0014440924426795036
+Expectation value:  -227.90486705736888
+std_error: 0.0011799193146766927
+Expectation value:  -227.90357244596714
+std_error: 0.0013179233303713283
+Expectation value:  -227.90681032583308
+std_error: 0.0015420117869293908
+Expectation value:  -227.9052365569902
+std_error: 0.0014258427311356946
+Expectation value:  -227.90834800339806
+std_error: 0.0014831015867930444
+Expectation value:  -227.90474698298132
+std_error: 0.0014935602137965717
+Expectation value:  -227.9053756180578
+std_error: 0.0014864074338476454
+Expectation value:  -227.90723868487711
+std_error: 0.0014743374581248532
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   12   F =-2.279072E+02    MAXCV = 0.000000E+00
+   X = 2.529341E-01
+
+coefficient    operator
+ 2.52934e-01        (1' 1' 2  2  ) : 1010 [1010]  
+
+Iteration energy: -227.90723868487711
+Ansatz Indices: [11]
+Gradient circuit depth:  45
+Energy circuit depth:  45
+
+*** Adapt Iteration 2 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.068973
+Operator 6: 0.136563
+Operator 8: 0.123466
+Operator 9: 0.084339
+Operator 11: 0.019662
+Operator 13: 0.069057
+
+Total gradient norm:     0.225653
+Selected: 6 (norm 0.136563)
+Expectation value:  -227.61831838978733
+std_error: 0.0032758010303251353
+Expectation value:  -227.3079472625855
+std_error: 0.0015005501018253533
+Expectation value:  -227.413989128028
+std_error: 0.003221512182447961
+Expectation value:  -227.78981011073859
+std_error: 0.002328262435339208
+Expectation value:  -227.90545442128447
+std_error: 0.002321916499611709
+Expectation value:  -227.6027955722499
+std_error: 0.003226915168919828
+Expectation value:  -227.3008438542783
+std_error: 0.0014655748201217148
+Expectation value:  -227.433637062695
+std_error: 0.0032719735398502705
+tolerance:  0.002321916499611709
+Expectation value:  -227.90434799775258
+std_error: 0.002322524824216685
+Expectation value:  -227.90183457108762
+std_error: 0.002469374425069699
+Expectation value:  -227.88832844710623
+std_error: 0.002581937934387514
+Expectation value:  -227.91611775716842
+std_error: 0.002037628877122379
+Expectation value:  -227.92020087111206
+std_error: 0.0017322769575096439
+Expectation value:  -227.91507467563454
+std_error: 0.0015399330387464174
+Expectation value:  -227.92023156122326
+std_error: 0.001766791102682554
+Expectation value:  -227.92026240196873
+std_error: 0.0016137849609919948
+Expectation value:  -227.91812570871625
+std_error: 0.0016497259165637395
+Expectation value:  -227.91907904432773
+std_error: 0.0015672321220758037
+Expectation value:  -227.9178971898932
+std_error: 0.0016436021577298568
+Expectation value:  -227.92011120345697
+std_error: 0.0015988393764985339
+Expectation value:  -227.91998294364942
+std_error: 0.001592820298624211
+Expectation value:  -227.91751517774378
+std_error: 0.0016642513942494094
+Expectation value:  -227.91840218591446
+std_error: 0.0016141409887528962
+Expectation value:  -227.91830889869183
+std_error: 0.001611693550541774
+Expectation value:  -227.9170218505443
+std_error: 0.0016278024613699852
+Expectation value:  -227.92125069899777
+std_error: 0.0015995081526001848
+Expectation value:  -227.92013374713736
+std_error: 0.0015888440607123413
+Expectation value:  -227.9184263950199
+std_error: 0.0015866413870625823
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   20   F =-2.279184E+02    MAXCV = 0.000000E+00
+   X = 2.567147E-01   1.438409E-01
+
+coefficient    operator
+ 2.56715e-01        (1' 1' 2  2  ) : 1010 [1010]  
+ 1.43841e-01        (0' 0' 3  3  ) : 1010 [1010]  
+
+Iteration energy: -227.9184263950199
+Ansatz Indices: [11, 6]
+Gradient circuit depth:  45
+Energy circuit depth:  45
+
+*** Adapt Iteration 3 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.064372
+Operator 6: 0.048095
+Operator 8: 0.122032
+Operator 9: 0.090466
+Operator 11: 0.022289
+Operator 13: 0.064411
+
+Total gradient norm:     0.184874
+Selected: 8 (norm 0.122032)
+Expectation value:  -226.6869511659418
+std_error: 0.002308356272897956
+Expectation value:  -226.83301769868297
+std_error: 0.003984420177045821
+Expectation value:  -227.2975207383174
+std_error: 0.004229091008340144
+Expectation value:  -227.79993845271127
+std_error: 0.002538681603387594
+Expectation value:  -227.899525177955
+std_error: 0.0025318466220745624
+Expectation value:  -227.5159367759075
+std_error: 0.004251184191573956
+Expectation value:  -227.03258763286436
+std_error: 0.003981847767076936
+Expectation value:  -226.72585771038374
+std_error: 0.0022886636653728456
+tolerance:  0.0025318466220745624
+Expectation value:  -227.90247987925702
+std_error: 0.002521148793118485
+Expectation value:  -227.89630818180498
+std_error: 0.002682598695759841
+Expectation value:  -227.90132447562092
+std_error: 0.0026316037633077804
+Expectation value:  -227.87500800533138
+std_error: 0.002816501038969715
+Expectation value:  -227.91969116267504
+std_error: 0.0021698431356795087
+Expectation value:  -227.92435550344425
+std_error: 0.0018487708863857892
+Expectation value:  -227.91412472877764
+std_error: 0.001735546907212591
+Expectation value:  -227.92517375348092
+std_error: 0.0018515507317581569
+Expectation value:  -227.9271406034873
+std_error: 0.0018643621121735446
+Expectation value:  -227.9216500683015
+std_error: 0.00167169247979257
+Expectation value:  -227.92739978700584
+std_error: 0.0020294916297789838
+Expectation value:  -227.92470667765346
+std_error: 0.0020740084866835654
+Expectation value:  -227.91997896693204
+std_error: 0.0020755915622503855
+Expectation value:  -227.92088898301418
+std_error: 0.0020647408059357754
+Expectation value:  -227.92453749395023
+std_error: 0.002092562547788401
+Expectation value:  -227.92618759670734
+std_error: 0.0020732126195792343
+Expectation value:  -227.92512193524848
+std_error: 0.002062249620789024
+Expectation value:  -227.92098674162978
+std_error: 0.0020777789032370066
+Expectation value:  -227.92871974822825
+std_error: 0.0020053575056009224
+Expectation value:  -227.9243375472614
+std_error: 0.0019900918331382765
+Expectation value:  -227.92454082698694
+std_error: 0.002029816230976761
+Expectation value:  -227.92277124084086
+std_error: 0.0020089463143709027
+Expectation value:  -227.92053323533432
+std_error: 0.0020332919125924803
+Expectation value:  -227.92277149236085
+std_error: 0.00203013821727632
+Expectation value:  -227.9261182766427
+std_error: 0.0019887516532493873
+Expectation value:  -227.92372646362796
+std_error: 0.0020286476239552258
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   26   F =-2.279237E+02    MAXCV = 0.000000E+00
+   X = 3.197187E-01   1.414818E-01   2.010382E-01
+
+coefficient    operator
+ 3.19719e-01        (1' 1' 2  2  ) : 1010 [1010]  
+ 1.41482e-01        (0' 0' 3  3  ) : 1010 [1010]  
+ 2.01038e-01        (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]  
+
+Iteration energy: -227.92372646362796
+Ansatz Indices: [11, 6, 8]
+Gradient circuit depth:  490
+Energy circuit depth:  490
+
+*** Adapt Iteration 4 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.045197
+Operator 6: 0.047729
+Operator 8: 0.024174
+Operator 9: 0.102662
+Operator 11: 0.065301
+Operator 13: 0.045252
+
+Total gradient norm:     0.147502
+Selected: 9 (norm 0.102662)
+Expectation value:  -226.71214944567808
+std_error: 0.002169566715305255
+Expectation value:  -226.89904424433178
+std_error: 0.0037666391062880335
+Expectation value:  -227.38013035128654
+std_error: 0.004178794867885586
+Expectation value:  -227.82482891073295
+std_error: 0.0027125295299912705
+Expectation value:  -227.91831256316908
+std_error: 0.0027202022765985797
+Expectation value:  -227.58277054336628
+std_error: 0.004151002150155927
+Expectation value:  -227.06539925998837
+std_error: 0.003739099092486181
+Expectation value:  -226.72892836797308
+std_error: 0.002138135620450012
+tolerance:  0.0027202022765985797
+Expectation value:  -227.91738103695747
+std_error: 0.0026938466811018934
+Expectation value:  -227.90984059250025
+std_error: 0.0028765248422328513
+Expectation value:  -227.9202193747398
+std_error: 0.0027512134603701658
+Expectation value:  -227.91450094990284
+std_error: 0.002904577648250311
+Expectation value:  -227.89974511801103
+std_error: 0.0030003813126522343
+Expectation value:  -227.9287930559754
+std_error: 0.0025232787117181535
+Expectation value:  -227.92646259614963
+std_error: 0.002564777599327919
+Expectation value:  -227.9301243873802
+std_error: 0.002350951717161315
+Expectation value:  -227.9372554305898
+std_error: 0.0022595803430326307
+Expectation value:  -227.935314014086
+std_error: 0.0020267303194162756
+Expectation value:  -227.9260235795317
+std_error: 0.0024215052990714603
+Expectation value:  -227.9325179606771
+std_error: 0.0023363828476792308
+Expectation value:  -227.93921648546896
+std_error: 0.002233409493076694
+Expectation value:  -227.9395829713327
+std_error: 0.0021432509805961834
+Expectation value:  -227.93761716210273
+std_error: 0.0020622954362595858
+Expectation value:  -227.93778054005472
+std_error: 0.0021837514775261877
+Expectation value:  -227.93635536149057
+std_error: 0.002187416412604621
+Expectation value:  -227.93600845201814
+std_error: 0.0021558196788181486
+Expectation value:  -227.9346922200187
+std_error: 0.002140585905588037
+Expectation value:  -227.93650691734126
+std_error: 0.0021119601984306113
+Expectation value:  -227.93617589134598
+std_error: 0.0021604917357077123
+Expectation value:  -227.934869646063
+std_error: 0.002148508446688097
+Expectation value:  -227.9387854705644
+std_error: 0.00215005150083975
+Expectation value:  -227.94075467211644
+std_error: 0.002127538772649528
+Expectation value:  -227.93539240847224
+std_error: 0.0021397186118462808
+Expectation value:  -227.9365499367255
+std_error: 0.0021446191645087503
+Expectation value:  -227.93681291184825
+std_error: 0.0021747521218322824
+Expectation value:  -227.9349451870472
+std_error: 0.0021513576514650135
+Expectation value:  -227.9367269816773
+std_error: 0.002159636660356964
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   29   F =-2.279367E+02    MAXCV = 0.000000E+00
+   X = 1.666272E-01   2.392196E-01   2.075221E-01   2.523741E-01
+
+coefficient    operator
+ 1.66627e-01        (1' 1' 2  2  ) : 1010 [1010]  
+ 2.39220e-01        (0' 0' 3  3  ) : 1010 [1010]  
+ 2.07522e-01        (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]  
+ 2.52374e-01        (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001  
+
+Iteration energy: -227.9367269816773
+Ansatz Indices: [11, 6, 8, 9]
+Gradient circuit depth:  795
+Energy circuit depth:  795
+
+*** Adapt Iteration 5 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.045678
+Operator 6: 0.007650
+Operator 8: 0.016580
+Operator 9: 0.044296
+Operator 11: 0.038429
+Operator 13: 0.045648
+
+Total gradient norm:     0.089120
+Selected: 4 (norm 0.045678)
+Expectation value:  -227.44324741762696
+std_error: 0.0036829401399822714
+Expectation value:  -227.21925495445933
+std_error: 0.0022330934290461855
+Expectation value:  -227.43818927010093
+std_error: 0.0036184575752575402
+Expectation value:  -227.84732948367343
+std_error: 0.0028201920598412093
+Expectation value:  -227.8857731392308
+std_error: 0.0028278831158604183
+Expectation value:  -227.48398871167885
+std_error: 0.003634501319471427
+Expectation value:  -227.14193250303222
+std_error: 0.002218046570387999
+Expectation value:  -227.2845341686518
+std_error: 0.0036855533319009905
+tolerance:  0.0028278831158604183
+Expectation value:  -227.88719287884007
+std_error: 0.0028111070536681626
+Expectation value:  -227.88855651903665
+std_error: 0.002899327235289038
+Expectation value:  -227.88214188508508
+std_error: 0.0030071102253131656
+Expectation value:  -227.87775690175735
+std_error: 0.0030156982896048273
+Expectation value:  -227.88093152217849
+std_error: 0.003053425176853073
+Expectation value:  -227.8569355666218
+std_error: 0.0031227035968931084
+Expectation value:  -227.9102114906515
+std_error: 0.0026451234803284013
+Expectation value:  -227.92351106984208
+std_error: 0.0023589640029831865
+Expectation value:  -227.9074649499802
+std_error: 0.0024182022537725693
+Expectation value:  -227.92670623488206
+std_error: 0.0023202767005508066
+Expectation value:  -227.93328974601
+std_error: 0.002258590158754934
+Expectation value:  -227.93615007732873
+std_error: 0.0022610493461543073
+Expectation value:  -227.94030222167706
+std_error: 0.0021765746029393834
+Expectation value:  -227.94034721833717
+std_error: 0.0018913714017762156
+Expectation value:  -227.93341099715224
+std_error: 0.0019899739057132985
+Expectation value:  -227.94108006574075
+std_error: 0.00186701945454285
+Expectation value:  -227.93853277647932
+std_error: 0.0019542331790887196
+Expectation value:  -227.93407402647313
+std_error: 0.0017696138411098922
+Expectation value:  -227.93973146102798
+std_error: 0.001882213618657701
+Expectation value:  -227.93711205109136
+std_error: 0.0021575724605169553
+Expectation value:  -227.93636163755738
+std_error: 0.001820715259719362
+Expectation value:  -227.94148731878425
+std_error: 0.001942488606836406
+Expectation value:  -227.94128759931203
+std_error: 0.0019017893307263444
+Expectation value:  -227.94221514566914
+std_error: 0.0019883610493859
+Expectation value:  -227.94108260634005
+std_error: 0.0020202388523048237
+Expectation value:  -227.94318977377938
+std_error: 0.0019870568904400312
+Expectation value:  -227.93904591266246
+std_error: 0.002062460884171255
+Expectation value:  -227.93846209728304
+std_error: 0.002008944014853378
+Expectation value:  -227.93978820853906
+std_error: 0.0020038006354125646
+Expectation value:  -227.9387918788463
+std_error: 0.0020172966258157625
+Expectation value:  -227.937888139638
+std_error: 0.002009437725537517
+Expectation value:  -227.9418722423129
+std_error: 0.0019802267186465865
+Expectation value:  -227.93882179238068
+std_error: 0.0020158213886982985
+Expectation value:  -227.94158718717395
+std_error: 0.002002671090990425
+Expectation value:  -227.9404165556427
+std_error: 0.0020187867125602407
+Expectation value:  -227.9392336394899
+std_error: 0.0020062636551732137
+Expectation value:  -227.9393440187157
+std_error: 0.002029602504751303
+Expectation value:  -227.94067176865545
+std_error: 0.001998660075015616
+Expectation value:  -227.93967063500887
+std_error: 0.0019921646649025903
+Expectation value:  -227.9408796961565
+std_error: 0.0020062828020380773
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   40   F =-2.279409E+02    MAXCV = 0.000000E+00
+   X = 1.911414E-01   2.314350E-01   1.974969E-01   1.631868E-01   5.455250E-02
+
+coefficient    operator
+ 1.91141e-01        (1' 1' 2  2  ) : 1010 [1010]  
+ 2.31435e-01        (0' 0' 3  3  ) : 1010 [1010]  
+ 1.97497e-01        (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]  
+ 1.63187e-01        (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001  
+ 5.45525e-02        (0' 0' 2  2  ) : 1010 [1010]  
+
+Iteration energy: -227.9408796961565
+Ansatz Indices: [11, 6, 8, 9, 4]
+Gradient circuit depth:  839
+Energy circuit depth:  839
+
+*** Adapt Iteration 6 ***
+
+Non-Zero Gradients (Exact circuit evaluation)
+Operator 4: 0.007586
+Operator 6: 0.005329
+Operator 8: 0.016971
+Operator 9: 0.007632
+Operator 11: 0.020604
+Operator 13: 0.049641
+
+Total gradient norm:     0.057627
+Selected: 13 (norm 0.049641)
+Expectation value:  -227.44189077210194
+std_error: 0.003620678548169611
+Expectation value:  -227.2142847972936
+std_error: 0.00206047103515687
+Expectation value:  -227.4353937465105
+std_error: 0.0035564119537631754
+Expectation value:  -227.84876593075998
+std_error: 0.0027390120705409362
+Expectation value:  -227.89348566804313
+std_error: 0.0027060891310913262
+Expectation value:  -227.4752326510824
+std_error: 0.0035646849382813656
+Expectation value:  -227.14426524965674
+std_error: 0.0020615565921428564
+Expectation value:  -227.29448958670244
+std_error: 0.0036034760582616056
+tolerance:  0.0027060891310913262
+Expectation value:  -227.887262840761
+std_error: 0.0027541442372747624
+Expectation value:  -227.89038521459094
+std_error: 0.0028236016164953017
+Expectation value:  -227.88705467090716
+std_error: 0.0029442107584722508
+Expectation value:  -227.8802195672044
+std_error: 0.0029556364004238132
+Expectation value:  -227.89051118678512
+std_error: 0.002926833860753367
+Expectation value:  -227.8853563153289
+std_error: 0.0029490064840847117
+Expectation value:  -227.86519126917548
+std_error: 0.0031116955248058913
+Expectation value:  -227.90764602439413
+std_error: 0.0027383791654269334
+Expectation value:  -227.92166605223977
+std_error: 0.0025323167091591465
+Expectation value:  -227.92751796835884
+std_error: 0.0024186211950772076
+Expectation value:  -227.93109901982868
+std_error: 0.0023526619949185484
+Expectation value:  -227.92775005669236
+std_error: 0.0024603902186774327
+Expectation value:  -227.93370901972048
+std_error: 0.0022040837749346554
+Expectation value:  -227.93198781836668
+std_error: 0.0023578045233417916
+Expectation value:  -227.9267715544526
+std_error: 0.002023055709853015
+Expectation value:  -227.9394821199535
+std_error: 0.002159231047243196
+Expectation value:  -227.93820480034907
+std_error: 0.002142313728963439
+Expectation value:  -227.93937134335786
+std_error: 0.002118796223003059
+Expectation value:  -227.93751676597077
+std_error: 0.002183198694546886
+Expectation value:  -227.93955482700233
+std_error: 0.0022341033028523247
+Expectation value:  -227.94229273980406
+std_error: 0.0021919193837809875
+Expectation value:  -227.93860627979603
+std_error: 0.0020880912851083703
+Expectation value:  -227.9393988654249
+std_error: 0.0022046149171164177
+Expectation value:  -227.940200186827
+std_error: 0.0022617690173728673
+Expectation value:  -227.93858876229788
+std_error: 0.002201504540521326
+Expectation value:  -227.9391102565015
+std_error: 0.0022174949911273325
+Expectation value:  -227.94033474206012
+std_error: 0.0021762761783366146
+Expectation value:  -227.94259407430278
+std_error: 0.0021459121385270425
+Expectation value:  -227.94090567661533
+std_error: 0.002112952327005758
+Expectation value:  -227.94140620734524
+std_error: 0.002148968882212379
+Expectation value:  -227.93957193874033
+std_error: 0.0021912429567982694
+Expectation value:  -227.94228946619396
+std_error: 0.0021790880810995815
+Expectation value:  -227.93870455769786
+std_error: 0.0021545214143468276
+Expectation value:  -227.93966465297808
+std_error: 0.0021662899501772317
+Expectation value:  -227.9407509213643
+std_error: 0.002159284493222139
+Expectation value:  -227.94065093607682
+std_error: 0.0021485415819153995
+Expectation value:  -227.94119021455342
+std_error: 0.0021446550350845296
+Expectation value:  -227.94372411994883
+std_error: 0.002175511318012261
+Expectation value:  -227.94018810649703
+std_error: 0.0021476195092504087
+Expectation value:  -227.94212167957997
+std_error: 0.002155953067407691
+Expectation value:  -227.9437541395049
+std_error: 0.002149109682615197
+Expectation value:  -227.942139767309
+std_error: 0.0021450919663748365
+Expectation value:  -227.9429911668273
+std_error: 0.002181064619600582
+Expectation value:  -227.94197970637998
+std_error: 0.002146580261937006
+Expectation value:  -227.94442533497423
+std_error: 0.0021639682726950606
+Expectation value:  -227.94198343483475
+std_error: 0.0021737507411331977
+Expectation value:  -227.94070154020622
+std_error: 0.0021448064591158447
+Expectation value:  -227.9428632428144
+std_error: 0.002130324972150525
+Expectation value:  -227.93865775526052
+std_error: 0.002162380153365027
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   49   F =-2.279387E+02    MAXCV = 0.000000E+00
+   X = 2.129753E-01   2.672601E-01   1.343113E-01   2.284699E-01   8.741674E-02
+       6.341489E-02
+
+coefficient    operator
+ 2.12975e-01        (1' 1' 2  2  ) : 1010 [1010]  
+ 2.67260e-01        (0' 0' 3  3  ) : 1010 [1010]  
+ 1.34311e-01        (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]  
+ 2.28470e-01        (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001  
+ 8.74167e-02        (0' 0' 2  2  ) : 1010 [1010]  
+ 6.34149e-02        (1' 1' 3  3  ) : 1010 [1010]  
+
+Iteration energy: -227.93865775526052
+Ansatz Indices: [11, 6, 8, 9, 4, 13]
+Converge archived due to not energy improvement
+HF energy: -227.89048126100337
+Final adaptVQE energy: -227.93865775526052
+CASCI energy: -227.9444022378741
+Error (respect to CASCI):  5.744e-03
+{'energy': -227.93865775526052, 'ansatz': <vqemulti.pool.tools.OperatorList object at 0x13a992010>, 'indices': [11, 6, 8, 9, 4, 13], 'coefficients': [0.21297527182806966, 0.267260081937805, 0.13431133777289794, 0.22846989784542152, 0.08741674481631728, 0.06341488821433326], 'iterations': {'energies': [-227.89056111172073, -227.90723868487711, -227.9184263950199, -227.92372646362796, -227.9367269816773, -227.9408796961565, -227.93865775526052], 'norms': [], 'f_evaluations': [20, 28, 34, 37, 48, 57], 'ansatz_size': [1, 2, 3, 4, 5, 6], 'variance': [0.009324947219705833, 0.009324947219705833, 0.009324947219705833, 0.009324947219705833, 0.009324947219705833, 0.009324947219705833, 0.009324947219705833], 'fidelity': [], 'coefficients': [[], [0.25293408155868635], [0.25671470357709153, 0.1438409458955282], [0.3197186524892868, 0.1414817648206515, 0.20103816681252631], [0.16662715343621662, 0.23921955259952915, 0.20752210339191932, 0.2523740937346921], [0.19114142679124912, 0.2314349661085414, 0.19749687786226966, 0.16318676989790357, 0.05455250475693416], [0.21297527182806966, 0.267260081937805, 0.13431133777289794, 0.22846989784542152, 0.08741674481631728, 0.06341488821433326]], 'indices': [[], [11], [11, 6], [11, 6, 8], [11, 6, 8, 9], [11, 6, 8, 9, 4], [11, 6, 8, 9, 4, 13]]}, 'variance': 0.009324947219705833, 'num_iterations': 5}
+dict_keys(['energy', 'ansatz', 'indices', 'coefficients', 'iterations', 'variance', 'num_iterations'])
+[1, 1, 1, 1, 0, 0, 0, 0]
+Expectation value:  -227.94252387056497
+std_error: 0.002159469030152932
+Energy restart: -227.94252387056497

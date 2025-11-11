@@ -1,0 +1,357 @@
+FullCI energy result: -1.8674951844363887
+N electrons 4
+N Orbitals 4
+
+POOL
+---------------------------
+           (0' 2  ) : 00 11 [00] [11]
+           (0' 3  ) : 00 11 [00] [11]
+           (1' 2  ) : 00 11 [00] [11]
+           (1' 3  ) : 00 11 [00] [11]
+     (0' 0' 2  2  ) : 1010 [1010]
+     (0' 0' 3  2  ) : 1010 [0110] [1010] 1001
+     (0' 0' 3  3  ) : 1010 [1010]
+     (1' 0' 2  2  ) : 1010 [1001] [1010] 0110
+     (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+     (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+     (1' 0' 3  3  ) : 1010 [1001] [1010] 0110
+     (1' 1' 2  2  ) : 1010 [1010]
+     (1' 1' 3  2  ) : 1010 [0110] [1010] 1001
+     (1' 1' 3  3  ) : 1010 [1010]
+precision 0.01
+pool size:  14
+
+*** Adapt Iteration 1 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.000963
+Operator 1: 0.000574
+Operator 2: 0.000494
+Operator 3: 0.001077
+Operator 4: 0.228938
+Operator 5: 0.002068
+Operator 6: 0.191550
+Operator 7: 0.001739
+Operator 8: 0.062224
+Operator 9: 0.422613
+Operator 10: 0.001094
+Operator 11: 0.194341
+Operator 12: 0.001079
+Operator 13: 0.231998
+
+Total gradient norm:     0.602645
+Selected: 9 (norm 0.422613)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   13   F =-1.567195E+00    MAXCV = 0.000000E+00
+   X = 2.478750E+00
+
+coefficient   operator
+ 2.47875      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+
+Iteration energy: -1.5671949778265322
+Ansatz Indices: [9]
+Gradient circuit depth:  415
+Energy circuit depth:  415
+
+*** Adapt Iteration 2 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.004891
+Operator 1: 0.002567
+Operator 2: 0.003403
+Operator 3: 0.001482
+Operator 4: 0.005879
+Operator 5: 0.000079
+Operator 6: 0.012867
+Operator 7: 0.000608
+Operator 8: 0.024536
+Operator 9: 0.018952
+Operator 10: 0.000049
+Operator 11: 0.014324
+Operator 12: 0.000192
+Operator 13: 0.005378
+
+Total gradient norm:     0.037949
+Selected: 8 (norm 0.024536)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   20   F =-1.578353E+00    MAXCV = 0.000000E+00
+   X = 2.811772E+00  -2.733169E-01
+
+coefficient   operator
+ 2.81177      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+-0.27332      (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+
+Iteration energy: -1.5783533861270531
+Ansatz Indices: [9, 8]
+Gradient circuit depth:  622
+Energy circuit depth:  622
+
+*** Adapt Iteration 3 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.003776
+Operator 1: 0.005900
+Operator 2: 0.000023
+Operator 3: 0.003265
+Operator 4: 0.023761
+Operator 5: 0.001130
+Operator 6: 0.061939
+Operator 7: 0.003194
+Operator 8: 0.035451
+Operator 9: 0.013761
+Operator 10: 0.000325
+Operator 11: 0.057857
+Operator 12: 0.000508
+Operator 13: 0.027092
+
+Total gradient norm:     0.100001
+Selected: 6 (norm 0.061939)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   32   F =-1.668967E+00    MAXCV = 0.000000E+00
+   X = 3.535429E+00  -7.683189E-01   8.533956E-01
+
+coefficient   operator
+ 3.53543      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+-0.76832      (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+ 0.85340      (0' 0' 3  3  ) : 1010 [1010]
+
+Iteration energy: -1.6689672018413906
+Ansatz Indices: [9, 8, 6]
+Gradient circuit depth:  694
+Energy circuit depth:  694
+
+*** Adapt Iteration 4 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.001178
+Operator 1: 0.000185
+Operator 2: 0.000306
+Operator 3: 0.001133
+Operator 4: 0.057913
+Operator 5: 0.001468
+Operator 6: 0.031731
+Operator 7: 0.000263
+Operator 8: 0.019816
+Operator 9: 0.077524
+Operator 10: 0.000790
+Operator 11: 0.207692
+Operator 12: 0.000985
+Operator 13: 0.061427
+
+Total gradient norm:     0.240165
+Selected: 11 (norm 0.207692)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   29   F =-1.796237E+00    MAXCV = 0.000000E+00
+   X = 3.590346E+00  -5.474613E-01   7.517182E-01   1.043375E+00
+
+coefficient   operator
+ 3.59035      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+-0.54746      (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+ 0.75172      (0' 0' 3  3  ) : 1010 [1010]
+ 1.04337      (1' 1' 2  2  ) : 1010 [1010]
+
+Iteration energy: -1.7962367133876564
+Ansatz Indices: [9, 8, 6, 11]
+Gradient circuit depth:  694
+Energy circuit depth:  694
+
+*** Adapt Iteration 5 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.003187
+Operator 1: 0.001606
+Operator 2: 0.001109
+Operator 3: 0.001315
+Operator 4: 0.015899
+Operator 5: 0.000814
+Operator 6: 0.063710
+Operator 7: 0.001673
+Operator 8: 0.022090
+Operator 9: 0.054120
+Operator 10: 0.000534
+Operator 11: 0.003771
+Operator 12: 0.000704
+Operator 13: 0.018177
+
+Total gradient norm:     0.089963
+Selected: 6 (norm 0.063710)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   35   F =-1.791419E+00    MAXCV = 0.000000E+00
+   X = 3.540982E+00  -6.634134E-01   9.687083E-01   1.170814E+00   2.151862E-01
+
+coefficient   operator
+ 3.54098      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+-0.66341      (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+ 0.96871      (0' 0' 3  3  ) : 1010 [1010]
+ 1.17081      (1' 1' 2  2  ) : 1010 [1010]
+ 0.21519      (0' 0' 3  3  ) : 1010 [1010]
+
+Iteration energy: -1.7914186273693107
+Ansatz Indices: [9, 8, 6, 11, 6]
+Gradient circuit depth:  694
+Energy circuit depth:  694
+HF energy: -1.3113344140103154
+Final adaptVQE energy: -1.7914186273693107
+FullCI energy: -1.8674951844363887
+Error: 0.07607655706707805
+Indices: [9, 8, 6, 11, 6]
+Coefficients: [3.5409824765996114, -0.6634134030415207, 0.968708281273137, 1.1708141195896828, 0.21518615263877794]
+Num operators: 5
+n_evaluations:  440
+
+Fidelity measure:  0.63
+
+------------------------------------
+version: qiskit 0.25.1
+Total shots: 10000
+Circuit evaluations (per shot): 53066
+Total circuit depth (per shot): 29196394
+Maximum circuit depth: 695
+Average circuit depth: 550.19
+Gate counts (per shot):
+ PauliX         : 212264
+ Hadamard       : 9886020
+ RX             : 9886040
+ CNOT           : 23064544
+ RZ             : 2448016
+------------------------------------
+
+partial data
+ -1.567194977827   0.300300206610   0.602645468750
+ -1.578353386127   0.289141798309   0.037948723565
+ -1.668967201841   0.198527982595   0.100000596493
+ -1.796236713388   0.071258471049   0.240164564290
+ -1.791418627369   0.076076557067   0.089962564444
+n_electrons:  4
+n_orbitals:  4
+n_qubits: 8
+pool size:  14
+
+*** Adapt Iteration 1 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.000470
+Operator 1: 0.000042
+Operator 2: 0.000105
+Operator 3: 0.000265
+Operator 4: 0.004432
+Operator 5: 0.000477
+Operator 6: 0.042153
+Operator 7: 0.000254
+Operator 8: 0.000308
+Operator 9: 0.000561
+Operator 10: 0.000037
+Operator 11: 0.003595
+Operator 12: 0.001515
+Operator 13: 0.004488
+
+Total gradient norm:     0.042812
+Selected: 6 (norm 0.042153)
+
+   Normal return from subroutine COBYLA
+
+   NFVALS =   42   F =-1.909538E+00    MAXCV = 0.000000E+00
+   X = 5.281737E+00   5.386303E-01   5.305887E-01   1.069144E+00   1.798947E-01
+       2.506220E-01
+
+coefficient   operator
+ 5.28174      (1' 0' 3  2  ) : 1010 0101 [1001] [0110] [1010] [0101] 0110 1001
+ 0.53863      (1' 0' 3  2  ) : 0000 1111 1010 0101 1001 0110 [0000] [1111] [1010] [0101] [0110] [1001]
+ 0.53059      (0' 0' 3  3  ) : 1010 [1010]
+ 1.06914      (1' 1' 2  2  ) : 1010 [1010]
+ 0.17989      (0' 0' 3  3  ) : 1010 [1010]
+ 0.25062      (0' 0' 3  3  ) : 1010 [1010]
+
+Iteration energy: -1.9095384913789868
+Ansatz Indices: [6]
+Gradient circuit depth:  694
+Energy circuit depth:  694
+
+*** Adapt Iteration 2 ***
+
+Non-Zero Gradients (Simulated with 10000 shots)
+Operator 0: 0.001375
+Operator 1: 0.002723
+Operator 2: 0.000097
+Operator 4: 0.006846
+Operator 5: 0.001838
+Operator 6: 0.019300
+Operator 7: 0.000246
+Operator 8: 0.000619
+Operator 9: 0.004732
+Operator 10: 0.000521
+Operator 11: 0.003820
+Operator 12: 0.000115
+Operator 13: 0.005576
+
+Total gradient norm:     0.022379
+Selected: 6 (norm 0.019300)
+Converge archived due to repeated operator
+Energy HF: -1.31133441
+Energy HF (2): -1.60337057
+Energy adaptVQE:  -1.9095384913789868
+Energy FullCI:  -1.98598143321041
+Error: 0.0764429418314232
+Ansatz: [-0.35355339059327373 [2^ 1^ 6 5] +
+0.35355339059327373 [2^ 1^ 7 4] +
+0.35355339059327373 [3^ 0^ 6 5] +
+-0.35355339059327373 [3^ 0^ 7 4] +
+0.35355339059327373 [6^ 5^ 2 1] +
+-0.35355339059327373 [6^ 5^ 3 0] +
+-0.35355339059327373 [7^ 4^ 2 1] +
+0.35355339059327373 [7^ 4^ 3 0], -0.408248290463863 [2^ 0^ 6 4] +
+-0.2041241452319315 [2^ 1^ 6 5] +
+-0.2041241452319315 [2^ 1^ 7 4] +
+-0.2041241452319315 [3^ 0^ 6 5] +
+-0.2041241452319315 [3^ 0^ 7 4] +
+-0.408248290463863 [3^ 1^ 7 5] +
+0.408248290463863 [6^ 4^ 2 0] +
+0.2041241452319315 [6^ 5^ 2 1] +
+0.2041241452319315 [6^ 5^ 3 0] +
+0.2041241452319315 [7^ 4^ 2 1] +
+0.2041241452319315 [7^ 4^ 3 0] +
+0.408248290463863 [7^ 5^ 3 1], -0.7071067811865475 [1^ 0^ 7 6] +
+0.7071067811865475 [7^ 6^ 1 0], -0.7071067811865475 [3^ 2^ 5 4] +
+0.7071067811865475 [5^ 4^ 3 2], -0.7071067811865475 [1^ 0^ 7 6] +
+0.7071067811865475 [7^ 6^ 1 0], -0.7071067811865475 [1^ 0^ 7 6] +
+0.7071067811865475 [7^ 6^ 1 0]]
+Indices: [6]
+Coefficients: [5.281736586908932, 0.5386303261826724, 0.5305887249224214, 1.0691441368853936, 0.17989469712355385, 0.25062203292682855]
+Num operators: 6
+
+Fidelity measure (previous):  0.62
+
+Fidelity measure:  0.67
+Total num evaluations: 692
+
+------------------------------------
+version: qiskit 0.25.1
+Total shots: 10000
+Circuit evaluations (per shot): 71274
+Total circuit depth (per shot): 41845466
+Maximum circuit depth: 695
+Average circuit depth: 587.11
+Gate counts (per shot):
+ PauliX         : 285096
+ Hadamard       : 14579456
+ RX             : 14579476
+ CNOT           : 33552352
+ RZ             : 3613328
+------------------------------------
+
+ -1.567194977827   0.418786455384   0.602645468750
+ -1.578353386127   0.407628047083   0.037948723565
+ -1.668967201841   0.317014231369   0.100000596493
+ -1.796236713388   0.189744719823   0.240164564290
+ -1.791418627369   0.194562805841   0.089962564444
+ -1.909538491379   0.076442941831   0.042812450958

@@ -9,8 +9,13 @@ import numpy as np
 
 class GeneticAdapt(Method):
 
-    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance,
-                 gradient_simulator, beta):
+    def __init__(self, gradient_threshold,
+                 diff_threshold,
+                 coeff_tolerance,
+                 gradient_simulator,
+                 beta,
+                 min_iterations=0):
+
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
@@ -20,7 +25,7 @@ class GeneticAdapt(Method):
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla]
         self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
-                                   }
+                                   'min_iterations': min_iterations}
 
 
 

@@ -34,9 +34,22 @@ def qubits_operator_action(pool, indeces):
 
 class AdapTetris(Method):
 
-    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance, gradient_simulator, operator_update_max_grad
+    def __init__(self,
+                 gradient_threshold,
+                 diff_threshold,
+                 coeff_tolerance,
+                 gradient_simulator,
+                 operator_update_max_grad,
+                 min_iterations=0
                 ):
-
+        """
+        :param gradient_threshold: total-gradient-norm convergence threshold (in Hartree)
+        :param diff_threshold: missing description
+        :param coeff_tolerance: Set upper limit value for coefficient to be considered as zero
+        :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
+        :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
+        :param min_iterations: force to do at least this number of iterations
+        """
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
@@ -45,7 +58,8 @@ class AdapTetris(Method):
 
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla, energy_worsening]
-        self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold}
+        self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
+                                   'min_iterations': min_iterations}
 
 
 

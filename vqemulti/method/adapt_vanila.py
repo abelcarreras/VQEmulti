@@ -25,6 +25,7 @@ class AdapVanilla(Method):
         :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
         :param operator_update_number: number of operators to add to the ansatz at each iteration
         :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
+        :param min_iterations: force to do at least this number of iterations
         """
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold

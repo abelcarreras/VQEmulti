@@ -227,14 +227,18 @@ def cobyla_mod(fun, x0, jac, args=(), **options):
               'maxiter': 1000,
               'tol': 1-4,
               'catol': 2e-4,
-              'n_guess': 8,
+              'n_guess': 9,
               'guess_range': np.pi}
 
     params.update(options)
 
     energy_list = []
     std_list = []
-    x_range = list(np.linspace(-params['guess_range'], params['guess_range'], params['n_guess']))
+    if params['n_guess'] < 2:
+        x_range = [0.0]
+    else:
+        x_range = list(np.linspace(-params['guess_range'], params['guess_range'], params['n_guess']))
+
     for x_test in x_range:
         x0_test = [x for x in x0]
         x0_test[-1] = x_test
@@ -245,7 +249,7 @@ def cobyla_mod(fun, x0, jac, args=(), **options):
     x0[-1] = x_range[np.argmin(energy_list)]
 
     std_error = std_list[np.argmin(energy_list)]
-    tolerance = np.max([std_error, params['tol']])
+    tolerance = np.max([std_error, params['tol']])*0.01
     print('tolerance: ', tolerance)
 
     result = _minimize_cobyla(fun, x0, args=args,
@@ -253,8 +257,8 @@ def cobyla_mod(fun, x0, jac, args=(), **options):
                               disp=options['disp'], catol=params['catol'], callback=None)
 
     return OptimizeResult(x=result.x, fun=result.fun, jac=jac,
-                          nit=result.nfev + params['n_guess'],
-                          nfev=result.nfev + params['n_guess'],
+                          nit=result.nfev + len(energy_list),
+                          nfev=result.nfev + len(energy_list),
                           success=result.success)
 
     # from scipy.optimize.cobyla import fmin_cobyla

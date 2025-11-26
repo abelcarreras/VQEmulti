@@ -67,9 +67,11 @@ def compute_gradient_vector(hf_reference_fock, hamiltonian, ansatz, coefficients
     :return: the gradient vector
     """
 
+    # get n_qubits
+    n_qubits = len(hf_reference_fock)
+
     # transform hamiltonian to sparse
-    sparse_hamiltonian = get_sparse_operator(hamiltonian)
-    n_qubits = count_qubits(hamiltonian)
+    sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubits)
 
     # Prepare the current state from ansatz (& coefficient) and HF reference
     sparse_state = prepare_adapt_state(hf_reference_fock,

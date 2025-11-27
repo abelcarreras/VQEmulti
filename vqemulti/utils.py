@@ -712,7 +712,7 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     """
     if n_qubits is None:
         n_qubits = count_qubits(operator)
-        print('n_qubits_inside', n_qubits)
+        warnings.warn('n_qubits not specified. Using {}'.format(n_qubits))
 
     if Configuration().mapping == 'bk':
         if isinstance(operator, (openfermion.FermionOperator, openfermion.InteractionOperator)):
@@ -1514,3 +1514,60 @@ def configuration_generator(n, k):
             vector[pos] = 1
         yield vector
 
+
+def get_operators_order(operator_list, ordering_type='hungarian'):
+
+    n_operators = len(operator_list)
+
+    if n_operators == 1:
+        return [0]
+
+    comm_matrix = np.zeros((n_operators, n_operators))
+    for i in range(n_operators):
+        for j in range(i, n_operators):
+            comm_matrix[i, j] = comm_matrix[j, i] = commutativity_value(operator_list[i], operator_list[j])
+
+    def spectral_ordering(similarity_matrix):
+        # Build Laplacian L = D - W
+        W = (similarity_matrix + similarity_matrix.T) / 2.0
+        degree = np.sum(W, axis=1)
+        L = np.diag(degree) - W
+        # compute smallest nontrivial eigenvector (second smallest eigenvalue)
+        # use np.linalg.eigh on small matrices
+        vals, vecs = np.linalg.eigh(L)
+        # eigenvectors sorted ascending; take second (index 1)
+        fiedler = vecs[:, 1]
+        ordering = np.argsort(fiedler)
+        return list(ordering)
+
+    def hungarian_ordering(comm_matrix):
+
+        from scipy.optimize import linear_sum_assignment
+
+        # permutation algorithms functions
+        def hungarian_algorithm(sub_matrix):
+            row_ind, col_ind = linear_sum_assignment(sub_matrix)
+            perm = np.zeros_like(row_ind)
+            perm[row_ind] = col_ind
+            return perm
+
+        return hungarian_algorithm(-comm_matrix)
+
+    # print(np.round(comm_matrix, decimals=1))
+
+    if ordering_type == 'spectral':
+        order = spectral_ordering(comm_matrix)
+    elif ordering_type == 'hungarian':
+        order = hungarian_ordering(comm_matrix)
+    else:
+        raise Exception('Error in ordering type')
+
+    # comm_matrix_ord = comm_matrix[order,:][:, order]
+    # print(np.round(comm_matrix_ord, decimals=1))
+
+    return order#[::-1]
+
+
+def break_qubit_operator(operator):
+    from openfermion import QubitOperator
+    return [QubitOperator(term)*coef for term, coef in operator.terms.items()]

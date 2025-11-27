@@ -1,4 +1,6 @@
-from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix, ansatz_to_matrix_list
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
+from vqemulti.utils import get_operators_order, break_qubit_operator, ansatz_to_matrix_list
+
 from openfermion.utils import count_qubits
 from collections import defaultdict
 import numpy as np
@@ -12,6 +14,7 @@ class SimulatorBase:
                  test_only=False,
                  hamiltonian_grouping=True,
                  separate_matrix_operators=True,
+                 reorder_trotter=False,
                  shots=1000):
         """
         :param trotter: Trotterize ansatz operators
@@ -19,11 +22,13 @@ class SimulatorBase:
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
         :param hamiltonian_grouping: organize Hamiltonian into Abelian commutative groups (reduce evaluations)
         :param separate_matrix_operators: separate adaptVQE matrix operators (only with test_only = True)
+        :param reorder_trotter: reorder operators before trotterization to minimize non-commutativity errors
         :param shots: number of samples to perform in the simulation
         """
 
         self._trotter = trotter
         self._trotter_steps = trotter_steps
+        self._reorder_trotter = reorder_trotter
         self._test_only = test_only
         self._shots = shots
         self._circuit_count = []
@@ -164,6 +169,13 @@ class SimulatorBase:
             for operator in ansatz:
                 if len(operator.terms) == 0:
                     continue
+
+                # reorder operators
+                if self._reorder_trotter:
+                    op_list = break_qubit_operator(operator)
+                    order = get_operators_order(op_list)
+                    operator = sum([op_list[i] for i in order])
+
                 # Add the gates corresponding to this operator to the ansatz gate list
                 trotter_ansatz += self._trotterize_operator(operator, n_qubits)
 

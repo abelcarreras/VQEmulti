@@ -1,12 +1,12 @@
-from vqemulti.energy.exact import exact_adapt_vqe_energy, exact_vqe_energy
-from vqemulti.energy.simulation import simulate_adapt_vqe_energy, simulate_vqe_energy
+from vqemulti.energy.exact import exact_vqe_energy
+from vqemulti.energy.simulation import simulate_vqe_energy
 
 
 def get_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator):
     if energy_simulator is None:
-        return exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian)
+        return exact_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, trotterize=True)
     else:
-        return simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+        return simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator, trotterize=True)
 
 
 def get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator):

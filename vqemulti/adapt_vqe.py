@@ -1,12 +1,11 @@
-from vqemulti.energy import exact_adapt_vqe_energy
+from vqemulti.energy import get_adapt_vqe_energy
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError, Converged
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
-from vqemulti.energy.simulation import simulate_adapt_vqe_variance, simulate_adapt_vqe_energy
-from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
-from vqemulti.gradient.exact import exact_adapt_vqe_energy_gradient
+from vqemulti.energy.simulation import simulate_adapt_vqe_variance
+from vqemulti.gradient import get_adapt_vqe_energy_gradient
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
 import scipy
@@ -89,15 +88,11 @@ def adaptVQE(hamiltonian,
     method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool, energy_threshold)
 
     # Hartree-Fock energy calculation
-    if energy_simulator is None:
-        iterations['energies'].append(exact_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian))
-    else:
-        energy_simulator.update_model(precision=energy_threshold,
-                                      variance=variance,
-                                      n_coefficients=len(coefficients),
-                                      n_qubits=n_qubits)
-        iterations['energies'].append(simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian,
-                                                                energy_simulator))
+    if energy_simulator is not None:
+        energy_simulator.update_model(precision=energy_threshold, variance=variance,
+                                      n_coefficients=len(coefficients), n_qubits=n_qubits)
+
+    iterations['energies'].append(get_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator))
     iterations['coefficients'].append(coefficients)
     iterations['indices'].append(ansatz.get_index(operators_pool))
 
@@ -119,29 +114,20 @@ def adaptVQE(hamiltonian,
                     'num_iterations': iteration}
 
         # run optimization
-        if energy_simulator is None:
-            results = scipy.optimize.minimize(exact_adapt_vqe_energy,
-                                              coefficients,
-                                              (ansatz, hf_reference_fock, hamiltonian),
-                                              jac=exact_adapt_vqe_energy_gradient,
-                                              method=optimizer_params.method,
-                                              options=optimizer_params.options,
-                                              tol=energy_threshold,
-                                              )
-        else:
+        if energy_simulator is not None:
             energy_simulator.update_model(precision=energy_threshold,
                                           variance=variance,
                                           n_coefficients=len(coefficients),
                                           n_qubits=n_qubits)
 
-            results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
-                                              coefficients,
-                                              (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                              jac=simulate_vqe_energy_gradient,
-                                              method=optimizer_params.method,
-                                              options=optimizer_params.options,
-                                              tol=energy_threshold,
-                                              )
+        results = scipy.optimize.minimize(get_adapt_vqe_energy,
+                                          coefficients,
+                                          (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
+                                          jac=get_adapt_vqe_energy_gradient,
+                                          method=optimizer_params.method,
+                                          options=optimizer_params.options,
+                                          tol=energy_threshold,
+                                          )
 
         coefficients = list(results.x)
         energy = results.fun
@@ -251,9 +237,9 @@ if __name__ == '__main__':
     print('hf reference', hf_reference_fock)
 
     # Simulator
-    from simulators.penny_simulator import PennylaneSimulator as Simulator
+    # from simulators.penny_simulator import PennylaneSimulator as Simulator
     # from simulators.cirq_simulator import CirqSimulator as Simulator
-    # from simulators.qiskit_simulator import QiskitSimulator as Simulator
+    from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
     simulator = Simulator(trotter=True,
                           trotter_steps=1,

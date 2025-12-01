@@ -22,33 +22,6 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     return energy, std_error
 
 
-def simulate_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, return_std=False):
-    """
-    Obtain the hamiltonian expectation value for a given adaptVQE state (reference + ansatz) and a hamiltonian
-
-    :param coefficients: adaptVQE coefficients
-    :param ansatz: ansatz expressed in qubit/fermion operators
-    :param hf_reference_fock: reference HF in fock vspace vector
-    :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
-    :param simulator: simulation object
-    :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
-    """
-
-    # transform to qubit hamiltonian
-    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
-
-    # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
-
-    # evaluate hamiltonian
-    energy, std_error = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)
-
-    if return_std:
-        return energy, std_error
-
-    return energy
-
-
 def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
                         multiplicity=0,
                         generate_random=False,
@@ -148,7 +121,7 @@ def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, ha
     return energy_square
 
 
-def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, return_std=False):
+def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, trotterize=False, return_std=False):
     """
     Obtain the hamiltonian expectation value for a given VQE state (reference + ansatz) and a hamiltonian
 
@@ -157,14 +130,20 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, si
     :param hf_reference_fock: reference HF in fock vspace vector
     :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
     :param simulator: simulation object
+    :param trotterize: use trotterized wave function (adaptVQE style)
+    :param return_std: return std also
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
     # transform to qubit hamiltonian
     qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
-    # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=True)
+    if trotterize:
+        # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
+        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
+    else:
+        # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
+        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=True)
 
     # evaluate hamiltonian
     energy, std_error = _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_hamiltonian, simulator)

@@ -112,50 +112,51 @@ def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):
     return get_ucc_ansatz(kappa, None, full_amplitudes=True, tolerance=tolerance, use_qubit=use_qubit)
 
 
-def force_local_amplitudes(amplitudes, distance=1):
+def crop_local_amplitudes(amplitudes, n_neighbors=1):
     """
     remove interactions in the amplitudes between orbitals at larger distance than the set distance
 
     :param amplitudes: amplitudes matrix (occ x virt) / (occ x occ x virt x virt )
-    :param distance: distance between orbitals
+    :param n_neighbors: distance between orbitals
     :return: local amplitudes
     """
 
     if len(np.shape(amplitudes)) == 2:
         # a_j a_i^
         nocc, nvrt = amplitudes.shape
-        local_amplitudes = np.zeros_like(amplitudes)
-
-        local_amplitudes[max(distance - nocc, 0):, :min(distance, nvrt)] = \
-            amplitudes[max(distance - nocc, 0):, :min(distance, nvrt)]
+        local_amplitudes = np.array(amplitudes).copy()  # a_j a_i^
+        for i in range(nocc):
+            local_amplitudes[i, max(0, n_neighbors - nocc + i+1):] = 0
 
     elif len(np.shape(amplitudes)) == 4:
         # a_j a_l a_i^ a_k^
         # double electron amplitudes
-        print('double')
         nocc, nvrt = amplitudes.shape[1:3]
-        local_amplitudes = np.zeros_like(amplitudes)
-        local_amplitudes[max(distance - nocc, 0):,
-        max(distance - nocc, 0):,
-        :min(distance, nvrt),
-        :min(distance, nvrt)] = \
-            amplitudes[max(distance - nocc, 0):,
-            max(distance - nocc, 0):,
-            :min(distance, nvrt),
-            :min(distance, nvrt)]
+
+        local_amplitudes = np.array(amplitudes).copy()  # a_j a_l a_i^ a_k^
+
+        for i in range(nocc):
+            # strict criteria, all pairs (i, j) (k, l) within distance
+            local_amplitudes[i, :, max(0, n_neighbors - nocc + i + 1):, :] = 0
+            local_amplitudes[:, i, :, max(0, n_neighbors - nocc + i + 1):] = 0
+
     else:
         raise Exception('Amplitudes format not accepted')
 
     return local_amplitudes
 
 
-def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=False):
+def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=False, n_terms=None, local=False):
     """
     Get unitary coupled Jastrow ansatz from 1-excitation and 2-excitation CC amplitudes
 
     :param t1: 1-excitation amplitudes in spin-orbital basis ( n x n )
     :param t2: 1-excitation amplitudes in spin-orbital basis ( n x n x n x n )
+    :param full_trotter: full trotter
     :param tolerance: amplitude cutoff to include term in the ansatz
+    :param use_qubit: return operators as QubitOperators
+    :param n_terms: number of terms (U^JU) to be included in the ansatz
+    :param local: use local version of J operator
     :return: coefficients as list and ansatz as OperatorsList
     """
     from jastrow.factor import double_factorized_t2
@@ -183,9 +184,29 @@ def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=Fa
         coefficients.append(1.0)
         operators.append(operator_tot)
 
+    if n_terms is None:
+        n_terms = len(diag_coulomb_mats) * 2
+
+    def make_local(mat):
+        local_mat = np.array(mat).copy()
+        for i, row in enumerate(local_mat):
+            row[i+2:] = 0
+            row[:max(0, i-1)] = 0
+        return local_mat
+
+    i_term = 1
+    operator_list = []
     for diag, U in zip(diag_coulomb_mats, orbital_rotations):
         for U_i, diag_i in zip(U, diag):
+            if i_term > n_terms:
+                break
+            i_term += 1
 
+            if local:
+                # make local version
+                diag_i = np.tril(np.triu(diag_i, -1), 1)
+
+            # build Jastrow operator
             j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)
             for i in range(norb):
                 for j in range(norb):
@@ -220,8 +241,12 @@ def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=Fa
                 coefficients += coefficients_c
                 operators += [op for op in ansatz_c]
 
-            # operators = operators[::-1]
-            # coefficients = coefficients[::-1]
+    #from utils import get_operators_order
+    #ordering = get_operators_order(operators)
+    #print('ordering: ', ordering)
+    #exit()
+    #operators = np.array(operators)[ordering]
+    #coefficients = np.array(coefficients)[ordering]
 
     ansatz = OperatorList(operators, normalize=False, antisymmetrize=False)
 
@@ -236,12 +261,29 @@ if __name__ == '__main__':
     from vqemulti.utils import get_hf_reference_in_fock_space
     from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
     from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
+    from qiskit_ibm_runtime.fake_provider import FakeTorino
+    from qiskit_aer import AerSimulator
 
-    simulator = Simulator(trotter=True,
+    from vqemulti.preferences import Configuration
+    #config = Configuration()
+    #config.verbose = 2
+
+    simulator = Simulator(trotter=False,
                           trotter_steps=1,
                           test_only=True,
                           hamiltonian_grouping=True,
-                          use_estimator=True)
+                          use_estimator=True, shots=10000,
+                          # backend=FakeTorino(),
+                          # use_ibm_runtime=True
+                          )
+
+    simulator_jastrow = simulator.copy()
+    #simulator_jastrow._backend = FakeTorino()
+    #simulator_jastrow._use_ibm_runtime = True
+    simulator_sqd = simulator.copy()
+    simulator_sqd._backend = AerSimulator()
+    simulator_sqd._use_ibm_runtime = True
+
 
     hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
                                        ('H', [2.0, 0.0, 0.0]),
@@ -253,16 +295,56 @@ if __name__ == '__main__':
                              description='molecule')
 
     # run classical calculation
-    n_frozen_orb = 0
-    n_total_orb = 4
+    n_frozen_orb = 0 # nothing
+    n_total_orb = 4 # total orbitals
     molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
                          frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
 
+    tol_ampl = 0.01
+
+    from pyscf.fci import cistring
+    mc = molecule._pyscf_data['casci']
+
+    ncas = mc.ncas
+    nelec = mc.nelecas
+
+    # determinants α i β (representats com enters amb bits d’ocupació)
+    na, nb = nelec
+    alpha_det = cistring.make_strings(range(ncas), na)
+    beta_det = cistring.make_strings(range(ncas), nb)
+
+
+    def interleave_bits(a, b, ncas):
+        """Return interleaved occupation string (αβ αβ ...)"""
+        a_bits = [(a >> i) & 1 for i in range(ncas)]
+        b_bits = [(b >> i) & 1 for i in range(ncas)]
+        inter = []
+        for i in reversed(range(ncas)):
+            inter.append(str(a_bits[i]))
+            inter.append(str(b_bits[i]))
+        return ''.join(inter)[::-1]
+
+    print('\namplitudes CASCI')
+    for i, a in enumerate(alpha_det):
+        for j, b in enumerate(beta_det):
+            amp = mc.ci[i, j]
+            if amp**2 > tol_ampl:
+                # print(f"α={format(a, f'0{ncas}b')}  β={format(b, f'0{ncas}b')}  coef={amp:+.6f}")
+                cfg = interleave_bits(a, b, ncas)
+                print(f"{cfg}   {amp:+.6f}  ({amp**2:.6f}) ")
+
     hamiltonian = molecule.get_molecular_hamiltonian()
+    from openfermion import QubitOperator
+
+    # hamiltonian = QubitOperator('Z0 Z1 Z4 Z5 Z7')
+    # hamiltonian = QubitOperator('Z0 Z2 Z3 Z6 Z7')
+
+    # print(hamiltonian)
 
     n_electrons = molecule.n_electrons - n_frozen_orb * 2
     n_orbitals = n_total_orb - n_frozen_orb  # molecule.n_orbitals
     n_qubits = n_orbitals * 2
+    print('n_qubits: ', n_qubits)
 
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
@@ -296,32 +378,33 @@ if __name__ == '__main__':
                                   simulator)
 
     spin_square = get_adapt_vqe_energy(coefficients,
-                                 ansatz,
-                                 hf_reference_fock,
-                                 spin_square_operator(n_orbitals),
-                                 simulator)
+                                       ansatz,
+                                       hf_reference_fock,
+                                       spin_square_operator(n_orbitals),
+                                       simulator)
 
     print('n_particles: {:8.4f}'.format(n_particle))
     print('Sz: {:8.4f}'.format(spin_z))
     print('S2: {:8.4f}'.format(spin_square))
 
-
     print('\nJASTROW ansatz\n==============')
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
-    t2 = force_local_amplitudes(ccsd.t2, distance=1)
-    coefficients, ansatz = get_ucj_ansatz(t2, full_trotter=True, use_qubit=True)
+    t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
 
+    coefficients, ansatz = get_ucj_ansatz(t2, full_trotter=False, use_qubit=False, n_terms=1, local=False)
+
+    #simulator_jastrow = None
     energy = get_adapt_vqe_energy(coefficients,
                                   ansatz,
                                   hf_reference_fock,
                                   hamiltonian,
-                                  simulator)
+                                  simulator_jastrow)
 
-    simulator.print_statistics()
-    print(simulator.get_circuits()[-1])
+    simulator_jastrow.print_statistics()
+    print(simulator_jastrow.get_circuits()[-1])
 
-    print('energy: ', energy)
+    print('Jastrow energy: ', energy)
 
     n_particle = get_adapt_vqe_energy(coefficients,
                                       ansatz,
@@ -345,8 +428,40 @@ if __name__ == '__main__':
     print('Sz: {:8.4f}'.format(spin_z))
     print('S2: {:8.4f}'.format(spin_square))
 
+
+    def get_projections(n_qubits, n_electrons, tolerance=0.01):
+
+        from vqemulti.operators import configuration_projector_operator
+        from vqemulti.utils import configuration_generator
+
+        print('\nAmplitudes square')
+        amplitudes_square = []
+        for configuration in configuration_generator(n_qubits, n_electrons):
+            amplitude2 = get_adapt_vqe_energy(coefficients,
+                                              ansatz,
+                                              hf_reference_fock,
+                                              configuration_projector_operator(configuration),
+                                              simulator)
+
+            amplitudes_square.append(amplitude2)
+
+            if abs(amplitude2) > tolerance:
+                print('{} {:8.5f} '.format(''.join([str(s) for s in configuration]), amplitude2.real))
+
+        print('sum amplitudes square: ', np.sum(amplitudes_square))
+        return amplitudes_square
+
+    get_projections(n_qubits, n_electrons, tolerance=tol_ampl)
+
     # SQD
     from vqemulti.energy.simulation import simulate_energy_sqd
-
-    energy = simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons, adapt=True)
+    energy, samples = simulate_energy_sqd(coefficients,
+                                          ansatz,
+                                          hf_reference_fock,
+                                          hamiltonian,
+                                          simulator_sqd,
+                                          n_electrons,
+                                          adapt=True,
+                                          return_samples=True)
     print('SQD energy', energy)
+    print(samples)

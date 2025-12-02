@@ -3,7 +3,7 @@ from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.preferences import Configuration
 from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
-from vqemulti.adapt_vqe import simulate_adapt_vqe_energy
+from vqemulti.adapt_vqe import get_adapt_vqe_energy
 from vqemulti.pool.tools import OperatorList
 import scipy
 import numpy as np
@@ -82,7 +82,7 @@ for energy_threshold in et_list:
 
     energy_list = []
     for i in range(50):
-        results = scipy.optimize.minimize(simulate_adapt_vqe_energy,
+        results = scipy.optimize.minimize(get_adapt_vqe_energy,
                                           coefficients,
                                           (ansatz, hf_reference_fock, hamiltonian, simulator),
                                           method='COBYLA',  # SPSA for real hardware

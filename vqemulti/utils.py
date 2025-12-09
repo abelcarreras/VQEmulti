@@ -3,6 +3,7 @@ from openfermion.ops.representations import InteractionOperator
 from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, binary_code_transform
 from openfermion.transforms import reorder, get_interaction_operator, get_fermion_operator
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
+from openfermion import FermionOperator, QubitOperator, normal_ordered
 from vqemulti.preferences import Configuration
 from subprocess import Popen, PIPE, STDOUT
 import os, pathlib, warnings
@@ -614,7 +615,6 @@ def fermion_to_qubit(operator):
     :param operator: fermion operator
     :return: qubit operator
     """
-    from openfermion import QubitOperator
     if isinstance(operator, QubitOperator):
         warnings.warn('Already Qubit operator. Returning as is')
         return operator
@@ -659,9 +659,8 @@ def proper_order(ansatz):
     :param ansatz: Fermion operators
     :return: ordered Fermion operators
     """
-    from openfermion import normal_ordered
 
-    total = openfermion.FermionOperator()
+    total = FermionOperator()
     for term in ansatz:
         for i, v in term.terms.items():
             t, c = sort_tuples(i)
@@ -672,7 +671,6 @@ def proper_order(ansatz):
 
 def cache_operator(func):
     cache_dict = {}
-    import openfermion
 
     def wrapper_cache(*args, **kwargs):
 
@@ -823,7 +821,6 @@ def load_wave_function(filename='wf.yml', qubit_op=False):
     """
 
     import yaml
-    from openfermion import FermionOperator, QubitOperator
     from vqemulti.pool.tools import OperatorList
 
     op_list = []
@@ -1569,5 +1566,24 @@ def get_operators_order(operator_list, ordering_type='hungarian'):
 
 
 def break_qubit_operator(operator):
-    from openfermion import QubitOperator
     return [QubitOperator(term)*coef for term, coef in operator.terms.items()]
+
+
+def get_truncated_fermion_operators(op, max_orbital, max_mb=None):
+    """
+    remove terms of the hamiltonian according to orbital number and number of operators in term
+
+    :param op: hamiltonian operator
+    :param max_orbital: max number of orbitals
+    :param max_mb: max number of operators in terms
+    :return:
+    """
+    max_mode = max_orbital*2
+    if max_mb is None:
+        max_mb = max_mode
+
+    new_op = FermionOperator()
+    for term, coeff in op.terms.items():
+        if all(mode <= max_mode for mode, action in term) and len(term) <= max_mb:
+            new_op += FermionOperator(term, coeff)
+    return new_op

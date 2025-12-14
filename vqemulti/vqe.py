@@ -1,9 +1,7 @@
-from vqemulti.energy import exact_vqe_energy, get_vqe_energy, simulate_vqe_energy
-from vqemulti.gradient.simulation import simulate_vqe_energy_gradient
-from vqemulti.gradient import exact_vqe_energy_gradient
+from vqemulti.energy import get_vqe_energy
+from vqemulti.gradient import get_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
 from vqemulti.optimizers import OptimizerParams
-from vqemulti.preferences import Configuration
 import numpy as np
 import scipy
 
@@ -51,31 +49,19 @@ def vqe(hamiltonian,
         return {'energy': energy, 'coefficients': [], 'ansatz': ansatz, 'f_evaluations': 0}
 
     # Optimize the results from analytical calculation
-    if energy_simulator is None:
-        results = scipy.optimize.minimize(exact_vqe_energy,
-                                          coefficients,
-                                          (ansatz, hf_reference_fock, hamiltonian),
-                                          jac=exact_vqe_energy_gradient,
-                                          method=optimizer_params.method,
-                                          options=optimizer_params.options,
-                                          tol=energy_threshold,
-                                          )
-
-    else:
-        results = scipy.optimize.minimize(simulate_vqe_energy,
-                                          coefficients,
-                                          (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                          jac=simulate_vqe_energy_gradient,
-                                          method=optimizer_params.method,
-                                          options=optimizer_params.options,
-                                          tol=energy_threshold,
-                                          )
+    results = scipy.optimize.minimize(get_vqe_energy,
+                                      coefficients,
+                                      (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
+                                      jac=get_vqe_energy_gradient,
+                                      method=optimizer_params.method,
+                                      options=optimizer_params.options,
+                                      tol=energy_threshold,
+                                      )
 
     return {'energy': results.fun,
             'coefficients': list(results.x),
             'ansatz': ansatz,
             'f_evaluations': results.nfev}
-
 
 
 if __name__ == '__main__':
@@ -136,8 +122,8 @@ if __name__ == '__main__':
     result = vqe(hamiltonian,
                  uccsd_ansatz,
                  hf_reference_fock,
-                 # energy_simulator=simulator,
-                 opt_qubits=False)
+                 energy_simulator=simulator,
+                 )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy VQE: {:.8f}'.format(result['energy']))

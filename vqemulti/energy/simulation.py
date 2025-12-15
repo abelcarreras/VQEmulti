@@ -154,7 +154,7 @@ def simulate_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, si
     return energy
 
 
-def simulate_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+def _old_simulate_vqe_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference
 

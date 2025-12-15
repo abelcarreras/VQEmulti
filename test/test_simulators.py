@@ -148,7 +148,7 @@ class OperationsTest(unittest.TestCase):
         print('test HF reference exact circuit evaluation')
         # simulators exact energy
         for Simulator in [QiskitSimulator, PennylaneSimulator, CirqSimulator]:
-            simulator = Simulator(trotter=False, test_only=False, shots=100000, hamiltonian_grouping=True)
+            simulator = Simulator(trotter=False, test_only=False, shots=1000000, hamiltonian_grouping=True)
 
             energy_sp = simulate_vqe_energy([], self.uccsd_ansatz[:0],
                                             self.hf_reference_fock,
@@ -160,7 +160,7 @@ class OperationsTest(unittest.TestCase):
         print('test 3 operators ansatz exact circuit evaluation')
         # simulators exact energy
         for Simulator in [QiskitSimulator, PennylaneSimulator, CirqSimulator]:
-            simulator = Simulator(trotter=False, test_only=False, shots=100000, hamiltonian_grouping=True)
+            simulator = Simulator(trotter=False, test_only=False, shots=1000000, hamiltonian_grouping=True)
 
             energy_sp = simulate_vqe_energy(self.result['coefficients'],
                                             self.result['ansatz'],
@@ -176,7 +176,7 @@ class OperationsTest(unittest.TestCase):
         print('test HF reference exact circuit evaluation')
         # simulators exact energy
         for Simulator in [QiskitSimulator, PennylaneSimulator, CirqSimulator]:
-            simulator = Simulator(trotter=True, test_only=False, shots=100000, hamiltonian_grouping=True)
+            simulator = Simulator(trotter=True, test_only=False, shots=1000000, hamiltonian_grouping=True)
 
             energy_sp = simulate_vqe_energy([], self.uccsd_ansatz[:0],
                                             self.hf_reference_fock,
@@ -188,7 +188,7 @@ class OperationsTest(unittest.TestCase):
         print('test 3 operators ansatz exact circuit evaluation')
         # simulators exact energy
         for Simulator in [QiskitSimulator, PennylaneSimulator, CirqSimulator]:
-            simulator = Simulator(trotter=True, test_only=False, shots=100000, hamiltonian_grouping=True)
+            simulator = Simulator(trotter=True, test_only=False, shots=1000000, hamiltonian_grouping=True)
 
             energy_sp = simulate_vqe_energy(self.result['coefficients'],
                                             self.result['ansatz'],

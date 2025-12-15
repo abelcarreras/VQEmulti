@@ -146,6 +146,23 @@ def crop_local_amplitudes(amplitudes, n_neighbors=1):
     return local_amplitudes
 
 
+def get_mod_matrix(matrix, tolerance=2*np.pi, fix_antidiagonals=True):
+    n_orb = len(matrix)
+    matrix_mod = np.array(matrix)
+
+    if matrix_mod[0, 0] < matrix_mod[n_orb-1, n_orb-1]:
+        tolerance *= -1
+
+    matrix_mod[0, 0] = tolerance
+    matrix_mod[n_orb-1, n_orb-1] = -tolerance
+
+    if fix_antidiagonals:
+        matrix_mod[n_orb-1, 0] = 0.0
+        matrix_mod[0, n_orb-1] = 0.0
+
+    return matrix_mod
+
+
 def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=False, n_terms=None, local=False):
     """
     Get unitary coupled Jastrow ansatz from 1-excitation and 2-excitation CC amplitudes
@@ -205,6 +222,8 @@ def get_ucj_ansatz(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit=Fa
             if local:
                 # make local version
                 diag_i = np.tril(np.triu(diag_i, -1), 1)
+
+            #diag_i = get_mod_matrix(diag_i, tolerance=7*np.pi/4, fix_antidiagonals=False)
 
             # build Jastrow operator
             j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)

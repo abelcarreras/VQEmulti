@@ -241,7 +241,7 @@ def simulate_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamilton
     return energy
 
 
-def simulate_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
+def simulate_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, trotter=False):
     """
     Obtain the hamiltonian square expectation value for a given VQE state (reference + ansatz) and a hamiltonian
 
@@ -250,6 +250,7 @@ def simulate_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, 
     :param hf_reference_fock: reference HF in fock vspace vector
     :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
     :param simulator: simulation object
+    :param trotter: use trotter (for adaptVQE)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
@@ -257,7 +258,7 @@ def simulate_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, 
     qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
     # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=True)
+    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not trotter)
 
     # prepare gates
     state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
@@ -281,17 +282,6 @@ def simulate_adapt_vqe_variance(coefficients, ansatz, hf_reference_fock, hamilto
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
-    # transform to qubit hamiltonian
-    qubit_hamiltonian = fermion_to_qubit(hamiltonian)
-
-    # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
-
-    # prepare gates
-    state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
-
-    # energy = simulator.get_state_evaluation(qubit_hamiltonian, state_preparation_gates)
-
-    variance = simulator.get_state_evaluation_variance(qubit_hamiltonian, state_preparation_gates)
+    variance = simulate_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, trotter=False)
 
     return variance

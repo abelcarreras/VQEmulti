@@ -123,11 +123,14 @@ class OperatorList:
 
         prefactors = []
         for op in self._list:
-            if self.get_operators_type() == QubitOperator:
-                prefactors.append((list(op.terms.values())[0]).real)
+            values = list(op.terms.values())
+            if len(values) == 1:
+                if self.get_operators_type() == QubitOperator:
+                    prefactors.append((values[0]/1j).real)
+                else:
+                    prefactors.append(values[0])
             else:
-                prefactors.append((list(op.terms.values())[0]).real)
-
+                return None
         return prefactors
 
     def scale_vector(self, coefficients):

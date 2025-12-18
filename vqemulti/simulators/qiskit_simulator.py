@@ -689,6 +689,38 @@ class QiskitSimulator(SimulatorBase):
 
         return counts_total
 
+    def get_state_sampling(self, state_preparation_gates, n_qubits):
+        """
+        get sampling of the state in the computational basis using the Qiskit simulator.
+        By construction, all the expectation values of the strings in subHamiltonian can be
+        obtained from the same measurement array. This reduces quantum computer simulations
+
+        :return: dictionary with samples in little-endian
+        """
+
+        # Initialize circuit and apply hamiltonian gates according to main string
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        self._get_circuit_stat_data(circuit)
+
+        circuit.measure_all()
+
+        if not self._use_ibm_runtime:
+            result = self._backend.run(circuit, shots=self._shots, memory=True).result()
+            # memory = result.get_memory()
+        else:
+            sampler = RHESampler(self._backend, n_qubits, self._session)
+            result = sampler.run(circuit, shots=self._shots, memory=True).result()
+
+        counts_total = result.get_counts()
+
+        # set bistrings to big-endian
+        # counts_total = {bitstring[::-1]: count for bitstring, count in counts_total.items()}
+
+        return counts_total
+
     def _build_reference_gates(self, hf_reference_fock):
         """
         Create the gates for preparing the Hartree Fock ground state, that serves

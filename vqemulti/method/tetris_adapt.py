@@ -31,15 +31,14 @@ def qubits_operator_action(pool, indeces):
     return qubit_indices
 
 
-
 class AdapTetris(Method):
 
     def __init__(self,
-                 gradient_threshold,
-                 diff_threshold,
-                 coeff_tolerance,
-                 gradient_simulator,
-                 operator_update_max_grad,
+                 gradient_threshold=1e-6,
+                 diff_threshold=0,
+                 coeff_tolerance=1e-10,
+                 gradient_simulator=None,
+                 operator_update_max_grad=2e-2,
                  min_iterations=0
                 ):
         """
@@ -50,6 +49,8 @@ class AdapTetris(Method):
         :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
         :param min_iterations: force to do at least this number of iterations
         """
+        super().__init__()
+
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
         self.coeff_tolerance = coeff_tolerance
@@ -62,27 +63,15 @@ class AdapTetris(Method):
                                    'min_iterations': min_iterations}
 
 
-
     def update_ansatz(self, ansatz, iterations):
         coefficients = deepcopy(iterations['coefficients'][-1])
-        if self.gradient_simulator is None:
-            gradient_vector = compute_gradient_vector(self.reference_hf,
-                                                      self.hamiltonian,
-                                                      ansatz,
-                                                      coefficients,
-                                                      self.operators_pool)
-        else:
+        if self.gradient_simulator is not None:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
-                                            variance=iterations['variance'][-1],
-                                            n_coefficients=len(coefficients),
-                                            n_qubits=self.hamiltonian.n_qubits)
+                                                 variance=iterations['variance'][-1],
+                                                 n_coefficients=len(coefficients),
+                                                 n_qubits=self.hamiltonian.n_qubits)
 
-            gradient_vector = simulate_gradient(self.reference_hf,
-                                                self.hamiltonian,
-                                                ansatz,
-                                                coefficients,
-                                                self.operators_pool,
-                                                self.gradient_simulator)
+        gradient_vector = ansatz.pool_gradient_vector(self.hamiltonian, self.operators_pool, self.gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
 
@@ -122,10 +111,10 @@ class AdapTetris(Method):
             print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
         # check if repeated operator
-        repeat_operator = len(max_indices) == len(ansatz.get_index(self.operators_pool)[-len(max_indices):]) and \
+        repeat_operator = len(max_indices) == len(ansatz.operators.get_index(self.operators_pool)[-len(max_indices):]) and \
                           np.all(
                               np.array(max_indices) == np.array(
-                                  ansatz.get_index(self.operators_pool)[-len(max_indices):]))
+                                  ansatz.operators.get_index(self.operators_pool)[-len(max_indices):]))
 
         # if repeat operator finish adaptVQE
         if repeat_operator:
@@ -133,10 +122,13 @@ class AdapTetris(Method):
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):
-            coefficients.append(0)
-            ansatz.append(max_operator)
+            ansatz.add_operator(max_operator, 0.0)
 
-        return ansatz, coefficients
+        if self.gradient_simulator is not None:
+            circuit_info = self.gradient_simulator.get_circuit_info(ansatz)
+            print('Gradient circuit depth: ', circuit_info['depth'])
+
+        return ansatz
 
 
 

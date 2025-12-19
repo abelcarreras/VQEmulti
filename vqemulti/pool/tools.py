@@ -11,6 +11,11 @@ class OperatorList:
 
         return object.__new__(cls)
 
+    def __deepcopy__(self, memo):
+        import copy
+        operators_copy = [copy.deepcopy(op, memo) for op in self._list]
+        return OperatorList(operators_copy, normalize=False, antisymmetrize=False, spin_symmetry=False)
+
     def __init__(self, operators, normalize=False, antisymmetrize=True, spin_symmetry=False):
         """
         basis class to manage operators lists

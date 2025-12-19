@@ -13,7 +13,7 @@ def adaptVQE(hamiltonian,
              adapt_ansatz,
              energy_threshold=0.0001,
              max_iterations=50,
-             method=AdapVanilla(),
+             method=None,
              energy_simulator=None,
              reference_dm=None,
              optimizer_params=OptimizerParams(),
@@ -33,6 +33,10 @@ def adaptVQE(hamiltonian,
     :param optimizer_params: parameters to be used in the optimizer (OptimizerParams object)
     :return: results dictionary
     """
+
+    # default method for adaptVQE
+    if method is None:
+        method = AdapVanilla()
 
     print('optimizer params: ', optimizer_params)
 
@@ -55,7 +59,7 @@ def adaptVQE(hamiltonian,
     print('Initial variance: ', variance)
 
     # Initialize variables that are common for all the methods
-    method.initialize_general_variables(adapt_ansatz._reference_fock, hamiltonian, operators_pool, energy_threshold)
+    method.initialize_general_variables(hamiltonian, operators_pool, energy_threshold)
 
     # fill data in iterations dictionary
     iterations['variance'].append(variance)
@@ -129,10 +133,7 @@ def adaptVQE(hamiltonian,
                         'variance': iterations['variance'][-1],
                         'num_iterations': iteration}
 
-        if method._gradient_simulator is not None:
-            circuit_info = method._gradient_simulator.get_circuit_info(adapt_ansatz)
-            print('Gradient circuit depth: ', circuit_info['depth'])
-
+        # to be deprecated
         if energy_simulator is not None:
             circuit_info = energy_simulator.get_circuit_info(adapt_ansatz)
             print('Energy circuit depth: ', circuit_info['depth'])
@@ -206,23 +207,46 @@ if __name__ == '__main__':
 
     # Method
     from vqemulti.method.adapt_vanila import AdapVanilla
-    #from vqemulti.method.tetris_adapt import AdapTetris
-    #from vqemulti.method.genetic_adapt import GeneticAdapt
-    #from vqemulti.method.genetic_add_adapt import Genetic_Add_Adapt
+    from vqemulti.method.tetris_adapt import AdapTetris
+    from vqemulti.method.genetic_adapt import GeneticAdapt
+    from vqemulti.method.genetic_add_adapt import Genetic_Add_Adapt
 
-    method = AdapVanilla(gradient_threshold=1e-6,
-                         diff_threshold=0,
-                         coeff_tolerance=1e-10,
-                         # gradient_simulator=simulator,
-                         operator_update_number=1,
-                         operator_update_max_grad=2e-2,
-                         )
+    method_vanilla = AdapVanilla(gradient_threshold=1e-6,
+                             diff_threshold=0,
+                             coeff_tolerance=1e-10,
+                             # gradient_simulator=simulator,
+                             operator_update_number=1,
+                             operator_update_max_grad=2e-2,
+                             )
+
+    method_tetris = AdapTetris(gradient_threshold=1e-6,
+                               diff_threshold=0,
+                               coeff_tolerance=1e-10,
+                               # gradient_simulator=simulator,
+                               operator_update_max_grad=0.001
+                               )
+
+    method_genetic = GeneticAdapt(gradient_threshold=1e-6,
+                                  diff_threshold=0,
+                                  coeff_tolerance=1e-10,
+                                  gradient_simulator=None,
+                                  beta=6
+                                  )
+
+    method_genetic_add = Genetic_Add_Adapt(gradient_threshold=1e-6,
+                                           diff_threshold=0,
+                                           coeff_tolerance=1e-10,
+                                           gradient_simulator=None,
+                                           beta=6,
+                                           alpha=0.001
+                                           )
+
     try:
         result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                           operators_pool,  # fermionic operators
                           adapt_ansatz,
                           energy_threshold=0.0001,
-                          method=method,
+                          # method=method_genetic_add,
                           max_iterations=20,
                           # energy_simulator=simulator,
                           # variance_simulator=simulator,

@@ -6,10 +6,16 @@ from copy import deepcopy
 import numpy as np
 
 
-
 class Genetic_Add_Adapt(Method):
 
-    def __init__(self, gradient_threshold, diff_threshold, coeff_tolerance, gradient_simulator, beta, alpha, min_iterations=0):
+    def __init__(self,
+                 gradient_threshold=1e-6,
+                 diff_threshold=0,
+                 coeff_tolerance=1e-10,
+                 gradient_simulator=None,
+                 beta=6,
+                 alpha=0.001,
+                 min_iterations=0):
 
         self.gradient_threshold = gradient_threshold
         self.diff_threshold = diff_threshold
@@ -20,32 +26,22 @@ class Genetic_Add_Adapt(Method):
 
         # Convergence criteria definition for this method
         self.criteria_list = [zero_valued_coefficient_adaptvanilla]
-        self.params_convergence = {'coeff_tolerance': self.coeff_tolerance, 'diff_threshold': self.diff_threshold,
+        self.params_convergence = {'coeff_tolerance': self.coeff_tolerance,
+                                   'diff_threshold': self.diff_threshold,
                                    'min_iterations': min_iterations}
-
-
 
     def update_ansatz(self, ansatz, iterations):
         coefficients = deepcopy(iterations['coefficients'][-1])
         # Select the mutation that is going to happen
-        if self.gradient_simulator is None:
-            gradient_vector = compute_gradient_vector(self.reference_hf,
-                                                      self.hamiltonian,
-                                                      ansatz,
-                                                      coefficients,
-                                                      self.operators_pool)
-        else:
+        if self.gradient_simulator is not None:
             self.gradient_simulator.update_model(precision=self.energy_threshold,
                                             variance=iterations['variance'][-1],
                                             n_coefficients=len(coefficients),
                                             n_qubits=self.hamiltonian.n_qubits)
 
-            gradient_vector = simulate_gradient(self.reference_hf,
-                                                self.hamiltonian,
-                                                ansatz,
-                                                coefficients,
-                                                self.operators_pool,
-                                                self.gradient_simulator)
+        ansatz_copy = ansatz.copy()
+        ansatz_copy.parameters = coefficients
+        gradient_vector = ansatz_copy.pool_gradient_vector(self.hamiltonian, self.operators_pool, self.gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
 
@@ -85,14 +81,12 @@ class Genetic_Add_Adapt(Method):
 
             # check if repeated operator
             if len(coefficients)>0:
-                repeat_operator = np.all(np.array(selected) == np.array(ansatz.get_index(self.operators_pool)[-1:]))
+                repeat_operator = np.all(np.array(selected) == np.array(ansatz.operators.get_index(self.operators_pool)[-1:]))
                 # if repeat operator finish adaptVQE
                 if repeat_operator:
                     raise Converged(message='Converge archived due to repeated operator')
 
-
-            coefficients.append(0)
-            ansatz.append(new_operator)
+            ansatz.add_operator(new_operator, 0.0)
 
         else:
             # primary selection of operators
@@ -107,10 +101,10 @@ class Genetic_Add_Adapt(Method):
                 print("Selected: {} (norm {:.6f})".format(max_index, max_gradient))
 
             # check if repeated operator
-            repeat_operator = len(max_indices) == len(ansatz.get_index(self.operators_pool)[-len(max_indices):]) and \
+            repeat_operator = len(max_indices) == len(ansatz.operators.get_index(self.operators_pool)[-len(max_indices):]) and \
                               np.all(
                                   np.array(max_indices) == np.array(
-                                      ansatz.get_index(self.operators_pool)[-len(max_indices):]))
+                                      ansatz.operators.get_index(self.operators_pool)[-len(max_indices):]))
 
             # if repeat operator finish adaptVQE
             if repeat_operator:
@@ -118,9 +112,8 @@ class Genetic_Add_Adapt(Method):
 
             # Initialize the coefficient of the operator that will be newly added at 0
             for max_index, max_operator in zip(max_indices, max_operators):
-                coefficients.append(0)
-                ansatz.append(max_operator)
+                ansatz.add_operator(max_operator, 0.0)
 
-        return ansatz, coefficients
+        return ansatz
 
 

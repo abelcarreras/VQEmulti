@@ -24,10 +24,12 @@ class AdapVanilla(Method):
         :param operator_update_max_grad: max gradient relative deviation between operations that update together in one iteration
         :param min_iterations: force to do at least this number of iterations
         """
+        super().__init__()
+
         self._gradient_threshold = gradient_threshold
         self._diff_threshold = diff_threshold
         self._coeff_tolerance = coeff_tolerance
-        self._gradient_simulator = gradient_simulator
+        self.gradient_simulator = gradient_simulator
         self._operator_update_number = operator_update_number
         self._operator_update_max_grad = operator_update_max_grad
 
@@ -38,13 +40,13 @@ class AdapVanilla(Method):
 
     def update_ansatz(self, ansatz, iterations):
 
-        if self._gradient_simulator is not None:
-            self._gradient_simulator.update_model(precision=self.energy_threshold,
+        if self.gradient_simulator is not None:
+            self.gradient_simulator.update_model(precision=self.energy_threshold,
                                                   variance=iterations['variance'][-1],
                                                   n_coefficients=len(ansatz),
                                                   n_qubits=ansatz.n_qubits)
 
-        gradient_vector = ansatz.pool_gradient_vector(self.hamiltonian, self.operators_pool, self._gradient_simulator)
+        gradient_vector = ansatz.pool_gradient_vector(self.hamiltonian, self.operators_pool, self.gradient_simulator)
 
         total_norm = np.linalg.norm(gradient_vector)
         iterations['norms'].append(total_norm)
@@ -87,10 +89,8 @@ class AdapVanilla(Method):
         for max_index, max_operator in zip(max_indices, max_operators):
             ansatz.add_operator(max_operator, 0.0)
 
+        if self.gradient_simulator is not None:
+            circuit_info = self.gradient_simulator.get_circuit_info(ansatz)
+            print('Gradient circuit depth: ', circuit_info['depth'])
+
         return ansatz
-
-
-
-
-
-

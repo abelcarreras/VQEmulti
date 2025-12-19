@@ -45,6 +45,7 @@ def get_density_matrix(ansatz, frozen_core=0):
 
     return density_matrix_alpha + density_matrix_beta
 
+
 def get_second_order_density_matrix(ansatz, frozen_core=0):
     """
     Calculates the 2 particles density matrix in molecular orbitals basis

@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 
 
-class ProductExponentialAnsatz(GenericAnsatz):
+class _ProductExponentialAnsatz(GenericAnsatz):
     """
     ansatz type: Sum(e^O_i)
     """
@@ -118,10 +118,15 @@ class ExponentialAnsatz(GenericAnsatz):
         self._reference_fock = reference_fock
         self._n_qubit = len(reference_fock)
 
+        assert len(parameters) == len(operator_list)
+
         if not is_hermitian(1j * sum(operator_list)):
             raise Exception('Non antihermitian operator')
 
 
+    @property
+    def n_qubits(self):
+        return len(self._reference_fock)
 
     @property
     def operators(self):
@@ -250,6 +255,24 @@ class ExponentialAnsatz(GenericAnsatz):
             gradient.append(2 * term[0].real)
 
         return gradient
+
+    def get_state_vector(self):
+        """
+        prepare state vector from coefficients ansatz and reference
+
+        :return state vector
+        """
+
+        ref_state = get_sparse_ket_from_fock(self._reference_fock)
+
+        exponent = sp.sparse.csr_array((2 ** self._n_qubit, 2 ** self._n_qubit), dtype=float)
+        for coefficient, operator in zip(self._parameters, self._operators):
+            exponent += coefficient * get_sparse_operator(operator, self._n_qubit)
+
+        state = sp.sparse.linalg.expm_multiply(exponent, ref_state)
+
+        return state
+
 
     def get_sampling(self, simulator):
 

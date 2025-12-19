@@ -1,3 +1,4 @@
+import numpy as np
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, PyscfMolecularData
 from vqemulti.utils import generate_reduced_hamiltonian
@@ -5,6 +6,7 @@ from vqemulti.pool.singlet_sd import get_pool_singlet_sd
 from vqemulti.utils import get_hf_reference_in_fock_space, fermion_to_qubit
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from vqemulti.preferences import Configuration
+from vqemulti.ansatz.exponential import ExponentialAnsatz
 from vqemulti import vqe
 import unittest
 
@@ -37,18 +39,20 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
-        uccsd_ansatz = uccsd_ansatz.get_quibits_list() # to qubit operators
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
+        uccsd_operators = uccsd_operators.get_quibits_list() # to qubit operators
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
         hamiltonian = fermion_to_qubit(hamiltonian) # to qubit operators
 
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
+
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock)
+        result = vqe(hamiltonian, uccsd_ansatz)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -80,18 +84,20 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
-        uccsd_ansatz = uccsd_ansatz.get_quibits_list() # to qubit operators
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
+        uccsd_operators = uccsd_operators.get_quibits_list() # to qubit operators
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
         hamiltonian = fermion_to_qubit(hamiltonian) # to qubit operators
 
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
+
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock)
+        result = vqe(hamiltonian, uccsd_ansatz)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -123,18 +129,20 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
-        uccsd_ansatz = uccsd_ansatz.get_quibits_list()  # to qubit operators
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
+        uccsd_operators = uccsd_operators.get_quibits_list() # to qubit operators
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
         hamiltonian = fermion_to_qubit(hamiltonian)  # to qubit operators
 
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
+
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock)
+        result = vqe(hamiltonian, uccsd_ansatz)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -168,22 +176,23 @@ class OperationsTest(unittest.TestCase):
         print('n_qubits:', hamiltonian.n_qubits)
 
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
-        uccsd_ansatz = uccsd_ansatz.get_quibits_list() # to qubit operators
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
+        uccsd_operators = uccsd_operators.get_quibits_list() # to qubit operators
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
         hamiltonian = fermion_to_qubit(hamiltonian) # to qubit operators
 
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
+
         # setup simulator
         simulator = QiskitSimulator(trotter=True, trotter_steps=1, test_only=True)
 
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock,
-                     energy_simulator=simulator)
+        result = vqe(hamiltonian, uccsd_ansatz, energy_simulator=simulator)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -216,16 +225,18 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
+
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock)
+        result = vqe(hamiltonian, uccsd_ansatz)
 
         print('Energy HF: {:.8f}'.format(self.molecule.hf_energy))
         print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -252,20 +263,21 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
-        uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
+        # get UCCSD operators
+        uccsd_operators = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+
+        # define ansatz
+        initial_parameters = np.zeros_like(uccsd_operators)
+        uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_operators, hf_reference_fock)
 
         # setup simulator
         simulator = QiskitSimulator(trotter=True, trotter_steps=1, test_only=True)
 
         print('Initialize VQE')
-        result = vqe(hamiltonian,
-                     uccsd_ansatz,
-                     hf_reference_fock,
-                     energy_simulator=simulator)
+        result = vqe(hamiltonian, uccsd_ansatz, energy_simulator=simulator)
 
         print('Energy VQE: {:.8f}'.format(result['energy']))
         print('Num operators: ', len(result['ansatz']))

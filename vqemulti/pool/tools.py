@@ -19,6 +19,9 @@ class OperatorList:
         :param normalize: if True, divide operators in list elements and set coefficients to one
         :param antisymmetrize: if True modify fermion operators to be antisymmetric
         """
+        if isinstance(operators, OperatorList):
+            operators = operators._list
+
         if isinstance(operators, (list, tuple)):
             if len(operators) > 0:
                 self._type = type(operators[0])

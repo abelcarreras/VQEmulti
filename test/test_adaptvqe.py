@@ -7,6 +7,7 @@ from vqemulti.errors import NotConvergedError
 from vqemulti.adapt_vqe import adaptVQE
 from vqemulti.symmetry import get_symmetry_reduced_pool, symmetrize_molecular_orbitals, get_pauli_symmetry_reduced_pool
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 import unittest
 
 
@@ -38,11 +39,14 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
+        # get UCCSD pool
         operators_pool = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+
+        # define ansatz
+        adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
 
         # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
         from vqemulti.optimizers import OptimizerParams
@@ -62,7 +66,7 @@ class OperationsTest(unittest.TestCase):
         print('Initialize adaptVQE bfgs')
         result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                           operators_pool,  # fermionic operators
-                          hf_reference_fock,
+                          adapt_ansatz,
                           energy_threshold=1e-2,
                           method=method,
                           max_iterations=8,
@@ -86,7 +90,7 @@ class OperationsTest(unittest.TestCase):
         print('Initialize adaptVQE cobyla')
         result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                           operators_pool,  # fermionic operators
-                          hf_reference_fock,
+                          adapt_ansatz,
                           energy_threshold=1e-2,
                           method=method,
                           max_iterations=8,
@@ -142,6 +146,9 @@ class OperationsTest(unittest.TestCase):
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+        # define ansatz
+        adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
         # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
         from vqemulti.optimizers import OptimizerParams
         opt_bfgs = OptimizerParams(method='BFGS', options={'gtol': 1e-2})
@@ -161,7 +168,7 @@ class OperationsTest(unittest.TestCase):
         try:
             result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                               operators_pool,  # fermionic operators
-                              hf_reference_fock,
+                              adapt_ansatz,
                               energy_threshold=1e-2,
                               method=method,
                               max_iterations=8,
@@ -197,11 +204,14 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
+        # get UCCSD ansatz
         operators_pool = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+
+        # define ansatz
+        adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
 
         # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
         from vqemulti.optimizers import OptimizerParams
@@ -224,7 +234,7 @@ class OperationsTest(unittest.TestCase):
         print('Initialize adaptVQE bfgs')
         result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                           operators_pool,  # fermionic operators
-                          hf_reference_fock,
+                          adapt_ansatz,
                           energy_threshold=1e-2,
                           method=method,
                           max_iterations=8,
@@ -257,11 +267,14 @@ class OperationsTest(unittest.TestCase):
         print('n_orbitals: ', n_orbitals)
         print('n_qubits:', hamiltonian.n_qubits)
 
-        # define UCCSD ansatz
+        # get UCCSD ansatz
         operators_pool = get_pool_singlet_sd(n_electrons, n_orbitals)
 
         # Get reference Hartree Fock state
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
+
+        # define ansatz
+        adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
 
         # define optimizer (check: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
         from vqemulti.optimizers import OptimizerParams
@@ -285,7 +298,7 @@ class OperationsTest(unittest.TestCase):
         print('Initialize adaptVQE bfgs')
         result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                           operators_pool,  # fermionic operators
-                          hf_reference_fock,
+                          adapt_ansatz,
                           energy_threshold=1e-2,
                           method=method,
                           max_iterations=8,

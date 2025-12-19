@@ -234,6 +234,7 @@ class SimulatorBase:
         return self._circuit_draw
 
     def update_model(self, **param_dict):
+        # TO BE DEPRECATED
         if self._shots_model is not None:
             tolerance, self._shots = self._shots_model(param_dict)
             print('shots_update: ', self._shots)

@@ -1,6 +1,3 @@
-from vqemulti.energy.simulation import simulate_adapt_vqe_variance
-from vqemulti.energy import get_adapt_vqe_energy
-from vqemulti.gradient import get_adapt_vqe_energy_gradient
 from vqemulti.utils import get_string_from_fermionic_operator
 from vqemulti.pool.tools import OperatorList
 from vqemulti.errors import NotConvergedError, Converged
@@ -8,44 +5,34 @@ from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
-import scipy
+from vqemulti.vqe import vqe
 
 
 def adaptVQE(hamiltonian,
              operators_pool,
-             hf_reference_fock,
+             adapt_ansatz,
              energy_threshold=0.0001,
              max_iterations=50,
-             coefficients=None,
-             ansatz=None,
              method=AdapVanilla(),
              energy_simulator=None,
-             variance_simulator=None,
              reference_dm=None,
-             optimizer_params=None,
+             optimizer_params=OptimizerParams(),
              ):
     """
     Perform an adaptVQE calculation
 
     :param hamiltonian: hamiltonian in fermionic operators
     :param operators_pool: fermionic operators pool
-    :param hf_reference_fock: HF reference in Fock space vector (occupations)
+    :param adapt_ansatz: ExponentialProduct ansatz
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param max_iterations: max number of adaptVQE iterations
-    :param coefficients: Initial coefficients (None if new calculation)
-    :param ansatz: Initial ansatz [Should match with coefficients] (None if new calculation)
     :param method: Method used to update the ansatz
     :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
     :param gradient_simulator: Simulator object used to obtain the gradient, if None do not use simulator (exact)
-    :param variance_simulator: Simulator object used to obtain the variance, if None use energy_simulator
     :param reference_dm: reference density matrix (ideally from fullCI) that is used to compute the quantum fidelity
     :param optimizer_params: parameters to be used in the optimizer (OptimizerParams object)
     :return: results dictionary
     """
-
-    # set default optimizer params
-    if optimizer_params is None:
-        optimizer_params = OptimizerParams()
 
     print('optimizer params: ', optimizer_params)
 
@@ -53,60 +40,39 @@ def adaptVQE(hamiltonian,
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': [],
                   'coefficients': [], 'indices': []}
 
-    # Check if initial guess
-    if ansatz is None:
-        ansatz = OperatorList([])
-
-    if coefficients is None:
-        coefficients = []
-
-    assert len(coefficients) == len(ansatz)
+    # get initial coefficients
+    coefficients = adapt_ansatz.parameters
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
     print('pool size: ', len(operators_pool))
 
     # get n qubits to be used
-    n_qubits = len(hf_reference_fock)
-    print('n_qubits: ', n_qubits)
-
-    # set variance simulator
-    if energy_simulator is not None:
-        # variance_simulator = gradient_simulator if variance_simulator is None else variance_simulator
-        variance_simulator = energy_simulator if variance_simulator is None else variance_simulator
+    print('n_qubits: ', adapt_ansatz.n_qubits)
 
     # compute circuit variance
-    if variance_simulator is not None:
-        # Calculation of Hamiltonian variance
-        variance = simulate_adapt_vqe_variance(coefficients, ansatz, hf_reference_fock, hamiltonian, variance_simulator)
-        print('Hamiltonian Variance: ', variance)
-    else:
-        variance = 0
-    iterations['variance'].append(variance)
+    variance = adapt_ansatz.get_energy(coefficients, hamiltonian, energy_simulator, return_std=True)[1]
+    print('Initial variance: ', variance)
 
     # Initialize variables that are common for all the methods
-    method.initialize_general_variables(hf_reference_fock, hamiltonian, operators_pool, energy_threshold)
+    method.initialize_general_variables(adapt_ansatz._reference_fock, hamiltonian, operators_pool, energy_threshold)
 
-    # Hartree-Fock energy calculation
-    if energy_simulator is not None:
-        energy_simulator.update_model(precision=energy_threshold, variance=variance,
-                                      n_coefficients=len(coefficients), n_qubits=n_qubits)
-
-    iterations['energies'].append(get_adapt_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator))
+    # fill data in iterations dictionary
+    iterations['variance'].append(variance)
+    iterations['energies'].append(adapt_ansatz.get_energy(coefficients, hamiltonian, energy_simulator))
     iterations['coefficients'].append(coefficients)
-    iterations['indices'].append(ansatz.get_index(operators_pool))
+    iterations['indices'].append(adapt_ansatz.operators.get_index(operators_pool))
 
     for iteration in range(max_iterations):
-
         print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
         # update ansatz
         try:
-            ansatz, coefficients = method.update_ansatz(ansatz, iterations)
+            adapt_ansatz = method.update_ansatz(adapt_ansatz, iterations)
         except Converged as c:
             print(c.message)
             return {'energy': iterations['energies'][-1],
-                    'ansatz': ansatz,
+                    'ansatz': adapt_ansatz,
                     'indices': iterations['indices'][-1],
                     'coefficients': iterations['coefficients'][-1],
                     'iterations': iterations,
@@ -118,47 +84,35 @@ def adaptVQE(hamiltonian,
             energy_simulator.update_model(precision=energy_threshold,
                                           variance=variance,
                                           n_coefficients=len(coefficients),
-                                          n_qubits=n_qubits)
+                                          n_qubits=adapt_ansatz.n_qubits)
 
-        results = scipy.optimize.minimize(get_adapt_vqe_energy,
-                                          coefficients,
-                                          (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                          jac=get_adapt_vqe_energy_gradient,
-                                          method=optimizer_params.method,
-                                          options=optimizer_params.options,
-                                          tol=energy_threshold,
-                                          )
-
-        coefficients = list(results.x)
-        energy = results.fun
+        results_vqe = vqe(hamiltonian, adapt_ansatz, energy_simulator, energy_threshold, optimizer_params)
 
         print('\n{:^12}   {}'.format('coefficient', 'operator'))
-        for c, op in zip(coefficients, ansatz):
-            if ansatz.is_fermionic():
+        for c, op in zip(adapt_ansatz.parameters, adapt_ansatz.operators):
+            if adapt_ansatz.operators.is_fermionic():
                 print('{:12.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
             else:
                 print('{:12.5e} {} '.format(c, str(op).replace('\n', '')))
         print()
 
         if reference_dm is not None:
-            n_orb = len(hf_reference_fock)//2
-            density_matrix = get_density_matrix(coefficients, ansatz, hf_reference_fock, n_orb)
+            density_matrix = get_density_matrix(adapt_ansatz)
             fidelity = density_fidelity(reference_dm, density_matrix)
             print('fidelity: {:6.4e}'.format(fidelity))
             iterations['fidelity'].append(fidelity)
 
         # print iteration results
-        print('Iteration energy:', energy)
-        print('Ansatz Indices:', ansatz.get_index(operators_pool))
+        print('Iteration energy:', results_vqe['energy'])
+        print('Ansatz Indices:', adapt_ansatz.operators.get_index(operators_pool))
 
         # Data storage
-        iterations['energies'].append(energy)
-        iterations['f_evaluations'].append(results.nfev)
-        iterations['ansatz_size'].append(len(coefficients))
+        iterations['energies'].append(results_vqe['energy'])
+        iterations['f_evaluations'].append(results_vqe['f_evaluations'])
+        iterations['ansatz_size'].append(len(adapt_ansatz))
         iterations['variance'].append(variance)
-        iterations['coefficients'].append(coefficients)
-        iterations['indices'].append(ansatz.get_index(operators_pool))
-
+        iterations['coefficients'].append(results_vqe['coefficients'])
+        iterations['indices'].append(adapt_ansatz.operators.get_index(operators_pool))
 
         # Checking criteria convergence
         criteria_list = method.get_criteria_list_convergence()
@@ -168,34 +122,35 @@ def adaptVQE(hamiltonian,
             except Converged as c:
                 print(c.message)
                 return {'energy': iterations['energies'][-1],
-                        'ansatz': ansatz,
+                        'ansatz': adapt_ansatz,
                         'indices': iterations['indices'][-1],
                         'coefficients': iterations['coefficients'][-1],
                         'iterations': iterations,
                         'variance': iterations['variance'][-1],
                         'num_iterations': iteration}
 
-        if method.gradient_simulator is not None:
-            circuit_info = method.gradient_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+        if method._gradient_simulator is not None:
+            circuit_info = method._gradient_simulator.get_circuit_info(adapt_ansatz)
             print('Gradient circuit depth: ', circuit_info['depth'])
 
         if energy_simulator is not None:
-            circuit_info = energy_simulator.get_circuit_info(coefficients, ansatz, hf_reference_fock)
+            circuit_info = energy_simulator.get_circuit_info(adapt_ansatz)
             print('Energy circuit depth: ', circuit_info['depth'])
 
     raise NotConvergedError({'energy': iterations['energies'][-1],
-                             'ansatz': ansatz,
+                             'ansatz': adapt_ansatz,
                              'indices': iterations['indices'][-1],
                              'coefficients': iterations['coefficients'][-1],
                              'iterations': iterations,
                              'variance': iterations['variance'][-1],
-                             'num_iterations': len(ansatz)})
+                             'num_iterations': len(adapt_ansatz)})
 
 if __name__ == '__main__':
     from openfermion import MolecularData
     from openfermionpyscf import run_pyscf
     from pool import get_pool_singlet_sd
     from utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
+    from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
     from analysis import get_info
 
     Configuration().verbose = True
@@ -236,12 +191,15 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_orbitals*2)
     print('hf reference', hf_reference_fock)
 
+    # define ansatz
+    adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
     # Simulator
     # from simulators.penny_simulator import PennylaneSimulator as Simulator
     # from simulators.cirq_simulator import CirqSimulator as Simulator
     from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
-    simulator = Simulator(trotter=True,
+    simulator = Simulator(trotter=False,
                           trotter_steps=1,
                           test_only=True,
                           shots=1000)
@@ -255,21 +213,21 @@ if __name__ == '__main__':
     method = AdapVanilla(gradient_threshold=1e-6,
                          diff_threshold=0,
                          coeff_tolerance=1e-10,
-                         gradient_simulator=None,
+                         # gradient_simulator=simulator,
                          operator_update_number=1,
                          operator_update_max_grad=2e-2,
                          )
     try:
         result = adaptVQE(hamiltonian,     # fermionic hamiltonian
                           operators_pool,  # fermionic operators
-                          hf_reference_fock,
+                          adapt_ansatz,
                           energy_threshold=0.0001,
-                          method = method,
-                          max_iterations = 20,
-                          energy_simulator = None,
-                          variance_simulator = None,
-                          reference_dm = None,
-                          optimizer_params = None
+                          method=method,
+                          max_iterations=20,
+                          # energy_simulator=simulator,
+                          # variance_simulator=simulator,
+                          reference_dm=None,
+                          # optimizer_params=OptimizerParams()
                           )
     except NotConvergedError as c:
         print('Not converged :(')

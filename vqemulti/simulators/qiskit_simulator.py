@@ -795,9 +795,11 @@ class QiskitSimulator(SimulatorBase):
                 gates_name.update({gate[0].name: gate[0].name})
                 self._circuit_gates[gates_name[gate[0].name]] += 1
 
-    def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
+    def get_circuit_info(self, ansatz):
 
-        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
+        coefficients, operators, hf_reference_fock = ansatz.parameters, ansatz.operators, ansatz._reference_fock
+
+        ansatz_qubit = operators.transform_to_scaled_qubit(coefficients)
 
         state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
 

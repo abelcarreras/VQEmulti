@@ -2,14 +2,13 @@ from vqemulti.energy import get_vqe_energy
 from vqemulti.gradient import get_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
 from vqemulti.optimizers import OptimizerParams
+from vqemulti.ansatz import GenericAnsatz
 import numpy as np
 import scipy
 
 
 def vqe(hamiltonian,
-        ansatz,
-        hf_reference_fock,
-        coefficients=None,
+        ansatz: GenericAnsatz,
         energy_simulator=None,
         energy_threshold=1e-4,
         optimizer_params=None
@@ -18,10 +17,7 @@ def vqe(hamiltonian,
     Perform a VQE calculation
 
     :param hamiltonian: hamiltonian in fermionic operators
-    :param ansatz: ansatz (fermionic operator list) to optimize
-    :param coefficients: initial guess coefficients (leave None to initialize to zero)
-    :param opt_qubits: choose basis of optimization (True: qubits operators, False: fermion operators)
-    :param hf_reference_fock: HF reference in Fock space vector (occupations)
+    :param ansatz: Ansatz object tooptimize
     :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :return: results dictionary
@@ -33,30 +29,25 @@ def vqe(hamiltonian,
 
     print('optimizer params: ', optimizer_params)
 
-    # transform to qubit hamiltonian
-    ansatz = OperatorList(ansatz)
-
     # initial guess
-    n_terms = len(ansatz)
-    if coefficients is None:
-        coefficients = np.zeros(n_terms)
-
-    assert len(coefficients) == len(ansatz)
+    coefficients = np.array(ansatz.parameters, dtype=float)
 
     # check if no coefficients
-    if n_terms == 0:
-        energy = get_vqe_energy(coefficients, ansatz, hf_reference_fock, hamiltonian, energy_simulator)
+    if len(ansatz) == 0:
+        energy = ansatz.get_energy(coefficients, hamiltonian, energy_simulator)
         return {'energy': energy, 'coefficients': [], 'ansatz': ansatz, 'f_evaluations': 0}
 
     # Optimize the results from analytical calculation
-    results = scipy.optimize.minimize(get_vqe_energy,
+    results = scipy.optimize.minimize(ansatz.get_energy,
                                       coefficients,
-                                      (ansatz, hf_reference_fock, hamiltonian, energy_simulator),
-                                      jac=get_vqe_energy_gradient,
+                                      (hamiltonian, energy_simulator),
+                                      jac=ansatz.get_gradients,
                                       method=optimizer_params.method,
                                       options=optimizer_params.options,
                                       tol=energy_threshold,
                                       )
+
+    ansatz.parameters = results.x
 
     return {'energy': results.fun,
             'coefficients': list(results.x),
@@ -100,18 +91,25 @@ if __name__ == '__main__':
 
     print('n_qubits:', hamiltonian.n_qubits)
 
-    # Get UCCSD ansatz
-    uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
+    # Get UCCSD params
+    uccsd_pool = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
     # uccsd_ansatz = []
 
     # Get reference Hartree Fock state
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=2)
     print('hf reference', hf_reference_fock)
 
+    # get ansatz
+    from vqemulti.ansatz.exponential import ExponentialAnsatz
+
+    initial_parameters = np.zeros_like(uccsd_pool)
+    uccsd_ansatz = ExponentialAnsatz(initial_parameters, uccsd_pool, hf_reference_fock)
+
+
     # Simulator
     # from simulators.penny_simulator import PennylaneSimulator as Simulator
-    from simulators.cirq_simulator import CirqSimulator as Simulator
-    # from simulators.qiskit_simulator import QiskitSimulator as Simulator
+    # from simulators.cirq_simulator import CirqSimulator as Simulator
+    from simulators.qiskit_simulator import QiskitSimulator as Simulator
 
     simulator = Simulator(trotter=False,
                           trotter_steps=1,
@@ -121,7 +119,6 @@ if __name__ == '__main__':
     print('Initialize VQE')
     result = vqe(hamiltonian,
                  uccsd_ansatz,
-                 hf_reference_fock,
                  energy_simulator=simulator,
                  )
 
@@ -131,7 +128,7 @@ if __name__ == '__main__':
     print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
     print('Num operators: ', len(result['ansatz']))
-    print('Ansatz:\n', result['ansatz'])
+    print('Ansatz:\n', result['ansatz']._operators)
     print('Coefficients:\n', result['coefficients'])
 
     simulator.print_statistics()

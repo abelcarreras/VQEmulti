@@ -13,17 +13,23 @@ class ProductExponentialAnsatz(GenericAnsatz):
     """
     ansatz type: Sum(e^O_i)
     """
-    def __init__(self, parameters: list, operator_list: OperatorList | list, reference_fock : list):
+    def __init__(self, parameters, operator_list: OperatorList | list, reference_fock : list):
         super().__init__()
-        self._operators = operator_list
-        self._parameters = parameters
+        self._operators = OperatorList(operator_list)
+        self._parameters = list(parameters)
         self._reference_fock = reference_fock
         self._n_qubit = len(reference_fock)
+
+        assert len(parameters) == len(operator_list)
 
         # check antihermiticity for each operator
         for op in operator_list:
             if not is_hermitian(1j * op):
                 raise Exception('Non antihermitian operator')
+
+    @property
+    def n_qubits(self):
+        return len(self._reference_fock)
 
     @property
     def operators(self):
@@ -49,7 +55,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
         ket = get_sparse_ket_from_fock(self._reference_fock)
 
         # use trotterized operators (for adaptVQE)
-        for coefficient, operator in zip(coefficients, self._operators):
+        for coefficient, operator in zip(self._parameters, self._operators):
             # Get the operator matrix representation of the operator
             sparse_operator = coefficient * get_sparse_operator(operator, self._n_qubit)
 
@@ -129,7 +135,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
             operator = get_sparse_operator(self._operators[-(term + 1)], self._n_qubit)
             gradient_vector.insert(0, 2 * hbra.dot(operator).dot(ket)[0, 0].real)
 
-            if term < len(coefficients) - 1:
+            if term < len(self._parameters) - 1:
                 recurse(hbra, ket, term + 1)
 
         recurse(hbra, ket, 0)
@@ -170,6 +176,118 @@ class ProductExponentialAnsatz(GenericAnsatz):
             sampled_gradient, variance = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
 
             gradient_vector.append(sampled_gradient)
+
+        return gradient_vector
+
+    def get_state_vector(self):
+        """
+        prepare state vector from coefficients ansatz and reference
+
+        :return state vector
+        """
+
+        # Initialize the state vector with the reference state.
+        # |state> = |state_old> · exp(i * coef · |ansatz>
+        # imaginary i already included in |ansatz>
+        state = get_sparse_ket_from_fock(self._reference_fock)
+
+        # Apply the ansatz operators one by one to obtain the state as optimized by the last iteration
+        for coefficient, operator in zip(self._parameters, self._operators):
+            sparse_operator = coefficient * get_sparse_operator(operator, self.n_qubits)
+            state = sp.sparse.linalg.expm_multiply(sparse_operator, state)
+        return state
+
+    def pool_gradient_vector(self, hamiltonian, pool, simulator):
+
+        if simulator is None:
+            return self._exact_pool_gradient_vector(hamiltonian, pool)
+        else:
+            return self._simulate_pool_gradient_vector(hamiltonian, pool, simulator)
+
+    def _exact_pool_gradient_vector(self, hamiltonian, pool):
+        """
+        computes the gradient vector of the energy with respect to a pool of operators
+
+        :param hf_reference_fock: reference HF state in Fock space vector
+        :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
+        :param ansatz: VQE ansatz in qubit operators
+        :param coefficients: list of VQE coefficients
+        :param pool: pool of qubit operators
+        :return: the gradient vector
+        """
+
+        # transform hamiltonian to sparse
+        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
+
+        # Prepare the current state from ansatz (& coefficient) and HF reference
+        sparse_state = self.get_state_vector()
+
+        # Calculate and print gradients
+        # print('pool size: ', len(pool))
+        print("\nNon-Zero Gradients (exact)")
+        gradient_vector = []
+        for i, operator in enumerate(pool):
+            sparse_operator = get_sparse_operator(operator, self.n_qubits)
+
+            # gradient = 2 * <state | H · Op | state >  (non-explicit)
+            bra = sparse_state.transpose().conj()
+            ket = sparse_operator.dot(sparse_state)
+            gradient = 2 * np.abs(bra * sparse_hamiltonian * ket)[0, 0].real
+
+            if gradient > 1e-5:
+                print("Operator {}: {:.6f}".format(i, gradient))
+
+            gradient_vector.append(gradient)
+
+        return gradient_vector
+
+    def _simulate_pool_gradient_vector(self, hamiltonian, pool, simulator):
+        """
+        Calculates the gradient of the energy with respect to adding new operator from a pool.
+        To be used in adaptVQE poll gradients calculation  using simulator
+
+        :param hf_reference_fock: reference HF state in Fock space vector
+        :param hamiltonian: hamiltonian in qubit operators
+        :param ansatz: VQE ansatz in qubit/Fermion operators
+        :param coefficients: list of VQE coefficients
+        :param pool: pool of qubit operators
+        :param simulator: simulation object
+        :return: the gradient_vector
+        """
+
+        # transform to qubit hamiltonian
+        qubit_hamiltonian = fermion_to_qubit(hamiltonian)
+
+        ansatz_qubit = self._operators.transform_to_scaled_qubit(self.parameters)
+
+        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
+
+        if simulator._test_only:
+            print('Non-Zero Gradients (Exact circuit evaluation)')
+        else:
+            print('Non-Zero Gradients (Simulated with {} shots)'.format(simulator._shots))
+
+        # Calculate and print gradients
+        gradient_vector = []
+        for i, operator in enumerate(pool):
+
+            # convert to qubit if necessary
+            if not isinstance(operator, QubitOperator):
+                operator = fermion_to_qubit(operator)
+
+            # get gradient as dexp(c * A) / dc = < psi | [H, A] | psi >.
+            commutator_hamiltonian = qubit_hamiltonian * operator - operator * qubit_hamiltonian
+
+            sampled_gradient, variance = simulator.get_state_evaluation(commutator_hamiltonian, state_preparation_gates)
+
+            # set absolute value for gradient (sign is not important, only magnitude)
+            sampled_gradient = np.abs(sampled_gradient)
+            gradient_vector.append(sampled_gradient)
+
+            if sampled_gradient > 1e-6:
+                print("Operator {}: {:.6f}".format(i, sampled_gradient))
+                # just for testing
+                # print_comparison_gradient_analysis(qubit_hamiltonian, hf_reference_fock, ansatz_qubit, operator, sampled_gradient)
 
         return gradient_vector
 
@@ -290,13 +408,13 @@ if __name__ == '__main__':
     ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
 
     ansatz.add_operator(generator[0], 1.2)
-    print('energy 1: ', ansatz.get_energy(hamiltonian, None))
+    print('energy 1: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
     ansatz.add_operator(generator[1], 1.6)
-    print('energy 2: ', ansatz.get_energy(hamiltonian, None))
+    print('energy 2: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
     ansatz.add_operator(generator[2], 1.8)
-    print('energy 3: ', ansatz.get_energy(hamiltonian, None))
+    print('energy 3: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
     #coefficients = generator.get_quibits_list().operators_prefactors()
     #generator = generator.get_quibits_list(normalize=True)
@@ -305,7 +423,7 @@ if __name__ == '__main__':
     # ansatz = ProductExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
 
-    print('energy: ', ansatz.get_energy(hamiltonian, None))
+    print('energy: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
     print('energy: ', get_adapt_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, None))
 
 
@@ -320,18 +438,18 @@ if __name__ == '__main__':
 
     ansatz = ProductExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
-    print('energy SIM: ', ansatz.get_energy(hamiltonian, simulator))
-    print('energy Exact: ', ansatz.get_energy(hamiltonian, None))
+    print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
+    print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
-    print('energy gradients SIM: ', ansatz.get_gradients(hamiltonian, simulator))
-    print('energy gradients Exact: ', ansatz.get_gradients(hamiltonian, None))
+    print('energy gradients SIM: ', ansatz.get_gradients(ansatz.parameters, hamiltonian, simulator))
+    print('energy gradients Exact: ', ansatz.get_gradients(ansatz.parameters, hamiltonian, None))
 
     #print(simulator.get_circuits()[0])
     #exit()
     from vqemulti.vqe import vqe
 
     print(ansatz.parameters)
-    result = vqe(hamiltonian, ansatz.operators, hf_reference_fock, ansatz.parameters, energy_simulator=simulator)
+    result = vqe(hamiltonian, ansatz, energy_simulator=simulator)
     print(ansatz.parameters)
     print(result)
 
@@ -340,11 +458,11 @@ if __name__ == '__main__':
 
     ansatz_opt = ProductExponentialAnsatz(result['coefficients'], generator, hf_reference_fock)
 
-    print('energy SIM: ', ansatz.get_energy(hamiltonian, simulator))
-    print('energy Exact: ', ansatz.get_energy(hamiltonian, None))
+    print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
+    print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
-    print('gradient exact: ', ansatz_opt.get_gradients(hamiltonian, None))
-    print('gradient Simulation: ', ansatz_opt.get_gradients(hamiltonian, simulator))
+    print('gradient exact: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, None))
+    print('gradient Simulation: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, simulator))
 
     #from vqemulti.gradient import simulate_vqe_energy_gradient
     #print(simulate_vqe_energy_gradient(result['coefficients'], generator, hf_reference_fock, hamiltonian, simulator))

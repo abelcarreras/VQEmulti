@@ -2,6 +2,7 @@ import warnings
 
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.generators import get_ucj_generator
+from copy import deepcopy
 import numpy as np
 
 
@@ -42,8 +43,15 @@ def crop_local_amplitudes(amplitudes, n_neighbors=1):
 class GenericAnsatz:
 
     def __init__(self):
-        self._operators = None
+        self._operators = []
         self._parameters = []
+
+    def __len__(self):
+        return len(self._parameters)
+
+    @property
+    def n_qubits(self):
+        return 0
 
     @property
     def parameters(self):
@@ -51,9 +59,13 @@ class GenericAnsatz:
 
     @parameters.setter
     def parameters(self, parameters):
-        self._parameters = parameters
+        self._parameters = list(parameters)
 
-    def get_energy(self, hamiltonian, energy_simulator, return_std=False):
+    def copy(self):
+        return deepcopy(self)
+
+    def get_energy(self, parameters, hamiltonian, energy_simulator, return_std=False):
+        self._parameters = parameters
         if energy_simulator is None:
             return self._exact_energy(hamiltonian, return_std)
         else:
@@ -65,7 +77,8 @@ class GenericAnsatz:
     def _simulate_energy(self, hamiltonian, energy_simulator, return_std):
         raise NotImplemented()
 
-    def get_gradients(self, hamiltonian, simulator):
+    def get_gradients(self, parameters, hamiltonian, simulator):
+        self._parameters = parameters
         if simulator is None:
             return self._exact_gradient(hamiltonian)
         else:
@@ -93,8 +106,7 @@ class GenericAnsatz:
 
         def get_energy(parameters):
             cache_param = self._parameters
-            self._parameters = parameters
-            energy = self.get_energy(hamiltonian, simulator)
+            energy = self.get_energy(parameters, hamiltonian, simulator)
             self._parameters = cache_param
             return energy
 

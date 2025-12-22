@@ -1,7 +1,7 @@
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
 from vqemulti.utils import get_operators_order, break_qubit_operator, ansatz_to_matrix_list
 
-from openfermion.utils import count_qubits
+from openfermion import givens_decomposition_square, count_qubits
 from collections import defaultdict
 import numpy as np
 import warnings
@@ -188,6 +188,11 @@ class SimulatorBase:
             matrix_gates = self._get_matrix_operator_gates(matrix_list, n_qubits)
             return matrix_gates
 
+    def get_rotation_gates(self, rotation_matrix, n_qubits):
+        givens_layers, diagonal = givens_decomposition_square(rotation_matrix)
+
+        return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits)
+
     def print_statistics(self):
         if len(self._circuit_count) <= 0:
             warnings.warn('No simulation statistics to show')
@@ -263,6 +268,9 @@ class SimulatorBase:
         raise NotImplementedError()
 
     def _trotterize_operator(self, *args):
+        raise NotImplementedError()
+
+    def _get_givens_rotation_gates(self, *args):
         raise NotImplementedError()
 
     def simulator_info(self, *args):

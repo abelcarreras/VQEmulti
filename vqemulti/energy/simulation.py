@@ -12,7 +12,8 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
-    state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+    state_preparation_gates = simulator.get_reference_gates(hf_reference_fock)
+    state_preparation_gates += simulator.get_exponential_gates(ansatz_qubit, len(hf_reference_fock))
 
     # circuit_depth = simulator.get_circuit_depth(ansatz_qubit, hf_reference_fock)
     # print('circuit_depth', circuit_depth)

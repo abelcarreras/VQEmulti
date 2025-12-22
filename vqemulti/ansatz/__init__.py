@@ -275,7 +275,7 @@ if __name__ == '__main__':
     ccsd = molecule._pyscf_data.get('ccsd', None)
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
 
-    coefficients, ansatz = get_ucj_generator(t2, full_trotter=False, use_qubit=False, n_terms=1, local=False)
+    coefficients, ansatz = get_ucj_generator(t2, full_trotter=True, use_qubit=False, n_terms=1, local=False)
 
     #simulator_jastrow = None
     energy = get_adapt_vqe_energy(coefficients,

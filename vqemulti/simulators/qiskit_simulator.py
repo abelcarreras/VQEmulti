@@ -8,7 +8,8 @@ from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, IGate, SwapGate, U1Gate, UnitaryGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate
+from qiskit.circuit.library import SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
@@ -662,7 +663,8 @@ class QiskitSimulator(SimulatorBase):
         """
 
         n_qubits = len(hf_reference_fock)
-        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+        state_preparation_gates = self.get_reference_gates(hf_reference_fock)
+        state_preparation_gates += self.get_exponential_gates(ansatz_qubit, n_qubits)
 
         # Initialize circuit and apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
@@ -726,8 +728,6 @@ class QiskitSimulator(SimulatorBase):
         :return: reference gates
         """
 
-        n_qubits = len(hf_reference_fock)
-
         reference_gates = []
         for i, occ in enumerate(hf_reference_fock):
             if bool(occ):
@@ -761,6 +761,45 @@ class QiskitSimulator(SimulatorBase):
             trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
 
         return trotter_gates
+
+    def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits):
+
+        reference_gates = []
+
+        # Implement Givens rotation layers
+        for layer in givens_layers:
+            for i, j, theta, phi in layer:
+                # define qubit indices in qiskit order
+                i_qisk = n_qubits - i - 1
+                j_qisk = n_qubits - j - 1
+
+                # qc.rz(phi, i_qisk)
+                reference_gates.append(CircuitInstruction(RZGate(phi), [i_qisk]))
+
+                # qc.cx(i_qisk, j_qisk)
+                # qc.cry(-theta * 2, j_qisk, i_qisk)
+                # qc.cx(i_qisk, j_qisk)
+                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
+                reference_gates.append(CircuitInstruction(CRYGate(-2*theta), [j_qisk, i_qisk]))
+                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
+
+                # encode complex
+                # qc.rz(-phi, j_qisk)
+                # qc.rz(-phi, i_qisk)
+
+                reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
+                reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
+
+        # qc.barrier()
+
+        # Apply diagonal matrix as Z rotations
+        for i, angle in enumerate(np.angle(diagonal)):
+            # define qubit indices in qiskit order
+            i_qisk = n_qubits - i - 1
+            # qc.rz(-angle, i_qisk)
+            reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
+
+        return reference_gates
 
     def _get_circuit_stat_data(self, circuit):
 

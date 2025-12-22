@@ -148,7 +148,7 @@ def get_ucj_generator(t2, t1=None, full_trotter=True, tolerance=1e-20, use_qubit
 
                 # jastrow
                 spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
-                coefficients_j, ansatz_j = get_ucc_ansatz(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
+                coefficients_j, ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
                 # coefficients_j, ansatz_j = jastrow_to_qubits(spin_jastrow)
 
                 # basis change

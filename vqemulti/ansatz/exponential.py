@@ -281,7 +281,7 @@ if __name__ == '__main__':
     from vqemulti.pool import get_pool_qubit_sd, get_pool_singlet_sd
     coefficients, generator = [1.2, 1.6, 1.8], get_pool_singlet_sd(n_electrons, n_orbitals).get_quibits_list(normalize=True)[-3:]
     # coefficients, generator = [1.2, 1.6, 1.8], get_pool_qubit_sd(n_electrons, n_orbitals)[:3]
-   # coefficients, generator = [1.0], get_pool_qubit_sd(n_electrons, n_orbitals)[:1]
+    # coefficients, generator = [1.0], get_pool_qubit_sd(n_electrons, n_orbitals)[:1]
 
     #coefficients = generator.get_quibits_list().operators_prefactors()
     #generator = generator.get_quibits_list(normalize=True)
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     #gradient = simulate_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
     #print('gradient OG: ', gradient)
 
-    ansatz = ExponentialAnsatz([], [], hf_reference_fock)
+    ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
     print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
     print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
@@ -320,7 +320,6 @@ if __name__ == '__main__':
     result = vqe(hamiltonian, ansatz, energy_simulator=simulator)
     print(ansatz.parameters)
     print(result)
-    exit()
 
     # hf_energy = get_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
     # print('energy HF: ', hf_energy)

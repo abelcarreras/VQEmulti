@@ -9,120 +9,25 @@ import numpy as np
 import scipy as sp
 
 
-class _ProductExponentialAnsatz(GenericAnsatz):
-    """
-    ansatz type: Sum(e^O_i)
-    """
-    def __init__(self, parameters: list, operator_list: OperatorList | list):
-        super().__init__()
-        self._operators = operator_list
-        self._parameters = parameters
-
-    @property
-    def operators(self):
-        return self._operators
-
-    def get_energy(self, hf_reference_fock, hamiltonian, energy_simulator, return_std=False):
-        if energy_simulator is None:
-            return self._exact_energy(hf_reference_fock, hamiltonian, return_std)
-        else:
-            return self._simulate_energy(hf_reference_fock, hamiltonian, energy_simulator)
-
-    def add_operator(self, operator, parameter):
-        self._operators.append(operator)
-        self._parameters.append(parameter)
-
-    def _exact_energy(self, hf_reference_fock, hamiltonian, return_std=False):
-        """
-        Calculates the energy of the state prepared by applying an ansatz (of the
-        type of the VQE protocol) to a reference state.
-
-        :param coefficients: the list of coefficients of the ansatz operators
-        :param ansatz: ansatz expressed in qubit/fermion operators
-        :param hf_reference_fock: HF reference in Fock space vector
-        :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
-        :param trotterize: if True AdaptVQE else VQE
-        :return: exact energy
-        """
-
-        # Find the number of qubits of the system (2**n_qubit = dimension)
-        n_qubit = len(hf_reference_fock)
-
-        # get sparse hamiltonian
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubit)
-
-        # Transform reference vector into a Compressed Sparse Column matrix
-        ket = get_sparse_ket_from_fock(hf_reference_fock)
-
-        # use trotterized operators (for adaptVQE)
-        for coefficient, operator in zip(coefficients, self._operators):
-            # Get the operator matrix representation of the operator
-            sparse_operator = coefficient * get_sparse_operator(operator, n_qubit)
-
-            # Apply e ** (coefficient * operator) to the state (ket) for each operator in
-            ket = sp.sparse.linalg.expm_multiply(sparse_operator, ket)
-
-        # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
-        bra = ket.transpose().conj()
-        energy = np.sum(bra * sparse_hamiltonian * ket).real
-
-        if return_std:
-            return energy, 0.0
-
-        return energy
-
-    def _simulate_energy(self, hf_reference_fock, hamiltonian, simulator, return_std=False):
-        """
-        Obtain the hamiltonian expectation value for a given VQE state (reference + ansatz) and a hamiltonian
-
-        :param coefficients: VQE coefficients
-        :param ansatz: ansatz expressed in qubit/fermion operators
-        :param hf_reference_fock: reference HF in fock vspace vector
-        :param hamiltonian: hamiltonian in FermionOperator/InteractionOperator
-        :param simulator: simulation object
-        :param trotterize: use trotterized wave function (adaptVQE style)
-        :param return_std: return std also
-        :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
-        """
-
-        # transform to qubit hamiltonian
-        qubit_hamiltonian = fermion_to_qubit(hamiltonian)
-
-        # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
-        operators_list = OperatorList(self._operators)
-        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
-
-        # evaluate hamiltonian
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, hf_reference_fock)
-        energy, std_error = simulator.get_state_evaluation(qubit_hamiltonian, state_preparation_gates)
-
-        if return_std:
-            return energy, std_error
-
-        return energy
-
-
 class ExponentialAnsatz(GenericAnsatz):
     """
-    ansatz type: e^Sum(O_i)
+    ansatz type: e^Sum(A_i)
     """
     def __init__(self, parameters, operator_list: OperatorList | list, reference_fock: list):
         """
-        :param parameters:
-        :param operator_list:
-        :param reference_fock: Reference non-entangled state as Fock space vector
+        :param parameters: list of parameters
+        :param operator_list: list of operators
+        :param reference_fock: non-entangled initial state as Fock space vector
         """
         super().__init__()
         self._operators = operator_list
         self._parameters = parameters
         self._reference_fock = reference_fock
-        self._n_qubit = len(reference_fock)
 
         assert len(parameters) == len(operator_list)
 
         if not is_hermitian(1j * sum(operator_list)):
             raise Exception('Non antihermitian operator')
-
 
     @property
     def n_qubits(self):
@@ -131,7 +36,6 @@ class ExponentialAnsatz(GenericAnsatz):
     @property
     def operators(self):
         return self._operators
-
 
     def _exact_energy(self, hamiltonian, return_std=False):
         """
@@ -144,18 +48,10 @@ class ExponentialAnsatz(GenericAnsatz):
         """
 
         # get sparse hamiltonian
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, self._n_qubit)
+        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
 
-        # Transform reference vector into a Compressed Sparse Column matrix
-        ket = get_sparse_ket_from_fock(self._reference_fock)
-
-        # do not use trotterization (for VQE)
-        exponent = sp.sparse.csr_array((2**self._n_qubit, 2**self._n_qubit), dtype=float)
-        for coefficient, operator in zip(self._parameters, self._operators):
-            exponent += coefficient * get_sparse_operator(operator, self._n_qubit)
-
-        # Apply e ** (sum[coefficient * operator]) to the state (ket)
-        ket = sp.sparse.linalg.expm_multiply(exponent, ket)
+        # get state vector
+        ket = self.get_state_vector()
 
         # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
         bra = ket.transpose().conj()
@@ -177,16 +73,12 @@ class ExponentialAnsatz(GenericAnsatz):
         :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
         """
 
-
         # transform to qubit hamiltonian
         qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
-        # transform ansatz to qubit for VQE (coefficients are included in qubits objects)
-        operators_list = OperatorList(self._operators)
-        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters, join=True)
+        # get gates to prepare the state
+        state_preparation_gates = self.get_preparation_gates(simulator)
 
-        # evaluate hamiltonian
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
         energy, std_error = simulator.get_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
         if return_std:
@@ -205,7 +97,7 @@ class ExponentialAnsatz(GenericAnsatz):
         """
 
         hf_reference_fock = self._reference_fock
-        n_qubit = self._n_qubit  # Assumed stored in the class
+        n_qubit = self.n_qubits  # Assumed stored in the class
         dim = 2 ** n_qubit
         sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubit)
         ket_hf = get_sparse_ket_from_fock(hf_reference_fock)
@@ -265,25 +157,36 @@ class ExponentialAnsatz(GenericAnsatz):
 
         ref_state = get_sparse_ket_from_fock(self._reference_fock)
 
-        exponent = sp.sparse.csr_array((2 ** self._n_qubit, 2 ** self._n_qubit), dtype=float)
+        exponent = sp.sparse.csr_array((2 ** self.n_qubits, 2 ** self.n_qubits), dtype=float)
         for coefficient, operator in zip(self._parameters, self._operators):
-            exponent += coefficient * get_sparse_operator(operator, self._n_qubit)
+            exponent += coefficient * get_sparse_operator(operator, self.n_qubits)
 
         state = sp.sparse.linalg.expm_multiply(exponent, ref_state)
 
         return state
 
+    def get_preparation_gates(self, simulator):
+        """
+        get the gates to prepare the state
+
+        :param simulator: simulator for which the gates will be preparated
+        :return: gates list
+        """
+
+        operators_list = OperatorList(self._operators)
+        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters, join=True)
+        state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
+        state_preparation_gates += simulator.get_exponential_gates(ansatz_qubit, self.n_qubits)
+
+        return state_preparation_gates
 
     def get_sampling(self, simulator):
 
-        operators_list = OperatorList(self._operators)
-        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
-        n_qubit = len(self._reference_fock)
-
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
-        sampling = simulator.get_state_sampling(state_preparation_gates, n_qubit)
+        state_preparation_gates = self.get_preparation_gates(simulator)
+        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
 
         return sampling
+
 
 if __name__ == '__main__':
 
@@ -377,7 +280,7 @@ if __name__ == '__main__':
 
     from vqemulti.pool import get_pool_qubit_sd, get_pool_singlet_sd
     coefficients, generator = [1.2, 1.6, 1.8], get_pool_singlet_sd(n_electrons, n_orbitals).get_quibits_list(normalize=True)[-3:]
-    coefficients, generator = [1.2, 1.6, 1.8], get_pool_qubit_sd(n_electrons, n_orbitals)[:3]
+    # coefficients, generator = [1.2, 1.6, 1.8], get_pool_qubit_sd(n_electrons, n_orbitals)[:3]
    # coefficients, generator = [1.0], get_pool_qubit_sd(n_electrons, n_orbitals)[:1]
 
     #coefficients = generator.get_quibits_list().operators_prefactors()
@@ -385,7 +288,7 @@ if __name__ == '__main__':
 
     ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
-    hf_energy = ansatz.get_energy(hamiltonian, None)
+    hf_energy = ansatz.get_energy(ansatz.parameters, hamiltonian, None)
     print('energy HF: ', hf_energy)
 
     hf_energy = get_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, None)
@@ -394,25 +297,27 @@ if __name__ == '__main__':
 
     print('simulator')
     simulator = QiskitSimulator(trotter=False, trotter_steps=1000, test_only=True, use_estimator=True)
-    from vqemulti.gradient import simulate_vqe_energy_gradient
+    #from vqemulti.gradient import simulate_vqe_energy_gradient
 
-    gradient = simulate_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
-    print('gradient OG: ', gradient)
+    #gradient = simulate_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
+    #print('gradient OG: ', gradient)
 
     ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
-    print('energy SIM: ', ansatz.get_energy(hamiltonian, simulator))
-    print('energy Exact: ', ansatz.get_energy(hamiltonian, None))
+    print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
+    print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
-    print('energy gradients SIM: ', ansatz.get_gradients(hamiltonian, simulator))
-    print('energy gradients Exact: ', ansatz.get_gradients(hamiltonian, None))
+    simulator.print_circuits()
+
+    print('energy gradients SIM: ', ansatz.get_gradients(ansatz.parameters, hamiltonian, simulator))
+    print('energy gradients Exact: ', ansatz.get_gradients(ansatz.parameters, hamiltonian, None))
 
     # print(simulator.get_circuits()[0])
     # exit()
     from vqemulti.vqe import vqe
 
     print(ansatz.parameters)
-    result = vqe(hamiltonian, ansatz.operators, hf_reference_fock, ansatz.parameters, energy_simulator=simulator)
+    result = vqe(hamiltonian, ansatz, energy_simulator=simulator)
     print(ansatz.parameters)
     print(result)
 
@@ -421,13 +326,13 @@ if __name__ == '__main__':
 
     ansatz_opt = ExponentialAnsatz(result['coefficients'], generator, hf_reference_fock)
 
-    print('energy SIM: ', ansatz.get_energy(hamiltonian, simulator))
-    print('energy Exact: ', ansatz.get_energy(hamiltonian, None))
+    print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
+    print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
 
-    print('gradient exact: ', ansatz_opt.get_gradients(hamiltonian, None))
-    print('gradient Simulation: ', ansatz_opt.get_gradients(hamiltonian, simulator))
+    print('gradient exact: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, None))
+    print('gradient Simulation: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, simulator))
 
-    print('gradient Sim OG', simulate_vqe_energy_gradient(result['coefficients'], generator, hf_reference_fock, hamiltonian, simulator))
+    #print('gradient Sim OG', simulate_vqe_energy_gradient(result['coefficients'], generator, hf_reference_fock, hamiltonian, simulator))
 
     sampling = ansatz_opt.get_sampling(simulator)
     print('sampling: ', sampling)

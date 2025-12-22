@@ -13,7 +13,6 @@ class SimulatorBase:
                  trotter_steps=1,
                  test_only=False,
                  hamiltonian_grouping=True,
-                 separate_matrix_operators=True,
                  reorder_trotter=False,
                  shots=1000):
         """
@@ -21,7 +20,6 @@ class SimulatorBase:
         :param trotter_steps: number of trotter steps (only used if trotter=True)
         :param test_only: If true resolve QC circuit analytically instead of simulation (for testing circuit)
         :param hamiltonian_grouping: organize Hamiltonian into Abelian commutative groups (reduce evaluations)
-        :param separate_matrix_operators: separate adaptVQE matrix operators (only with test_only = True)
         :param reorder_trotter: reorder operators before trotterization to minimize non-commutativity errors
         :param shots: number of samples to perform in the simulation
         """
@@ -37,7 +35,6 @@ class SimulatorBase:
         self._circuit_draw = []
         self._shots_model = None
         self._hamiltonian_grouping = hamiltonian_grouping
-        self._separate_matrix_operators = separate_matrix_operators
         self._n_hamiltonian_terms = None
 
     def set_shots_model(self, shots_model):
@@ -148,25 +145,26 @@ class SimulatorBase:
 
         return np.sum(energy_list).real, std_error
 
-    def get_preparation_gates(self, ansatz, hf_reference_fock):
+    def get_reference_gates(self, reference_fock):
+        return self._build_reference_gates(reference_fock)
+
+    def get_exponential_gates(self, operators_list, n_qubits):
         """
         generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
-        :param ansatz: operators list in qubit
-        :param hf_reference_fock: reference HF in fock vspace vector
+        :param operators_list: operators list in qubit
         :param n_qubits: number of qubits
         :return: gates list in simulation library format
         """
-        n_qubits = len(hf_reference_fock)
 
         if self._trotter:
             # Use discrete (trotterized) operator gates
 
-            trotter_ansatz = []
+            trotter_gates = []
             # Go through the operators in the ansatz
             from vqemulti.simulators.tools import set_previous_row
             set_previous_row([])
-            for operator in ansatz:
+            for operator in operators_list:
                 if len(operator.terms) == 0:
                     continue
 
@@ -177,23 +175,18 @@ class SimulatorBase:
                     operator = sum([op_list[i] for i in order])
 
                 # Add the gates corresponding to this operator to the ansatz gate list
-                trotter_ansatz += self._trotterize_operator(operator, n_qubits)
-
-            # Initialize the state preparation gates with the reference state preparation gates
-            state_preparation_gates = self._build_reference_gates(hf_reference_fock)
+                trotter_gates += self._trotterize_operator(operator, n_qubits)
 
             # return total trotterized ansatz
-            return state_preparation_gates + trotter_ansatz
+            return trotter_gates
 
         else:
-            # Use matrix gate
-            if self._separate_matrix_operators:
-                matrix_list = ansatz_to_matrix_list(ansatz, n_qubits)
-            else:
-                matrix_list = [ansatz_to_matrix(ansatz, n_qubits)]
+            # build matrix gate
+            matrix_list = ansatz_to_matrix_list(operators_list, n_qubits)
 
             # Get gates in simulation library format
-            return self._get_matrix_operator_gates(hf_reference_fock, matrix_list)
+            matrix_gates = self._get_matrix_operator_gates(matrix_list, n_qubits)
+            return matrix_gates
 
     def print_statistics(self):
         if len(self._circuit_count) <= 0:

@@ -496,14 +496,9 @@ class QiskitSimulator(SimulatorBase):
 
         return np.array(result.get_statevector())
 
-    def _get_matrix_operator_gates(self, hf_reference_fock, matrix_list):
+    def _get_matrix_operator_gates(self, matrix_list, n_qubits):
 
-        # Initialize qubits
-        n_qubits = len(hf_reference_fock)
-
-        # Add gates for HF reference
-        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
-
+        state_preparation_gates = []
         # Append the ansatz directly as a matrix
         for i, matrix in enumerate(matrix_list):
             matrix_gate = UnitaryGate(matrix.toarray(), label='OP {}'.format(i+1))
@@ -797,16 +792,11 @@ class QiskitSimulator(SimulatorBase):
 
     def get_circuit_info(self, ansatz):
 
-        coefficients, operators, hf_reference_fock = ansatz.parameters, ansatz.operators, ansatz._reference_fock
+        # get gates to prepare the state
+        state_preparation_gates = ansatz.get_preparation_gates(self)
 
-        ansatz_qubit = operators.transform_to_scaled_qubit(coefficients)
-
-        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
-
-        # Initialize circuit.
-        n_qubits = len(hf_reference_fock)
-
-        circuit = qiskit.QuantumCircuit(n_qubits)
+        # build the circuit
+        circuit = qiskit.QuantumCircuit(ansatz.n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
 

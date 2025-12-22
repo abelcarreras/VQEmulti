@@ -280,9 +280,8 @@ class CirqSimulator(SimulatorBase):
                     # assume its unitary operator
                     self._circuit_gates['QubitUnitary'] += 1
 
-    def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
-        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
-        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+    def get_circuit_info(self, ansatz):
+        state_preparation_gates = ansatz.get_preparation_gates(self)
         circuit = cirq.Circuit(state_preparation_gates)
         return {'depth': len(cirq.Circuit(circuit.all_operations()))}
 

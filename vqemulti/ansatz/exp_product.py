@@ -14,11 +14,15 @@ class ProductExponentialAnsatz(GenericAnsatz):
     ansatz type: Sum(e^O_i)
     """
     def __init__(self, parameters, operator_list: OperatorList | list, reference_fock : list):
+        """
+        :param parameters: list of parameters
+        :param operator_list: list of operators
+        :param reference_fock: non-entangled initial state as Fock space vector
+        """
         super().__init__()
         self._operators = OperatorList(operator_list)
         self._parameters = list(parameters)
         self._reference_fock = reference_fock
-        self._n_qubit = len(reference_fock)
 
         assert len(parameters) == len(operator_list)
 
@@ -49,7 +53,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
         """
 
         # get sparse hamiltonian
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, self._n_qubit)
+        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
 
         # Transform reference vector into a Compressed Sparse Column matrix
         ket = get_sparse_ket_from_fock(self._reference_fock)
@@ -57,7 +61,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
         # use trotterized operators (for adaptVQE)
         for coefficient, operator in zip(self._parameters, self._operators):
             # Get the operator matrix representation of the operator
-            sparse_operator = coefficient * get_sparse_operator(operator, self._n_qubit)
+            sparse_operator = coefficient * get_sparse_operator(operator, self.n_qubits)
 
             # Apply e ** (coefficient * operator) to the state (ket) for each operator in
             ket = sp.sparse.linalg.expm_multiply(sparse_operator, ket)
@@ -84,12 +88,10 @@ class ProductExponentialAnsatz(GenericAnsatz):
         # transform to qubit hamiltonian
         qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
-        # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
-        operators_list = OperatorList(self._operators)
-        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
+        # get gates to prepare the state
+        state_preparation_gates = self.get_preparation_gates(simulator)
 
         # evaluate hamiltonian
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
         energy, std_error = simulator.get_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
         if return_std:
@@ -106,7 +108,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
         """
 
         # Transform Hamiltonian to matrix representation
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, self._n_qubit)
+        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
 
         # Transform reference vector into a Compressed Sparse Column matrix
         ket = get_sparse_ket_from_fock(self._reference_fock)
@@ -115,7 +117,7 @@ class ProductExponentialAnsatz(GenericAnsatz):
         # the ansatz, following the order of the list
         for j, (coefficient, operator) in enumerate(zip(self._parameters, self._operators)):
             # Get the operator matrix representation of the operator
-            sparse_operator = coefficient * get_sparse_operator(operator, self._n_qubit)
+            sparse_operator = coefficient * get_sparse_operator(operator, self.n_qubits)
 
             # Exponentiate the operator and update ket t
             ket = sp.sparse.linalg.expm_multiply(sparse_operator, ket)
@@ -128,11 +130,11 @@ class ProductExponentialAnsatz(GenericAnsatz):
         def recurse(hbra, ket, term):
 
             if term > 0:
-                operator = self._parameters[-term] * get_sparse_operator(self._operators[-term], self._n_qubit)
+                operator = self._parameters[-term] * get_sparse_operator(self._operators[-term], self.n_qubits)
                 hbra = (sp.sparse.linalg.expm_multiply(-operator, hbra.transpose().conj())).transpose().conj()
                 ket = sp.sparse.linalg.expm_multiply(-operator, ket)
 
-            operator = get_sparse_operator(self._operators[-(term + 1)], self._n_qubit)
+            operator = get_sparse_operator(self._operators[-(term + 1)], self.n_qubits)
             gradient_vector.insert(0, 2 * hbra.dot(operator).dot(ket)[0, 0].real)
 
             if term < len(self._parameters) - 1:
@@ -160,7 +162,8 @@ class ProductExponentialAnsatz(GenericAnsatz):
         operators_list = OperatorList(self._operators)
         ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
 
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
+        state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
+        state_preparation_gates += simulator.get_exponential_gates(ansatz_qubit, self.n_qubits)
 
         # Calculate and print gradients
         gradient_vector = []
@@ -196,6 +199,18 @@ class ProductExponentialAnsatz(GenericAnsatz):
             sparse_operator = coefficient * get_sparse_operator(operator, self.n_qubits)
             state = sp.sparse.linalg.expm_multiply(sparse_operator, state)
         return state
+
+    def get_preparation_gates(self, simulator):
+
+        # transform ansatz to qubit for adaptVQE (coefficients are included in qubits objects)
+        operators_list = OperatorList(self._operators)
+        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
+
+        # get the gates to prepare the state
+        state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
+        state_preparation_gates += simulator.get_exponential_gates(ansatz_qubit, self.n_qubits)
+
+        return state_preparation_gates
 
     def pool_gradient_vector(self, hamiltonian, pool, simulator):
 
@@ -258,9 +273,8 @@ class ProductExponentialAnsatz(GenericAnsatz):
         # transform to qubit hamiltonian
         qubit_hamiltonian = fermion_to_qubit(hamiltonian)
 
-        ansatz_qubit = self._operators.transform_to_scaled_qubit(self.parameters)
-
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
+        # get gates to prepare the state
+        state_preparation_gates = self.get_preparation_gates(simulator)
 
         if simulator._test_only:
             print('Non-Zero Gradients (Exact circuit evaluation)')
@@ -293,12 +307,8 @@ class ProductExponentialAnsatz(GenericAnsatz):
 
     def get_sampling(self, simulator):
 
-        operators_list = OperatorList(self._operators)
-        ansatz_qubit = operators_list.transform_to_scaled_qubit(self._parameters)
-        n_qubit = len(self._reference_fock)
-
-        state_preparation_gates = simulator.get_preparation_gates(ansatz_qubit, self._reference_fock)
-        sampling = simulator.get_state_sampling(state_preparation_gates, n_qubit)
+        state_preparation_gates = self.get_preparation_gates(simulator)
+        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
 
         return sampling
 
@@ -431,8 +441,8 @@ if __name__ == '__main__':
     simulator = QiskitSimulator(trotter=False, trotter_steps=1000, test_only=True, use_estimator=True)
     from vqemulti.gradient import get_adapt_vqe_energy_gradient
 
-    gradient = get_adapt_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
-    print('gradient OG: ', gradient)
+    #gradient = get_adapt_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
+    #print('gradient OG: ', gradient)
 
     # simulator = None
 
@@ -445,7 +455,6 @@ if __name__ == '__main__':
     print('energy gradients Exact: ', ansatz.get_gradients(ansatz.parameters, hamiltonian, None))
 
     #print(simulator.get_circuits()[0])
-    #exit()
     from vqemulti.vqe import vqe
 
     print(ansatz.parameters)
@@ -467,3 +476,5 @@ if __name__ == '__main__':
     #from vqemulti.gradient import simulate_vqe_energy_gradient
     #print(simulate_vqe_energy_gradient(result['coefficients'], generator, hf_reference_fock, hamiltonian, simulator))
 
+    sampling = ansatz_opt.get_sampling(simulator)
+    print('sampling: ', sampling)

@@ -254,15 +254,13 @@ class PennylaneSimulator(SimulatorBase):
             for k, v in gates_dict.items():
                 self._circuit_gates[k] += v
 
-    def get_circuit_info(self, coefficients, ansatz, hf_reference_fock):
+    def get_circuit_info(self, ansatz):
 
-        ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients)
-
-        state_preparation_gates = self.get_preparation_gates(ansatz_qubit, hf_reference_fock)
+        # get gates to prepare the state
+        state_preparation_gates = ansatz.get_preparation_gates(self)
 
         # Initialize circuit.
-        n_qubits = len(hf_reference_fock)
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
+        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(ansatz.n_qubits)])
 
         # add gates to circuit
         def circuit_function():

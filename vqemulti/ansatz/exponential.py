@@ -26,7 +26,7 @@ class ExponentialAnsatz(GenericAnsatz):
 
         assert len(parameters) == len(operator_list)
 
-        if not is_hermitian(1j * sum(operator_list)):
+        if len(operator_list) > 0 and not is_hermitian(1j * sum(operator_list)):
             raise Exception('Non antihermitian operator')
 
     @property
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     #gradient = simulate_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
     #print('gradient OG: ', gradient)
 
-    ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
+    ansatz = ExponentialAnsatz([], [], hf_reference_fock)
 
     print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
     print('energy Exact: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
@@ -320,6 +320,7 @@ if __name__ == '__main__':
     result = vqe(hamiltonian, ansatz, energy_simulator=simulator)
     print(ansatz.parameters)
     print(result)
+    exit()
 
     # hf_energy = get_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
     # print('energy HF: ', hf_energy)

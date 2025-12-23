@@ -174,8 +174,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
 
                 # implement rotation
-                rotation_inv = np.linalg.inv(rotation)
-                state_preparation_gates += simulator.get_rotation_gates(rotation_inv, self.n_qubits)
+                state_preparation_gates += simulator.get_rotation_gates(rotation.T.conj(), self.n_qubits)
 
             return state_preparation_gates
 

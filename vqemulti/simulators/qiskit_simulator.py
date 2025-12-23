@@ -762,7 +762,7 @@ class QiskitSimulator(SimulatorBase):
 
         return trotter_gates
 
-    def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits):
+    def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits, tolerance=1e-6):
 
         reference_gates = []
 
@@ -774,7 +774,8 @@ class QiskitSimulator(SimulatorBase):
                 j_qisk = n_qubits - j - 1
 
                 # qc.rz(phi, i_qisk)
-                reference_gates.append(CircuitInstruction(RZGate(phi), [i_qisk]))
+                if abs(phi) >= tolerance:
+                    reference_gates.append(CircuitInstruction(RZGate(phi), [i_qisk]))
 
                 # qc.cx(i_qisk, j_qisk)
                 # qc.cry(-theta * 2, j_qisk, i_qisk)
@@ -787,8 +788,9 @@ class QiskitSimulator(SimulatorBase):
                 # qc.rz(-phi, j_qisk)
                 # qc.rz(-phi, i_qisk)
 
-                reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
-                reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
+                if abs(phi) >= tolerance:
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
 
         # qc.barrier()
 
@@ -797,7 +799,8 @@ class QiskitSimulator(SimulatorBase):
             # define qubit indices in qiskit order
             i_qisk = n_qubits - i - 1
             # qc.rz(-angle, i_qisk)
-            reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
+            if abs(angle) >= tolerance:
+                reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
 
         return reference_gates
 

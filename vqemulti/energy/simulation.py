@@ -23,19 +23,16 @@ def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simu
     return energy, std_error
 
 
-def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator, n_electrons,
+def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         multiplicity=0,
                         generate_random=False,
                         backend='dice',
-                        adapt=False,
                         return_samples=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
 
-    :param coefficients: adaptVQE coefficients
-    :param ansatz: ansatz expressed in qubit/fermion operators
-    :param hf_reference_fock: reference HF in fock vspace vector
+    :param ansatz: ansatz
     :param hamiltonian: hamiltonian in InteractionOperator
     :param simulator: simulation object
     :param n_electrons: number of electrons
@@ -66,12 +63,12 @@ def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, si
         raise Exception('Hamiltonian must be a InteractionOperator')
 
     # transform ansatz to qubit for VQE/adaptVQE
-    ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not adapt)
+    #ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not adapt)
 
     if generate_random:
-        samples = generate_counts_uniform(simulator._shots, len(hf_reference_fock))
+        samples = generate_counts_uniform(simulator._shots, ansatz.n_qubits)
     else:
-        samples = simulator.get_sampling(ansatz_qubit, hf_reference_fock)
+        samples = ansatz.get_sampling(simulator)
 
     if Configuration().verbose:
         print('samples ({}):'.format(len(samples)), samples)
@@ -94,6 +91,7 @@ def simulate_energy_sqd(coefficients, ansatz, hf_reference_fock, hamiltonian, si
         return sqd_energy, samples
 
     return sqd_energy
+
 
 def simulate_adapt_vqe_energy_square(coefficients, ansatz, hf_reference_fock, hamiltonian, simulator):
     """

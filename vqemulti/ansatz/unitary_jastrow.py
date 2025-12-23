@@ -35,6 +35,23 @@ def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):
     return get_ucc_generator(kappa, None, full_amplitudes=True, tolerance=tolerance, use_qubit=use_qubit)
 
 
+def matrix_power(matrix, exponent):
+    """
+    only for orthogonal matrices
+
+    :param matrix: orthogonal matrix
+    :param exponent: exponent parameter
+    :return: matrix power
+    """
+    # for efficiency and stability of standard UCJ
+    if exponent == 1.0:
+        return matrix
+    if exponent == -1.0:
+        return matrix.conj().T
+
+    from scipy.linalg import logm, expm
+    return expm(exponent * logm(matrix))
+
 class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
@@ -165,16 +182,23 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
             state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
 
+            i_param = 0
             for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_matrices):
 
-                state_preparation_gates += simulator.get_rotation_gates(rotation, self.n_qubits)
+                rotation_param = -self.parameters[i_param]
+                rotation_p = matrix_power(rotation, rotation_param)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits)
 
                 # implement jastrow term
-                jastrow_qubit = jastrow.transform_to_scaled_qubit([1.0])
+                jastrow_param = self.parameters[i_param+1]
+                jastrow_qubit = jastrow.transform_to_scaled_qubit([jastrow_param])
                 state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
 
                 # implement rotation
-                state_preparation_gates += simulator.get_rotation_gates(rotation.T.conj(), self.n_qubits)
+                rotation_param = -self.parameters[i_param+2]
+                rotation_p = matrix_power(rotation, rotation_param)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits)
+                i_param += 3
 
             return state_preparation_gates
 
@@ -232,7 +256,7 @@ if __name__ == '__main__':
     #config.verbose = 2
     config.mapping = 'jw'
 
-    simulator = Simulator(trotter=True,
+    simulator = Simulator(trotter=False,
                           trotter_steps=1,
                           test_only=True,
                           hamiltonian_grouping=True,
@@ -281,7 +305,12 @@ if __name__ == '__main__':
     print(simulator.get_circuits()[-1])
 
     print('Jastrow energy: ', energy)
-    exit()
+
+    from vqemulti.vqe import vqe
+    print(vqe(hamiltonian, ucja, energy_simulator=None))
+
+    energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
+    print('Optimized Jastrow energy: ', energy)
 
     n_particle = ucja.get_energy(ucja.parameters, n_particles_operator(ucja.n_qubits//2), None)
     spin_z = ucja.get_energy(ucja.parameters, spin_z_operator(ucja.n_qubits//2), None)
@@ -312,16 +341,12 @@ if __name__ == '__main__':
 
     get_projections(ucja.n_qubits, n_electrons, tolerance=tol_ampl)
 
-    exit()
     # SQD
     from vqemulti.energy.simulation import simulate_energy_sqd
-    energy, samples = simulate_energy_sqd(coefficients,
-                                          ansatz,
-                                          hf_reference_fock,
+    energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,
                                           n_electrons,
-                                          adapt=True,
                                           return_samples=True)
     print('SQD energy', energy)
     print(samples)

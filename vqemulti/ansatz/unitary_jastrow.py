@@ -160,13 +160,13 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
     def get_preparation_gates(self, simulator):
 
-        if self._full_trotter:
+        if self._full_trotter and Configuration().mapping == 'jw':
+            # this is only for JW mapping (due to givens rotations implementation)
 
             state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
 
             for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_matrices):
 
-                # implement rotation
                 state_preparation_gates += simulator.get_rotation_gates(rotation, self.n_qubits)
 
                 # implement jastrow term
@@ -229,8 +229,9 @@ if __name__ == '__main__':
     from qiskit_aer import AerSimulator
 
     from vqemulti.preferences import Configuration
-    #config = Configuration()
+    config = Configuration()
     #config.verbose = 2
+    config.mapping = 'jw'
 
     simulator = Simulator(trotter=True,
                           trotter_steps=1,

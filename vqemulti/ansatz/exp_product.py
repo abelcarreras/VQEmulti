@@ -405,7 +405,7 @@ if __name__ == '__main__':
 
     print('\nUCC ansatz\n==========')
     from vqemulti.ansatz.generators import get_ucc_generator
-    coefficients, generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=False)
+    generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=False)
 
 
     from vqemulti.pool import get_pool_qubit_sd, get_pool_singlet_sd

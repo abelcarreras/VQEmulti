@@ -1,10 +1,9 @@
 from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
-from openfermion.utils import count_qubits
 from vqemulti.pool.tools import OperatorList
 from vqemulti.utils import fermion_to_qubit
 from vqemulti.ansatz import GenericAnsatz
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
-from openfermion import QubitOperator, is_hermitian
+from openfermion import is_hermitian
 import numpy as np
 import scipy as sp
 
@@ -276,7 +275,7 @@ if __name__ == '__main__':
 
     print('\nUCC ansatz\n==========')
     from vqemulti.ansatz.generators import get_ucc_generator
-    coefficients, generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=False)
+    generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=False)
 
     from vqemulti.pool import get_pool_qubit_sd, get_pool_singlet_sd
     coefficients, generator = [1.2, 1.6, 1.8], get_pool_singlet_sd(n_electrons, n_orbitals).get_quibits_list(normalize=True)[-3:]

@@ -2,8 +2,10 @@ from jastrow.factor import double_factorized_t2
 from jastrow.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
 from jastrow.rotation import change_of_basis_orbitals
 from openfermion import FermionOperator, QubitOperator, hermitian_conjugated, normal_ordered
-from vqemulti.ansatz.generators.ucc import get_ucc_generator
+from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
+from vqemulti.utils import get_hf_reference_in_fock_space
+from vqemulti.preferences import Configuration
 from numpy.testing import assert_almost_equal
 import numpy as np
 import scipy as sp
@@ -43,6 +45,7 @@ def matrix_power(matrix, exponent):
 
     from scipy.linalg import logm, expm
     return expm(exponent * logm(matrix))
+
 
 class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
@@ -131,23 +134,19 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
                     # jastrow
                     spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
-                    coefficients_j, ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
+                    ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
                     self._jastrow_matrices.append(ansatz_j)
 
                     # basis change
                     U_spin = get_spin_matrix(U_i.T)
                     self._rotation_matrices.append(U_spin)
-                    coefficients_u, ansatz_u = get_basis_change_exp(U_spin, use_qubit=use_qubit)  # a_i^ a_j
+                    ansatz_u = get_basis_change_exp(U_spin, use_qubit=use_qubit)  # a_i^ a_j
 
                     # add to ansatz
-                    coefficients += [-c for c in coefficients_u]
-                    operators += [op for op in ansatz_u]
-
-                    coefficients += coefficients_j
-                    operators += [op for op in ansatz_j]
-
-                    coefficients += [c for c in coefficients_u]
-                    operators += [op for op in ansatz_u]
+                    coefficients += [-1.0, 1.0, 1.0]
+                    operators += ansatz_u
+                    operators += ansatz_j
+                    operators += ansatz_u
 
                 else:
                     orb_t2 = change_of_basis_orbitals(None, j_mat, U_i.T)[1]  # a_i^ a_j a_k^ a_l
@@ -237,13 +236,10 @@ if __name__ == '__main__':
     from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
     from openfermionpyscf import run_pyscf
     from openfermion import MolecularData
-    from vqemulti.utils import get_hf_reference_in_fock_space
-    from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
     from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
     from qiskit_ibm_runtime.fake_provider import FakeTorino
     from qiskit_aer import AerSimulator
 
-    from vqemulti.preferences import Configuration
     config = Configuration()
     #config.verbose = 2
     config.mapping = 'jw'
@@ -283,13 +279,12 @@ if __name__ == '__main__':
     tol_ampl = 0.01
 
     print('\nJASTROW ansatz\n==============')
-    from vqemulti.ansatz.generators.ucj import get_ucj_generator
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=1, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=2, full_trotter=True)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 

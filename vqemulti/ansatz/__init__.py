@@ -1,7 +1,7 @@
 import warnings
 
 from vqemulti.ansatz.generators import get_ucc_generator
-from vqemulti.ansatz.generators import get_ucj_generator
+#from vqemulti.ansatz.generators import get_ucj_generator
 from copy import deepcopy
 import numpy as np
 
@@ -235,7 +235,8 @@ if __name__ == '__main__':
     print('energy HF: ', hf_energy)
 
     print('\nUCC ansatz\n==========')
-    coefficients, ansatz = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=True)
+    ansatz = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=True)
+    coefficients = np.ones_like(ansatz)
 
     # simulator = None
     energy = get_adapt_vqe_energy(coefficients,
@@ -271,41 +272,30 @@ if __name__ == '__main__':
     print('S2: {:8.4f}'.format(spin_square))
 
     print('\nJASTROW ansatz\n==============')
+    from vqemulti.ansatz.unitary_jastrow import UnitaryCoupledJastrowAnsatz
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
+    t1 = ccsd.t1
 
-    coefficients, ansatz = get_ucj_generator(t2, full_trotter=True, use_qubit=False, n_terms=1, local=False)
+    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=1, full_trotter=True)
 
-    #simulator_jastrow = None
-    energy = get_adapt_vqe_energy(coefficients,
-                                  ansatz,
-                                  hf_reference_fock,
-                                  hamiltonian,
-                                  simulator_jastrow)
+    energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 
-    simulator_jastrow.print_statistics()
-    print(simulator_jastrow.get_circuits()[-1])
+    simulator.print_statistics()
+    print(simulator.get_circuits()[-1])
 
     print('Jastrow energy: ', energy)
 
-    n_particle = get_adapt_vqe_energy(coefficients,
-                                      ansatz,
-                                      hf_reference_fock,
-                                      n_particles_operator(n_orbitals),
-                                      simulator)
+    from vqemulti.vqe import vqe
+    print(vqe(hamiltonian, ucja, energy_simulator=None))
 
-    spin_z = get_adapt_vqe_energy(coefficients,
-                                  ansatz,
-                                  hf_reference_fock,
-                                  spin_z_operator(n_orbitals),
-                                  simulator)
+    energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
+    print('Optimized Jastrow energy: ', energy)
 
-    spin_square = get_adapt_vqe_energy(coefficients,
-                                       ansatz,
-                                       hf_reference_fock,
-                                       spin_square_operator(n_orbitals),
-                                       simulator)
+    n_particle = ucja.get_energy(ucja.parameters, n_particles_operator(ucja.n_qubits//2), None)
+    spin_z = ucja.get_energy(ucja.parameters, spin_z_operator(ucja.n_qubits//2), None)
+    spin_square = ucja.get_energy(ucja.parameters, spin_square_operator(ucja.n_qubits//2), None)
 
     print('n_particles: {:8.4f}'.format(n_particle))
     print('Sz: {:8.4f}'.format(spin_z))
@@ -320,11 +310,7 @@ if __name__ == '__main__':
         print('\nAmplitudes square')
         amplitudes_square = []
         for configuration in configuration_generator(n_qubits, n_electrons):
-            amplitude2 = get_adapt_vqe_energy(coefficients,
-                                              ansatz,
-                                              hf_reference_fock,
-                                              configuration_projector_operator(configuration),
-                                              simulator)
+            amplitude2 = ucja.get_energy(ucja.parameters, configuration_projector_operator(configuration), None)
 
             amplitudes_square.append(amplitude2)
 
@@ -334,17 +320,15 @@ if __name__ == '__main__':
         print('sum amplitudes square: ', np.sum(amplitudes_square))
         return amplitudes_square
 
-    get_projections(n_qubits, n_electrons, tolerance=tol_ampl)
+    get_projections(ucja.n_qubits, n_electrons, tolerance=tol_ampl)
 
     # SQD
-    from vqemulti.energy.simulation import simulate_energy_sqd
-    energy, samples = simulate_energy_sqd(coefficients,
-                                          ansatz,
-                                          hf_reference_fock,
+    from vqemulti.sqd import simulate_energy_sqd
+    energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,
                                           n_electrons,
-                                          adapt=True,
                                           return_samples=True)
-    print('SQD energy', energy)
+
     print(samples)
+    print('SQD energy', energy)

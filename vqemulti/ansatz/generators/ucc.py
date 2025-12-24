@@ -48,11 +48,8 @@ def get_ucc_generator(t1, t2, tolerance=1e-6, use_qubit=False, full_amplitudes=F
     assert normal_ordered(operator_tot + hermitian_conjugated(operator_tot)).isclose(FermionOperator.zero(), tolerance)
 
     operators = [operator_tot]
-    coefficients = [1.0]
 
     if use_qubit:
         operators = [fermion_to_qubit(op) for op in operators]
 
-    ansatz = OperatorList(operators, normalize=False, antisymmetrize=False)
-
-    return coefficients, ansatz
+    return OperatorList(operators, normalize=False, antisymmetrize=False)

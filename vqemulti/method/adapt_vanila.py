@@ -82,8 +82,7 @@ class AdapVanilla(Method):
         # if repeat operator finish adaptVQE
         if repeat_operator:
             warnings.warn('warning: repeated operator')
-            return ansatz
-            # raise Converged(message='Converge archived due to repeated operator')
+            raise Converged(message='Converge archived due to repeated operator')
 
         # Initialize the coefficient of the operator that will be newly added at 0
         for max_index, max_operator in zip(max_indices, max_operators):

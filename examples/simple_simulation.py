@@ -3,6 +3,7 @@ from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hami
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.adapt_vqe import adaptVQE
 from vqemulti.analysis import get_info
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
@@ -33,6 +34,9 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbit
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+# build initial ansatz
+ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
 # define simulator paramters
 simulator = Simulator(trotter=True,
                       trotter_steps=1,
@@ -50,12 +54,11 @@ method = AdapVanilla(gradient_threshold=1e-6,
 # run adaptVQE
 result = adaptVQE(hamiltonian,  # fermionic hamiltonian
                   operators_pool,  # fermionic operators
-                  hf_reference_fock,
+                  ansatz,
                   energy_threshold=0.0001,
                   method=method,
                   max_iterations=20,
                   energy_simulator=simulator,
-                  variance_simulator=simulator,
                   reference_dm=None,
                   optimizer_params=None)
 
@@ -72,5 +75,3 @@ print("Ansatz:", result["ansatz"])
 print("Indices:", result["indices"])
 print("Coefficients:", result["coefficients"])
 print("Num operators: {}".format(len(result["ansatz"])))
-
-

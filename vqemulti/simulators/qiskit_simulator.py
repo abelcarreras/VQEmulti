@@ -593,8 +593,8 @@ class QiskitSimulator(SimulatorBase):
             total_variance += coefficient ** 2 - expectation_value**2
             total_expectation_value += expectation_value
 
-            log_message('variance: ', float(coefficient ** 2 - expectation_value**2), log_level=1)
-            log_message('expectation: ', float(expectation_value), log_level=1)
+            log_message('variance: ', coefficient ** 2 - (expectation_value.real)**2, log_level=1)
+            log_message('expectation: ', expectation_value.real, log_level=1)
 
         return total_expectation_value, total_variance
 

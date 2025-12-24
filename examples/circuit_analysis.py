@@ -1,3 +1,5 @@
+import numpy as np
+
 from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
@@ -5,7 +7,7 @@ from vqemulti import vqe
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from vqemulti.preferences import Configuration
-from vqemulti.energy import get_vqe_energy
+from vqemulti.ansatz.exponential import ExponentialAnsatz
 
 
 conf = Configuration()
@@ -34,7 +36,9 @@ hamiltonian = molecule.get_molecular_hamiltonian()
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
 # Get UCCSD ansatz
-uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
+uccsd_generator = get_pool_singlet_sd(n_electrons, n_orbitals)
+parameters = np.zeros_like(uccsd_generator)
+uccsd_ansatz = ExponentialAnsatz(parameters, uccsd_generator, hf_reference_fock)
 
 # define simulator
 simulator = QiskitSimulator(trotter=True,
@@ -44,7 +48,6 @@ simulator = QiskitSimulator(trotter=True,
 print('Initialize VQE')
 result = vqe(hamiltonian,  # fermionic hamiltonian
              uccsd_ansatz,  # fermionic ansatz
-             hf_reference_fock,
              energy_simulator=simulator)
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))
@@ -60,12 +63,7 @@ simulator.print_statistics()
 # perform a single call to energy evaluator an use new simulator object to store only one circuit
 simulator_sp = QiskitSimulator(trotter=True, test_only=True)
 
-energy = get_vqe_energy(result['coefficients'],
-                        result['ansatz'],
-                        hf_reference_fock,
-                        hamiltonian,
-                        energy_simulator=simulator_sp)
-
+energy = uccsd_ansatz.get_energy(result['coefficients'], hamiltonian, energy_simulator=simulator_sp)
 print('Energy VQE: {:.8f}'.format(energy))
 
 # print circuits

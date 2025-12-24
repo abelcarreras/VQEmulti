@@ -1,6 +1,3 @@
-from vqemulti.energy import get_vqe_energy
-from vqemulti.gradient import get_vqe_energy_gradient
-from vqemulti.pool.tools import OperatorList
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.ansatz import GenericAnsatz
 from vqemulti.utils import log_message

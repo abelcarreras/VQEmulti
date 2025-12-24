@@ -1,20 +1,15 @@
-import numpy as np
-
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from openfermionpyscf import run_pyscf
 from openfermion import MolecularData
 from vqemulti.utils import get_hf_reference_in_fock_space
-from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
-from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
 from qiskit_ibm_runtime.fake_provider import FakeTorino
 from qiskit_aer import AerSimulator
 from vqemulti.ansatz.exponential import ExponentialAnsatz
-from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from vqemulti.preferences import Configuration
 from collections import Counter
-from vqemulti.preferences import Configuration
 from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
 from vqemulti.utils import get_dmrg_energy
+import numpy as np
 
 # config = Configuration()
 # config.verbose = 2
@@ -113,8 +108,6 @@ for time in np.arange(0.0, 2.5, dt):
     # print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
 
     # simulator.print_circuits()
-
-    from vqemulti.energy.simulation import simulate_energy_sqd
 
     samples_i = ansatz.get_sampling(simulator)
     samples = Counter(samples) + Counter(samples_i)

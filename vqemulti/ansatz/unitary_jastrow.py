@@ -329,7 +329,7 @@ if __name__ == '__main__':
     get_projections(ucja.n_qubits, n_electrons, tolerance=tol_ampl)
 
     # SQD
-    from vqemulti.energy.simulation import simulate_energy_sqd
+    from vqemulti.sqd import simulate_energy_sqd
     energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,

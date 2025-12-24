@@ -22,11 +22,14 @@ pip -e install .
 
 Basic example for regular VQE
 -----------------------------
+
 ```python
+import numpy as np
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqemulti.pool import get_pool_singlet_sd
+from vqemulti.ansatz.exponential import ExponentialAnsatz
 from vqemulti import vqe
 
 h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
@@ -52,25 +55,28 @@ hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 print('n_qubits:', hamiltonian.n_qubits)
 
-# Get UCCSD ansatz in fermion operators
-uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
+# Get UCCSD generator in fermion operators
+uccsd_generator = get_pool_singlet_sd(n_electrons, n_orbitals)
 
 # Get reference Hartree Fock state in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 print('hf reference', hf_reference_fock)
 
+# build exponential ansatz e^sum_i(op_i)|HF>
+parameters = np.zeros_like(uccsd_generator)
+uccsd_ansatz = ExponentialAnsatz(parameters, uccsd_generator, hf_reference_fock)
+
 # Define Pennylane simulator
 from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
-simulator = Simulator(trotter=True,     # use Trotter transformation
+simulator = Simulator(trotter=True,  # use Trotter transformation
                       trotter_steps=1,  # define Trotter transformation steps
-                      shots=1000)       # define number of shots
+                      shots=1000)  # define number of shots
 
 print('Initialize VQE')
-result = vqe(hamiltonian,                # hamiltonian in fermion operators 
-             uccsd_ansatz,               # ansatz in fermion operators
-             hf_reference_fock,          # reference vector in Fock space
-             energy_simulator=simulator) # use simulator 
+result = vqe(hamiltonian,  # hamiltonian in fermion operators 
+             uccsd_ansatz,  # ansatz 
+             energy_simulator=simulator)  # use simulator 
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))
 print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -90,6 +96,7 @@ from vqemulti.pool import get_pool_singlet_sd
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz 
 from vqemulti.utils import generate_reduced_hamiltonian
 
 # molecule definition
@@ -116,6 +123,9 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+# Get initial ansatz |HF>
+adapt_ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
 from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 
 # define the simulator
@@ -127,7 +137,7 @@ simulator = Simulator(trotter=False,
 # run adaptVQE
 result = adaptVQE(hamiltonian,
                   operators_pool,
-                  hf_reference_fock,
+                  adapt_ansatz,
                   energy_simulator=simulator,
                   )
 
@@ -138,7 +148,7 @@ print('Energy FullCI: ', molecule.fci_energy)
 error = result['energy'] - molecule.fci_energy
 print('Error:', error)
 
-print('Ansatz:', result['ansatz'])
+print('Ansatz operators:', result['ansatz'].operators)
 print('Coefficients:', result['coefficients'])
 print('Operator Indices:', result['indices'])
 print('Num operators: {}'.format(len(result['ansatz'])))

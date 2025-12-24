@@ -142,7 +142,7 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from openfermion import MolecularData
     from vqemulti.utils import get_hf_reference_in_fock_space
-    from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
+    # from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
     from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
     from qiskit_ibm_runtime.fake_provider import FakeTorino
     from qiskit_aer import AerSimulator
@@ -231,41 +231,22 @@ if __name__ == '__main__':
 
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
-    hf_energy = get_vqe_energy([], [], hf_reference_fock, hamiltonian, None)
-    print('energy HF: ', hf_energy)
-
     print('\nUCC ansatz\n==========')
-    ansatz = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=True)
-    coefficients = np.ones_like(ansatz)
+    uccsd_generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=True)
+    coefficients = np.ones_like(uccsd_generator)
 
-    # simulator = None
-    energy = get_adapt_vqe_energy(coefficients,
-                                  ansatz,
-                                  hf_reference_fock,
-                                  hamiltonian,
-                                  simulator)
+    from vqemulti.ansatz.exponential import ExponentialAnsatz
+    uccsd_ansatz = ExponentialAnsatz(coefficients, uccsd_generator, hf_reference_fock)
+
+    energy = uccsd_ansatz.get_energy(uccsd_ansatz.parameters, hamiltonian, simulator)
 
     simulator.print_statistics()
     print('energy: ', energy)
     print(simulator.get_circuits()[-1])
 
-    n_particle = get_adapt_vqe_energy(coefficients,
-                                      ansatz,
-                                      hf_reference_fock,
-                                      n_particles_operator(n_orbitals),
-                                      simulator)
-
-    spin_z = get_adapt_vqe_energy(coefficients,
-                                  ansatz,
-                                  hf_reference_fock,
-                                  spin_z_operator(n_orbitals),
-                                  simulator)
-
-    spin_square = get_adapt_vqe_energy(coefficients,
-                                       ansatz,
-                                       hf_reference_fock,
-                                       spin_square_operator(n_orbitals),
-                                       simulator)
+    n_particle = uccsd_ansatz.get_energy(uccsd_ansatz.parameters, n_particles_operator(uccsd_ansatz.n_qubits//2), None)
+    spin_z = uccsd_ansatz.get_energy(uccsd_ansatz.parameters, spin_z_operator(uccsd_ansatz.n_qubits//2), None)
+    spin_square = uccsd_ansatz.get_energy(uccsd_ansatz.parameters, spin_square_operator(uccsd_ansatz.n_qubits//2), None)
 
     print('n_particles: {:8.4f}'.format(n_particle))
     print('Sz: {:8.4f}'.format(spin_z))

@@ -320,7 +320,6 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from openfermion import MolecularData
     from vqemulti.utils import get_hf_reference_in_fock_space
-    from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
     from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
     from qiskit_ibm_runtime.fake_provider import FakeTorino
     from qiskit_aer import AerSimulator
@@ -338,9 +337,6 @@ if __name__ == '__main__':
                           # use_ibm_runtime=True
                           )
 
-    simulator_jastrow = simulator.copy()
-    #simulator_jastrow._backend = FakeTorino()
-    #simulator_jastrow._use_ibm_runtime = True
     simulator_sqd = simulator.copy()
     simulator_sqd._backend = AerSimulator()
     simulator_sqd._use_ibm_runtime = True
@@ -431,20 +427,10 @@ if __name__ == '__main__':
     print(len(coefficients), len(generator))
 
     # ansatz = ProductExponentialAnsatz(coefficients, generator, hf_reference_fock)
-
-
     print('energy: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
-    print('energy: ', get_adapt_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, None))
-
 
     print('simulator')
     simulator = QiskitSimulator(trotter=False, trotter_steps=1000, test_only=True, use_estimator=True)
-    from vqemulti.gradient import get_adapt_vqe_energy_gradient
-
-    #gradient = get_adapt_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
-    #print('gradient OG: ', gradient)
-
-    # simulator = None
 
     ansatz = ProductExponentialAnsatz(coefficients, generator, hf_reference_fock)
 
@@ -462,9 +448,6 @@ if __name__ == '__main__':
     print(ansatz.parameters)
     print(result)
 
-    #hf_energy = get_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
-    #print('energy HF: ', hf_energy)
-
     ansatz_opt = ProductExponentialAnsatz(result['coefficients'], generator, hf_reference_fock)
 
     print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
@@ -473,8 +456,5 @@ if __name__ == '__main__':
     print('gradient exact: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, None))
     print('gradient Simulation: ', ansatz_opt.get_gradients(ansatz.parameters, hamiltonian, simulator))
 
-    #from vqemulti.gradient import simulate_vqe_energy_gradient
-    #print(simulate_vqe_energy_gradient(result['coefficients'], generator, hf_reference_fock, hamiltonian, simulator))
-
-    sampling = ansatz_opt.get_sampling(simulator)
+    sampling = ansatz_opt.get_sampling(simulator_sqd)
     print('sampling: ', sampling)

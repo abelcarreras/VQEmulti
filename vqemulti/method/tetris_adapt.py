@@ -1,7 +1,4 @@
 from vqemulti.method import Method
-from vqemulti.gradient import compute_gradient_vector
-from vqemulti.gradient.simulation import simulate_gradient
-from vqemulti.energy import get_adapt_vqe_energy
 from vqemulti.errors import Converged
 from vqemulti.method.convergence_functions import zero_valued_coefficient_adaptvanilla, energy_worsening
 from copy import deepcopy

@@ -193,7 +193,6 @@ if __name__ == '__main__':
     from openfermionpyscf import run_pyscf
     from openfermion import MolecularData
     from vqemulti.utils import get_hf_reference_in_fock_space
-    from vqemulti.energy import get_vqe_energy, get_adapt_vqe_energy
     from vqemulti.operators import n_particles_operator, spin_z_operator, spin_square_operator
     from qiskit_ibm_runtime.fake_provider import FakeTorino
     from qiskit_aer import AerSimulator
@@ -290,16 +289,8 @@ if __name__ == '__main__':
     hf_energy = ansatz.get_energy(ansatz.parameters, hamiltonian, None)
     print('energy HF: ', hf_energy)
 
-    hf_energy = get_vqe_energy(coefficients, generator, hf_reference_fock, hamiltonian, None)
-
-    print('energy HF: ', hf_energy)
-
     print('simulator')
     simulator = QiskitSimulator(trotter=False, trotter_steps=1000, test_only=True, use_estimator=True)
-    #from vqemulti.gradient import simulate_vqe_energy_gradient
-
-    #gradient = simulate_vqe_energy_gradient(coefficients, generator, hf_reference_fock, hamiltonian, simulator)
-    #print('gradient OG: ', gradient)
 
     ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
 

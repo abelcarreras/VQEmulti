@@ -72,7 +72,6 @@ print('Energy VQE: {:.8f}'.format(result['energy']))
 print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 print('------------------------')
 
-from vqemulti.energy import simulate_vqe_energy
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 
 simulator = Simulator(trotter=False, test_only=True, shots=10000, hamiltonian_grouping=True)

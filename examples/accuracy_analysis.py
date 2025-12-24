@@ -1,14 +1,9 @@
 from vqemulti.utils import get_hf_reference_in_fock_space, generate_reduced_hamiltonian
 from vqemulti.pool import get_pool_singlet_sd
-from vqemulti.preferences import Configuration
 from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
-from vqemulti.energy import get_adapt_vqe_energy
-from vqemulti.pool.tools import OperatorList
-#from vqemulti.adapt_vqe import adapt_ansatz
 from vqemulti.vqe import vqe
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
-import scipy
 import numpy as np
 
 

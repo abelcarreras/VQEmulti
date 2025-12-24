@@ -43,7 +43,6 @@ class SimulatorBase:
 
         if self._test_only:
             evaluation, std_error = self._get_exact_state_evaluation(qubit_hamiltonian, state_preparation_gates)
-            std_error = 0
         else:
             evaluation, std_error = self._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 

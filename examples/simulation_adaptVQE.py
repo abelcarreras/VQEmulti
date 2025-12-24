@@ -6,6 +6,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.optimizers import OptimizerParams
 from vqemulti import NotConvergedError
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
@@ -37,6 +38,9 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbit
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+# build initial ansatz
+ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
 # define simulator
 simulator = Simulator(trotter=False, test_only=True, hamiltonian_grouping=True, shots=250)
 
@@ -58,11 +62,10 @@ try:
     # run adaptVQE
     result = adaptVQE(hamiltonian,
                       operators_pool,
-                      hf_reference_fock,
+                      ansatz,
                       energy_threshold=1e-2,
                       method=method,
                       energy_simulator=simulator,
-                      variance_simulator = None,
                       max_iterations=3,  # maximum number of interations
                       reference_dm=None,
                       optimizer_params=opt_cobyla # optimizer parameters

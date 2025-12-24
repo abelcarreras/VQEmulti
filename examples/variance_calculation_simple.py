@@ -4,12 +4,9 @@ from openfermionpyscf import run_pyscf
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqemulti.pool.singlet_sd import get_pool_singlet_sd
 from vqemulti.vqe import vqe
-from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
+from vqemulti.ansatz.exponential import ExponentialAnsatz
 # from vqemulti.simulators.penny_simulator import PennylaneSimulator as Simulator
 from vqemulti.simulators.cirq_simulator import CirqSimulator as Simulator
-
-from vqemulti.energy.simulation import simulate_adapt_vqe_energy_square, simulate_adapt_vqe_energy, simulate_vqe_variance, simulate_adapt_vqe_variance
-from vqemulti.energy import exact_adapt_vqe_energy
 import matplotlib.pyplot as plt
 import numpy as np
 from vqemulti.preferences import Configuration
@@ -47,7 +44,7 @@ print(hamiltonian)
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get UCCSD ansatz
-uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=1)
+uccsd_generator = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=1)
 
 # print(n_electrons, hamiltonian.n_qubits)
 # Get reference Hartree Fock state
@@ -61,10 +58,12 @@ simulator = Simulator(trotter=True, test_only=True, hamiltonian_grouping=True)
 # uccsd_ansatz = []
 # simulator = None
 # print(uccsd_ansatz[:3])
-print('full ansatz size: ', len(uccsd_ansatz))
+print('full ansatz size: ', len(uccsd_generator))
 n_coeff = 3
 
-result = vqe(hamiltonian, uccsd_ansatz[:n_coeff], hf_reference_fock, energy_simulator=simulator)
+uccsd_ansatz = ExponentialAnsatz(np.ones_like(uccsd_generator[:n_coeff]), uccsd_generator[:n_coeff], hf_reference_fock)
+
+result = vqe(hamiltonian, uccsd_ansatz, energy_simulator=simulator)
 
 print('Coefficients: ', result['coefficients'])
 
@@ -77,7 +76,7 @@ from vqemulti.energy import simulate_vqe_energy
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 
 simulator = Simulator(trotter=False, test_only=True, shots=10000, hamiltonian_grouping=True)
-exact = simulate_vqe_energy(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
+exact = uccsd_ansatz.get_energy(result['coefficients'], hamiltonian, simulator)
 # simulator.print_circuits()
 print('Exact VQE energy: ', exact)
 
@@ -85,7 +84,7 @@ print('Exact VQE energy: ', exact)
 #print('Exact adaptVQE energy: ', exact)
 
 # compute the variance as Var = E[X^2] - E[X]^2 with simulator
-n_measures = 1
+n_measures = 3
 
 n_shots = 5900  # 201  # 370 # 185
 n_shots = max(1, n_shots)
@@ -103,19 +102,17 @@ for i in range(n_measures):
     print('i:', i)
 
     if not use_opt:
-        e = simulate_vqe_energy(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
+        e = uccsd_ansatz.get_energy(result['coefficients'], hamiltonian, simulator)
     else:
-        results = vqe(hamiltonian, result['ansatz'], hf_reference_fock, result['coefficients'],
+        results = vqe(hamiltonian, uccsd_ansatz,
                       energy_simulator=simulator, energy_threshold=1e-2)
 
         e = results['energy']
     energy_list.append(e)
 
-    # print(energy_list)
-    # variance = simulate_adapt_vqe_variance(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
-
-    variance = simulate_vqe_variance(result['coefficients'], result['ansatz'], hf_reference_fock, hamiltonian, simulator)
-    variance_list.append(variance)
+    _, std_error = uccsd_ansatz.get_energy(result['coefficients'], hamiltonian, simulator, return_std=True)
+    print('std_error: ', std_error)
+    variance_list.append(std_error**2)
     # print(variance)
     # target_dev = 1e-2
     # print('NShots (1e-2): : ', int(variance / target_dev ** 2))

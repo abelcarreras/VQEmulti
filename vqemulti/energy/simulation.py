@@ -1,4 +1,5 @@
 from vqemulti.utils import fermion_to_qubit
+from vqemulti.utils import log_message
 
 
 def _simulate_generic(ansatz_qubit, hf_reference_fock, qubit_eval_operator, simulator):
@@ -70,8 +71,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     else:
         samples = ansatz.get_sampling(simulator)
 
-    if Configuration().verbose:
-        print('samples ({}):'.format(len(samples)), samples)
+    log_message('samples ({}):'.format(len(samples)), samples, log_level=1)
 
     configurations = []
     for bitstring in samples.keys():

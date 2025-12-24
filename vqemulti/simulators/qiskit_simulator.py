@@ -1,8 +1,7 @@
 import warnings
 
 from vqemulti.simulators import SimulatorBase
-from vqemulti.preferences import Configuration
-from vqemulti.utils import convert_hamiltonian, group_hamiltonian
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, log_message
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
 from openfermion.utils import count_qubits
@@ -594,9 +593,8 @@ class QiskitSimulator(SimulatorBase):
             total_variance += coefficient ** 2 - expectation_value**2
             total_expectation_value += expectation_value
 
-            if Configuration().verbose > 1:
-                print('variance: ', float(coefficient ** 2 - expectation_value**2))
-                print('expectation: ', float(expectation_value))
+            log_message('variance: ', float(coefficient ** 2 - expectation_value**2), log_level=1)
+            log_message('expectation: ', float(expectation_value), log_level=1)
 
         return total_expectation_value, total_variance
 
@@ -616,9 +614,8 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
-        #if Configuration().verbose:
-        #    print('circuit:')
-        #    print(circuit)
+        # log_message('circuit:', log_message=1)
+        # log_message(circuit, , log_message=1)
 
         list_strings = []
         for pauli_string, coefficient in formatted_hamiltonian.items():
@@ -627,9 +624,8 @@ class QiskitSimulator(SimulatorBase):
 
         measure_op = SparsePauliOp.from_list(list_strings)
 
-        #if Configuration().verbose:
-        #    print('measure operator:')
-        #    print(measure_op)
+        # log_message('measure operator:', log_message=1)
+        # log_message(measure_op, log_message=1)
 
         # circuit stats
         for _ in list_strings:
@@ -647,9 +643,8 @@ class QiskitSimulator(SimulatorBase):
 
         expectation_value = sum(job.result().values)
 
-        if Configuration().verbose > 1:
-            print('Expectation value: ', expectation_value)
-            print('std_error:', std_error)
+        log_message('Expectation value: ', expectation_value, log_level=1)
+        log_message('std_error:', std_error, log_level=1)
 
         return expectation_value, std_error
 
@@ -817,8 +812,7 @@ class QiskitSimulator(SimulatorBase):
 
         # circuit drawing
         self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
-        if Configuration().verbose > 2:
-            print(self._circuit_draw[-1])
+        log_message(self._circuit_draw[-1], log_level=2)
 
         # depth
         self._circuit_count.append(circuit.depth())

@@ -5,6 +5,7 @@ from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.method.adapt_vanila import AdapVanilla
+from vqemulti.utils import log_message
 from vqemulti.vqe import vqe
 
 
@@ -38,7 +39,7 @@ def adaptVQE(hamiltonian,
     if method is None:
         method = AdapVanilla()
 
-    print('optimizer params: ', optimizer_params)
+    log_message('optimizer params: ', optimizer_params)
 
     # Initialize data structures
     iterations = {'energies': [], 'norms': [], 'f_evaluations': [], 'ansatz_size': [], 'variance': [], 'fidelity': [],
@@ -49,14 +50,14 @@ def adaptVQE(hamiltonian,
 
     # define operatorList from pool
     operators_pool = OperatorList(operators_pool)
-    print('pool size: ', len(operators_pool))
+    log_message('pool size: ', len(operators_pool))
 
     # get n qubits to be used
-    print('n_qubits: ', adapt_ansatz.n_qubits)
+    log_message('n_qubits: ', adapt_ansatz.n_qubits)
 
     # compute circuit variance
     variance = adapt_ansatz.get_energy(coefficients, hamiltonian, energy_simulator, return_std=True)[1]
-    print('Initial variance: ', variance)
+    log_message('Initial variance: ', variance)
 
     # Initialize variables that are common for all the methods
     method.initialize_general_variables(hamiltonian, operators_pool, energy_threshold)
@@ -68,13 +69,13 @@ def adaptVQE(hamiltonian,
     iterations['indices'].append(adapt_ansatz.operators.get_index(operators_pool))
 
     for iteration in range(max_iterations):
-        print('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
+        log_message('\n*** Adapt Iteration {} ***\n'.format(iteration+1))
 
         # update ansatz
         try:
             adapt_ansatz = method.update_ansatz(adapt_ansatz, iterations)
         except Converged as c:
-            print(c.message)
+            log_message(c.message)
             return {'energy': iterations['energies'][-1],
                     'ansatz': adapt_ansatz,
                     'indices': iterations['indices'][-1],
@@ -92,23 +93,23 @@ def adaptVQE(hamiltonian,
 
         results_vqe = vqe(hamiltonian, adapt_ansatz, energy_simulator, energy_threshold, optimizer_params)
 
-        print('\n{:^12}   {}'.format('coefficient', 'operator'))
+        log_message('\n{:^12}   {}'.format('coefficient', 'operator'))
         for c, op in zip(adapt_ansatz.parameters, adapt_ansatz.operators):
             if adapt_ansatz.operators.is_fermionic():
-                print('{:12.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
+                log_message('{:12.5e}   {} '.format(c, get_string_from_fermionic_operator(op)))
             else:
-                print('{:12.5e} {} '.format(c, str(op).replace('\n', '')))
-        print()
+                log_message('{:12.5e} {} '.format(c, str(op).replace('\n', '')))
+        log_message()
 
         if reference_dm is not None:
             density_matrix = get_density_matrix(adapt_ansatz)
             fidelity = density_fidelity(reference_dm, density_matrix)
-            print('fidelity: {:6.4e}'.format(fidelity))
+            log_message('fidelity: {:6.4e}'.format(fidelity))
             iterations['fidelity'].append(fidelity)
 
         # print iteration results
-        print('Iteration energy:', results_vqe['energy'])
-        print('Ansatz Indices:', adapt_ansatz.operators.get_index(operators_pool))
+        log_message('Iteration energy:', results_vqe['energy'])
+        log_message('Ansatz Indices:', adapt_ansatz.operators.get_index(operators_pool))
 
         # Data storage
         iterations['energies'].append(results_vqe['energy'])
@@ -124,7 +125,7 @@ def adaptVQE(hamiltonian,
             try:
                 criteria(iterations)
             except Converged as c:
-                print(c.message)
+                log_message(c.message)
                 return {'energy': iterations['energies'][-1],
                         'ansatz': adapt_ansatz,
                         'indices': iterations['indices'][-1],
@@ -136,7 +137,7 @@ def adaptVQE(hamiltonian,
         # to be deprecated
         if energy_simulator is not None:
             circuit_info = energy_simulator.get_circuit_info(adapt_ansatz)
-            print('Energy circuit depth: ', circuit_info['depth'])
+            log_message('Energy circuit depth: ', circuit_info['depth'])
 
     raise NotConvergedError({'energy': iterations['energies'][-1],
                              'ansatz': adapt_ansatz,

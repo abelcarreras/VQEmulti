@@ -2,6 +2,7 @@ import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from vqemulti.simulators.backend_opt import get_backend_opt_layout, accumulated_errors
 from vqemulti.preferences import Configuration
+from vqemulti.utils import log_message
 
 
 class RHESampler:
@@ -31,9 +32,9 @@ class RHESampler:
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
 
+        log_message('depth: ', circuit.depth(), log_level=1)
+        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
         if Configuration().verbose > 1:
-            print('depth: ', circuit.depth())
-            print('isa_depth: ', isa_circuit.depth())
             accumulated_errors(self._backend, isa_circuit, print_data=True)
 
 
@@ -60,8 +61,7 @@ class RHEstimator:
         self._backend = backend
         self._limit_hw = limit_hw
 
-        if Configuration().verbose > 1:
-            print('layout: ', layout)
+        log_message('layout: ', layout, log_level=1)
 
     def run(self, circuit, measure_op, shots=10000):
 
@@ -71,15 +71,15 @@ class RHEstimator:
         n_chunks = min([n_chunks, len(measure_op)])
         chunck_size = int(np.ceil(len(measure_op)/n_chunks))
 
+        log_message('depth: ', circuit.depth(), log_level=1)
+        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
+        log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
+        log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
+        # log_message('observable: ', measure_op, log_level=1)
+        log_message('n_observable: ', len(measure_op), log_level=1)
+        log_message('n_chunks: ', n_chunks, log_level=1)
+        log_message('chunck_size: ', chunck_size, log_level=1)
         if Configuration().verbose > 1:
-            print('depth: ', circuit.depth())
-            print('isa_depth: ', isa_circuit.depth())
-            print('circuit gate count: ', dict(circuit.count_ops()))
-            print('isa_circuit gate count: ', dict(isa_circuit.count_ops()))
-            # print('observable: ', measure_op)
-            print('n_observable: ', len(measure_op))
-            print('n_chunks: ', n_chunks)
-            print('chunck_size: ', chunck_size)
             accumulated_errors(self._backend, isa_circuit, print_data=True)
 
         from qiskit_ibm_runtime import EstimatorV2
@@ -126,14 +126,12 @@ class RHEstimator:
             # print('expectationV2:', expectation_value)
             # print('varianceV2: ', variance, '/ ', job.result()[0].data.stds)
             # print('shots: ', shots)
-            if Configuration().verbose > 1:
-                print(i+1, '/', n_chunks)
-                print('partial expectation: ', expectation_value)
-                print('metadata: ', job.result()[0].metadata)
+            log_message(i+1, '/', n_chunks, log_level=1)
+            log_message('partial expectation: ', expectation_value, log_level=1)
+            log_message('metadata: ', job.result()[0].metadata, log_level=1)
 
         std = np.sqrt(variance/shots)
-        if Configuration().verbose > 1:
-            print('Final Estimator value: ', expectation_value)
+        log_message('Final Estimator value: ', expectation_value, log_level=1)
 
         # emulate Qiskit Estimator result interface
         class ResultData:

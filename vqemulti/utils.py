@@ -1591,7 +1591,7 @@ def get_truncated_fermion_operators(op, max_orbital, max_mb=None):
     return new_op
 
 
-def log_message(*args, log_level=False):
+def log_message(*args, log_level=-1):
 
     if log_level <= 0:
         print(*args)

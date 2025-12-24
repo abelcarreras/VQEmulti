@@ -1,6 +1,5 @@
-from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, ansatz_to_matrix
-from vqemulti.utils import get_operators_order, break_qubit_operator, ansatz_to_matrix_list
-
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix
+from vqemulti.utils import get_operators_order, break_qubit_operator, operator_to_matrix_list
 from openfermion import givens_decomposition_square, count_qubits
 from collections import defaultdict
 import numpy as np
@@ -148,11 +147,11 @@ class SimulatorBase:
     def get_reference_gates(self, reference_fock):
         return self._build_reference_gates(reference_fock)
 
-    def get_exponential_gates(self, operators_list, n_qubits):
+    def get_exponential_gates(self, generator, n_qubits):
         """
         generate operation gates for a given ansantz in simulation library format (Cirq, pennylane, etc..)
 
-        :param operators_list: operators list in qubit
+        :param generator: qubit operators list
         :param n_qubits: number of qubits
         :return: gates list in simulation library format
         """
@@ -164,7 +163,7 @@ class SimulatorBase:
             # Go through the operators in the ansatz
             from vqemulti.simulators.tools import set_previous_row
             set_previous_row([])
-            for operator in operators_list:
+            for operator in generator:
                 if len(operator.terms) == 0:
                     continue
 
@@ -182,7 +181,7 @@ class SimulatorBase:
 
         else:
             # build matrix gate
-            matrix_list = ansatz_to_matrix_list(operators_list, n_qubits)
+            matrix_list = operator_to_matrix_list(generator, n_qubits)
 
             # Get gates in simulation library format
             matrix_gates = self._get_matrix_operator_gates(matrix_list, n_qubits)

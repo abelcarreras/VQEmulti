@@ -72,18 +72,19 @@ def ansatz_to_matrix(ansatz, n_qubits):
     return matrix
 
 
-def ansatz_to_matrix_list(ansatz, n_qubits):
+def operator_to_matrix_list(generators_list, n_qubits):
     """
-    generate a list of matrix representations of the operators that corresponds to each element of the ansatz list
+    generate a list of matrix representations of the exponential of operators from the generators_list
 
-    :param ansatz: list of operators
+
+    :param generators_list: list of operators
     :param n_qubits: number of quibits
-    :return: list of matrices
+    :return: list of matrix representations
     """
 
     matrix_list = []
-    for operator in ansatz:
-        # Get corresponding the operator matrix (exponent)
+    for operator in generators_list:
+        # Get corresponding the operator matrix
         operator_matrix = get_sparse_operator(operator, n_qubits)
 
         # Add unitary operator to matrix as exp(operator_matrix)

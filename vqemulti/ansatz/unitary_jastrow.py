@@ -1,13 +1,3 @@
-from vqemulti.utils import get_sparse_ket_from_fock, get_sparse_operator
-from openfermion.utils import count_qubits
-from vqemulti.pool.tools import OperatorList
-from vqemulti.utils import fermion_to_qubit
-from vqemulti.ansatz import GenericAnsatz
-from vqemulti.simulators.qiskit_simulator import QiskitSimulator
-from openfermion import QubitOperator, is_hermitian
-import numpy as np
-import scipy as sp
-
 from jastrow.factor import double_factorized_t2
 from jastrow.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
 from jastrow.rotation import change_of_basis_orbitals
@@ -15,6 +5,8 @@ from openfermion import FermionOperator, QubitOperator, hermitian_conjugated, no
 from vqemulti.ansatz.generators.ucc import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 from numpy.testing import assert_almost_equal
+import numpy as np
+import scipy as sp
 
 
 def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):

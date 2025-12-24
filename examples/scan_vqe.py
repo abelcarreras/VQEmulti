@@ -40,12 +40,14 @@ for d in np.linspace(0.3, 3, n_points):
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
     # Get UCCSD ansatz
-    uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals)
+    uccsd_generator = get_pool_singlet_sd(n_electrons, n_orbitals)
+
+    # build ansatz
+    from vqemulti.ansatz.exponential import ExponentialAnsatz
+    ansatz_generator = ExponentialAnsatz(np.ones_like(uccsd_generator), uccsd_generator, hf_reference_fock)
 
     print('Initialize VQE')
-    result = vqe(hamiltonian,  # fermionic hamiltonian
-                 uccsd_ansatz,  # fermionic ansatz
-                 hf_reference_fock)
+    result = vqe(hamiltonian, ansatz_generator)
 
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

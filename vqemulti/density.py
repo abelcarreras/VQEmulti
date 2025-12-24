@@ -16,7 +16,7 @@ def get_density_matrix(ansatz, frozen_core=0):
     """
 
     # get number of qubits
-    n_orbitals = ansatz.n_qubits // 2
+    n_orbitals = ansatz.n_qubits // 2 + frozen_core
     n_qubit = (n_orbitals - frozen_core) * 2
 
     # get state vector

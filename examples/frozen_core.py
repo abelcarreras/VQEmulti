@@ -35,17 +35,19 @@ hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=
 print('n_qubits:', hamiltonian.n_qubits)
 
 # Get UCCSD ansatz
-uccsd_ansatz = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=7)
+uccsd_generator = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=7)
 
 # Get reference Hartree Fock state
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=7)
 print('hf reference', hf_reference_fock)
 
+from vqemulti.ansatz.exponential import ExponentialAnsatz
+
+initial_paramters = np.ones_like(uccsd_generator)
+uccsd_ansatz = ExponentialAnsatz(initial_paramters, uccsd_generator, hf_reference_fock)
 
 print('Initialize VQE')
-result = vqe(hamiltonian,
-             uccsd_ansatz,
-             hf_reference_fock)
+result = vqe(hamiltonian, uccsd_ansatz)
 
 print('Energy HF: {:.8f}'.format(molecule.hf_energy))
 print('Energy VQE: {:.8f}'.format(result['energy']))
@@ -54,11 +56,12 @@ print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
 
 print('Num operators: ', len(result['ansatz']))
 print('Ansatz (compact representation):')
-result['ansatz'].print_compact_representation()
+result['ansatz'].operators.print_compact_representation()
 print('Coefficients:\n', result['coefficients'])
 
 
-density_matrix = get_density_matrix(result['coefficients'], result['ansatz'],
-                                    hf_reference_fock, n_orbitals, frozen_core=7)
+density_matrix = get_density_matrix(uccsd_ansatz, frozen_core=7)
+print(density_matrix)
+print('n_electrons: ', np.sum(np.diag(density_matrix)))
 
 print('fidelity: {:.5f}'.format(density_fidelity(molecule.fci_one_rdm, density_matrix)))

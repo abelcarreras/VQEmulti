@@ -3,8 +3,11 @@ from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.preferences import Configuration
 from openfermionpyscf import run_pyscf
 import matplotlib.pyplot as plt
-from vqemulti.adapt_vqe import get_adapt_vqe_energy
+from vqemulti.energy import get_adapt_vqe_energy
 from vqemulti.pool.tools import OperatorList
+#from vqemulti.adapt_vqe import adapt_ansatz
+from vqemulti.vqe import vqe
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 import scipy
 import numpy as np
 
@@ -13,7 +16,6 @@ vqe_energies = []
 energies_fullci = []
 energies_hf = []
 
-Configuration().verbose = True
 
 # molecule definition
 from generate_mol import tetra_h4_mol, linear_h4_mol, square_h4_mol
@@ -61,11 +63,12 @@ precision = 1e-1
 print('precision: ', precision)
 
 
-coefficients = np.array([])
-ansatz = OperatorList([])
+#coefficients = np.array([])
+#ansatz = OperatorList([])
 
 # coefficients = np.array([2.48875])
 # ansatz = pool[9: 10]
+ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
 
 std_list = []
 et_list = [0.5, 0.4, 0.3, 0.2, 0.1]
@@ -82,14 +85,9 @@ for energy_threshold in et_list:
 
     energy_list = []
     for i in range(50):
-        results = scipy.optimize.minimize(get_adapt_vqe_energy,
-                                          coefficients,
-                                          (ansatz, hf_reference_fock, hamiltonian, simulator),
-                                          method='COBYLA',  # SPSA for real hardware
-                                          tol=energy_threshold,
-                                          options={'disp': False})  # 'rhobeg': 0.01)
 
-        energy_list.append(results.fun)
+        results = vqe(hamiltonian, ansatz, simulator, energy_threshold=energy_threshold)
+        energy_list.append(results['energy'])
 
     print('energy threshold:', energy_threshold)
     print('VQE energy:', energy_list[-1])

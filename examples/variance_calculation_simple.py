@@ -84,7 +84,7 @@ print('Exact VQE energy: ', exact)
 #print('Exact adaptVQE energy: ', exact)
 
 # compute the variance as Var = E[X^2] - E[X]^2 with simulator
-n_measures = 3
+n_measures = 20
 
 n_shots = 5900  # 201  # 370 # 185
 n_shots = max(1, n_shots)
@@ -96,7 +96,7 @@ energy_list = []
 variance_list = []
 use_opt = True
 
-simulator = Simulator(trotter=False, test_only=True, shots=n_shots, hamiltonian_grouping=False)
+simulator = Simulator(trotter=False, test_only=False, shots=n_shots, hamiltonian_grouping=False)
 
 for i in range(n_measures):
     print('i:', i)

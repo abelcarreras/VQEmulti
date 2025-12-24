@@ -7,10 +7,12 @@ from openfermionpyscf import run_pyscf
 from vqemulti.pool import get_pool_singlet_sd
 from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_fock_space
 from vqemulti.adapt_vqe import adaptVQE
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
+from vqemulti.errors import NotConvergedError
 
 
 h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
-                                       ['He', [0, 0, 1.0]]],
+                                      ['He', [0, 0, 1.0]]],
                              basis='6-31g',
                              multiplicity=1,
                              charge=0,
@@ -38,6 +40,9 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+# build initial ansatz
+ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
 # Simulator
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 
@@ -56,29 +61,29 @@ method = AdapVanilla(gradient_threshold=1e-6,
                      operator_update_max_grad=2e-2,
                      )
 # FIRST CALCULATION
-result_first = adaptVQE(hamiltonian,  # fermionic hamiltonian
-                          operators_pool,  # fermionic operators
-                          hf_reference_fock,
-                          energy_threshold=0.0001,
-                          method=method,
-                          max_iterations=20,
-                          energy_simulator=None,
-                          variance_simulator=None,
-                          reference_dm=None,
-                          optimizer_params=None)
+try:
+    result_first = adaptVQE(hamiltonian,  # fermionic hamiltonian
+                            operators_pool,  # fermionic operators
+                            ansatz,
+                            energy_threshold=0.0001,
+                            method=method,
+                            max_iterations=3,
+                            energy_simulator=None,
+                            reference_dm=None,
+                            optimizer_params=None)
+
+except NotConvergedError as f:
+    result_first = f.results
 
 # SECOND (restarted) CALCULATION
 print('restarting calculation')
 result = adaptVQE(hamiltonian, # fermionic hamiltonian
                   operators_pool, # fermionic operators
-                  hf_reference_fock,
+                  ansatz,
                   energy_threshold=0.0001,
                   method=method,
                   max_iterations=20,
                   energy_simulator=None,
-                  variance_simulator=None,
-                  coefficients=result_first['coefficients'],  # previous calculation coefficients
-                  ansatz=result_first['ansatz'],  # previous calculation ansatz
                   reference_dm=None,
                   optimizer_params=None
                   )

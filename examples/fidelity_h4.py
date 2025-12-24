@@ -9,6 +9,7 @@ from vqemulti.utils import generate_reduced_hamiltonian, get_hf_reference_in_foc
 from vqemulti.adapt_vqe import adaptVQE
 from vqemulti.preferences import Configuration
 from vqemulti.density import get_density_matrix, density_fidelity
+from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 import numpy as np
 
 
@@ -68,6 +69,9 @@ operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbit
 # Get Hartree Fock reference in Fock space
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
 
+# build initial ansatz
+ansatz = ProductExponentialAnsatz([], [], hf_reference_fock)
+
 # Simulator
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 
@@ -79,7 +83,7 @@ simulator = Simulator(trotter=True,
 # FIRST CALCULATION
 result_first = adaptVQE(hamiltonian,
                         operators_pool,
-                        hf_reference_fock,
+                        ansatz,
                         reference_dm=nat_rdm_fci,
                         # energy_simulator=simulator,
                         # gradient_simulator=simulator
@@ -96,10 +100,7 @@ print(np.round(nat_rdm_fci, decimals=6))
 print(np.trace(nat_rdm_fci))
 
 
-density_matrix = get_density_matrix(result_first['coefficients'],
-                                    result_first['ansatz'],
-                                    hf_reference_fock,
-                                    n_orbitals)
+density_matrix = get_density_matrix(ansatz)
 
 print('\nadaptVQE density matrix')
 print(density_matrix)

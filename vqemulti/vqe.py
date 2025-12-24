@@ -3,6 +3,7 @@ from vqemulti.gradient import get_vqe_energy_gradient
 from vqemulti.pool.tools import OperatorList
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.ansatz import GenericAnsatz
+from vqemulti.utils import log_message
 import numpy as np
 import scipy
 
@@ -27,7 +28,7 @@ def vqe(hamiltonian,
     if optimizer_params is None:
         optimizer_params = OptimizerParams()
 
-    print('optimizer params: ', optimizer_params)
+    log_message('optimizer params: ', optimizer_params, log_level=1)
 
     # initial guess
     coefficients = np.array(ansatz.parameters, dtype=float)

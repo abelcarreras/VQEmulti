@@ -1589,3 +1589,15 @@ def get_truncated_fermion_operators(op, max_orbital, max_mb=None):
         if all(mode <= max_mode for mode, action in term) and len(term) <= max_mb:
             new_op += FermionOperator(term, coeff)
     return new_op
+
+
+def log_message(*args, log_level=False):
+
+    if log_level <= 0:
+        print(*args)
+
+    elif Configuration().verbose is False:
+        return
+
+    elif Configuration().verbose >= log_level:
+        print(*args)

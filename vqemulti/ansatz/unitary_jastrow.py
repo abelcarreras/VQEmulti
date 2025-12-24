@@ -348,5 +348,6 @@ if __name__ == '__main__':
                                           simulator_sqd,
                                           n_electrons,
                                           return_samples=True)
-    print('SQD energy', energy)
+
     print(samples)
+    print('SQD energy', energy)

@@ -1195,7 +1195,8 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     n_electrons = np.sum(configuration_list[0])
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
-                           schedule=[(0, 1e-3),(100, 1e-6)])
+                           # schedule=[(0, 1e-3),(100, 1e-6)]
+                           )
 
     # run Dice
     if mpirun_options:

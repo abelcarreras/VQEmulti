@@ -4,7 +4,7 @@ from vqemulti.simulators import SimulatorBase
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, log_message
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
-from vqemulti.simulators.layout import LayoutModelLinear
+from vqemulti.simulators.layout import LayoutModelDefault
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
@@ -460,9 +460,10 @@ class QiskitSimulator(SimulatorBase):
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
         self._use_ibm_runtime = use_ibm_runtime
+        self._layout_model = layout_model
 
-        if layout_model is None:
-            self._layout_model = LayoutModelLinear()
+        if self._layout_model is None:
+            self._layout_model = LayoutModelDefault()
 
         if self._backend is None:
             self._backend = AerSimulator(noise_model=noise_model)

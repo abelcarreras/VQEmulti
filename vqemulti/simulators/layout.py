@@ -33,6 +33,11 @@ def get_paths(parelles, N):
     return tots_camins
 
 
+class LayoutModelDefault:
+    def get_layout(self, backend, n_qubits):
+        return None
+
+
 class LayoutModelLinear:
     def __init__(self, cache_time=3600):
         self._cache_time = cache_time
@@ -84,9 +89,9 @@ class LayoutModelLinear:
         # layout cache
         time.time()
         current_time = time.time()
-        if backend.name in layouts_cache:
-            if abs(layouts_cache[backend.name]['time'] - current_time) < self._cache_time:
-                return layouts_cache[backend.name]['layout']
+        if (backend.name, n_qubits) in layouts_cache:
+            if abs(layouts_cache[(backend.name, n_qubits)]['time'] - current_time) < self._cache_time:
+                return layouts_cache[(backend.name, n_qubits)]['layout']
 
         quality, two_gate_non_error, decoherence_t1, decoherence_t2 = self._process_data(backend)
 
@@ -102,7 +107,7 @@ class LayoutModelLinear:
                 layout = path
 
         # store layout
-        layouts_cache[backend.name] = {'time': current_time, 'layout': layout}
+        layouts_cache[(backend.name, n_qubits)] = {'time': current_time, 'layout': layout}
 
         return layout
 
@@ -142,6 +147,156 @@ class LayoutModelLinear:
         plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
 
         print('Quality layout: ', self._highest_quality)
+
+        plt.show()
+
+
+class LayoutModelSQD:
+    def __init__(self, initial_qubit=21, cache_time=3600):
+        self._cache_time = cache_time
+        self._initial_qubit = initial_qubit
+
+    def get_layout(self, backend, n_qubits):
+
+        import networkx as nx
+
+        # check if backend belongs to IBM runtime
+        if isinstance(backend, str):
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            service = QiskitRuntimeService()
+            backend = service.backend(backend)
+
+        if backend.coupling_map is None:
+            warnings.warn('Unable to generate backend layout with {}'.format(backend))
+            return None
+
+        def build_coupling_graph(backend):
+            """
+            Convert the backend coupling map to a NetworkX undirected graph.
+            """
+            rw_graph = backend.coupling_map.graph
+
+            # convert to networkx
+            G = nx.Graph()
+            G.add_nodes_from(rw_graph.nodes())
+            for edge in rw_graph.edge_list():
+                G.add_edge(edge[0], edge[1])
+
+            return G
+
+        # build Xnetwork from compling map
+        G = build_coupling_graph(backend)
+
+        # generate graph from centers of heavy hex
+        nodes_degree_3 = [n for n, d in G.degree() if d == 3]
+        G_big = nx.Graph()
+        for i, i_node in enumerate(nodes_degree_3):
+            idx = nodes_degree_3.index(i_node)
+            G_big.add_node(idx)
+
+        for i, i_node in enumerate(nodes_degree_3):
+            for j_node in nodes_degree_3[i:]:
+                d = nx.shortest_path_length(G, i_node, j_node)
+                if d == 2:
+                    # print(i_node, j_node)
+                    idx_i = nodes_degree_3.index(i_node)
+                    idx_j = nodes_degree_3.index(j_node)
+
+                    G_big.add_edge(idx_i, idx_j)
+
+        import matplotlib.pyplot as plt
+        # pos = nx.kamada_kawai_layout(G_big)
+        # nx.draw(G_big, pos, with_labels=True)
+        # plt.show()
+        # print(G_big)
+
+        # nodes with a single edge (border nodes)
+        nodes_degree_1 = [n for n, d in G_big.degree() if d == 1]
+
+        # compute distance vector
+        dist_vec = []
+        nodes_list = []
+        for i in nodes_degree_1:
+            for j in nodes_degree_1:
+                if i != j:
+                    d = nx.shortest_path_length(G_big, i, j)
+                    dist_vec.append(d)
+                    nodes_list.append((i, j))
+
+        # compute compatibility between paths (not crossing)
+        compatible = np.zeros((len(nodes_list), len(nodes_list)), dtype=bool)
+        for i, i_pair in enumerate(nodes_list):
+            for j, j_pair in enumerate(nodes_list):
+                path_i = nx.shortest_path(G_big, source=i_pair[0], target=i_pair[1])
+                path_j = nx.shortest_path(G_big, source=j_pair[0], target=j_pair[1])
+                # print('->', i, j, not np.any([i in path_j for i in path_i]), [i in path_j for i in path_i])
+                compatible[i, j] = not np.any([i in path_j for i in path_i])
+
+        # sort by distance vector
+        arg_sort = np.argsort(dist_vec)[::-1]
+        dist_vec = np.array(dist_vec)[arg_sort]
+        # print('dist_vec: ', dist_vec)
+        compatible = compatible[:, arg_sort][arg_sort, :]
+        nodes_list = np.array(nodes_list)[arg_sort]
+
+        sum_vector = []
+        pair = []
+        for i in arg_sort:
+            for j in arg_sort:
+                if (nodes_list[i][0] not in nodes_list[j]) and (nodes_list[i][1] not in nodes_list[j]):
+                    if compatible[i, j]:
+                        #pair_beta = nodes_list[i]
+                        sum_vector.append(dist_vec[i] + dist_vec[j])
+                        pair.append([nodes_list[i], nodes_list[j]])
+
+        max_index = np.argsort(sum_vector)[-1]
+        pair_alpha, pair_beta = pair[max_index]
+        #print(pair_alpha)
+        #print(pair_beta)
+
+        path_a = nx.shortest_path(G_big, source=pair_alpha[0], target=pair_alpha[1])
+        path_b = nx.shortest_path(G_big, source=pair_beta[0], target=pair_beta[1])
+        assert not np.any([i in path_b for i in path_a])
+
+
+        def big_to_original(G, path_i, nodes_degree_3):
+            path = []
+            for i in range(len(path_i)-1):
+                ini = nodes_degree_3[path_i[i]]
+                fin = nodes_degree_3[path_i[i+1]]
+                path += nx.shortest_path(G, source=ini, target=fin)[:-1]
+            return path
+
+        alpha_chain = big_to_original(G, path_a, nodes_degree_3)
+        beta_chain = big_to_original(G, path_b, nodes_degree_3)
+
+        n_nodes = n_qubits//2
+        alpha_chain = alpha_chain[:n_nodes]
+        beta_chain = beta_chain[:n_nodes]
+
+        layout = []
+        for qa, qb in zip(alpha_chain, beta_chain):
+            layout += [qa, qb]
+
+        # print('layout :', layout)
+        return layout
+
+    def plot_data(self, backend, n_qubits):
+        from qiskit.visualization import plot_gate_map
+        import matplotlib.pyplot as plt
+
+        n_backend_qubits = backend.num_qubits
+
+        layout = self.get_layout(backend, n_qubits)
+        qubit_color = []
+        for i in range(n_backend_qubits):
+            if i in layout:
+                qubit_color.append("#ff0066")
+            else:
+                qubit_color.append("#6600cc")
+
+        plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
 
         plt.show()
 
@@ -216,7 +371,5 @@ if __name__ == '__main__':
 
     # real hardware backend
     backend = 'ibm_torino'
-
-    layout = get_backend_opt_layout(backend, 4, plot_data=True)
 
     print('layout: ', layout)

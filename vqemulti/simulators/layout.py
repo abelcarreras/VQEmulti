@@ -33,71 +33,91 @@ def get_paths(parelles, N):
     return tots_camins
 
 
-def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
+class LayoutModelLinear:
+    def __init__(self, cache_time=3600):
+        self._cache_time = cache_time
 
-    # layout cache
-    time.time()
-    current_time = time.time()
-    if backend.name in layouts_cache:
-        if abs(layouts_cache[backend.name]['time'] - current_time) < cache_time:
-            return layouts_cache[backend.name]['layout']
+    def _process_data(self, backend):
 
-    # check if backend belongs to IBM runtime
-    if isinstance(backend, str):
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        # get data
+        n_backend_qubits = backend.num_qubits
 
-        service = QiskitRuntimeService()
-        backend = service.backend(backend)
+        decoherence_t1 = []
+        decoherence_t2 = []
+        for i in range(n_backend_qubits):
+            decoherence_t1.append(backend.qubit_properties(i).t1)
+            decoherence_t2.append(backend.qubit_properties(i).t2)
 
-    if backend.coupling_map is None:
-        warnings.warn('Unable to generate backend layout with {}'.format(backend))
-        return None
+        # get total error
+        two_gate_non_error = np.ones((n_backend_qubits))
+        two_gate_instructions = [op.name for op in backend.operations if op.num_qubits == 2 and isinstance(op.name, str)]
+        # print('instructions:', two_gate_instructions)
+        # print('operations: ', backend.operations)
 
-    # get data
-    n_backend_qubits = backend.num_qubits
-    edges = backend.coupling_map.get_edges()
+        for instruc in two_gate_instructions:
+            #print(backend.target[instruc])
+            for qubits, value in backend.target[instruc].items():
+                for q in qubits:
+                    two_gate_non_error[q] *= (1.0 - value.error)
 
-    decoherence_t1 = []
-    decoherence_t2 = []
-    for i in range(n_backend_qubits):
-        decoherence_t1.append(backend.qubit_properties(i).t1)
-        decoherence_t2.append(backend.qubit_properties(i).t2)
+        # print(two_gate_non_error)
 
-    # get total error
-    two_gate_non_error = np.ones((n_backend_qubits))
-    two_gate_instructions = [op.name for op in backend.operations if op.num_qubits == 2 and isinstance(op.name, str)]
-    # print('instructions:', two_gate_instructions)
-    # print('operations: ', backend.operations)
+        quality = two_gate_non_error/np.average(two_gate_non_error) + \
+                  np.array(decoherence_t1)/np.average(decoherence_t1) + \
+                  np.array(decoherence_t2)/np.average(decoherence_t2)
 
-    for instruc in two_gate_instructions:
-        #print(backend.target[instruc])
-        for qubits, value in backend.target[instruc].items():
-            for q in qubits:
-                two_gate_non_error[q] *= (1.0 - value.error)
+        return quality, two_gate_non_error, decoherence_t1, decoherence_t2
 
-    # print(two_gate_non_error)
+    def get_layout(self, backend, n_qubits):
 
-    quality = two_gate_non_error/np.average(two_gate_non_error) + \
-              np.array(decoherence_t1)/np.average(decoherence_t1) + \
-              np.array(decoherence_t2)/np.average(decoherence_t2)
+        # check if backend belongs to IBM runtime
+        if isinstance(backend, str):
+            from qiskit_ibm_runtime import QiskitRuntimeService
 
-    # find optimal path
-    layout = None
-    highest_quality = 0
-    for path in get_paths(edges, n_qubits):
-        quality_path = sum([quality[j] for j in path])
-        if quality_path > highest_quality:
-            highest_quality = quality_path
-            layout = path
+            service = QiskitRuntimeService()
+            backend = service.backend(backend)
 
-    if plot_data:
+        if backend.coupling_map is None:
+            warnings.warn('Unable to generate backend layout with {}'.format(backend))
+            return None
+
+        # layout cache
+        time.time()
+        current_time = time.time()
+        if backend.name in layouts_cache:
+            if abs(layouts_cache[backend.name]['time'] - current_time) < self._cache_time:
+                return layouts_cache[backend.name]['layout']
+
+        quality, two_gate_non_error, decoherence_t1, decoherence_t2 = self._process_data(backend)
+
+        edges = backend.coupling_map.get_edges()
+
+        # find optimal path
+        layout = None
+        self._highest_quality = 0
+        for path in get_paths(edges, n_qubits):
+            quality_path = sum([quality[j] for j in path])
+            if quality_path > self._highest_quality:
+                self._highest_quality = quality_path
+                layout = path
+
+        # store layout
+        layouts_cache[backend.name] = {'time': current_time, 'layout': layout}
+
+        return layout
+
+    def plot_data(self, backend, n_qubits):
         from qiskit.visualization import plot_gate_map
         import matplotlib.pyplot as plt
+
+        n_backend_qubits = backend.num_qubits
+
+        quality, two_gate_non_error, decoherence_t1, decoherence_t2 = self._process_data(backend)
 
         plt.title('Error per qubits (lower is better)')
         plt.xlabel('Qubits')
         plt.ylabel('Error')
-        plt.bar([str(i) for i in range(n_backend_qubits)], 1-two_gate_non_error)
+        plt.bar([str(i) for i in range(n_backend_qubits)], 1 - two_gate_non_error)
 
         plt.figure()
         plt.title('Decoherence time T1 (higher is better)')
@@ -111,6 +131,7 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
         plt.ylabel('time (s)')
         plt.bar([str(i) for i in range(n_backend_qubits)], decoherence_t2)
 
+        layout = self.get_layout(backend, n_qubits)
         qubit_color = []
         for i in range(n_backend_qubits):
             if i in layout:
@@ -119,15 +140,10 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
                 qubit_color.append("#6600cc")
 
         plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
-        print('Quality layout: ', highest_quality)
+
+        print('Quality layout: ', self._highest_quality)
 
         plt.show()
-
-
-    # store layout
-    layouts_cache[backend.name] = {'time': current_time, 'layout': layout}
-
-    return layout
 
 
 def accumulated_errors(backend, circuit, print_data=False):

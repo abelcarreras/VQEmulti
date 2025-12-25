@@ -247,9 +247,6 @@ class SimulatorBase:
     def _measure_expectation(self, *args):
         raise NotImplementedError()
 
-    def get_sampling(self, *args):
-        raise NotImplementedError()
-
     def get_state_sampling(self, *args):
         raise NotImplementedError()
 

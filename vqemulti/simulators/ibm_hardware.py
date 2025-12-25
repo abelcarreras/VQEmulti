@@ -1,15 +1,13 @@
 import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from vqemulti.simulators.backend_opt import get_backend_opt_layout, accumulated_errors
 from vqemulti.preferences import Configuration
 from vqemulti.utils import log_message
+from vqemulti.simulators.layout import accumulated_errors
 
 
 class RHESampler:
 
-    def __init__(self, backend, n_qubits, session):
-
-        layout = get_backend_opt_layout(backend, n_qubits)
+    def __init__(self, backend, session, layout=None):
 
         self._pm = generate_preset_pass_manager(backend=backend,
                                                 optimization_level=3,
@@ -18,7 +16,6 @@ class RHESampler:
                                                 )
 
         self._session = session
-        self.num_qubits = n_qubits
         self._backend = backend
 
     def run(self, circuit, shots=1000, memory=True):
@@ -48,9 +45,7 @@ class RHESampler:
 
 class RHEstimator:
 
-    def __init__(self, backend, n_qubits, session, limit_hw=50000):
-
-        layout = get_backend_opt_layout(backend, n_qubits)
+    def __init__(self, backend, session, layout=None, limit_hw=50000):
 
         self.pm = generate_preset_pass_manager(backend=backend,
                                                optimization_level=3,

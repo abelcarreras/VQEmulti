@@ -43,6 +43,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     # transform ansatz to qubit for VQE/adaptVQE
     #ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not adapt)
 
+    log_message('start sampling ({})'.format(simulator), log_level=1)
     if generate_random:
         samples = generate_counts_uniform(simulator._shots, ansatz.n_qubits)
     else:
@@ -59,6 +60,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
 
+    log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
     if backend.lower() == 'dice':
         sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
     else:

@@ -4,6 +4,7 @@ from vqemulti.simulators import SimulatorBase
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, log_message
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
+from vqemulti.simulators.layout import LayoutModelLinear
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
@@ -437,7 +438,8 @@ class QiskitSimulator(SimulatorBase):
                  use_estimator=False,
                  session=None,
                  use_ibm_runtime=False,
-                 noise_model=None
+                 noise_model=None,
+                 layout_model=None,
                  ):
 
         """
@@ -458,6 +460,9 @@ class QiskitSimulator(SimulatorBase):
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
         self._use_ibm_runtime = use_ibm_runtime
+
+        if layout_model is None:
+            self._layout_model = LayoutModelLinear()
 
         if self._backend is None:
             self._backend = AerSimulator(noise_model=noise_model)
@@ -567,7 +572,9 @@ class QiskitSimulator(SimulatorBase):
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
         else:
-            sampler = RHESampler(self._backend, n_qubits, self._session)
+            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            log_message('layout: {}'.format(layout), log_level=2)
+            sampler = RHESampler(self._backend, self._session, layout)
             result = sampler.run(circuit, shots=self._shots, memory=True).result()
 
         counts_total = result.get_counts()
@@ -637,7 +644,9 @@ class QiskitSimulator(SimulatorBase):
             variance = sum([meta['variance'] for meta in job.result().metadata])
             std_error = np.sqrt(variance/self._shots)
         else:
-            estimator = RHEstimator(self._backend, n_qubits, session=self._session)
+            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            log_message('layout: {}'.format(layout), log_level=2)
+            estimator = RHEstimator(self._backend, session=self._session, layout=layout)
             job = estimator.run(circuit, measure_op, shots=self._shots)
             std_error = sum([meta['std_error'] for meta in job.result().metadata])
 
@@ -647,39 +656,6 @@ class QiskitSimulator(SimulatorBase):
         log_message('std_error:', std_error, log_level=1)
 
         return expectation_value, std_error
-
-    def get_sampling(self, ansatz_qubit, hf_reference_fock):
-        """
-        get sampling of the state in the computational basis using the Qiskit simulator.
-        By construction, all the expectation values of the strings in subHamiltonian can be
-        obtained from the same measurement array. This reduces quantum computer simulations
-
-        :return: expectation value
-        """
-
-        n_qubits = len(hf_reference_fock)
-        state_preparation_gates = self.get_reference_gates(hf_reference_fock)
-        state_preparation_gates += self.get_exponential_gates(ansatz_qubit, n_qubits)
-
-        # Initialize circuit and apply hamiltonian gates according to main string
-        circuit = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates:
-            circuit.append(gate)
-
-        self._get_circuit_stat_data(circuit)
-
-        circuit.measure_all()
-
-        if not self._use_ibm_runtime:
-            result = self._backend.run(circuit, shots=self._shots, memory=True).result()
-            # memory = result.get_memory()
-        else:
-            sampler = RHESampler(self._backend, n_qubits, self._session)
-            result = sampler.run(circuit, shots=self._shots, memory=True).result()
-
-        counts_total = result.get_counts()
-
-        return counts_total
 
     def get_state_sampling(self, state_preparation_gates, n_qubits):
         """
@@ -691,6 +667,7 @@ class QiskitSimulator(SimulatorBase):
         """
 
         # Initialize circuit and apply hamiltonian gates according to main string
+        log_message('create circuit for sampling', log_level=2)
         circuit = qiskit.QuantumCircuit(n_qubits)
         for gate in state_preparation_gates:
             circuit.append(gate)
@@ -703,7 +680,9 @@ class QiskitSimulator(SimulatorBase):
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
         else:
-            sampler = RHESampler(self._backend, n_qubits, self._session)
+            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            log_message('layout: {}'.format(layout), log_level=2)
+            sampler = RHESampler(self._backend, self._session, layout)
             result = sampler.run(circuit, shots=self._shots, memory=True).result()
 
         counts_total = result.get_counts()
@@ -800,6 +779,8 @@ class QiskitSimulator(SimulatorBase):
         return reference_gates
 
     def _get_circuit_stat_data(self, circuit):
+
+        log_message('generate circuit stats', log_level=2)
 
         gates_name = {'x': 'PauliX', 'y': 'PauliY', 'z': 'PauliZ',
                       'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',

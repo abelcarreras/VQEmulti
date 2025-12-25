@@ -50,7 +50,7 @@ def get_backend_opt_layout(backend, n_qubits, plot_data=False, cache_time=3600):
         backend = service.backend(backend)
 
     if backend.coupling_map is None:
-        warnings.warn('Unable to generate backend layout')
+        warnings.warn('Unable to generate backend layout with {}'.format(backend))
         return None
 
     # get data

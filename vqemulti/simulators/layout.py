@@ -272,7 +272,7 @@ class LayoutModelSQD:
         beta_chain = big_to_original(G, path_b, nodes_degree_3)
 
         n_nodes = n_qubits//2
-        alpha_chain = alpha_chain[:n_nodes]
+        alpha_chain = alpha_chain[-n_nodes:]
         beta_chain = beta_chain[:n_nodes]
 
         layout = []

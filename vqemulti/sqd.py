@@ -49,7 +49,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     else:
         samples = ansatz.get_sampling(simulator)
 
-    log_message('samples ({}):'.format(len(samples)), samples, log_level=1)
+    log_message('# samples: {}'.format(len(samples)), log_level=1)
 
     configurations = []
     for bitstring in samples.keys():
@@ -59,6 +59,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
             configurations.append(fock_vector)
 
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
+    log_message('# configuration: {}'.format(len(configurations)), log_level=1)
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
     if backend.lower() == 'dice':

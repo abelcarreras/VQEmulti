@@ -1100,6 +1100,7 @@ def create_input_file_dice(configuration_list,
                            epsilon2=1e-2,
                            max_iterations=1,
                            n_samples=200,
+                           calc_1rdm=False,
                            filename='input.dat'):
     """
     create input for DICE software
@@ -1156,6 +1157,9 @@ def create_input_file_dice(configuration_list,
         f.write(f"nPTiter 0\n")
         f.write(f"sampleN {n_samples}\n")
 
+        if calc_1rdm:
+            f.write(f"DoRDM\n")
+
         # configurations
         # f.write(f"sampleN 200\n")
         f.write(f"nocc {n_electrons}\n")
@@ -1166,9 +1170,9 @@ def create_input_file_dice(configuration_list,
 
 
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
-                                data_dir='temp_dir',
                                 mpirun_options=None,
-                                stream_output=False
+                                stream_output=False,
+                                return_density_matrix=False,
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1177,13 +1181,12 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     :param configuration_list: list of configurations
     :param hamiltonian: hamiltonian in openFermion InterationOperator form
     :param dice_path: path to Dice binary
-    :param data_dir: path to store temporal files
     :param mpirun_options: mpi options
     :param stream_output: if True stream output on screen
     :return: SCI energy
     """
 
-    data_path = pathlib.Path(data_dir)
+    data_path = pathlib.Path(Configuration().temp_dir)
 
     dice_path = os.environ.get('DICE_PATH')
     if dice_path is None:
@@ -1196,6 +1199,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     n_electrons = np.sum(configuration_list[0])
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
+                           calc_1rdm=return_density_matrix,
                            # schedule=[(0, 1e-3),(100, 1e-6)]
                            )
 
@@ -1222,9 +1226,24 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
         #err = err.decode()
         # print(err)
 
-    # print(output)
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
+
+    # read density matrix
+    if return_density_matrix:
+        import glob
+        files = sorted(glob.glob(str(data_path / 'spatial1RDM.*.txt')))
+        with open(files[-1], 'r') as f:
+            lines = f.read().split('\n')
+
+        n_orb = int(lines[0])
+        rdm = np.zeros((n_orb, n_orb))
+
+        for line in lines[1:-1]:
+            i, j, value = line.split()
+            rdm[int(i), int(j)] = float(value)
+
+        return sci_energy, rdm
 
     return sci_energy
 
@@ -1339,7 +1358,6 @@ def get_dmrg_energy(hamiltonian,
                     max_solver_iterations=200,
                     sample=None,  # 0.02
                     stream_output=False,
-                    data_dir='temp_dir',
                     mpirun_options=None
                     ):
     """
@@ -1357,11 +1375,10 @@ def get_dmrg_energy(hamiltonian,
     :param max_solver_iterations: maximum number of Davidson steps
     :param sample: if not None compute and return sampled configurations from MPS
     :param stream_output: if True stream output on screen
-    :param data_dir: path to store temporal files
     :return: energy, [configurations list]
     """
 
-    data_path = pathlib.Path(data_dir)
+    data_path = pathlib.Path(Configuration().temp_dir)
     block2_path = os.environ.get('BLOCK2_PATH')
     if block2_path is None:
         block2_path = 'block2main'

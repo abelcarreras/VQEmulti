@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+import tempfile
 
 class Singleton(type):
     _instances = {}
@@ -14,4 +14,5 @@ class Singleton(type):
 class Configuration(metaclass=Singleton):
     mapping: str = 'jw'  # jw: Jordan-wigner , bk: Bravyi-Kitaev, pc: parity transform
     verbose: bool = False
+    temp_dir: str = str(tempfile.TemporaryDirectory())
 

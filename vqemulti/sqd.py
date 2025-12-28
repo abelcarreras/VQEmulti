@@ -70,7 +70,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
     if backend.lower() == 'dice':
-        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
+        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian, stream_output=True)
     else:
         sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
 
@@ -204,7 +204,10 @@ def generate_full_configurations(orbital_conf):
     full_configurations = set()
     for alpha in orbital_conf:
         for beta in orbital_conf:
-            full_configurations.add(tuple(list(alpha) + list(beta)))
+            conf = []
+            for a, b in zip(alpha, beta):
+                conf += [a, b]
+            full_configurations.add(tuple(conf))
 
     return list(full_configurations)
 

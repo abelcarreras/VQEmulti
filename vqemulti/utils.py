@@ -1173,6 +1173,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 mpirun_options=None,
                                 stream_output=False,
                                 return_density_matrix=False,
+                                hci_schedule=None
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1200,6 +1201,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
                            calc_1rdm=return_density_matrix,
+                           schedule=hci_schedule,
                            # schedule=[(0, 1e-3),(100, 1e-6)]
                            )
 

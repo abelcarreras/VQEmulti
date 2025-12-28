@@ -70,7 +70,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
     if backend.lower() == 'dice':
-        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian, stream_output=True)
+        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
     else:
         sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
 

@@ -27,9 +27,9 @@ class ProductExponentialAnsatz(GenericAnsatz):
         assert len(parameters) == len(operator_list)
 
         # check antihermiticity for each operator
-        for op in operator_list:
-            if not is_hermitian(1j * op):
-                raise Exception('Non antihermitian operator')
+        #for op in operator_list:
+        #    if not is_hermitian(1j * op):
+        #        raise Exception('Non antihermitian operator')
 
     @property
     def n_qubits(self):

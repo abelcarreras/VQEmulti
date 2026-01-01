@@ -1,5 +1,7 @@
 from jastrow.factor import double_factorized_t2
 from jastrow.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
+from jastrow.basis import get_t1_spinorbitals_absolute_full, get_absolute_orbitals
+
 from jastrow.rotation import change_of_basis_orbitals
 from openfermion import FermionOperator, QubitOperator, hermitian_conjugated, normal_ordered
 from vqemulti.ansatz.generators import get_ucc_generator
@@ -65,8 +67,8 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._rotation_matrices = []
         self._jastrow_matrices = []
         self._full_trotter = full_trotter
+        self._spin_t1 = None
 
-        #t1 = np.array(t1)
         t2 = np.array(t2)
         n_occupied, _, n_virtual, _ = t2.shape
         n_total = n_virtual + n_occupied
@@ -83,22 +85,16 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
         # print(orbital_rotations.shape)
         norb = orbital_rotations.shape[-1]
-        n_qubits = norb * 2
 
         coefficients = []
         operators = []
 
         if t1 is not None:
-            t1_spin = get_t1_spinorbitals(t1)  # a_j a_i^ -> a_i^ a_j
-            operator_tot = FermionOperator()
-            for i in range(n_qubits):
-                for j in range(n_qubits):
-                    if abs(t1_spin[i, j]) > tolerance:
-                        operator = FermionOperator('{}^ {}'.format(i, j))
-                        operator_tot += t1_spin[i, j] * operator - hermitian_conjugated(t1_spin[i, j] * operator)
-
+            t1 = np.array(t1)
+            t1_spin = get_t1_spinorbitals(t1)
+            self._spin_t1 = t1_spin - t1_spin.T.conjugate()
+            operators += get_ucc_generator(self._spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)
             coefficients.append(1.0)
-            operators.append(operator_tot)
 
         if n_terms is None:
             n_terms = len(diag_coulomb_mats) * 2
@@ -151,9 +147,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 else:
                     orb_t2 = change_of_basis_orbitals(None, j_mat, U_i.T)[1]  # a_i^ a_j a_k^ a_l
                     spin_t2 = get_t2_spinorbitals_absolute_full(orb_t2)
-                    coefficients_c, ansatz_c = get_ucc_generator(None, spin_t2, full_amplitudes=True)
+                    ansatz_c = get_ucc_generator(self._spin_t1, spin_t2, full_amplitudes=True)
 
-                    coefficients += coefficients_c
+                    coefficients += [1.0]
                     operators += [op for op in ansatz_c]
 
         super().__init__(coefficients, operators, hf_reference_fock)
@@ -173,7 +169,13 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
             state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
 
-            i_param = 0
+            if self._spin_t1 is not None:
+                rotation_param = -self.parameters[0]
+                rotation = sp.linalg.expm(self._spin_t1)
+                rotation_p = matrix_power(rotation, rotation_param)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits)
+
+            i_param = 0 if self._spin_t1 is None else 1
             for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_matrices):
 
                 rotation_param = -self.parameters[i_param]
@@ -284,7 +286,7 @@ if __name__ == '__main__':
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=2, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=1, full_trotter=True)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 

@@ -1,7 +1,6 @@
 import warnings
 
 from vqemulti.ansatz.generators import get_ucc_generator
-#from vqemulti.ansatz.generators import get_ucj_generator
 from copy import deepcopy
 import numpy as np
 
@@ -232,7 +231,7 @@ if __name__ == '__main__':
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
     print('\nUCC ansatz\n==========')
-    uccsd_generator = get_ucc_generator(None, molecule.ccsd_double_amps, use_qubit=True)
+    uccsd_generator = get_ucc_generator(molecule.ccsd_single_amps, molecule.ccsd_double_amps, use_qubit=True)
     coefficients = np.ones_like(uccsd_generator)
 
     from vqemulti.ansatz.exponential import ExponentialAnsatz

@@ -90,8 +90,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         operators = []
 
         if t1 is not None:
-            t1 = np.array(t1)
-            t1_spin = get_t1_spinorbitals(t1)
+            t1_spin = get_t1_spinorbitals(t1).real
             self._spin_t1 = t1_spin - t1_spin.T.conjugate()
             operators += get_ucc_generator(self._spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)
             coefficients.append(1.0)
@@ -107,7 +106,6 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
             return local_mat
 
         i_term = 1
-        operator_list = []
         for diag, U in zip(diag_coulomb_mats, orbital_rotations):
             for U_i, diag_i in zip(U, diag):
                 if i_term > n_terms:
@@ -147,7 +145,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 else:
                     orb_t2 = change_of_basis_orbitals(None, j_mat, U_i.T)[1]  # a_i^ a_j a_k^ a_l
                     spin_t2 = get_t2_spinorbitals_absolute_full(orb_t2)
-                    ansatz_c = get_ucc_generator(self._spin_t1, spin_t2, full_amplitudes=True)
+                    ansatz_c = get_ucc_generator(None, spin_t2, full_amplitudes=True, use_qubit=use_qubit)
 
                     coefficients += [1.0]
                     operators += [op for op in ansatz_c]
@@ -170,7 +168,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
             state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
 
             if self._spin_t1 is not None:
-                rotation_param = -self.parameters[0]
+                rotation_param = self.parameters[0]
                 rotation = sp.linalg.expm(self._spin_t1)
                 rotation_p = matrix_power(rotation, rotation_param)
                 state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits)
@@ -286,7 +284,7 @@ if __name__ == '__main__':
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=1, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(t1, t2, n_terms=1, full_trotter=True)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 

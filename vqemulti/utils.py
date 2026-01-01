@@ -1150,6 +1150,9 @@ def create_input_file_dice(configuration_list,
                     max_iterations = line[0]
 
         f.write(f"end\n")
+        # f.write(f"writebestdeterminants\n")
+        f.write(f"printbestdeterminants 100000000\n")
+        # f.write(f"printalldeterminants\n")
 
         # perturbation
         f.write(f"maxiter {max_iterations}\n")
@@ -1169,11 +1172,49 @@ def create_input_file_dice(configuration_list,
         f.write(f"end\n")
 
 
+def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator, energy, n_qubits, use_jw = False):
+
+    hamiltonian_fermion = get_fermion_operator(hamiltonian)
+    if use_jw:
+        # use JW transformation
+        print('n_qubits: ', n_qubits)
+        h_sparse = get_sparse_operator(hamiltonian_fermion, n_qubits=n_qubits)
+        ci_sparse = get_sparse_operator(ci_vector, n_qubits=n_qubits)[:, 0]
+        psih = h_sparse @ ci_sparse
+        val_e = ci_sparse.getH() @ psih
+        val_e2 = psih.getH() @ psih
+
+        print('E1_jw: ', val_e[0, 0])
+        print('E2_jw: ', val_e2[0, 0])
+
+        variance = val_e2[0, 0] - val_e[0, 0] ** 2
+
+    else:
+        # work with fermion operators
+        from openfermion import hermitian_conjugated
+
+        ci_vector = normal_ordered(ci_vector)
+        psi_h = normal_ordered(hamiltonian_fermion * ci_vector)
+
+        psi_H_psi = normal_ordered(hermitian_conjugated(ci_vector) * psi_h)
+        E1_of = psi_H_psi.terms[()]
+        print('E1_of', E1_of)
+
+        E2_of = normal_ordered(hermitian_conjugated(psi_h) * psi_h).terms[()]
+        print('E2_of', E2_of)
+
+        variance = E2_of - E1_of**2
+
+    return variance
+
+
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 mpirun_options=None,
                                 stream_output=False,
                                 return_density_matrix=False,
-                                hci_schedule=None
+                                parse_2rdm=False,
+                                hci_schedule=None,
+                                compute_variance=False
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1181,14 +1222,18 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
     :param configuration_list: list of configurations
     :param hamiltonian: hamiltonian in openFermion InterationOperator form
-    :param dice_path: path to Dice binary
     :param mpirun_options: mpi options
     :param stream_output: if True stream output on screen
+    :param return_density_matrix: compute and return 1-RDM
+    :param parse_2rdm: parse and return 1-RDM and 2-RDM
+    :param hci_schedule: perform HCI with given schedule, if None only use provided subspace (for SQD)
+    :param compute_variance: compute variance (very expensive!)
     :return: SCI energy
     """
 
     data_path = pathlib.Path(Configuration().temp_dir)
 
+    # get path of dice executable
     dice_path = os.environ.get('DICE_PATH')
     if dice_path is None:
         dice_path = 'Dice'
@@ -1202,7 +1247,6 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
                            calc_1rdm=return_density_matrix,
                            schedule=hci_schedule,
-                           # schedule=[(0, 1e-3),(100, 1e-6)]
                            )
 
     # run Dice
@@ -1231,6 +1275,44 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
 
+    # careful! this may take a very long time
+    if compute_variance:
+
+        # parse CI vector
+        enum_ini = output.find('Printing most important determinants')
+        enum_end = output.find('Returning without error')
+
+        def get_conf(conf):
+            vec = []
+            for c in conf:
+                if c == '0':
+                    vec += [0, 0]
+                elif c == '2':
+                    vec += [1, 1]
+                if c == 'a':
+                    vec += [1, 0]
+                if c == 'b':
+                    vec += [0, 1]
+            return tuple(vec)
+
+        det_section = output[enum_ini:enum_end].split('\n')[3:-4]
+
+        norm_ci = 0
+        ci_state = FermionOperator()
+        for line_det in det_section:
+            # print('---------')
+            line_vec = line_det.split()
+            amplitude = float(line_vec[1])
+            det = get_conf(line_vec[2:])
+            # print(''.join(line_vec[2:]))
+            ci_state += amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v])
+            # print(line_vec[2:], amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v]))
+            norm_ci += amplitude ** 2
+        log_message('norm CI:', norm_ci, log_level=1)
+
+        variance = get_variance_from_ci(ci_state, hamiltonian, sci_energy, n_qubits=len(configuration_list[0]))
+        print('Variance: ', variance)
+
     # read density matrix
     if return_density_matrix:
         import glob
@@ -1239,13 +1321,34 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
             lines = f.read().split('\n')
 
         n_orb = int(lines[0])
-        rdm = np.zeros((n_orb, n_orb))
+
+        # 1-RDM
+        rdm_1 = np.zeros((n_orb, n_orb))
 
         for line in lines[1:-1]:
             i, j, value = line.split()
-            rdm[int(i), int(j)] = float(value)
+            rdm_1[int(i), int(j)] = float(value)
 
-        return sci_energy, rdm
+        if parse_2rdm:
+            files = sorted(glob.glob(str(data_path / 'spatialRDM.*.txt')))
+            with open(files[-1], 'r') as f:
+                lines = f.read().split('\n')
+
+            n_orb = int(lines[0])
+
+            # 2-RDM
+            rdm_2 = np.zeros((n_orb, n_orb, n_orb, n_orb))
+            for line in lines[1:-1]:
+                i, j, k, l, value = line.split()
+                rdm_2[int(i), int(j), int(k), int(l)] = float(value)
+
+            inv = np.argsort((0, 2, 1, 3))
+
+            rdm_2 = rdm_2.transpose(inv)
+
+            return sci_energy, rdm_1, rdm_2
+        else:
+            return sci_energy, rdm_1
 
     return sci_energy
 
@@ -1441,19 +1544,19 @@ def get_dmrg_energy(hamiltonian,
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
-        dice_call = ["mpirun"] + list(mpirun_options) + [block2_path, 'dmrg.conf']
+        block2_call = ["mpirun"] + list(mpirun_options) + [block2_path, 'dmrg.conf']
     else:
-        dice_call = [block2_path, 'dmrg.conf']
+        block2_call = [block2_path, 'dmrg.conf']
 
     if stream_output:
-        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=STDOUT, cwd=data_path, text=True, bufsize=1)
+        qchem_process = Popen(block2_call, stdout=PIPE, stdin=PIPE, stderr=STDOUT, cwd=data_path, text=True, bufsize=1)
         output = ''
         for line in qchem_process.stdout:
             print(line, end='')  # Print output as generated
             output += line
         qchem_process.wait()
     else:
-        qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_path)
+        qchem_process = Popen(block2_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_path)
         (output, err) = qchem_process.communicate()
         qchem_process.wait()
         output = output.decode(errors='ignore')

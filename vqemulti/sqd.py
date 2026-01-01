@@ -63,7 +63,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
     log_message('# configuration: {}'.format(len(configurations)), log_level=1)
 
-    configurations = configuration_recovery_2(configurations, hamiltonian, n_electrons,
+    configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
                                               multiplicity=0, n_max_diff=4, n_iter=8)
 
     log_message('# recovery conf: {}'.format(len(configurations)), log_level=1)
@@ -78,125 +78,6 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
         return sqd_energy, samples
 
     return sqd_energy
-
-
-def configuration_recovery(configurations, n_electrons, multiplicity=0):
-    n_electrons_alpha = n_electrons //2
-    n_electrons_beta = n_electrons //2
-
-    def hamming_distance(det1, det2):
-        return (det1 ^ det2).bit_count()
-
-    def get_bit(bitstring, index):
-        return (bitstring >> index) & 1
-
-    def flip_bit(bitstring, index):
-        return bitstring ^ (1 << index)
-
-    def add_one(bitstring, index):
-        return bitstring | (1 << index)
-
-    def add_zero(bitstring, index):
-        return bitstring & ~(1 << index)
-
-    def hamming_weight(bitstring):
-        return bitstring.bit_count()
-
-    def det_to_string(det, n_orbitals):
-        return format(det, f"0{n_orbitals}b")
-
-    def orbital_probabilities(orbital_conf, n_orbitals):
-
-        probs = np.zeros(n_orbitals, dtype=float)
-
-        norm = 0
-        for conf, v in orbital_conf.items():
-            # print(det_to_string(conf, n_orbitals))
-            for i in range(n_orbitals):
-                probs[i] += ((conf >> i) & 1 ) * v
-            norm += v
-
-        probs /= norm
-        return probs#[::-1]
-
-
-    n_orbitals = len(list(configurations.keys())[0])//2
-    good_conf = defaultdict(int)
-    bad_conf = defaultdict(int)
-    for k, v in configurations.items():
-        alpha = int(k[1::2], 2)
-        beta = int(k[::2], 2)
-
-        if hamming_weight(alpha) == n_electrons_alpha:
-            good_conf[alpha] += v
-        else:
-            bad_conf[alpha] += v
-
-
-        if hamming_weight(beta) == n_electrons_beta:
-            good_conf[beta] += v
-        else:
-            bad_conf[beta] += v
-
-    print(good_conf)
-    print('good_conf :', len(good_conf))
-
-    for _ in range(2):
-        prob_vec = orbital_probabilities(good_conf, n_orbitals)
-
-        def fix_conf(vec, prob_vec, h_distance, tolerance=5e-3):
-            indices = np.argsort(prob_vec)
-            ref_prob = None
-            new_vec_list = []
-            if h_distance > 0:
-                for i in indices[::-1]:
-                    #print('here', ref_prob, abs(ref_prob - prob_vec[i]))
-                    # print(i, 'val:', get_bit(vec, i))
-                    if not get_bit(vec, i):
-
-                        if ref_prob is not None and abs(ref_prob - prob_vec[i]) > tolerance:
-                            break
-
-                        # print('add 1 in ', i)
-                        new_vec_list.append(add_one(vec, i))
-
-                        ref_prob = prob_vec[i]
-
-            else:
-                ref_prob = prob_vec[indices[0]]
-                for i in indices:
-                    if get_bit(vec, i):
-                        if ref_prob is not None and abs(ref_prob - prob_vec[i]) > tolerance:
-                            break
-
-                        new_vec_list.append(add_zero(vec, i))
-                        ref_prob = prob_vec[i]
-
-            return new_vec_list
-
-        for k, v in bad_conf.items():
-            h_distance = n_electrons_alpha - hamming_weight(k)
-            if abs(h_distance) < 2:
-                #print('in->', det_to_string(k,n_orbitals), h_distance)
-                new_conf_list = fix_conf(k, prob_vec, h_distance)
-
-                for conf in new_conf_list:
-                    #print('out->', det_to_string(conf, n_orbitals), h_distance)
-                    good_conf[conf] += v
-
-                    assert hamming_weight(conf) == n_electrons_alpha
-
-        print(good_conf)
-        print('good_conf_i :', len(good_conf))
-
-    sorted_configurations = sorted(good_conf.items(),
-                                   key=lambda item: item[1],
-                                   reverse=True)
-
-    for k, v in sorted_configurations:
-        print('{} {}'.format(det_to_string(k, n_orbitals), v))
-
-    exit()
 
 
 def generate_full_configurations(orbital_conf):
@@ -222,7 +103,11 @@ def joint_configurations(conf1, conf2):
     return list(total_conf)
 
 
-def configuration_recovery_2(configurations, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1):
+def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1):
+
+    if multiplicity > 0:
+        raise NotImplementedError('multiplicity must be 0!')
+
     n_electrons_alpha = n_electrons // 2
     n_electrons_beta = n_electrons // 2
 
@@ -288,9 +173,12 @@ def configuration_recovery_2(configurations, hamiltonian, n_electrons, multiplic
 
     return full_configurations
 
-from qiskit_addon_sqd.subsampling import postselect_and_subsample
-from qiskit_addon_sqd.configuration_recovery import recover_configurations
+#from qiskit_addon_sqd.subsampling import postselect_and_subsample
+#from qiskit_addon_sqd.configuration_recovery import recover_configurations
 
+
+def get_variance(hamiltonia, ci_vector):
+    pass
 
 if __name__ == '__main__':
 
@@ -307,6 +195,6 @@ if __name__ == '__main__':
 
     #configuration_recovery(configurations, 10)
 
-    a = configuration_recovery_2(configurations, None, 10)
+    a = configuration_recovery(configurations, None, 10)
     print(a)
     exit()

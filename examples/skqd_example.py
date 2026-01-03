@@ -3,25 +3,31 @@ from openfermionpyscf import run_pyscf
 from openfermion import MolecularData
 from vqemulti.utils import get_hf_reference_in_fock_space
 from qiskit_ibm_runtime.fake_provider import FakeTorino
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_aer import AerSimulator
 from vqemulti.ansatz.exponential import ExponentialAnsatz
 from vqemulti.preferences import Configuration
 from collections import Counter
 from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
-from vqemulti.utils import get_dmrg_energy
+from vqemulti.utils import get_dmrg_energy, fermion_to_qubit
+from vqemulti.sqd import configuration_recovery
 import numpy as np
 
 # config = Configuration()
 # config.verbose = 2
+
+backend = FakeTorino()
+# service = QiskitRuntimeService()
+# backend = service.backend('ibm_basquecountry')
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,
                       test_only=True,
                       hamiltonian_grouping=True,
                       use_estimator=True,
-                      shots=10000,
-                      # backend=FakeTorino(),
-                      # use_ibm_runtime=True
+                      shots=1000,
+                      backend=backend,
+                      use_ibm_runtime=True
                       )
 
 hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
@@ -77,7 +83,6 @@ for i, a in enumerate(alpha_det):
             print(f"{cfg}   {amp:+.6f}  ({amp ** 2:.6f}) ")
 
 hamiltonian = molecule.get_molecular_hamiltonian()
-from vqemulti.utils import fermion_to_qubit
 hamiltonian_te = fermion_to_qubit(hamiltonian)
 print('H terms:', len(hamiltonian_te.terms))
 hamiltonian_te.compress(2e-2)
@@ -91,14 +96,14 @@ print('n_qubits: ', n_qubits)
 
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
-dt = 0.1
+dt = 1e-5 #0.00001
 
 energy_error_list = []
 configuration_number = []
 samples = {}
-for time in np.arange(0.0, 2.5, dt):
+for time in np.arange(0.0, 5e-5, dt):
 
-    from vqemulti.utils import fermion_to_qubit
+    print('time:', time)
     generator = [1j * hamiltonian_te]
     coefficients = [time]
     ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
@@ -118,8 +123,10 @@ for time in np.arange(0.0, 2.5, dt):
     configurations = []
     for bitstring in samples.keys():
         fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
-        if np.sum(fock_vector[::2]) == alpha_electrons and np.sum(fock_vector[1::2]) == beta_electrons:
-            configurations.append(fock_vector)
+        configurations.append(fock_vector)
+
+    configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
+                                            multiplicity=0, n_max_diff=4, n_iter=0)
 
     sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
 

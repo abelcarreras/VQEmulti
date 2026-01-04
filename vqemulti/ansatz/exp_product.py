@@ -43,38 +43,6 @@ class ProductExponentialAnsatz(GenericAnsatz):
         self._operators.append(operator)
         self._parameters.append(parameter)
 
-    def _exact_energy(self, hamiltonian, return_std=False):
-        """
-        Calculates the energy of the state prepared by applying an ansatz (of the
-        type of the VQE protocol) to a reference state.
-
-        :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
-        :return: exact energy
-        """
-
-        # get sparse hamiltonian
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
-
-        # Transform reference vector into a Compressed Sparse Column matrix
-        ket = get_sparse_ket_from_fock(self._reference_fock)
-
-        # use trotterized operators (for adaptVQE)
-        for coefficient, operator in zip(self._parameters, self._operators):
-            # Get the operator matrix representation of the operator
-            sparse_operator = coefficient * get_sparse_operator(operator, self.n_qubits)
-
-            # Apply e ** (coefficient * operator) to the state (ket) for each operator in
-            ket = sp.sparse.linalg.expm_multiply(sparse_operator, ket)
-
-        # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
-        bra = ket.transpose().conj()
-        energy = np.sum(bra * sparse_hamiltonian * ket).real
-
-        if return_std:
-            return energy, 0.0
-
-        return energy
-
     def _simulate_energy(self, hamiltonian, simulator, return_std=False):
         """
         Obtain the hamiltonian expectation value for a given VQE state (reference + ansatz) and a hamiltonian

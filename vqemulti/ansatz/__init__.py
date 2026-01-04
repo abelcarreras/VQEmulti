@@ -1,6 +1,5 @@
-import warnings
-
 from vqemulti.ansatz.generators import get_ucc_generator
+from vqemulti.utils import get_sparse_operator
 from copy import deepcopy
 import numpy as np
 
@@ -70,10 +69,34 @@ class GenericAnsatz:
         else:
             return self._simulate_energy(hamiltonian, energy_simulator, return_std)
 
-    def _exact_energy(self, hamiltonian, return_std):
-        raise NotImplemented()
+    def _exact_energy(self, hamiltonian, return_std=False):
+        """
+        Calculates the energy of the state prepared by applying an ansatz (of the
+        type of the VQE protocol) to a reference state.
+
+        :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
+        :return: exact energy
+        """
+
+        # get sparse hamiltonian
+        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
+
+        # get state vector
+        ket = self.get_state_vector()
+
+        # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
+        bra = ket.transpose().conj()
+        energy = np.sum(bra * sparse_hamiltonian * ket).real
+
+        if return_std:
+            return energy, 0.0
+
+        return energy
 
     def _simulate_energy(self, hamiltonian, energy_simulator, return_std):
+        raise NotImplemented()
+
+    def get_state_vector(self):
         raise NotImplemented()
 
     def get_gradients(self, parameters, hamiltonian, simulator):

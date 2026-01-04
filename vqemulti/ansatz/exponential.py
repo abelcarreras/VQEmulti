@@ -36,31 +36,6 @@ class ExponentialAnsatz(GenericAnsatz):
     def operators(self):
         return self._operators
 
-    def _exact_energy(self, hamiltonian, return_std=False):
-        """
-        Calculates the energy of the state prepared by applying an ansatz (of the
-        type of the VQE protocol) to a reference state.
-
-        :param hf_reference_fock: HF reference in Fock space vector
-        :param hamiltonian: Hamiltonian in FermionOperator/InteractionOperator
-        :return: exact energy
-        """
-
-        # get sparse hamiltonian
-        sparse_hamiltonian = get_sparse_operator(hamiltonian, self.n_qubits)
-
-        # get state vector
-        ket = self.get_state_vector()
-
-        # Get the corresponding bra and calculate the energy: |<bra| H |ket>|
-        bra = ket.transpose().conj()
-        energy = np.sum(bra * sparse_hamiltonian * ket).real
-
-        if return_std:
-            return energy, 0.0
-
-        return energy
-
     def _simulate_energy(self, hamiltonian, simulator, return_std=False):
         """
         Obtain the hamiltonian expectation value for a given VQE state (reference + ansatz) and a hamiltonian

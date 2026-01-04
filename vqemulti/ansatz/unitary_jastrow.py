@@ -1,9 +1,6 @@
-from jastrow.factor import double_factorized_t2
-from jastrow.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
-from jastrow.basis import get_t1_spinorbitals_absolute_full, get_absolute_orbitals
-
-from jastrow.rotation import change_of_basis_orbitals
-from openfermion import FermionOperator, QubitOperator, hermitian_conjugated, normal_ordered
+from vqemulti.ansatz.generators.factor import double_factorized_t2
+from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
+from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 from vqemulti.utils import get_hf_reference_in_fock_space
@@ -21,7 +18,6 @@ def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):
     :param tolerance: tolerance
     :return: sparse matrix representation of the generator
     """
-    from openfermion import FermionOperator, hermitian_conjugated, get_sparse_operator, normal_ordered
 
     kappa = -1. * sp.linalg.logm(U_test)  # convention
 

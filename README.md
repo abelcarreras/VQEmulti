@@ -1,26 +1,46 @@
 VQEmulti
 ========
 
-A variational quantum eigensolver (VQE) implementation based in Openfermion. This code
-provides a common interface for different flavors of VQE. It uses cirq and pennylane
-libraries for the energy and gradient simulations. 
+A collection of variational quantum eigensolver (VQE) implementations based in Openfermion. 
+This code provides a common and flexible interface for different quantum computing algorithms.
 
 
-VQE algorithms currently implemented
-------------------------------------
-- regular VQE
+Quantum computing algorithms
+----------------------------
+- VQE
 - adaptVQE
+- qubit-adaptVQE
+- tetris-adaptVQE
+- prune-adaptVQE
+- SQD
+- SKQD
 
+Ansatze
+-------
+- Unitary Coupled Cluster 
+- Product of Unitary Coupled Cluster 
+- Unitary Cluster Jastrow
+
+Simulation plugins
+------------------
+- Qiskit Aer
+- Pennylane
+- cirq
+
+Quantum Hardware
+----------------
+- Qiskit IBM runtime
 
 Installation
 ------------
 ```bash
+git clone https://github.com/abelcarreras/VQEmulti.git vqemulti
 cd vqemulti
 pip -e install .
 ```
 
 
-Basic example for regular VQE
+Basic example for VQE
 -----------------------------
 
 ```python

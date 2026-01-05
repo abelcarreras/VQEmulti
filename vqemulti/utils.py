@@ -1206,7 +1206,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 stream_output=False,
                                 hci_schedule=None,
                                 compute_density_matrix=False,
-                                compute_variance=True
+                                compute_variance=False
                                 ):
     """
     get selected CI energy using Dice software.

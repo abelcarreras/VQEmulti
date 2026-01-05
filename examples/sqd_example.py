@@ -11,15 +11,13 @@ from qiskit_ibm_runtime.fake_provider import FakeTorino
 from qiskit_aer import AerSimulator
 
 config = Configuration()
-config.verbose = 1
+config.verbose = False
 config.mapping = 'jw'
-config.temp_dir = '/Users/abel/test_dice/'
 
 # list of backends
 backend = AerSimulator()
-#backend = FakeTorino()
+# backend = FakeTorino()
 #service = QiskitRuntimeService()
-#backend = service.least_busy(simulator=False, operational=True)
 #backend = service.backend('ibm_basquecountry')
 print('backend: ', backend)
 
@@ -53,7 +51,8 @@ configuration_HF = [
 ]
 hci_energy = get_selected_ci_energy_dice(configuration_HF, hamiltonian,
                                          stream_output=False,
-                                         hci_schedule=[(0, 1e-3),(100, 1e-6)])
+                                         hci_schedule=[(0, 1e-3),(100, 1e-6)]
+                                         )
 
 print('HCI_energy:', hci_energy)
 
@@ -74,7 +73,7 @@ layout_model = LayoutModelSQD()
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,
-                      test_only=False,
+                      test_only=True,
                       hamiltonian_grouping=True,
                       use_estimator=True, shots=100,
                       backend=backend,
@@ -93,20 +92,12 @@ if False:
     print(simulator.get_circuits()[-1])
 
 # SQD
-print('SQD start')
-energy, samples = simulate_energy_sqd(ucja,
-                                      hamiltonian,
-                                      simulator,
-                                      n_electrons,
-                                      generate_random=True,
-                                      return_samples=True)
-
-# order samples
-print('\nsamples')
-sorted_configurations = sorted(samples.items(),
-                               key=lambda item: item[1],
-                               reverse=True)
-for k, v in sorted_configurations:
-    print('{} {}'.format(k, v))
+energy, variance = simulate_energy_sqd(ucja,
+                                       hamiltonian,
+                                       simulator,
+                                       n_electrons,
+                                       generate_random=False,
+                                       return_variance=True)
 
 print('\nSQD energy', energy)
+print('SQD variance', variance)

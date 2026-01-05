@@ -1,4 +1,4 @@
-from vqemulti.utils import log_message
+from vqemulti.utils import log_message, log_section
 from collections import defaultdict
 from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
 import numpy as np
@@ -9,7 +9,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         multiplicity=0,
                         generate_random=False,
                         backend='dice',
-                        return_samples=False):
+                        return_variance=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -53,6 +53,14 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     log_message('# samples: {}'.format(len(samples)), log_level=1)
 
+    if log_section(log_level=1):
+        print('\nsample list')
+        sorted_configurations = sorted(samples.items(),
+                                       key=lambda item: item[1],
+                                       reverse=True)
+        for k, v in sorted_configurations:
+            print('{} {}'.format(k, v))
+
     configurations = []
     for bitstring in samples.keys():
         fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
@@ -64,18 +72,19 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     log_message('# configuration: {}'.format(len(configurations)), log_level=1)
 
     configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
-                                              multiplicity=0, n_max_diff=4, n_iter=8)
+                                              multiplicity=0, n_max_diff=4, n_iter=4)
 
     log_message('# recovery conf: {}'.format(len(configurations)), log_level=1)
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
     if backend.lower() == 'dice':
-        sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
+        sqd_energy, extra = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
     else:
         sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
+        extra = {'variance': None}
 
-    if return_samples:
-        return sqd_energy, samples
+    if return_variance:
+        return sqd_energy, extra['variance']
 
     return sqd_energy
 
@@ -132,8 +141,8 @@ def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicit
     log_message('# initial total unique conf: {}'.format(len(full_configurations)), log_level=1)
 
     for i_iter in range(n_iter):
-        _, rdm = get_selected_ci_energy_dice(full_configurations, hamiltonian, return_density_matrix=True)
-        prob_vec = np.diag(rdm)/n_electrons
+        results = get_selected_ci_energy_dice(full_configurations, hamiltonian, compute_density_matrix=True)[1]
+        prob_vec = np.diag(results['1rdm'])/n_electrons
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
         # prob_vec = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 0.001, 0.001, 0.001])

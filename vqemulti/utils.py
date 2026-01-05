@@ -1100,7 +1100,7 @@ def create_input_file_dice(configuration_list,
                            epsilon2=1e-2,
                            max_iterations=1,
                            n_samples=200,
-                           calc_1rdm=False,
+                           calc_rdm=False,
                            filename='input.dat'):
     """
     create input for DICE software
@@ -1160,7 +1160,7 @@ def create_input_file_dice(configuration_list,
         f.write(f"nPTiter 0\n")
         f.write(f"sampleN {n_samples}\n")
 
-        if calc_1rdm:
+        if calc_rdm:
             f.write(f"DoRDM\n")
 
         # configurations
@@ -1172,11 +1172,11 @@ def create_input_file_dice(configuration_list,
         f.write(f"end\n")
 
 
-def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator, energy, n_qubits, use_jw = False):
+def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator, energy, n_qubits, exact=False):
 
     hamiltonian_fermion = get_fermion_operator(hamiltonian)
-    if use_jw:
-        # use JW transformation
+    if exact:
+        # use JW transformation to compute the exact variance
         print('n_qubits: ', n_qubits)
         h_sparse = get_sparse_operator(hamiltonian_fermion, n_qubits=n_qubits)
         ci_sparse = get_sparse_operator(ci_vector, n_qubits=n_qubits)[:, 0]
@@ -1190,20 +1190,13 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
         variance = val_e2[0, 0] - val_e[0, 0] ** 2
 
     else:
-        # work with fermion operators
-        from openfermion import hermitian_conjugated
-
-        ci_vector = normal_ordered(ci_vector)
+        # compute the projected variance
         psi_h = normal_ordered(hamiltonian_fermion * ci_vector)
 
-        psi_H_psi = normal_ordered(hermitian_conjugated(ci_vector) * psi_h)
-        E1_of = psi_H_psi.terms[()]
-        print('E1_of', E1_of)
-
-        E2_of = normal_ordered(hermitian_conjugated(psi_h) * psi_h).terms[()]
-        print('E2_of', E2_of)
-
-        variance = E2_of - E1_of**2
+        variance = 0
+        for det, ampl in psi_h.terms.items():
+            if not det in ci_vector.terms and det[-1][1] == 1: # check operators that kill the vacuum
+                variance += ampl**2
 
     return variance
 
@@ -1211,10 +1204,9 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 mpirun_options=None,
                                 stream_output=False,
-                                return_density_matrix=False,
-                                parse_2rdm=False,
                                 hci_schedule=None,
-                                compute_variance=False
+                                compute_density_matrix=False,
+                                compute_variance=True
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1245,7 +1237,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     n_electrons = np.sum(configuration_list[0])
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
-                           calc_1rdm=return_density_matrix,
+                           calc_rdm=compute_density_matrix,
                            schedule=hci_schedule,
                            )
 
@@ -1275,6 +1267,9 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
 
+    log_message('sci_energy: ', sci_energy, log_level=1)
+
+    extra_data = {}
     # careful! this may take a very long time
     if compute_variance:
 
@@ -1305,16 +1300,18 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
             amplitude = float(line_vec[1])
             det = get_conf(line_vec[2:])
             # print(''.join(line_vec[2:]))
-            ci_state += amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v])
+            ci_state += amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v][::-1])
             # print(line_vec[2:], amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v]))
             norm_ci += amplitude ** 2
         log_message('norm CI:', norm_ci, log_level=1)
 
         variance = get_variance_from_ci(ci_state, hamiltonian, sci_energy, n_qubits=len(configuration_list[0]))
-        print('Variance: ', variance)
+        log_message('Variance: ', variance, log_level=1)
+
+        extra_data['variance'] = variance
 
     # read density matrix
-    if return_density_matrix:
+    if compute_density_matrix:
         import glob
         files = sorted(glob.glob(str(data_path / 'spatial1RDM.*.txt')))
         with open(files[-1], 'r') as f:
@@ -1329,26 +1326,28 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
             i, j, value = line.split()
             rdm_1[int(i), int(j)] = float(value)
 
-        if parse_2rdm:
-            files = sorted(glob.glob(str(data_path / 'spatialRDM.*.txt')))
-            with open(files[-1], 'r') as f:
-                lines = f.read().split('\n')
+        extra_data['1rdm'] = rdm_1
 
-            n_orb = int(lines[0])
+        files = sorted(glob.glob(str(data_path / 'spatialRDM.*.txt')))
+        with open(files[-1], 'r') as f:
+            lines = f.read().split('\n')
 
-            # 2-RDM
-            rdm_2 = np.zeros((n_orb, n_orb, n_orb, n_orb))
-            for line in lines[1:-1]:
-                i, j, k, l, value = line.split()
-                rdm_2[int(i), int(j), int(k), int(l)] = float(value)
+        n_orb = int(lines[0])
 
-            inv = np.argsort((0, 2, 1, 3))
+        # 2-RDM
+        rdm_2 = np.zeros((n_orb, n_orb, n_orb, n_orb))
+        for line in lines[1:-1]:
+            i, j, k, l, value = line.split()
+            rdm_2[int(i), int(j), int(k), int(l)] = float(value)
 
-            rdm_2 = rdm_2.transpose(inv)
+        inv = np.argsort((0, 2, 1, 3))
 
-            return sci_energy, rdm_1, rdm_2
-        else:
-            return sci_energy, rdm_1
+        rdm_2 = rdm_2.transpose(inv)
+
+        extra_data['2rdm'] = rdm_2
+
+    if compute_density_matrix or compute_variance:
+        return sci_energy, extra_data
 
     return sci_energy
 
@@ -1723,3 +1722,17 @@ def log_message(*args, log_level=-1):
 
     elif Configuration().verbose >= log_level:
         print(*args)
+
+
+def log_section(log_level=-1):
+
+    if log_level <= 0:
+        return True
+
+    elif Configuration().verbose is False:
+        return False
+
+    elif Configuration().verbose >= log_level:
+        return True
+
+    return False

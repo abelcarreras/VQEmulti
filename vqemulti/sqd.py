@@ -81,11 +81,15 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     log_message('# recovery conf: {}'.format(len(configurations)), log_level=1)
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
+
+    extra = {'variance': None}
     if backend.lower() == 'dice':
-        sqd_energy, extra = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
+        if return_variance:
+            sqd_energy, extra = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
+        else:
+            sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=False)
     else:
         sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
-        extra = {'variance': None}
 
     if return_variance:
         return sqd_energy, extra['variance']

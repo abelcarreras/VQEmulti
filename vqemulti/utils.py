@@ -1562,9 +1562,9 @@ def get_dmrg_energy(hamiltonian,
         # err = err.decode()
         # print(err)
 
-    enum = output.find('Final canonical form')
+    enum = output.find('DMRG Energy')
     try:
-        sci_energy = float(output[enum: enum+500].split()[9])
+        sci_energy = float(output[enum: enum+100].split()[3])
     except IndexError:
         raise Exception('Block2 {}'.format(output.split('\n')[-2]))
 

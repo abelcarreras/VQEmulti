@@ -7,6 +7,7 @@ import numpy as np
 
 def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         multiplicity=0,
+                        add_hf_configuration=False,
                         generate_random=False,
                         backend='dice',
                         return_variance=False):
@@ -19,6 +20,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param simulator: simulation object
     :param n_electrons: number of electrons
     :param multiplicity: multiplicity
+    :param add_hf_configuration: add HF configuration to Selected-CI
     :param generate_random: generate random configuration distribution instead of simulation
     :param backend: backend to use for selected-CI  (dice, qiskit)
     :param adapt: True if adaptVQE False if VQE
@@ -33,7 +35,6 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     # print('electrons: ', alpha_electrons, beta_electrons)
 
     from qiskit_addon_sqd.counts import generate_counts_uniform
-    import numpy as np
 
     from openfermion.ops.representations import InteractionOperator
     if not isinstance(hamiltonian, InteractionOperator):
@@ -67,6 +68,9 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
         # if np.sum(fock_vector[::2]) == alpha_electrons and np.sum(fock_vector[1::2]) == beta_electrons:
             # print(fock_vector)
         configurations.append(fock_vector)
+
+    if add_hf_configuration:
+        configurations.append([1]*n_electrons + [0]*(ansatz.n_qubits - n_electrons))
 
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
     log_message('# configuration: {}'.format(len(configurations)), log_level=1)

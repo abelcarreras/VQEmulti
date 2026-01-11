@@ -1233,6 +1233,9 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     # create dir and input files
     data_path.mkdir(parents=True, exist_ok=True)
 
+    if len(configuration_list) == 0:
+        raise Exception('No configurations provided for selected CI')
+
     # create input files
     n_electrons = np.sum(configuration_list[0])
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))

@@ -34,9 +34,35 @@ def get_paths(parelles, N):
 
 
 class LayoutModelDefault:
-    def get_layout(self, backend, n_qubits):
-        return None
+    def __init__(self, custom_list=None):
+        self._qubits_list = custom_list
 
+    def get_layout(self, backend, n_qubits):
+        if self._qubits_list is not None and len(self._qubits_list) < n_qubits:
+            raise Exception('Number of requested qubits ({}) less than defined ({})'.format(n_qubits, len(self._qubits_list)))
+        return self._qubits_list
+
+    def plot_data(self, backend, n_qubits):
+        from qiskit.visualization import plot_gate_map
+        import matplotlib.pyplot as plt
+
+        n_backend_qubits = backend.num_qubits
+
+        layout = self.get_layout(backend, n_qubits)
+
+        if layout is not None:
+            qubit_color = []
+            for i in range(n_backend_qubits):
+                if i in layout:
+                    qubit_color.append("#ff0066")
+                else:
+                    qubit_color.append("#6600cc")
+        else:
+            qubit_color = None
+
+        plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
+
+        plt.show()
 
 class LayoutModelLinear:
     def __init__(self, cache_time=3600):

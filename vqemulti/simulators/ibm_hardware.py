@@ -1,8 +1,27 @@
 import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from vqemulti.preferences import Configuration
-from vqemulti.utils import log_message
+from vqemulti.utils import log_message, log_section
 from vqemulti.simulators.layout import accumulated_errors
+
+
+def get_isa_layout(isa_circuit):
+    """
+    get original layout from isa circuit
+
+    :param isa_circuit: Qiskit ISA circuit
+    :return: list of qubits
+    """
+    list_qubits = np.zeros(len(isa_circuit.qubits), dtype=int)
+    n_qubits = 0
+    for i, q in enumerate(isa_circuit.layout.initial_layout):
+        if q._register.name != 'ancilla':
+            # print(q, q._index, q._register, i)
+            list_qubits[q._index] =  i
+            n_qubits += 1
+        if i > len(isa_circuit.qubits) - 2:
+            break
+
+    return list_qubits[:n_qubits].tolist()
 
 
 class RHESampler:
@@ -31,7 +50,9 @@ class RHESampler:
 
         log_message('depth: ', circuit.depth(), log_level=1)
         log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        if Configuration().verbose > 1:
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=1)
+        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
+        if log_section(log_level=1):
             accumulated_errors(self._backend, isa_circuit, print_data=True)
 
 
@@ -68,13 +89,15 @@ class RHEstimator:
 
         log_message('depth: ', circuit.depth(), log_level=1)
         log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=1)
+        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
         log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
         log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
         # log_message('observable: ', measure_op, log_level=1)
         log_message('n_observable: ', len(measure_op), log_level=1)
         log_message('n_chunks: ', n_chunks, log_level=1)
         log_message('chunck_size: ', chunck_size, log_level=1)
-        if Configuration().verbose > 1:
+        if log_section(log_level=1):
             accumulated_errors(self._backend, isa_circuit, print_data=True)
 
         from qiskit_ibm_runtime import EstimatorV2

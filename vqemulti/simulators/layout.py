@@ -38,8 +38,8 @@ class LayoutModelDefault:
         self._qubits_list = custom_list
 
     def get_layout(self, backend, n_qubits):
-        if self._qubits_list is not None and len(self._qubits_list) < n_qubits:
-            raise Exception('Number of requested qubits ({}) less than defined ({})'.format(n_qubits, len(self._qubits_list)))
+        if self._qubits_list is not None and len(self._qubits_list) < n_qubits and backend.num_qubits > n_qubits:
+            raise Exception('Number of requested qubits ({}) is larger than available'.format(n_qubits))
         return self._qubits_list
 
     def plot_data(self, backend, n_qubits):

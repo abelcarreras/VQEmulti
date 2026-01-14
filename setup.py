@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def get_version_number():
@@ -16,11 +16,6 @@ setup(name='vqemulti',
       long_description_content_type='text/markdown',
       author='Abel Carreras',
       author_email='abel.carreras@multiversecomputing.com',
-      packages=['vqemulti',
-                'vqemulti.energy',
-                'vqemulti.gradient',
-                'vqemulti.pool',
-                'vqemulti.simulators',
-                'vqemulti.method'],
+      packages=find_packages(),
       install_requires=['numpy', 'scipy', 'openfermion', 'posym', 'cirq', 'pennylane', 'qiskit']
       )

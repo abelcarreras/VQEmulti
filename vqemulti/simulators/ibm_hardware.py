@@ -11,6 +11,9 @@ def get_isa_layout(isa_circuit):
     :param isa_circuit: Qiskit ISA circuit
     :return: list of qubits
     """
+    if isa_circuit.layout is None:
+        return None
+
     list_qubits = np.zeros(len(isa_circuit.qubits), dtype=int)
     n_qubits = 0
     for i, q in enumerate(isa_circuit.layout.initial_layout):

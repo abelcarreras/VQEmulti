@@ -19,14 +19,13 @@ h2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                              description='He2')
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+molecule = run_pyscf(h2_molecule, n_orbitals=4, run_fci=True, run_ccsd=True)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 4  # molecule.n_orbitals
+n_orbitals = molecule.n_orbitals
 
 hamiltonian = molecule.get_molecular_hamiltonian()
-hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
 # print data
 print('n_electrons: ', n_electrons)

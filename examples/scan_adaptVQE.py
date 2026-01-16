@@ -32,12 +32,11 @@ for d in np.linspace(0.3, 3, 20):
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
 
     # Choose specific pool of operators for adapt-VQE
-    operators_pool = get_pool_singlet_sd(n_electrons=n_electrons,
-                               n_orbitals=n_orbitals)
+    operators_pool = get_pool_singlet_sd(n_electrons=n_electrons, n_orbitals=n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)

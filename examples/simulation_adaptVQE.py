@@ -24,11 +24,11 @@ he2_molecule = MolecularData(geometry=[['He', [0, 0, 0]],
                              description='He2')
 
 # run classical calculation
-molecule = run_pyscf(he2_molecule, run_fci=True)
+molecule = run_pyscf(he2_molecule, run_fci=True, n_orbitals=4)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 4  # molecule.n_orbitals
+n_orbitals = molecule.n_orbitals
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 

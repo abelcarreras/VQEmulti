@@ -28,11 +28,11 @@ h2_molecule = MolecularData(geometry=[['H', [0, 0, 0]],
                              )
 
 # run classical calculation
-molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=False)
+molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=False, n_orbitals=3)
 
 # get properties from classical SCF calculation
 n_electrons = molecule.n_electrons
-n_orbitals = 3  # molecule.n_orbitals
+n_orbitals = molecule.n_orbitals
 
 print('n_electrons: ', n_electrons)
 print('n_orbitals: ', n_orbitals)

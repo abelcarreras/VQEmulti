@@ -42,8 +42,13 @@ hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
 # run classical calculation
 n_frozen_orb = 0  # nothing
 n_total_orb = 4  # total orbitals
-molecule = run_pyscf(hydrogen, run_fci=True, nat_orb=False, guess_mix=False, verbose=True,
-                     frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
+molecule = run_pyscf(hydrogen,
+                     run_fci=True,
+                     verbose=True,
+                     run_casci=True,
+                     frozen_core=n_frozen_orb,
+                     n_orbitals=n_total_orb,
+                     run_ccsd=True)
 
 fci_energy = molecule.fci_energy
 
@@ -89,10 +94,10 @@ hamiltonian_te.compress(2e-2)
 print('H terms compress:', len(hamiltonian_te.terms))
 
 multiplicity = 0
-n_electrons = molecule.n_electrons - n_frozen_orb * 2
-n_orbitals = n_total_orb - n_frozen_orb  # molecule.n_orbitals
-n_qubits = n_orbitals * 2
-print('n_qubits: ', n_qubits)
+n_electrons = molecule.n_electrons
+n_orbitals = molecule.n_orbitals
+n_qubits = molecule.n_qubits
+print('n_qubits:', n_qubits)
 
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 

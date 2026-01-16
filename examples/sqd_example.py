@@ -29,15 +29,12 @@ hydrogen = MolecularData(geometry=[('N', [0.0, 0.0, 0.0]),
                          charge=0,
                          description='molecule')
 
-# run classical calculation
-n_frozen_orb = 2  # nothing
-n_total_orb = 10  # total orbitals
-
+# run reference calculation
 molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
-                     frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
+                     frozen_core=2, n_orbitals=10, run_ccsd=True)
 
-n_electrons = molecule.n_electrons - n_frozen_orb * 2
-n_orbitals = n_total_orb - n_frozen_orb
+n_electrons = molecule.n_electrons
+n_orbitals = molecule.n_orbitals
 print('N_electrons: ', n_electrons)
 print('N_orb: ', n_orbitals)
 

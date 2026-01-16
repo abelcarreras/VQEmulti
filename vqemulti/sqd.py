@@ -190,12 +190,6 @@ def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicit
 
     return full_configurations
 
-#from qiskit_addon_sqd.subsampling import postselect_and_subsample
-#from qiskit_addon_sqd.configuration_recovery import recover_configurations
-
-
-def get_variance(hamiltonia, ci_vector):
-    pass
 
 if __name__ == '__main__':
 

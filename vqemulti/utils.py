@@ -723,6 +723,9 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
         if isinstance(operator, openfermion.FermionOperator):
             operator = binary_code_transform(operator, parity_code(count_qubits(operator)))
 
+    if isinstance(operator, openfermion.InteractionOperator):
+        operator = get_fermion_operator(operator)
+
     return get_sparse_operator_openfermion(operator, n_qubits, trunc, hbar)
 
 

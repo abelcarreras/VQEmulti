@@ -330,8 +330,7 @@ if __name__ == '__main__':
     energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,
-                                          n_electrons,
-                                          return_samples=True)
+                                          n_electrons)
 
     print(samples)
     print('SQD energy', energy)

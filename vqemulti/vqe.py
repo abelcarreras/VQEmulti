@@ -48,7 +48,7 @@ def vqe(hamiltonian,
     ansatz.parameters = results.x
 
     return {'energy': results.fun,
-            'coefficients': list(results.x),
+            'coefficients': results.x.tolist(),
             'ansatz': ansatz,
             'f_evaluations': results.nfev}
 

@@ -1150,8 +1150,8 @@ def create_input_file_dice(configuration_list,
                     max_iterations = line[0]
 
         f.write(f"end\n")
-        # f.write(f"writebestdeterminants\n")
-        f.write(f"printbestdeterminants 100000000\n")
+        f.write(f"writebestdeterminants 1\n")
+        f.write(f"printbestdeterminants 1\n")
         # f.write(f"printalldeterminants\n")
 
         # perturbation
@@ -1739,3 +1739,21 @@ def log_section(log_level=-1):
         return True
 
     return False
+
+
+def get_ci_amplitudes(ansatz, n_electrons, tolerance=0.01):
+    from vqemulti.operators import configuration_projector_operator
+
+    n_qubits = ansatz.n_qubits
+    print('\nAmplitudes square')
+    amplitudes_square = []
+    for configuration in configuration_generator(n_qubits, n_electrons):
+        amplitude2 = ansatz.get_energy(ansatz.parameters, configuration_projector_operator(configuration), None)
+
+        amplitudes_square.append(amplitude2)
+
+        if abs(amplitude2) > tolerance:
+            print('{} {:8.5f} '.format(''.join([str(s) for s in configuration]), amplitude2.real))
+
+    print('sum amplitudes square: ', np.sum(amplitudes_square))
+    return amplitudes_square

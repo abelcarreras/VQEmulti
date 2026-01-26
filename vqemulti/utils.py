@@ -1104,6 +1104,7 @@ def create_input_file_dice(configuration_list,
                            max_iterations=1,
                            n_samples=200,
                            calc_rdm=False,
+                           calc_ci_vect=False,
                            filename='input.dat'):
     """
     create input for DICE software
@@ -1115,6 +1116,8 @@ def create_input_file_dice(configuration_list,
     :param epsilon2: tolerance for perturbation part
     :param max_iterations: maximum number of iterations in the variational part (HCI)
     :param n_samples: number of stochastic samples for SHCI
+    :param calc_rdm: whether to calculate RDM
+    :param calc_ci_vect: whether to calculate CI vector
     :param filename: input filename
     :return:
     """
@@ -1153,9 +1156,10 @@ def create_input_file_dice(configuration_list,
                     max_iterations = line[0]
 
         f.write(f"end\n")
-        f.write(f"writebestdeterminants 1\n")
-        f.write(f"printbestdeterminants 1\n")
-        # f.write(f"printalldeterminants\n")
+        f.write(f"writebestdeterminants 1000000\n")
+        if calc_ci_vect:
+            f.write(f"printbestdeterminants 1000000\n")
+            # f.write(f"printalldeterminants\n")
 
         # perturbation
         f.write(f"maxiter {max_iterations}\n")
@@ -1170,12 +1174,11 @@ def create_input_file_dice(configuration_list,
         # f.write(f"sampleN 200\n")
         f.write(f"nocc {n_electrons}\n")
         for configuration in configuration_list:
-            # f.write(f"0 1 2 3\n")  # TODO arreglar aixo
             f.write(' '.join(get_num_conf(configuration)) + '\n')
         f.write(f"end\n")
 
 
-def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator, energy, n_qubits, exact=False):
+def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator, n_qubits, exact=False):
 
     hamiltonian_fermion = get_fermion_operator(hamiltonian)
     if exact:
@@ -1193,14 +1196,37 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
         variance = val_e2[0, 0] - val_e[0, 0] ** 2
 
     else:
+
+        def get_label_from_det(det, n_orbitlas):
+            initial = ['0'] * n_orbitlas
+            vec = [0] * n_orbitlas * 2
+            for op in det:
+                if op[1] == 0:
+                    raise Exception('This should not happen')
+                vec[op[0]] = 1
+
+            for i in range(n_orbitlas):
+                if vec[2 * i] + vec[2 * i + 1] == 2:
+                    initial[i] = '2'
+                elif vec[2 * i] == 1:
+                    initial[i] = 'a'
+                elif vec[2 * i + 1] == 1:
+                    initial[i] = 'b'
+
+            return ''.join(initial)
+
         # compute the projected variance
         psi_h = normal_ordered(hamiltonian_fermion * ci_vector)
 
         variance = 0
         for det, ampl in psi_h.terms.items():
             if not det in ci_vector.terms and det[-1][1] == 1: # check operators that kill the vacuum
+                # print('det: ', get_label_from_det(det, n_qubits//2), ampl)
                 variance += ampl**2
-
+            #elif det[-1][1] == 1:
+            #    print('IN WF det: ', get_label_from_det(det, n_qubits//2), ampl)
+            #else:
+            #    print('OUT WF det: ', det, ampl)
     return variance
 
 
@@ -1209,7 +1235,8 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 stream_output=False,
                                 hci_schedule=None,
                                 compute_density_matrix=False,
-                                compute_variance=False
+                                compute_variance=False,
+                                compute_ci_state=False,
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1241,9 +1268,11 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
     # create input files
     n_electrons = np.sum(configuration_list[0])
+
     create_fcidump_file(hamiltonian, n_electrons, filename=str(data_path / 'FCIDUMP'))
     create_input_file_dice(configuration_list, filename=str(data_path / 'input.dat'),
                            calc_rdm=compute_density_matrix,
+                           calc_ci_vect=compute_ci_state,
                            schedule=hci_schedule,
                            )
 
@@ -1252,8 +1281,9 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
         dice_call = ["mpirun"] + list(mpirun_options) + [dice_path]
+
     else:
-        dice_call = ["mpirun", dice_path]
+        dice_call = [dice_path]
 
     if stream_output:
         qchem_process = Popen(dice_call, stdout=PIPE, stdin=PIPE, stderr=STDOUT, cwd=data_path, text=True, bufsize=1)
@@ -1270,6 +1300,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
         #err = err.decode()
         # print(err)
 
+
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
 
@@ -1279,6 +1310,16 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     # careful! this may take a very long time
     if compute_variance:
 
+        dicevar_call = [dice_path + 'Var']
+        qchem_process = Popen(dicevar_call, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=data_path)
+        (output_var, err) = qchem_process.communicate()
+        qchem_process.wait()
+        output_var = output_var.decode(errors='ignore')
+        variance = float(output_var[-50:].split()[-1])
+        extra_data['variance'] = variance
+        log_message('Variance: ', variance, log_level=1)
+
+    if compute_ci_state:
         # parse CI vector
         enum_ini = output.find('Printing most important determinants')
         enum_end = output.find('Returning without error')
@@ -1298,6 +1339,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
         det_section = output[enum_ini:enum_end].split('\n')[3:-4]
 
+
         norm_ci = 0
         ci_state = FermionOperator()
         for line_det in det_section:
@@ -1310,11 +1352,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
             # print(line_vec[2:], amplitude * FermionOperator([(k, 1) for k, v in enumerate(det) if v]))
             norm_ci += amplitude ** 2
         log_message('norm CI:', norm_ci, log_level=1)
-
-        variance = get_variance_from_ci(ci_state, hamiltonian, sci_energy, n_qubits=len(configuration_list[0]))
-        log_message('Variance: ', variance, log_level=1)
-
-        extra_data['variance'] = variance
+        extra_data['ci_state'] = ci_state
 
     # read density matrix
     if compute_density_matrix:
@@ -1352,7 +1390,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
         extra_data['2rdm'] = rdm_2
 
-    if compute_density_matrix or compute_variance:
+    if compute_density_matrix or compute_variance or compute_ci_state:
         return sci_energy, extra_data
 
     return sci_energy

@@ -53,7 +53,7 @@ class RHESampler:
 
         log_message('depth: ', circuit.depth(), log_level=1)
         log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=1)
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
         log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
         if log_section(log_level=1):
             accumulated_errors(self._backend, isa_circuit, print_data=True)
@@ -92,7 +92,7 @@ class RHEstimator:
 
         log_message('depth: ', circuit.depth(), log_level=1)
         log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=1)
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
         log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
         log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
         log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)

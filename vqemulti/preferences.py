@@ -15,4 +15,5 @@ class Configuration(metaclass=Singleton):
     mapping: str = 'jw'  # jw: Jordan-wigner , bk: Bravyi-Kitaev, pc: parity transform
     verbose: bool = False
     temp_dir: str = str(tempfile.TemporaryDirectory().name)
+    mpirun_options = None
 

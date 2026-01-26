@@ -1231,7 +1231,6 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
 
 
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
-                                mpirun_options=None,
                                 stream_output=False,
                                 hci_schedule=None,
                                 compute_density_matrix=False,
@@ -1244,7 +1243,6 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
     :param configuration_list: list of configurations
     :param hamiltonian: hamiltonian in openFermion InterationOperator form
-    :param mpirun_options: mpi options
     :param stream_output: if True stream output on screen
     :param return_density_matrix: compute and return 1-RDM
     :param parse_2rdm: parse and return 1-RDM and 2-RDM
@@ -1277,6 +1275,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                            )
 
     # run Dice
+    mpirun_options = Configuration().mpirun_options
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
@@ -1505,7 +1504,6 @@ def get_dmrg_energy(hamiltonian,
                     max_solver_iterations=200,
                     sample=None,  # 0.02
                     stream_output=False,
-                    mpirun_options=None
                     ):
     """
     get energy from DMRG computed with BLOCK2.
@@ -1583,6 +1581,7 @@ def get_dmrg_energy(hamiltonian,
             f.write(f"sample {sample}\n")
 
     # run block2
+    mpirun_options = Configuration().mpirun_options
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()

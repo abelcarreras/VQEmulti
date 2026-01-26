@@ -1585,7 +1585,7 @@ def get_dmrg_energy(hamiltonian,
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
-        block2_call = ["mpirun"] + list(mpirun_options) + [block2_path, 'dmrg.conf']
+        block2_call = list(mpirun_options) + [block2_path, 'dmrg.conf']
     else:
         block2_call = [block2_path, 'dmrg.conf']
 

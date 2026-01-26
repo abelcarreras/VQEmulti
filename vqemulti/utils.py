@@ -1280,8 +1280,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     if mpirun_options:
         if isinstance(mpirun_options, str):
             mpirun_options = mpirun_options.split()
-        dice_call = ["mpirun"] + list(mpirun_options) + [dice_path]
-
+        dice_call = list(mpirun_options) + [dice_path]
     else:
         dice_call = [dice_path]
 

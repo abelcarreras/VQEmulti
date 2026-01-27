@@ -1302,7 +1302,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
 
-    log_message('sci_energy: ', sci_energy, log_level=1)
+    log_message('SCI energy: ', sci_energy, log_level=1)
 
     extra_data = {}
     # careful! this may take a very long time

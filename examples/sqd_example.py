@@ -11,12 +11,12 @@ from qiskit_ibm_runtime.fake_provider import FakeTorino
 from qiskit_aer import AerSimulator
 
 config = Configuration()
-config.verbose = False
+config.verbose = 1
 config.mapping = 'jw'
 
 # list of backends
-backend = AerSimulator()
-# backend = FakeTorino()
+# backend = AerSimulator()
+backend = FakeTorino()
 #service = QiskitRuntimeService()
 #backend = service.backend('ibm_basquecountry')
 print('backend: ', backend)
@@ -93,6 +93,7 @@ energy, variance = simulate_energy_sqd(ucja,
                                        hamiltonian,
                                        simulator,
                                        n_electrons,
+                                       max_configurations=10000,
                                        generate_random=False,
                                        return_variance=True)
 

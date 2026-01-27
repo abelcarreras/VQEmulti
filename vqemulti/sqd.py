@@ -7,6 +7,7 @@ import numpy as np
 
 def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         multiplicity=0,
+                        max_configurations=None,
                         add_hf_configuration=False,
                         generate_random=False,
                         backend='dice',
@@ -20,6 +21,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param simulator: simulation object
     :param n_electrons: number of electrons
     :param multiplicity: multiplicity
+    :param max_configurations: maximum number of configurations to diagonalize
     :param add_hf_configuration: add HF configuration to Selected-CI
     :param generate_random: generate random configuration distribution instead of simulation
     :param backend: backend to use for selected-CI  (dice, qiskit)
@@ -76,11 +78,14 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     log_message('# configuration: {}'.format(len(configurations)), log_level=1)
 
     configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
-                                              multiplicity=0, n_max_diff=4, n_iter=4)
+                                            multiplicity=0, n_max_diff=4, n_iter=4,
+                                            max_configurations=max_configurations)
 
     log_message('# recovery conf: {}'.format(len(configurations)), log_level=1)
 
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
+
+    configurations = sample_configurations(configurations, max_configurations)
 
     extra = {'variance': None}
     if backend.lower() == 'dice':
@@ -95,6 +100,19 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
         return sqd_energy, extra['variance']
 
     return sqd_energy
+
+
+def sample_configurations(configurations, max_configurations=None):
+    """
+    preliminary simple implementation
+    """
+    import random
+    if max_configurations is None or len(configurations) <= max_configurations:
+        return configurations
+
+    log_message('Max conf. exceeded. Sampling conf.: {}'.format(max_configurations), log_level=1)
+    configurations =  random.sample(list(configurations), max_configurations)
+    return configurations
 
 
 def generate_full_configurations(orbital_conf):
@@ -120,7 +138,7 @@ def joint_configurations(conf1, conf2):
     return list(total_conf)
 
 
-def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1):
+def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None):
 
     if multiplicity > 0:
         raise NotImplementedError('multiplicity must be 0!')
@@ -149,7 +167,8 @@ def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicit
     log_message('# initial total unique conf: {}'.format(len(full_configurations)), log_level=1)
 
     for i_iter in range(n_iter):
-        results = get_selected_ci_energy_dice(full_configurations, hamiltonian, compute_density_matrix=True)[1]
+        sampled_configurations = sample_configurations(full_configurations, max_configurations)
+        results = get_selected_ci_energy_dice(sampled_configurations, hamiltonian, compute_density_matrix=True)[1]
         prob_vec = np.diag(results['1rdm'])/n_electrons
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 

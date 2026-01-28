@@ -64,28 +64,19 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
         for k, v in sorted_configurations:
             print('{} {}'.format(k, v))
 
-    configurations = []
-    for bitstring in samples.keys():
-        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
-        # if np.sum(fock_vector[::2]) == alpha_electrons and np.sum(fock_vector[1::2]) == beta_electrons:
-            # print(fock_vector)
-        configurations.append(fock_vector)
-
-    if add_hf_configuration:
-        configurations.append([1]*n_electrons + [0]*(ansatz.n_qubits - n_electrons))
 
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
-    log_message('# configuration: {}'.format(len(configurations)), log_level=1)
+    log_message('# configurations: {}'.format(len(samples)), log_level=1)
 
-    configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
+    rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
                                             multiplicity=0, n_max_diff=4, n_iter=4,
                                             max_configurations=max_configurations)
 
-    log_message('# recovery conf: {}'.format(len(configurations)), log_level=1)
-
+    log_message('# recovery conf: {}'.format(len(rec_samples)), log_level=1)
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
 
-    configurations = sample_configurations(configurations, max_configurations)
+    configurations = get_subspace_configurations(rec_samples, max_configurations,
+                                                 add_hf_configuration=add_hf_configuration)
 
     extra = {'variance': None}
     if backend.lower() == 'dice':
@@ -102,43 +93,47 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     return sqd_energy
 
 
-def sample_configurations(configurations, max_configurations=None):
-    """
-    preliminary simple implementation
-    """
-    import random
-    if max_configurations is None or len(configurations) <= max_configurations:
-        return configurations
+def get_subspace_configurations(samples, max_configurations, add_hf_configuration=False):
 
-    log_message('Max conf. exceeded. Sampling conf.: {}'.format(max_configurations), log_level=1)
-    configurations =  random.sample(list(configurations), max_configurations)
+    # order by frequency
+    sorted_samples = sorted(samples.items(), key=lambda item: item[1], reverse=True)
+
+    configurations = []
+    for bitstring, c in sorted_samples:
+        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
+        configurations.append(fock_vector)
+
+    # truncate the lowest frequency configurations
+    if max_configurations is not None and len(configurations) > max_configurations:
+        log_message('Max conf. exceeded. Sampling conf.: {}'.format(max_configurations), log_level=1)
+        configurations = configurations[:max_configurations]
+
+    if add_hf_configuration:
+        log_message('Adding HF configuration', log_level=1)
+        n_qubits = len(configurations[0])
+        n_electrons = sum(configurations[0])
+        hf_conf = [1] * n_electrons + [0] * (n_qubits - n_electrons)
+        if hf_conf not in configurations:
+            configurations.append(hf_conf)
+
     return configurations
 
 
-def generate_full_configurations(orbital_conf):
+def generate_full_samples(orbital_sample_alpha, orbital_sample_beta):
 
-    full_configurations = set()
-    for alpha in orbital_conf:
-        for beta in orbital_conf:
-            conf = []
-            for a, b in zip(alpha, beta):
-                conf += [a, b]
-            full_configurations.add(tuple(conf))
+    full_samples = defaultdict(int)
+    for alpha, ca in orbital_sample_alpha.items():
+        for beta, cb in orbital_sample_beta.items():
+            conf = ''.join(a + b for a, b in zip(alpha, beta))
+            full_samples[conf] += ca * cb
 
-    return list(full_configurations)
+    return full_samples
 
-
-def joint_configurations(conf1, conf2):
-
-    total_conf = set()
-    for c in conf1:
-        total_conf.add(tuple(c))
-    for c in conf2:
-        total_conf.add(tuple(c))
-    return list(total_conf)
+def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None):
 
 
-def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None):
+    def get_electrons(bitsring):
+        return len
 
     if multiplicity > 0:
         raise NotImplementedError('multiplicity must be 0!')
@@ -146,68 +141,80 @@ def configuration_recovery(configurations, hamiltonian, n_electrons, multiplicit
     n_electrons_alpha = n_electrons // 2
     n_electrons_beta = n_electrons // 2
 
-    orbital_conf_good = set()
-    orbital_conf_bad = set()
+    orbital_conf_good = defaultdict(int)
+    orbital_conf_bad = defaultdict(int)
 
-    for conf in configurations:
-        alpha = tuple(conf[1::2])
-        beta = tuple(conf[::2])
+    for bistring, count in samples.items():
 
-        if sum(alpha) == n_electrons_alpha:
-            orbital_conf_good.add(alpha)
+        alpha = bistring[1::2]
+        beta = bistring[::2]
+
+        if alpha.count("1") == n_electrons_alpha:
+            orbital_conf_good[alpha] += count
         else:
-            orbital_conf_bad.add(alpha)
+            orbital_conf_bad[alpha] += count
 
-        if sum(beta) == n_electrons_beta:
-            orbital_conf_good.add(beta)
+        if beta.count("1") == n_electrons_beta:
+            orbital_conf_good[beta] += count
         else:
-            orbital_conf_bad.add(beta)
+            orbital_conf_bad[beta] += count
 
-    full_configurations = generate_full_configurations(orbital_conf_good)
-    log_message('# initial total unique conf: {}'.format(len(full_configurations)), log_level=1)
+    full_samples = generate_full_samples(orbital_conf_good, orbital_conf_good)
+    log_message('# initial total unique conf: {}'.format(len(full_samples)), log_level=1)
+
+    def set_bit(bitstring, position, bit):
+        return bitstring[:position] + bit + bitstring[position + 1:]
 
     for i_iter in range(n_iter):
-        sampled_configurations = sample_configurations(full_configurations, max_configurations)
+        sampled_configurations = get_subspace_configurations(full_samples, max_configurations,
+                                                             add_hf_configuration=True)
+
         results = get_selected_ci_energy_dice(sampled_configurations, hamiltonian, compute_density_matrix=True)[1]
         prob_vec = np.diag(results['1rdm'])/n_electrons
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
-        # prob_vec = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 0.001, 0.001, 0.001])
-        # prob_vec = np.array([0.5, 0.1, 0.2, 0.0, 0.1, 0.2, 0.5, 0.0])
-        n_orbitals = len(prob_vec)
+        prob_vec_bistring = prob_vec[::-1] # set in bistring order
 
-        new_conf_list = []
-        for conf in orbital_conf_bad:
-            diff = n_electrons_alpha - sum(conf)
-            new_conf = list(conf)
+        n_orbitals = len(prob_vec_bistring)
+
+        # new_conf_list = []
+        new_conf_dict = defaultdict(int)
+
+        for conf, c in orbital_conf_bad.items():
+            diff = n_electrons_alpha - conf.count("1")
+            new_conf = str(conf)
             for _ in range(n_max_diff):
                 if diff > 0:
-                    prob_vec_one = prob_vec / sum(prob_vec)
+                    prob_vec_one = prob_vec_bistring / sum(prob_vec_bistring)
                     choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_one)
                     if conf[choice] == 0:
-                        new_conf[choice] = 1
-                        if sum(new_conf) == n_electrons_alpha:
+                        new_conf = set_bit(new_conf, choice, "1")
+                        if new_conf.count("1") == n_electrons_alpha:
                             break
                 else:
-                    prob_vec_zero = (1-prob_vec) / sum(1-prob_vec)
+                    prob_vec_zero = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
                     choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_zero)
-                    if conf[choice] == 1:
-                        new_conf[choice] = 0
-                        if sum(new_conf) == n_electrons_alpha:
+                    if conf[choice] == "1":
+                        new_conf = set_bit(new_conf, choice, "0")
+                        if new_conf.count("1") == n_electrons_alpha:
                             break
 
-            if sum(new_conf) == n_electrons_alpha:
-                new_conf_list.append(new_conf)
+            if new_conf.count("1") == n_electrons_alpha:
+                new_conf_dict[new_conf] += c
 
         # log_message('# iter {} recovery half conf: {}'.format(i_iter, len(new_conf_list)), log_level=1)
 
-        recovered_full_conf = generate_full_configurations(new_conf_list)
-        log_message('# iter {} recovery conf: {}'.format(i_iter, len(recovered_full_conf)), log_level=1)
+        recovered_full_samples = generate_full_samples(new_conf_dict, new_conf_dict)
 
-        full_configurations = joint_configurations(full_configurations, recovered_full_conf)
-        log_message('# iter {} total unique conf: {}'.format(i_iter, len(full_configurations)), log_level=1)
+        log_message('# iter {} recovery conf: {}'.format(i_iter, len(recovered_full_samples)), log_level=1)
 
-    return full_configurations
+        # add recovered samples to full_samples
+        for key, value in recovered_full_samples.items():
+            full_samples[key] += value
+
+        log_message('# iter {} total unique conf: {}'.format(i_iter, len(full_samples)), log_level=1)
+
+    return full_samples
 
 
 if __name__ == '__main__':
@@ -227,4 +234,3 @@ if __name__ == '__main__':
 
     a = configuration_recovery(configurations, None, 10)
     print(a)
-    exit()

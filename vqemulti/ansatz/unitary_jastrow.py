@@ -227,6 +227,26 @@ def crop_local_amplitudes(amplitudes, n_neighbors=1):
     return local_amplitudes
 
 
+class CustomSampling(ProductExponentialAnsatz):
+    """
+    Simulate Jastrow ansatz reading the sampling from a file
+    to be used for test in SQD
+    """
+    def __init__(self, filename, n_electrons, n_obitals):
+        self._configurations = {}
+        with open(filename) as f:
+            for line in f.readlines():
+                configuration = line.split()
+                self._configurations[configuration[0]] = int(configuration[1])
+
+        hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_obitals*2)
+
+        super().__init__([], [], hf_reference_fock)
+
+    def get_sampling(self, *args, **kawargs):
+        return self._configurations
+
+
 if __name__ == '__main__':
 
     from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator

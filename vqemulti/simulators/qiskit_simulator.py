@@ -688,7 +688,7 @@ class QiskitSimulator(SimulatorBase):
 
         counts_total = result.get_counts()
 
-        # set bistrings to big-endian
+        # convert bistrings to little-endian
         # counts_total = {bitstring[::-1]: count for bitstring, count in counts_total.items()}
 
         return counts_total

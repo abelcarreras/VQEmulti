@@ -162,12 +162,13 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
         else:
             orbital_conf_bad[beta] += count
 
-    full_samples = generate_full_samples(orbital_conf_good, orbital_conf_good)
-    log_message('# initial total unique conf: {}'.format(len(full_samples)), log_level=1)
+    full_samples_original = generate_full_samples(orbital_conf_good, orbital_conf_good)
+    log_message('# original total unique conf: {}'.format(len(full_samples_original)), log_level=1)
 
     def set_bit(bitstring, position, bit):
         return bitstring[:position] + bit + bitstring[position + 1:]
 
+    full_samples = full_samples_original.copy()
     for i_iter in range(n_iter):
         sampled_configurations = get_subspace_configurations(full_samples, max_configurations,
                                                              add_hf_configuration=True)
@@ -212,6 +213,7 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
         log_message('# iter {} recovery conf: {}'.format(i_iter, len(recovered_full_samples)), log_level=1)
 
         # add recovered samples to full_samples
+        full_samples = full_samples_original.copy()
         for key, value in recovered_full_samples.items():
             full_samples[key] += value
 

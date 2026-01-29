@@ -11,7 +11,8 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         add_hf_configuration=False,
                         generate_random=False,
                         backend='dice',
-                        return_variance=False):
+                        return_extra=False,
+                        compute_variance=False):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -25,7 +26,8 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param add_hf_configuration: add HF configuration to Selected-CI
     :param generate_random: generate random configuration distribution instead of simulation
     :param backend: backend to use for selected-CI  (dice, qiskit)
-    :param adapt: True if adaptVQE False if VQE
+    :param compute_variance: compute projected variance of the state
+    :param return_extra: return extra computed information
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
@@ -78,17 +80,18 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     configurations = get_subspace_configurations(rec_samples, max_configurations,
                                                  add_hf_configuration=add_hf_configuration)
 
-    extra = {'variance': None}
+    extra = {'variance': None, 'configurations': configurations}
     if backend.lower() == 'dice':
-        if return_variance:
-            sqd_energy, extra = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
+        if compute_variance:
+            sqd_energy, extra_dice = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
+            extra.update(extra_dice)
         else:
             sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=False)
     else:
         sqd_energy = get_selected_ci_energy_qiskit(configurations, hamiltonian)
 
-    if return_variance:
-        return sqd_energy, extra['variance']
+    if return_extra:
+        return sqd_energy, extra
 
     return sqd_energy
 

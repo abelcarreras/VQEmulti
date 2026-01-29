@@ -89,13 +89,14 @@ if False:
     print(simulator.get_circuits()[-1])
 
 # SQD
-energy, variance = simulate_energy_sqd(ucja,
+energy, extra = simulate_energy_sqd(ucja,
                                        hamiltonian,
                                        simulator,
                                        n_electrons,
                                        max_configurations=10000,
                                        generate_random=False,
-                                       return_variance=True)
+                                       compute_variance=True,
+                                       return_extra=True)
 
 print('\nSQD energy', energy)
-print('SQD variance', variance)
+print('SQD variance', extra['variance'])

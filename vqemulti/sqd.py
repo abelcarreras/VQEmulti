@@ -12,7 +12,8 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         generate_random=False,
                         backend='dice',
                         return_extra=False,
-                        compute_variance=False):
+                        compute_variance=False,
+                        hf_bias=0.0):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -28,6 +29,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param backend: backend to use for selected-CI  (dice, qiskit)
     :param compute_variance: compute projected variance of the state
     :param return_extra: return extra computed information
+    :param hf_bias: favor near-HF configurations (must be positive!)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
@@ -59,7 +61,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     log_message('# samples: {}'.format(len(samples)), log_level=1)
 
     if log_section(log_level=1):
-        print('\nsample list')
+        print('\noriginal sample list')
         sorted_configurations = sorted(samples.items(),
                                        key=lambda item: item[1],
                                        reverse=True)
@@ -71,11 +73,21 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     log_message('# configurations: {}'.format(len(samples)), log_level=1)
 
     rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
-                                            multiplicity=0, n_max_diff=4, n_iter=4,
-                                            max_configurations=max_configurations)
+                                         multiplicity=0, n_max_diff=4, n_iter=4,
+                                         max_configurations=max_configurations,
+                                         hf_bias=hf_bias)
 
     log_message('# recovery conf: {}'.format(len(rec_samples)), log_level=1)
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
+
+
+    if log_section(log_level=1):
+        print('\nrecovered sample list')
+        sorted_configurations = sorted(rec_samples.items(),
+                                       key=lambda item: item[1],
+                                       reverse=True)
+        for k, v in sorted_configurations:
+            print('{} {}'.format(k, v))
 
     configurations = get_subspace_configurations(rec_samples, max_configurations,
                                                  add_hf_configuration=add_hf_configuration)
@@ -132,7 +144,33 @@ def generate_full_samples(orbital_sample_alpha, orbital_sample_beta):
 
     return full_samples
 
-def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None):
+
+def scale_probability(prob_vector, n_occupied, strength=1.0):
+    """
+    scale probability density by a sigmoid function to favor lower energy configurations
+
+    :param prob_vector: probability vector
+    :param n_occupied: number of occupied orbitals
+    :param strength: parameter to adjust the strength of HF-close configurations
+    :return: new probability vector
+    """
+    def sigmoid(x, position=0, k=1.0):
+        return 1.0 / (1.0 + np.exp(-k*(x-position)))
+
+    def exponential(x, position=0.0, k=1.0):
+        return np.exp(k * (x - position))
+
+    n_orb = len(prob_vector)
+    prob_vector_b = [float(sigmoid(i+0.5, position=n_occupied, k=strength)) for i in range(n_orb)]
+
+    prob_vector = np.multiply(prob_vector, prob_vector_b)
+    # prob_vector = np.convolve(prob_vector, prob_vector_b, mode='same')
+    prob_vector = prob_vector / np.sum(prob_vector)
+
+    return prob_vector
+
+
+def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None, hf_bias=0.0):
 
 
     def get_electrons(bitsring):
@@ -178,28 +216,41 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
         prob_vec_bistring = prob_vec[::-1] # set in bistring order
+        prob_vec_bit_one = scale_probability(prob_vec_bistring, n_electrons//2, strength=hf_bias)
+        prob_vec_bit_zero = scale_probability(1-prob_vec_bistring, n_electrons//2, strength=-hf_bias)
+        print('prob_vec_one', prob_vec_bit_one)
+        print('prob_vec_zero', prob_vec_bit_zero)
 
         n_orbitals = len(prob_vec_bistring)
 
         # new_conf_list = []
         new_conf_dict = defaultdict(int)
+        print('prob_vec_bistring', prob_vec_bistring)
 
         for conf, c in orbital_conf_bad.items():
             diff = n_electrons_alpha - conf.count("1")
             new_conf = str(conf)
             for _ in range(n_max_diff):
                 if diff > 0:
-                    prob_vec_one = prob_vec_bistring / sum(prob_vec_bistring)
-                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_one)
-                    if conf[choice] == 0:
+                    #prob_vec_one = prob_vec_bistring / sum(prob_vec_bistring)
+                    #prob_vec_one = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
+                    # print('prob_vec_one', prob_vec_one)
+                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_bit_one)
+                    if conf[choice] == "0":
+                        #print('1_ini', new_conf)
                         new_conf = set_bit(new_conf, choice, "1")
+                        #print('1_fin', new_conf)
                         if new_conf.count("1") == n_electrons_alpha:
                             break
                 else:
-                    prob_vec_zero = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
-                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_zero)
+                    #prob_vec_zero = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
+                    #prob_vec_zero = prob_vec_bistring / sum(prob_vec_bistring)
+                    # print('prob_vec_zero', prob_vec_zero)
+                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_bit_zero)
                     if conf[choice] == "1":
+                        #print('2_ini', new_conf)
                         new_conf = set_bit(new_conf, choice, "0")
+                        #print('2_fin', new_conf)
                         if new_conf.count("1") == n_electrons_alpha:
                             break
 

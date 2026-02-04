@@ -13,6 +13,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         backend='dice',
                         return_extra=False,
                         compute_variance=False,
+                        recovery_type=2,
                         hf_bias=0.0):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
@@ -29,6 +30,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param backend: backend to use for selected-CI  (dice, qiskit)
     :param compute_variance: compute projected variance of the state
     :param return_extra: return extra computed information
+    :param recovery_type: select recovery function (1: test recovery 2: qiskit-like recovery 0: No recovery)
     :param hf_bias: favor near-HF configurations (must be positive!)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
@@ -72,10 +74,20 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     # configurations = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=2, sample=0.01)[1]
     log_message('# configurations: {}'.format(len(samples)), log_level=1)
 
-    rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
-                                         multiplicity=0, n_max_diff=4, n_iter=4,
-                                         max_configurations=max_configurations,
-                                         hf_bias=hf_bias)
+    if recovery_type == 1:
+        rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
+                                             multiplicity=0, n_max_diff=4, n_iter=4,
+                                             max_configurations=max_configurations,
+                                             hf_bias=hf_bias)
+
+    elif recovery_type == 2:
+        rec_samples = configuration_recovery_2(samples, hamiltonian, n_electrons,
+                                             multiplicity=0, n_iter=4,
+                                             max_configurations=max_configurations)
+
+    else:
+        rec_samples = simple_filtering(samples, n_electrons, multiplicity=0)
+
 
     log_message('# recovery conf: {}'.format(len(rec_samples)), log_level=1)
     log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
@@ -92,7 +104,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     configurations = get_subspace_configurations(rec_samples, max_configurations,
                                                  add_hf_configuration=add_hf_configuration)
 
-    extra = {'variance': None, 'configurations': configurations}
+    extra = {'variance': None, 'configurations': configurations, 'rec_samples': rec_samples}
     if backend.lower() == 'dice':
         if compute_variance:
             sqd_energy, extra_dice = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
@@ -107,6 +119,29 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     return sqd_energy
 
+
+def simple_filtering(samples, n_electrons, multiplicity=0):
+
+    if multiplicity > 0:
+        raise NotImplementedError('multiplicity must be 0!')
+
+    n_electrons_alpha = n_electrons // 2
+    n_electrons_beta = n_electrons // 2
+
+    orbital_conf_good = defaultdict(int)
+
+    for bistring, count in samples.items():
+
+        alpha = bistring[1::2]
+        beta = bistring[::2]
+
+        if alpha.count("1") == n_electrons_alpha:
+            orbital_conf_good[alpha] += count
+
+        if beta.count("1") == n_electrons_beta:
+            orbital_conf_good[beta] += count
+
+    return generate_full_samples(orbital_conf_good, orbital_conf_good)
 
 def get_subspace_configurations(samples, max_configurations, add_hf_configuration=False):
 
@@ -169,6 +204,11 @@ def scale_probability(prob_vector, n_occupied, strength=1.0):
 
     return prob_vector
 
+def get_prob_diff(conf, prob_vec_bistring):
+    return np.abs(np.subtract(prob_vec_bistring, [int(i) for i in conf]))
+
+def get_indices(bitstring, index):
+        return [i for i, bit in enumerate(bitstring) if bit == str(index)]
 
 def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None, hf_bias=0.0):
 
@@ -272,6 +312,119 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
 
     return full_samples
 
+
+def configuration_recovery_2(samples,
+                             hamiltonian,
+                             n_electrons,
+                             multiplicity=0,
+                             n_iter=1,
+                             max_configurations=None,
+                             regularization_factor=0.7):
+
+    def regularization(prob_vect, factor=0.2):
+        return np.array([x if x > factor else 0 for x in prob_vect])
+
+    if multiplicity > 0:
+        raise NotImplementedError('multiplicity must be 0!')
+
+    n_electrons_alpha = n_electrons // 2
+    n_electrons_beta = n_electrons // 2
+
+    orbital_conf_good = defaultdict(int)
+    orbital_conf_bad = defaultdict(int)
+
+    for bistring, count in samples.items():
+
+        alpha = bistring[1::2]
+        beta = bistring[::2]
+
+        if alpha.count("1") == n_electrons_alpha:
+            orbital_conf_good[alpha] += count
+        else:
+            orbital_conf_bad[alpha] += count
+
+        if beta.count("1") == n_electrons_beta:
+            orbital_conf_good[beta] += count
+        else:
+            orbital_conf_bad[beta] += count
+
+    full_samples_original = generate_full_samples(orbital_conf_good, orbital_conf_good)
+    log_message('# original total unique conf: {}'.format(len(full_samples_original)), log_level=1)
+
+    def set_bit(bitstring, position, bit):
+        return bitstring[:position] + bit + bitstring[position + 1:]
+
+    full_samples = full_samples_original.copy()
+    for i_iter in range(n_iter):
+        sampled_configurations = get_subspace_configurations(full_samples, max_configurations,
+                                                             add_hf_configuration=True)
+
+        results = get_selected_ci_energy_dice(sampled_configurations, hamiltonian, compute_density_matrix=True)[1]
+        prob_vec = np.diag(results['1rdm'])/2
+        # prob_vec = [1, 1, 1, 0, 0, 0]
+        log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
+
+        prob_vec_bistring = prob_vec[::-1] # set in bistring order
+
+        new_conf_dict = defaultdict(int)
+
+        for conf, c in orbital_conf_bad.items():
+            diff = n_electrons_alpha - conf.count("1")
+            prob_diff = get_prob_diff(conf, prob_vec_bistring)
+            prob_diff = regularization(prob_diff, factor=regularization_factor)
+
+            new_conf = str(conf)
+            if diff > 0:
+                indices_occupied = get_indices(new_conf, 0)
+                p_choice = prob_diff[indices_occupied]
+                if np.sum(p_choice) == 0:
+                    continue
+
+                p_choice = p_choice/np.sum(p_choice)
+
+                try:
+                    indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
+                except ValueError:
+                    continue
+
+                for choice in indices_to_flip:
+                    new_conf = set_bit(new_conf, choice, "1")
+
+            else:
+                indices_occupied = get_indices(new_conf, 1)
+                p_choice = prob_diff[indices_occupied]
+
+                if np.sum(p_choice) == 0:
+                    continue
+
+                p_choice = p_choice/np.sum(p_choice)
+                try:
+                    indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
+                except ValueError:
+                    continue
+
+                for choice in indices_to_flip:
+                    new_conf = set_bit(new_conf, choice, "0")
+
+            if new_conf.count("1") == n_electrons_alpha:
+                new_conf_dict[new_conf] += c
+
+        # log_message('# iter {} recovery half conf: {}'.format(i_iter, len(new_conf_list)), log_level=1)
+
+        recovered_full_samples = generate_full_samples(new_conf_dict, new_conf_dict)
+
+        log_message('# iter {} recovery conf: {}'.format(i_iter, len(recovered_full_samples)), log_level=1)
+
+        # add recovered samples to full_samples
+        # full_samples = defaultdict(int)
+        full_samples = full_samples_original.copy()
+        for key, value in recovered_full_samples.items():
+            full_samples[key] += value
+
+
+        log_message('# iter {} total unique conf: {}'.format(i_iter, len(full_samples)), log_level=1)
+
+    return full_samples
 
 if __name__ == '__main__':
 

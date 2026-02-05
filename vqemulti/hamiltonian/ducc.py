@@ -104,6 +104,73 @@ def get_ducc_hamiltonian(hamiltonian, T1, T2, max_orbitals, max_order=None):
     return Hext
 
 
+def get_hamiltonian(hamiltonian, T1, T2):
+
+    import numpy as np
+    import openfermion.chem.molecular_data
+    from pyscf import ao2mo
+    from pyscf.tools import fcidump
+
+
+    # Load fcidump
+    fci_dict = fcidump.read('fcidump_h3.txt')
+    onebody_int_mo = fci_dict['H1']
+    twobody_int_mo = fci_dict['H2']
+    core_energy = fci_dict['ECORE']
+
+    # Convert to full 4-index array
+    twobody_int_full_mo = ao2mo.restore(1, twobody_int_mo, onebody_int_mo.shape[0])
+    print("Two-body integrals restored from PySCF in MO basis:")
+    #print(twobody_int_full_mo)
+    print('-----------------------------')
+
+    # The key correction: Reorder indices to match OpenFermion's expectation
+    # PySCF gives (pq|rs) but OpenFermion's spinorb_from_spatial expects proper chemist ordering
+    twobody_int_ordered = twobody_int_full_mo.transpose(0, 2, 3, 1)
+
+
+    print("Two-body integrals fed to the spin basis change:")
+    #print(twobody_int_ordered)
+    print('-----------------------------')
+
+
+    # Use spinorb_from_spatial
+    onebody_coeffs, twobody_coeffs = openfermion.chem.molecular_data.spinorb_from_spatial(
+        onebody_int_mo, twobody_int_ordered
+    )
+
+    # Apply the 1/2 factor
+    twobody_coeffs = twobody_coeffs / 2
+
+    print("Two-body coefficients found after changing the basis to spin orbitals and dividing by 2 "
+          "this is fed to the InterationOperator():")
+    #print(twobody_coeffs)
+    print('-----------------------------')
+
+    op_ham_secq = openfermion.ops.InteractionOperator(core_energy, onebody_coeffs, twobody_coeffs)
+
+
+    #print("\nFinal Hamiltonian:")
+    #print(op_ham_secq)
+    #print('-----------------------------')
+
+    from openfermion import get_fermion_operator, get_sparse_operator
+    H_fermion = get_fermion_operator(op_ham_secq)
+    print("\nFermion operator:")
+    print(H_fermion)
+    print('-----------------------------')
+    H_sparse = get_sparse_operator(H_fermion).toarray()
+
+    diag = np.linalg.eig(H_sparse)
+    print('The diagonal hamiltonian is:')
+    print(diag[0])
+    print('With the lowest eigenvalue being the ground state energy:', min(diag[0]).real)
+
+
+
+
+
+
 if __name__ == '__main__':
 
     dist = 3.0

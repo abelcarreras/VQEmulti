@@ -232,12 +232,16 @@ class CustomSampling(ProductExponentialAnsatz):
     Simulate Jastrow ansatz reading the sampling from a file
     to be used for test in SQD
     """
-    def __init__(self, filename, n_electrons, n_obitals):
+    def __init__(self, filename, n_electrons, n_obitals=None):
         self._configurations = {}
         with open(filename) as f:
             for line in f.readlines():
                 configuration = line.split()
+                n_obitals = len(configuration[0]) // 2
                 self._configurations[configuration[0]] = int(configuration[1])
+
+        if n_obitals is None:
+            raise Exception('n_obitals not defined!')
 
         hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_obitals*2)
 

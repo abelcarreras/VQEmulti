@@ -4,6 +4,7 @@ from openfermion.transforms import jordan_wigner, bravyi_kitaev, parity_code, bi
 from openfermion.transforms import reorder, get_interaction_operator, get_fermion_operator
 from openfermion import get_sparse_operator as get_sparse_operator_openfermion
 from openfermion import FermionOperator, QubitOperator, normal_ordered
+from openfermion.chem import molecular_data
 from vqemulti.preferences import Configuration
 from subprocess import Popen, PIPE, STDOUT
 import os, pathlib, warnings
@@ -1003,6 +1004,42 @@ def spinorbital_to_spatial_2e(two_body_spin, n_orb):
     return two_body_spatial / 2
 
 
+def get_hamiltonian_from_fcidump(filename='FCIDUMP'):
+    """
+    read hamiltonian from a FCIDUMP file.
+
+    :param filename: FCIDUMP filename
+    :return: hamiltonian as openfermion InteractionOperator
+    """
+
+    from pyscf import ao2mo
+    from pyscf.tools import fcidump
+
+    # Load fcidump
+    fci_dict = fcidump.read(filename)
+    onebody_int_mo = fci_dict['H1']
+    twobody_int_mo = fci_dict['H2']
+    core_energy = fci_dict['ECORE']
+
+    # Convert to full 4-index array
+    twobody_int_full_mo = ao2mo.restore(1, twobody_int_mo, onebody_int_mo.shape[0])
+
+    # The key correction: Reorder indices to match OpenFermion's expectation
+    # PySCF gives (pq|rs) but OpenFermion's spinorb_from_spatial expects proper chemist ordering
+    twobody_int_ordered = twobody_int_full_mo.transpose(0, 2, 3, 1)
+
+    # Use spinorb_from_spatial
+    onebody_coeffs, twobody_coeffs = molecular_data.spinorb_from_spatial(
+        onebody_int_mo, twobody_int_ordered
+    )
+
+    # Apply the 1/2 factor
+    twobody_coeffs = twobody_coeffs / 2
+
+    op_ham_secq = openfermion.ops.InteractionOperator(core_energy, onebody_coeffs, twobody_coeffs)
+    return op_ham_secq
+
+
 def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True):
     """
     write FCIDUMP file from an openFermion Hamiltonian using pyscf tools
@@ -1016,7 +1053,6 @@ def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True)
     if os.path.exists(filename) and not overwrite:
         return
 
-    from openfermion import FermionOperator
     if isinstance(hamiltonian, FermionOperator):
         create_fcidump_file_fermion(hamiltonian, n_elec, filename=filename)
         return
@@ -1052,48 +1088,116 @@ def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True)
     )
 
 
-def create_fcidump_file_fermion(hamiltonian, n_elec, filename='FCIDUMP'):
-    """
-    create a FCIDUMP file from a hamiltonian as FermionOperator
+def create_fcidump_file_fermion(ferm_op, n_elec, filename='FCIDUMP'):
 
-    :param hamiltonian: hamiltonian as openFermion InteractionOperator
-    :param configuration_list: list of initial guess configurations
-    :param filename: file name
-    """
 
-    n_orb = count_qubits(hamiltonian)//2
-    ms2 = 0
-    print('norb: ', n_orb)
+    # Assuming real orbitals so 8-fold and 4-fold symmetries are applied
+    # We need to read (((n*(n+1))/2)*(((n*(n+1))/2)+1))/2 elements for the two electron integrals
 
-    def all_even_indices(index_list):
-        return all(i % 2 == 0 for i in index_list)
+    # Create empty array with (((n*(n+1))/2)*(((n*(n+1))/2)+1))/2 elements for later populating
+    # n_spatial_orbs = 4
 
-    with open(filename, "w") as f:
-        f.write(f" &FCI NORB={n_orb}, NELEC={n_elec}, MS2={ms2}, \nORBSYM=1,1 \nISYM=1, \n &END\n")
-        for key, h_val in hamiltonian.terms.items():
-            indices = [ind[0] for ind in key] if len(key) > 0 else []
+    n_spatial_orbs = count_qubits(ferm_op) // 2
 
-            if all_even_indices(indices):
-                indices = [i//2+1 for i in indices]
-            else:
-                continue
+    m = n_spatial_orbs * (n_spatial_orbs + 1) // 2
+    size = m * (m + 1) // 2
+    twobody_int_8fold_mo = np.zeros(size, dtype=float)
 
-            if len(indices) == 4:
-                if indices[0] >= indices[1] and indices[2] >= indices[3] and indices[0] >= indices[2]:
-                    if indices[0] == indices[2] and indices[1] < indices[3]:
-                        continue
+    # Create empty array with shape (n_orb, n_orb) for later populating
+    onebody_int_mo = np.zeros((n_spatial_orbs, n_spatial_orbs), dtype=float)
 
-                    # Hamiltonian absorbs 1/2 into the coefficients. To recover 2e integrals should be multiplied by 2
-                    # f.write('{:25.20e} '.format(hamiltonian[key]*2) + '{} {} {} {}\n'.format(*indices))
-                    # indices = np.array(indices)[[1, 2, 3, 0]]
-                    f.write('{:25.20e} '.format(h_val*2) + '{} {} {} {}\n'.format(*indices))
+    # Create the labels ijkl for the fcidump file
+    pairs = []
+    for i in range(1, n_spatial_orbs+1):
+        for j in range(1, n_spatial_orbs+1):
+            if i>=j:
+                pairs.append(f'{i}{j}')
+    eri_labels = []
+    for p, (i, j) in enumerate(pairs):
+        for q in range(p + 1):
+            k, l = pairs[q]
+            eri_labels.append(f"{k}{l}{i}{j}")
+    # print('Labels for two-body terms created')
+    # print(eri_labels)
+    # print('-----------------------------')
 
-            if len(indices) == 2:
-                if indices[0] >= indices[1]:
-                    f.write('{:25.20e} '.format(h_val) + '{} {}  0  0\n'.format(*indices))
 
-            if len(indices) == 0:
-                f.write('{:25.20e} '.format(h_val) + '0  0  0  0\n')
+    # Create the labels ij for the fcidump file
+    onebody_labels = []
+    for i in range(1, n_spatial_orbs+1):
+        for j in range(1, n_spatial_orbs+1):
+            onebody_labels.append(f'{i}{j}{0}{0}')
+    # print('Labels for one-body terms created')
+    # print(onebody_labels)
+    # print('-----------------------------')
+
+    core_energy = 0.0
+    # Convert ferm_op to a dictionary for faster lookup
+    coeff_dict = {}
+    for term, coeff in ferm_op.terms.items():
+
+        if len(term) == 4:  # Two-body term
+            a, a_type = term[0]
+            b, b_type = term[1]
+            c, c_type = term[2]
+            d, d_type = term[3]
+
+            if a_type == 1 and b_type == 1 and c_type == 0 and d_type == 0: # Ensure normal order (tho it is always like that)
+                coeff_dict[(a, d, c, b)] = coeff # Correct here openfermion ordering
+
+        if len(term) == 2:  # One-body term
+            a, a_type = term[0]
+            b, b_type = term[1]
+            if a_type == 1 and b_type == 0: # Ensure normal order (tho it is always like that)
+                coeff_dict[(a, b)] = coeff # Correct here openfermion ordering
+            # print(coeff_dict[(a, b)], a,b)
+
+        if len(term) == 0:
+            core_energy = coeff
+
+    # Populate the array elements, look for the coefficient checking the label
+    for idx, label in enumerate(eri_labels):
+        i, j, k, l = int(label[0]), int(label[1]), int(label[2]), int(label[3])
+
+        # Transform from spatial to spin
+        i_spinalpha = 2 * i -2
+        j_spinalpha = 2 * j - 2
+        k_spinalpha = 2 * k - 2
+        l_spinalpha = 2 * l - 2
+
+        # Create the key to look for in the dictionary
+        dict_term = (i_spinalpha, j_spinalpha, k_spinalpha, l_spinalpha)
+        coeff = coeff_dict.get(dict_term, 0.0)
+        twobody_int_8fold_mo[idx] = 2*coeff
+    # print('8-fold symmetry eri populated')
+    # print(twobody_int_8fold_mo)
+    # print('-----------------------------')
+
+
+    for idx, label in enumerate(onebody_labels):
+        i, j = int(label[0]), int(label[1])
+
+        # Transform from spatial to spin
+        i_spinalpha = 2 * i - 2
+        j_spinalpha = 2 * j - 2
+
+        # Create the key to look for in the dictionary
+        dict_term = (i_spinalpha, j_spinalpha)
+        coeff = coeff_dict.get(dict_term, 0.0)
+        onebody_int_mo[i-1][j-1] = coeff
+    # print('one-body terms populated')
+    # print(onebody_int_mo)
+    # print('-----------------------------')
+
+    from pyscf.tools import fcidump
+
+    fcidump.from_integrals(filename,
+                           onebody_int_mo,
+                           twobody_int_8fold_mo,
+                           n_spatial_orbs,
+                           n_elec,
+                           core_energy,
+                           ms=0 )
 
 
 def create_input_file_dice(configuration_list,
@@ -1616,10 +1720,14 @@ def get_dmrg_energy(hamiltonian,
         order = np.load(str(data_path / 'nodex' / 'orbital_reorder.npy'))
         permutation = np.argsort(order)
 
+        # get amplitudes
+        amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)
+
+        # configurations
         conf_array = np.load(str(data_path / 'nodex' / 'sample-dets.npy'), allow_pickle=False)
 
         configurations = []
-        for conf_vect in conf_array:
+        for conf_vect, amplitude in zip(conf_array, amplitude_array):
             configuration = []
             for orbital in conf_vect[permutation]:
                 if orbital == 0:
@@ -1631,11 +1739,7 @@ def get_dmrg_energy(hamiltonian,
                 elif orbital == 3:
                     configuration += [1, 1]
 
-            configurations.append(configuration)
-
-        # get amplitudes
-        # amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)
-        # print(amplitude_array)
+            configurations.append((configuration, float(amplitude)))
 
         if spin is not None:
             import warnings

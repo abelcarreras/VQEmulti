@@ -1,0 +1,1 @@
+from vqemulti.hamiltonian.ducc import get_ducc_hamiltonian

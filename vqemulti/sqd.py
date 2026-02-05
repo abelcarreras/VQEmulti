@@ -42,20 +42,10 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     # print('electrons: ', alpha_electrons, beta_electrons)
 
-    from qiskit_addon_sqd.counts import generate_counts_uniform
-
-    from openfermion.ops.representations import InteractionOperator
-    if not isinstance(hamiltonian, InteractionOperator):
-        # transform operator
-        # from openfermion.transforms import get_interaction_operator
-        # hamiltonian = get_interaction_operator(hamiltonian)
-        raise Exception('Hamiltonian must be a InteractionOperator')
-
-    # transform ansatz to qubit for VQE/adaptVQE
-    #ansatz_qubit = ansatz.transform_to_scaled_qubit(coefficients, join=not adapt)
 
     log_message('start sampling ({})'.format(simulator), log_level=1)
     if generate_random:
+        from qiskit_addon_sqd.counts import generate_counts_uniform
         samples = generate_counts_uniform(simulator._shots, ansatz.n_qubits)
     else:
         samples = ansatz.get_sampling(simulator)
@@ -136,10 +126,10 @@ def simple_filtering(samples, n_electrons, multiplicity=0):
         beta = bistring[::2]
 
         if alpha.count("1") == n_electrons_alpha:
-            orbital_conf_good[alpha] += count
+            orbital_conf_good[alpha] += count / 2
 
         if beta.count("1") == n_electrons_beta:
-            orbital_conf_good[beta] += count
+            orbital_conf_good[beta] += count / 2
 
     return generate_full_samples(orbital_conf_good, orbital_conf_good)
 
@@ -231,14 +221,14 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
         beta = bistring[::2]
 
         if alpha.count("1") == n_electrons_alpha:
-            orbital_conf_good[alpha] += count
+            orbital_conf_good[alpha] += count / 2
         else:
-            orbital_conf_bad[alpha] += count
+            orbital_conf_bad[alpha] += count / 2
 
         if beta.count("1") == n_electrons_beta:
-            orbital_conf_good[beta] += count
+            orbital_conf_good[beta] += count / 2
         else:
-            orbital_conf_bad[beta] += count
+            orbital_conf_bad[beta] += count / 2
 
     full_samples_original = generate_full_samples(orbital_conf_good, orbital_conf_good)
     log_message('# original total unique conf: {}'.format(len(full_samples_original)), log_level=1)
@@ -339,14 +329,14 @@ def configuration_recovery_2(samples,
         beta = bistring[::2]
 
         if alpha.count("1") == n_electrons_alpha:
-            orbital_conf_good[alpha] += count
+            orbital_conf_good[alpha] += count / 2
         else:
-            orbital_conf_bad[alpha] += count
+            orbital_conf_bad[alpha] += count / 2
 
         if beta.count("1") == n_electrons_beta:
-            orbital_conf_good[beta] += count
+            orbital_conf_good[beta] += count / 2
         else:
-            orbital_conf_bad[beta] += count
+            orbital_conf_bad[beta] += count / 2
 
     full_samples_original = generate_full_samples(orbital_conf_good, orbital_conf_good)
     log_message('# original total unique conf: {}'.format(len(full_samples_original)), log_level=1)

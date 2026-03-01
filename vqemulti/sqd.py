@@ -14,7 +14,8 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                         return_extra=False,
                         compute_variance=False,
                         recovery_type=2,
-                        hf_bias=0.0):
+                        orbital_order=None,
+                        n_max_diff=4):
     """
     Obtain the hamiltonian expectation value with SQD using a given adaptVQE state as reference.
     Only compatible with JW mapping!!
@@ -30,8 +31,8 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     :param backend: backend to use for selected-CI  (dice, qiskit)
     :param compute_variance: compute projected variance of the state
     :param return_extra: return extra computed information
+    :param orbital_order: orbital - qubit mapping
     :param recovery_type: select recovery function (1: test recovery 2: qiskit-like recovery 0: No recovery)
-    :param hf_bias: favor near-HF configurations (must be positive!)
     :return: the expectation value of the Hamiltonian in the current state (HF ref + ansatz)
     """
 
@@ -66,22 +67,20 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     if recovery_type == 1:
         rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
-                                             multiplicity=0, n_max_diff=4, n_iter=4,
+                                             multiplicity=0, n_iter=4, n_max_diff=n_max_diff,
+                                             regularization_factor=0.7,
                                              max_configurations=max_configurations,
-                                             hf_bias=hf_bias)
+                                             orbital_order=orbital_order)
 
     elif recovery_type == 2:
-        rec_samples = configuration_recovery_2(samples, hamiltonian, n_electrons,
-                                             multiplicity=0, n_iter=4,
-                                             max_configurations=max_configurations)
-
+        rec_samples = configuration_recovery_all(samples, hamiltonian, n_electrons,
+                                                 multiplicity=0, n_iter=4,
+                                                 regularization_factor=0.7,
+                                                 max_configurations=max_configurations,
+                                                 orbital_order=orbital_order)
     else:
-        rec_samples = simple_filtering(samples, n_electrons, multiplicity=0)
-
-
-    log_message('# recovery conf: {}'.format(len(rec_samples)), log_level=1)
-    log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
-
+        rec_samples = simple_filtering(samples, n_electrons,
+                                       multiplicity=0)
 
     if log_section(log_level=1):
         print('\nrecovered sample list')
@@ -90,6 +89,9 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
                                        reverse=True)
         for k, v in sorted_configurations:
             print('{} {}'.format(k, v))
+
+    log_message('# recovery conf: {}'.format(len(rec_samples)), log_level=1)
+    log_message('start diagonalization ({})'.format(backend.lower()), log_level=1)
 
     configurations = get_subspace_configurations(rec_samples, max_configurations,
                                                  add_hf_configuration=add_hf_configuration)
@@ -197,14 +199,36 @@ def scale_probability(prob_vector, n_occupied, strength=1.0):
 def get_prob_diff(conf, prob_vec_bistring):
     return np.abs(np.subtract(prob_vec_bistring, [int(i) for i in conf]))
 
+def regularization(prob_vect, factor=0.7):
+    return np.array([x if x > factor else 0 for x in prob_vect])
+
 def get_indices(bitstring, index):
         return [i for i, bit in enumerate(bitstring) if bit == str(index)]
 
-def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_max_diff=4, n_iter=1, max_configurations=None, hf_bias=0.0):
+def configuration_recovery(samples,
+                           hamiltonian,
+                           n_electrons,
+                           multiplicity=0,
+                           n_max_diff=4,
+                           n_iter=1,
+                           max_configurations=None,
+                           regularization_factor=0.7,
+                           orbital_order=None):
 
+    """
+    configuration recovery implementation.
+    Only correct most obvious configurations according to n_max_diff factor
 
-    def get_electrons(bitsring):
-        return len
+    :param samples: original sample dict
+    :param hamiltonian: hamiltonian
+    :param n_electrons: number of electrons
+    :param multiplicity: multiplicity
+    :param n_max_diff: maximum number of electrons difference to correct
+    :param n_iter: number of iterations
+    :param max_configurations: maximum number of configurations to diagonalize
+    :param regularization_factor: regularization factor
+    :return: samples dict
+    """
 
     if multiplicity > 0:
         raise NotImplementedError('multiplicity must be 0!')
@@ -245,47 +269,45 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
         prob_vec = np.diag(results['1rdm'])/n_electrons
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
+        if orbital_order is None:
+            prob_vec = prob_vec[orbital_order]
+
         prob_vec_bistring = prob_vec[::-1] # set in bistring order
-        prob_vec_bit_one = scale_probability(prob_vec_bistring, n_electrons//2, strength=hf_bias)
-        prob_vec_bit_zero = scale_probability(1-prob_vec_bistring, n_electrons//2, strength=-hf_bias)
-        print('prob_vec_one', prob_vec_bit_one)
-        print('prob_vec_zero', prob_vec_bit_zero)
 
         n_orbitals = len(prob_vec_bistring)
 
-        # new_conf_list = []
         new_conf_dict = defaultdict(int)
-        print('prob_vec_bistring', prob_vec_bistring)
 
         for conf, c in orbital_conf_bad.items():
-            diff = n_electrons_alpha - conf.count("1")
-            new_conf = str(conf)
-            for _ in range(n_max_diff):
-                if diff > 0:
-                    #prob_vec_one = prob_vec_bistring / sum(prob_vec_bistring)
-                    #prob_vec_one = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
-                    # print('prob_vec_one', prob_vec_one)
-                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_bit_one)
-                    if conf[choice] == "0":
-                        #print('1_ini', new_conf)
-                        new_conf = set_bit(new_conf, choice, "1")
-                        #print('1_fin', new_conf)
-                        if new_conf.count("1") == n_electrons_alpha:
-                            break
-                else:
-                    #prob_vec_zero = (1-prob_vec_bistring) / sum(1-prob_vec_bistring)
-                    #prob_vec_zero = prob_vec_bistring / sum(prob_vec_bistring)
-                    # print('prob_vec_zero', prob_vec_zero)
-                    choice = np.random.choice(list(range(n_orbitals)), p=prob_vec_bit_zero)
-                    if conf[choice] == "1":
-                        #print('2_ini', new_conf)
-                        new_conf = set_bit(new_conf, choice, "0")
-                        #print('2_fin', new_conf)
-                        if new_conf.count("1") == n_electrons_alpha:
-                            break
+            prob_diff = get_prob_diff(conf, prob_vec_bistring)
+            prob_diff = regularization(prob_diff, factor=regularization_factor)
 
-            if new_conf.count("1") == n_electrons_alpha:
-                new_conf_dict[new_conf] += c
+            if np.sum(prob_diff) == 0:
+                continue
+
+            new_conf = str(conf)
+
+            # avoid issues with zero values
+            n_iter = np.min([n_max_diff, np.count_nonzero(prob_diff)])
+            for _ in range(n_iter):
+
+                prob_diff = prob_diff / np.sum(prob_diff)  # normalize
+
+                choice = np.random.choice(list(range(n_orbitals)), p=prob_diff)
+                if conf[choice] == "0":
+                    new_conf = set_bit(new_conf, choice, "1")
+                    prob_diff[choice] = 0
+
+                    if new_conf.count("1") == n_electrons_alpha:
+                        new_conf_dict[new_conf] += c
+                        break
+                else:
+                    new_conf = set_bit(new_conf, choice, "0")
+                    prob_diff[choice] = 0
+
+                    if new_conf.count("1") == n_electrons_alpha:
+                        new_conf_dict[new_conf] += c
+                        break
 
         # log_message('# iter {} recovery half conf: {}'.format(i_iter, len(new_conf_list)), log_level=1)
 
@@ -303,16 +325,27 @@ def configuration_recovery(samples, hamiltonian, n_electrons, multiplicity=0, n_
     return full_samples
 
 
-def configuration_recovery_2(samples,
-                             hamiltonian,
-                             n_electrons,
-                             multiplicity=0,
-                             n_iter=1,
-                             max_configurations=None,
-                             regularization_factor=0.7):
+def configuration_recovery_all(samples,
+                              hamiltonian,
+                              n_electrons,
+                              multiplicity=0,
+                              n_iter=1,
+                              max_configurations=None,
+                              regularization_factor=0.7,
+                              orbital_order=None):
+    """
+    emulate original qiskit recovery implementation
+    correct all samples
 
-    def regularization(prob_vect, factor=0.2):
-        return np.array([x if x > factor else 0 for x in prob_vect])
+    :param samples: original sample dict
+    :param hamiltonian: hamiltonian
+    :param n_electrons: number of electrons
+    :param multiplicity: multiplicity
+    :param n_iter: number of iterations
+    :param max_configurations: maximum number of configurations to diagonalize
+    :param regularization_factor: regularization factor
+    :return: samples dict
+    """
 
     if multiplicity > 0:
         raise NotImplementedError('multiplicity must be 0!')
@@ -353,6 +386,9 @@ def configuration_recovery_2(samples,
         prob_vec = np.diag(results['1rdm'])/2
         # prob_vec = [1, 1, 1, 0, 0, 0]
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
+
+        if orbital_order is None:
+            prob_vec = prob_vec[orbital_order]
 
         prob_vec_bistring = prob_vec[::-1] # set in bistring order
 

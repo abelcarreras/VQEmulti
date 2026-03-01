@@ -1111,7 +1111,7 @@ def create_fcidump_file_fermion(ferm_op, n_elec, filename='FCIDUMP'):
     for i in range(1, n_spatial_orbs+1):
         for j in range(1, n_spatial_orbs+1):
             if i>=j:
-                pairs.append(f'{i}{j}')
+                pairs.append((i, j))
     eri_labels = []
     for p, (i, j) in enumerate(pairs):
         for q in range(p + 1):
@@ -1719,6 +1719,7 @@ def get_dmrg_energy(hamiltonian,
         # get site order
         order = np.load(str(data_path / 'nodex' / 'orbital_reorder.npy'))
         permutation = np.argsort(order)
+        log_message('permutation DMRG', permutation, log_level=2)
 
         # get amplitudes
         amplitude_array = np.load(str(data_path / 'nodex' / 'sample-vals.npy'), allow_pickle=False)

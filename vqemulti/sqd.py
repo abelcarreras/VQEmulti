@@ -269,7 +269,7 @@ def configuration_recovery(samples,
         prob_vec = np.diag(results['1rdm'])/n_electrons
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
-        if orbital_order is None:
+        if orbital_order is not None:
             prob_vec = prob_vec[orbital_order]
 
         prob_vec_bistring = prob_vec[::-1] # set in bistring order
@@ -387,7 +387,7 @@ def configuration_recovery_all(samples,
         # prob_vec = [1, 1, 1, 0, 0, 0]
         log_message('SCI orbital occupancy: {}'.format(prob_vec), log_level=1)
 
-        if orbital_order is None:
+        if orbital_order is not None:
             prob_vec = prob_vec[orbital_order]
 
         prob_vec_bistring = prob_vec[::-1] # set in bistring order

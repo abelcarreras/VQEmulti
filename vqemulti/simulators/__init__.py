@@ -186,8 +186,50 @@ class SimulatorBase:
             matrix_gates = self._get_matrix_operator_gates(matrix_list, n_qubits)
             return matrix_gates
 
-    def get_rotation_gates(self, rotation_matrix, n_qubits):
-        givens_layers, diagonal = givens_decomposition_square(rotation_matrix)
+    def get_rotation_gates(self, rotation_matrix, n_qubits, separate_spins=False):
+
+        if separate_spins:
+
+            # Indices for alpha and beta (0-based indexing)
+            alpha_idx = np.arange(0, rotation_matrix.shape[0], 2)  # 0,2,4,6,...
+            beta_idx = np.arange(1, rotation_matrix.shape[0], 2)  # 1,3,5,7,...
+
+            # Extract blocks
+            U_alpha = rotation_matrix[np.ix_(alpha_idx, alpha_idx)]
+            U_beta = rotation_matrix[np.ix_(beta_idx, beta_idx)]
+
+            givens_layers_alpha, diag_alpha = givens_decomposition_square(U_alpha)
+            givens_layers_beta, diag_beta = givens_decomposition_square(U_beta)
+
+            def map_beta_layer(layer_beta):
+                new_layer = []
+                for (p, q, theta, phi) in layer_beta:
+                    p_global = 2 * p + 1
+                    q_global = 2 * q + 1
+                    new_layer.append((p_global, q_global, theta, phi))
+                return new_layer
+
+            def map_alpha_layer(layer_alpha):
+                new_layer = []
+                for (p, q, theta, phi) in layer_alpha:
+                    p_global = 2 * p
+                    q_global = 2 * q
+                    new_layer.append((p_global, q_global, theta, phi))
+                return new_layer
+
+
+            givens_layers = []
+            for la, lb in zip(givens_layers_alpha, givens_layers_beta):
+                layer = map_alpha_layer(la) + map_beta_layer(lb)
+                givens_layers.append(layer)
+
+            diagonal = np.zeros(len(rotation_matrix), dtype=complex)
+
+            diagonal[0::2] = diag_alpha
+            diagonal[1::2] = diag_beta
+
+        else:
+            givens_layers, diagonal = givens_decomposition_square(rotation_matrix)
 
         return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits)
 

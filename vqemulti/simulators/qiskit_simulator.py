@@ -779,7 +779,7 @@ class QiskitSimulator(SimulatorBase):
 
         return reference_gates
 
-    def _get_circuit_stat_data(self, circuit):
+    def _get_circuit_stat_data(self, circuit, separate_spins=True):
 
         log_message('generate circuit stats', log_level=2)
 
@@ -794,6 +794,12 @@ class QiskitSimulator(SimulatorBase):
 
         # circuit drawing
         self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
+
+        if separate_spins:
+            n_qubits = circuit.num_qubits
+            wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
+            self._circuit_draw.append(str(circuit.draw(fold=-1, wire_order=wire_order)))
+
         log_message(self._circuit_draw[-1], log_level=2)
 
         # depth

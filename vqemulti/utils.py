@@ -848,7 +848,7 @@ def load_wave_function(filename='wf.yml', qubit_op=False):
     return coefficients, OperatorList(op_list)
 
 
-def reorder_qubits(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
+def reorder_qubits_adapt(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
     """
     reorder hamiltonian, reference and pool (optional)
 
@@ -895,6 +895,40 @@ def reorder_qubits(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
         return reordered_hamiltonian, reordered_reference, reordered_pool
 
     return reordered_hamiltonian, reordered_reference
+
+
+def reorder_qubits_sqd(orbitals_order, hamiltonian, t2):
+    """
+    reorder hamiltonian, and T2
+
+    :param orbitals_order: list of indices of the new orbitals order
+    :param hamiltonian: hamiltonian operator
+    :param t2: t2 amplitudes
+    :return: reordered Hamiltonian and t2
+    """
+
+    # define reorder function
+    def order_function(mode_idx, num_modes):
+        spin = mode_idx % 2
+        spatial_idx = mode_idx // 2
+        new_spatial_idx = orbitals_order.index(spatial_idx)
+        return 2 * new_spatial_idx + spin
+
+    # reorder hamiltonian
+    if isinstance(hamiltonian, InteractionOperator):
+        hamiltonian = get_fermion_operator(hamiltonian)
+        reordered_hamiltonian = reorder(hamiltonian, order_function)
+    else:
+        reordered_hamiltonian = reorder(hamiltonian, order_function)
+
+    n_occ, n_virt = t2.shape[1:3]
+
+    occ_perm = [orbitals_order.index(i) for i in range(n_occ)]
+    virt_perm = [orbitals_order.index(i + n_occ) - n_occ for i in range(n_virt)]
+
+    t2_reordered = t2[np.ix_(occ_perm, occ_perm, virt_perm, virt_perm)]
+
+    return reordered_hamiltonian, t2_reordered
 
 
 def build_interaction_matrix(hamiltonian, show_plot=False):

@@ -7,4 +7,5 @@ cirq
 pennylane
 qiskit
 qiskit-aer
+pyyaml
 posym

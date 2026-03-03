@@ -49,7 +49,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, full_trotter=True, tolerance=1e-20, use_qubit=False, n_terms=None, local=False):
+    def __init__(self, t1, t2, full_trotter=True, tolerance=1e-20, use_qubit=False, n_terms=None, local=None):
         """
         assumed HF as reference
 
@@ -94,11 +94,11 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         if n_terms is None:
             n_terms = len(diag_coulomb_mats) * 2
 
-        def make_local(mat):
+        def make_local(mat, n):
             local_mat = np.array(mat).copy()
             for i, row in enumerate(local_mat):
-                row[i + 2:] = 0
-                row[:max(0, i - 1)] = 0
+                row[i + n:] = 0
+                row[:max(0, i - n + 1)] = 0
             return local_mat
 
         i_term = 1
@@ -108,9 +108,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                     break
                 i_term += 1
 
-                if local:
+                if local is not None:
                     # make local version
-                    diag_i = np.tril(np.triu(diag_i, -1), 1)
+                    diag_i = make_local(diag_i, local)
 
                 # diag_i = get_mod_matrix(diag_i, tolerance=7*np.pi/4, fix_antidiagonals=False)
 

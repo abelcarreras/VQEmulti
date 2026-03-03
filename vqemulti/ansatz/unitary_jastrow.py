@@ -58,7 +58,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         :param full_trotter: trotterize exponent (necessary for circuit implmentation)
         :param use_qubit: transform fermion to qubit operators early (deprecated)
         :param n_terms: number of UCC layers used
-        :param local: use local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
+        :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         """
         #super().__init__()
         self._operators = []
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(t1, t2, n_terms=1, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(t1, t2, n_terms=2, full_trotter=True)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 
@@ -351,8 +351,11 @@ if __name__ == '__main__':
 
     # SQD
     from vqemulti.sqd import simulate_energy_sqd
-    energy, samples = simulate_energy_sqd(ucja,
+    energy, extra = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,
-                                          n_electrons)
+                                          n_electrons,
+                                          return_extra=True,
+                                          )
 
+    print(extra)

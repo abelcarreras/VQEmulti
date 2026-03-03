@@ -49,13 +49,16 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, full_trotter=True, tolerance=1e-20, use_qubit=False, n_terms=None, local=None):
+    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None):
         """
         assumed HF as reference
 
         :param t1: single excitations amplitudes matrix (occupied x virtual)
         :param t2: double excitations amplitudes matrix (occupied x occupied x virtual x virtual)
-        :param reference_fock: non-entangled initial state as Fock space vector
+        :param full_trotter: trotterize exponent (necessary for circuit implmentation)
+        :param use_qubit: transform fermion to qubit operators early (deprecated)
+        :param n_terms: number of UCC layers used
+        :param local: use local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         """
         #super().__init__()
         self._operators = []
@@ -111,8 +114,6 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 if local is not None:
                     # make local version
                     diag_i = make_local(diag_i, local)
-
-                # diag_i = get_mod_matrix(diag_i, tolerance=7*np.pi/4, fix_antidiagonals=False)
 
                 # build Jastrow operator
                 j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)

@@ -49,7 +49,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None):
+    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False):
         """
         assumed HF as reference
 
@@ -59,6 +59,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         :param use_qubit: transform fermion to qubit operators early (deprecated)
         :param n_terms: number of UCC layers used
         :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
+        :param separate_spins: separate spin operators approach (under testing: incorrect phases)
         """
         #super().__init__()
         self._operators = []
@@ -67,6 +68,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._jastrow_matrices = []
         self._full_trotter = full_trotter
         self._spin_t1 = None
+        self._separate_spins = separate_spins
 
         t2 = np.array(t2)
         n_occupied, _, n_virtual, _ = t2.shape
@@ -168,14 +170,14 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 rotation_param = self.parameters[0]
                 rotation = sp.linalg.expm(self._spin_t1)
                 rotation_p = matrix_power(rotation, rotation_param)
-                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=True)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=self._separate_spins)
 
             i_param = 0 if self._spin_t1 is None else 1
             for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_matrices):
 
                 rotation_param = -self.parameters[i_param]
                 rotation_p = matrix_power(rotation, rotation_param)
-                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=True)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=self._separate_spins)
 
                 # implement jastrow term
                 jastrow_param = self.parameters[i_param+1]
@@ -185,7 +187,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 # implement rotation
                 rotation_param = -self.parameters[i_param+2]
                 rotation_p = matrix_power(rotation, rotation_param)
-                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=True)
+                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=self._separate_spins)
                 i_param += 3
 
             return state_preparation_gates

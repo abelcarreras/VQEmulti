@@ -1,6 +1,8 @@
-from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix
+from Cython.Compiler.Lexicon import raw_prefixes
+
+from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, get_sparse_operator
 from vqemulti.utils import get_operators_order, break_qubit_operator, operator_to_matrix_list
-from openfermion import givens_decomposition_square, count_qubits
+from openfermion import givens_decomposition_square, count_qubits, jordan_wigner
 from collections import defaultdict
 import numpy as np
 import warnings
@@ -198,35 +200,27 @@ class SimulatorBase:
             U_alpha = rotation_matrix[np.ix_(alpha_idx, alpha_idx)]
             U_beta = rotation_matrix[np.ix_(beta_idx, beta_idx)]
 
+            # get independent decomposition
             givens_layers_alpha, diag_alpha = givens_decomposition_square(U_alpha)
             givens_layers_beta, diag_beta = givens_decomposition_square(U_beta)
 
-            def map_beta_layer(layer_beta):
-                new_layer = []
-                for (p, q, theta, phi) in layer_beta:
-                    p_global = 2 * p + 1
-                    q_global = 2 * q + 1
-                    new_layer.append((p_global, q_global, theta, phi))
-                return new_layer
-
-            def map_alpha_layer(layer_alpha):
-                new_layer = []
-                for (p, q, theta, phi) in layer_alpha:
-                    p_global = 2 * p
-                    q_global = 2 * q
-                    new_layer.append((p_global, q_global, theta, phi))
-                return new_layer
-
-
             givens_layers = []
-            for la, lb in zip(givens_layers_alpha, givens_layers_beta):
-                layer = map_alpha_layer(la) + map_beta_layer(lb)
-                givens_layers.append(layer)
+            for layer_a in givens_layers_alpha:
+                layer_full = []
+                for (i, j, theta, phi) in layer_a:
+                    layer_full.append((2 * i, 2 * j, theta, phi))
+                givens_layers.append(layer_full)
 
-            diagonal = np.zeros(len(rotation_matrix), dtype=complex)
+            for layer_b in givens_layers_beta:
+                layer_full = []
+                for (i, j, theta, phi) in layer_b:
+                    layer_full.append((2 * i + 1, 2 * j + 1, theta, phi))
+                givens_layers.append(layer_full)
 
-            diagonal[0::2] = diag_alpha
-            diagonal[1::2] = diag_beta
+            diagonal = []
+            for da, db in zip(diag_alpha, diag_beta):
+                diagonal.append(da)
+                diagonal.append(db)
 
         else:
             givens_layers, diagonal = givens_decomposition_square(rotation_matrix)

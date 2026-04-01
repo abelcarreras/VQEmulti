@@ -618,7 +618,7 @@ def fermion_to_qubit(operator):
     :return: qubit operator
     """
     if isinstance(operator, QubitOperator):
-        warnings.warn('Already Qubit operator. Returning as is')
+        # warnings.warn('Already Qubit operator. Returning as is')
         return operator
 
     if Configuration().mapping == 'jw':
@@ -1641,6 +1641,7 @@ def get_dmrg_energy(hamiltonian,
                     schedule='default',
                     max_solver_iterations=200,
                     sample=None,  # 0.02
+                    compute_density_matrix=False,
                     stream_output=False,
                     ):
     """
@@ -1712,7 +1713,11 @@ def get_dmrg_energy(hamiltonian,
 
         # perturbation
         f.write(f"maxiter {max_solver_iterations}\n")
-        f.write(f"onepdm\n")
+
+        # 1PDM
+        if compute_density_matrix:
+            f.write(f"onepdm\n")
+
         # f.write(f"irrep_reorder\n")  # reorder sites acording to irrep
 
         if sample is not None:
@@ -1748,6 +1753,13 @@ def get_dmrg_energy(hamiltonian,
     except IndexError:
         raise Exception('Block2 {}'.format(output.split('\n')[-2]))
 
+    extra_data = {}
+    if compute_density_matrix:
+        pdm1 = np.load(str(data_path / 'nodex' / '1pdm.npy'))
+        extra_data['1rdm'] = pdm1[0] + pdm1[1]
+        extra_data['1rdm_a'] = pdm1[0]
+        extra_data['1rdm_b'] = pdm1[1]
+
     if sample is not None:
 
         # get site order
@@ -1761,7 +1773,7 @@ def get_dmrg_energy(hamiltonian,
         # configurations
         conf_array = np.load(str(data_path / 'nodex' / 'sample-dets.npy'), allow_pickle=False)
 
-        configurations = []
+        configurations = {}
         for conf_vect, amplitude in zip(conf_array, amplitude_array):
             configuration = []
             for orbital in conf_vect[permutation]:
@@ -1774,13 +1786,17 @@ def get_dmrg_energy(hamiltonian,
                 elif orbital == 3:
                     configuration += [1, 1]
 
-            configurations.append((configuration, float(amplitude)))
+            configurations[tuple(configuration)] = float(amplitude)
 
         if spin is not None:
             import warnings
             warnings.warn('Returned CSF are written as determinants')
 
-        return sci_energy, configurations
+        extra_data['configurations'] = configurations
+
+
+    if len(extra_data) > 0:
+        return sci_energy, extra_data
 
     return sci_energy
 

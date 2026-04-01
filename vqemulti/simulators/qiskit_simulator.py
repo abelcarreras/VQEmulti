@@ -13,6 +13,7 @@ from qiskit.circuit.library import SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
 from qiskit_aer.primitives import Estimator, Sampler
+from qiskit import qpy
 import qiskit
 import numpy as np
 
@@ -485,6 +486,8 @@ class QiskitSimulator(SimulatorBase):
 
         self._noise_model = noise_model
 
+        self._circuit_list = []
+
         super().__init__(trotter, trotter_steps, test_only, hamiltonian_grouping, separate_matrix_operators, shots)
 
     def _get_state_vector(self, state_preparation_gates, n_qubits):
@@ -792,6 +795,9 @@ class QiskitSimulator(SimulatorBase):
         if self._qiskit_optimizer:
             circuit = transpile(circuit, optimization_level=3, basis_gates=['x', 'cx', 'rx', 'ry', 'rz', 'h'])
 
+        # circuit storing
+        self._circuit_list.append(circuit)
+
         # circuit drawing
         self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
 
@@ -828,3 +834,8 @@ class QiskitSimulator(SimulatorBase):
 
     def simulator_info(self):
         return 'qiskit ' + str(qiskit.__version__)
+
+    def store_circuits(self, filename='circuits.qpy'):
+        with open(filename, 'wb') as f:
+            qpy.dump(self._circuit_list, f)
+

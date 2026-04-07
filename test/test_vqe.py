@@ -7,7 +7,7 @@ from vqemulti.utils import get_hf_reference_in_fock_space, fermion_to_qubit
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator
 from vqemulti.preferences import Configuration
 from vqemulti.ansatz.exponential import ExponentialAnsatz
-from vqemulti import vqe
+from vqemulti.vqe import vqe
 import unittest
 
 

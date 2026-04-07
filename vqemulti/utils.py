@@ -600,7 +600,7 @@ def normalize_operator(operator, phase_sign=False):
         sum_coeff += coeff_t
 
     if phase_sign:
-        sign = np.sign(sum_coeff)
+        sign = np.sign(sum_coeff).imag
     else:
         sign = 1
 
@@ -628,6 +628,12 @@ def fermion_to_qubit(operator):
     elif Configuration().mapping == 'pc':
         if isinstance(operator, InteractionOperator):
             operator = get_fermion_operator(operator)
+
+        # hack to solve type bug in openfermion
+        import sympy
+        import openfermion.ops.operators.symbolic_operator as so
+        so.COEFFICIENT_TYPES = (int, float, complex, np.int64, sympy.Expr)
+
         return binary_code_transform(operator, parity_code(count_qubits(operator)))
 
     raise Exception('{} mapping not implemented'.format(Configuration().mapping))

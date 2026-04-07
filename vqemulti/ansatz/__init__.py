@@ -2,6 +2,7 @@ from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.utils import get_sparse_operator
 from copy import deepcopy
 import numpy as np
+from abc import ABC, abstractmethod
 
 
 def crop_local_amplitudes(amplitudes, n_neighbors=1):
@@ -38,7 +39,7 @@ def crop_local_amplitudes(amplitudes, n_neighbors=1):
     return local_amplitudes
 
 
-class GenericAnsatz:
+class GenericAnsatz(ABC):
 
     def __init__(self):
         self._operators = []
@@ -93,11 +94,13 @@ class GenericAnsatz:
 
         return energy
 
+    @abstractmethod
     def _simulate_energy(self, hamiltonian, energy_simulator, return_std):
         raise NotImplemented()
 
+    @abstractmethod
     def get_state_vector(self):
-        raise NotImplemented()
+        pass
 
     def get_gradients(self, parameters, hamiltonian, simulator):
         self._parameters = parameters
@@ -105,9 +108,6 @@ class GenericAnsatz:
             return self._exact_gradient(hamiltonian)
         else:
             return self._simulate_gradient(hamiltonian, simulator)
-
-    def get_matrix_representation(self):
-        raise NotImplemented()
 
     def _exact_gradient(self, hamiltonian):
         return self._simulate_gradient(hamiltonian, None)

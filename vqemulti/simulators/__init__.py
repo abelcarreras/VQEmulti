@@ -6,9 +6,10 @@ from openfermion import givens_decomposition_square, count_qubits, jordan_wigner
 from collections import defaultdict
 import numpy as np
 import warnings
+from abc import ABC, abstractmethod
 
 
-class SimulatorBase:
+class SimulatorBase(ABC):
     def __init__(self,
                  trotter=False,
                  trotter_steps=1,
@@ -279,9 +280,14 @@ class SimulatorBase:
         from copy import deepcopy
         return deepcopy(self)
 
-    # mock methods (to be implemented in subclasses)
+    # methods to be implemented in subclasses
+    @abstractmethod
     def _measure_expectation(self, *args):
-        raise NotImplementedError()
+        pass
+
+    @abstractmethod
+    def _get_state_vector(self, *args):
+        pass
 
     def get_state_sampling(self, *args):
         raise NotImplementedError()
@@ -289,20 +295,21 @@ class SimulatorBase:
     def _measure_expectation_variance(self, *args):
         raise NotImplementedError()
 
-    def _get_state_vector(self, *args):
-        raise NotImplementedError()
-
+    @abstractmethod
     def _get_matrix_operator_gates(self, *args):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def _build_reference_gates(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def _trotterize_operator(self, *args):
-        raise NotImplementedError()
+        pass
 
     def _get_givens_rotation_gates(self, *args):
         raise NotImplementedError()
 
+    @abstractmethod
     def simulator_info(self, *args):
         raise NotImplementedError()

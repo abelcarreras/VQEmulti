@@ -53,13 +53,13 @@ class OperatorList:
 
                 else:
                     # anti-symmetrize
-                    total_fermion = (total_fermion - hermitian_conjugated(total_fermion))
+                    op_sym = op - hermitian_conjugated(op)
 
                     # check antisymmetric
-                    anti_hermitian_fermion = -hermitian_conjugated(total_fermion)
-                    assert normal_ordered(total_fermion) == normal_ordered(anti_hermitian_fermion)
+                    anti_hermitian_fermion = -hermitian_conjugated(op_sym)
+                    assert normal_ordered(op_sym) == normal_ordered(anti_hermitian_fermion)
 
-                    self._list.append(anti_hermitian_fermion)
+                    self._list.append(op_sym)
 
         if normalize:
             self._list = [normalize_operator(op, phase_sign=True) for op in self._list]

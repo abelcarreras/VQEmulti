@@ -197,6 +197,13 @@ class OperatorList:
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def __add__(self, other):
+        if isinstance(other, OperatorList):
+            new_list = other._list + self._list
+            return OperatorList(new_list)
+
+        raise Exception('Not compatible operation')
+
 
 if __name__ == '__main__':
 

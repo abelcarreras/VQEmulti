@@ -246,7 +246,7 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
     if Configuration().mapping == 'pc':
         hf_reference = fock_to_parity(hf_reference)
 
-    return list(hf_reference)
+    return hf_reference.tolist()
 
 
 def get_fock_space_vector(vector):

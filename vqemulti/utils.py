@@ -704,7 +704,7 @@ def cache_operator(func):
 
 @cache_operator
 def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
-    """
+    r"""
     wrapper over openfermion's get_sparse_operator for convenience
 
     :param operator: Currently supported operators include: FermionOperator,

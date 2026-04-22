@@ -246,8 +246,8 @@ if __name__ == '__main__':
 
     # print(hamiltonian)
 
-    n_electrons = molecule.n_electrons - n_frozen_orb * 2
-    n_orbitals = n_total_orb - n_frozen_orb  # molecule.n_orbitals
+    n_electrons = molecule.n_electrons
+    n_orbitals = n_total_orb   # molecule.n_orbitals
     n_qubits = n_orbitals * 2
     print('n_qubits: ', n_qubits)
 

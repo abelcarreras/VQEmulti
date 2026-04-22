@@ -203,7 +203,7 @@ if __name__ == '__main__':
     n_frozen_orb = 0 # nothing
     n_total_orb = 4 # total orbitals
     molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
-                         frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
+                         frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True, run_casci=True)
 
     tol_ampl = 0.01
 
@@ -330,7 +330,8 @@ if __name__ == '__main__':
     energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,
-                                          n_electrons)
+                                          n_electrons,
+                                          return_extra=True)
 
     print(samples)
     print('SQD energy', energy)

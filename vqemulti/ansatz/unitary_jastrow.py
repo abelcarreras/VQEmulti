@@ -5,6 +5,7 @@ from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
 from vqemulti.utils import get_hf_reference_in_fock_space
 from vqemulti.preferences import Configuration
+from vqemulti.utils import log_section, print_tensor_4d
 from numpy.testing import assert_almost_equal
 import numpy as np
 import scipy as sp
@@ -129,6 +130,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                     spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
                     self._jastrow_matrices.append(ansatz_j)
+
+                    if log_section(log_level=2):
+                        print_tensor_4d(spin_jastrow.imag, spin_notation=True, title='Jastrow interactions')
 
                     # basis change
                     U_spin = get_spin_matrix(U_i.T)

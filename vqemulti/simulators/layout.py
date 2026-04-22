@@ -37,7 +37,7 @@ class LayoutModelDefault:
     def __init__(self, custom_list=None):
         self._qubits_list = custom_list
 
-    def get_layout(self, backend, n_qubits):
+    def get_layout(self, circuit, backend, n_qubits):
         if self._qubits_list is not None and len(self._qubits_list) < n_qubits and backend.num_qubits > n_qubits:
             raise Exception('Number of requested qubits ({}) is larger than available'.format(n_qubits))
         return self._qubits_list
@@ -48,7 +48,7 @@ class LayoutModelDefault:
 
         n_backend_qubits = backend.num_qubits
 
-        layout = self.get_layout(backend, n_qubits)
+        layout = self.get_layout(None, backend, n_qubits)
 
         if layout is not None:
             qubit_color = []
@@ -99,7 +99,7 @@ class LayoutModelLinear:
 
         return quality, two_gate_non_error, decoherence_t1, decoherence_t2
 
-    def get_layout(self, backend, n_qubits):
+    def get_layout(self, circuit, backend, n_qubits):
 
         # check if backend belongs to IBM runtime
         if isinstance(backend, str):
@@ -162,7 +162,7 @@ class LayoutModelLinear:
         plt.ylabel('time (s)')
         plt.bar([str(i) for i in range(n_backend_qubits)], decoherence_t2)
 
-        layout = self.get_layout(backend, n_qubits)
+        layout = self.get_layout(None, backend, n_qubits)
         qubit_color = []
         for i in range(n_backend_qubits):
             if i in layout:
@@ -182,7 +182,7 @@ class LayoutModelSQD:
         self._cache_time = cache_time
         self._initial_qubit = initial_qubit
 
-    def get_layout(self, backend, n_qubits):
+    def get_layout(self, circuit, backend, n_qubits):
 
         import networkx as nx
 
@@ -314,7 +314,7 @@ class LayoutModelSQD:
 
         n_backend_qubits = backend.num_qubits
 
-        layout = self.get_layout(backend, n_qubits)
+        layout = self.get_layout(None, backend, n_qubits)
         qubit_color = []
         for i in range(n_backend_qubits):
             if i in layout:
@@ -387,6 +387,52 @@ def accumulated_errors(backend, circuit, print_data=False):
         two_qubit_gate_count,
     ]
     return results
+
+
+class LayoutModelNapo:
+    def __init__(self, custom_list=None):
+        self._qubits_list = custom_list
+
+    def get_layout(self, circuit, backend, n_qubits):
+
+        import mapomatic as mm
+
+        from qiskit import transpile
+        trans_qc = transpile(circuit, backend)
+        small_qc = mm.deflate_circuit(trans_qc)
+        print(small_qc)
+
+        layouts = mm.matching_layouts(small_qc, backend)
+
+        layouts = layouts[:2]
+        print(layouts)
+        print('num qubits: ', small_qc.num_qubits)
+
+        scores = mm.evaluate_layouts(small_qc, layouts, backend)
+
+        return scores[0][0]
+
+    def plot_data(self, backend, n_qubits):
+        from qiskit.visualization import plot_gate_map
+        import matplotlib.pyplot as plt
+
+        n_backend_qubits = backend.num_qubits
+
+        layout = self.get_layout(None, backend, n_qubits)
+
+        if layout is not None:
+            qubit_color = []
+            for i in range(n_backend_qubits):
+                if i in layout:
+                    qubit_color.append("#ff0066")
+                else:
+                    qubit_color.append("#6600cc")
+        else:
+            qubit_color = None
+
+        plot_gate_map(backend, qubit_color=qubit_color, qubit_size=60, font_size=25, figsize=(8, 8))
+
+        plt.show()
 
 
 if __name__ == '__main__':

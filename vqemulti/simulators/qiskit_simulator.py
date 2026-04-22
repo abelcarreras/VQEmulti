@@ -576,7 +576,7 @@ class QiskitSimulator(SimulatorBase):
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
         else:
-            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
             log_message('layout: {}'.format(layout), log_level=2)
             sampler = RHESampler(self._backend, self._session, layout)
             result = sampler.run(circuit, shots=self._shots, memory=True).result()
@@ -648,7 +648,7 @@ class QiskitSimulator(SimulatorBase):
             variance = sum([meta['variance'] for meta in job.result().metadata])
             std_error = np.sqrt(variance/self._shots)
         else:
-            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
             log_message('layout: {}'.format(layout), log_level=2)
             estimator = RHEstimator(self._backend, session=self._session, layout=layout)
             job = estimator.run(circuit, measure_op, shots=self._shots)
@@ -684,7 +684,7 @@ class QiskitSimulator(SimulatorBase):
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
         else:
-            layout = self._layout_model.get_layout(self._backend, n_qubits)
+            layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
             log_message('layout: {}'.format(layout), log_level=2)
             sampler = RHESampler(self._backend, self._session, layout)
             result = sampler.run(circuit, shots=self._shots, memory=True).result()

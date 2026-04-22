@@ -246,6 +246,7 @@ def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0)
     if Configuration().mapping == 'pc':
         hf_reference = fock_to_parity(hf_reference)
 
+    hf_reference = np.array(hf_reference)
     return hf_reference.tolist()
 
 
@@ -1957,3 +1958,29 @@ def get_ci_amplitudes(ansatz, n_electrons, tolerance=0.01):
 
     print('sum amplitudes square: ', np.sum(amplitudes_square))
     return amplitudes_square
+
+
+def print_tensor_4d(matrix, tol=1e-2, order=None, spin_notation=False, title=False):
+
+    if title is not None:
+        print(title)
+
+    if order is not None:
+        matrix = matrix.transpose(order)
+
+    ni, nj, nk, nl = matrix.shape
+
+    for i in range(ni):
+        for j in range(nj):
+            for k in range(nk):
+                for l in range(nl):
+                    if abs(matrix[i, j, k, l]) > tol:
+                        if spin_notation is False:
+                            print('{:3}  {:3}  {:3}  {:3}: {:10.5e}'.format(i, j, k, l, matrix[i, j, k, l]))
+                        else:
+                            spin = lambda i: 'a' if np.mod(i, 2) == 0 else 'b'
+                            print('{:3}{:1} {:3}{:1} {:3}{:1} {:3}{:1}: {:10.5e}'.format(i//2, spin(i),
+                                                                                         j//2, spin(j),
+                                                                                         k//2, spin(k),
+                                                                                         l//2, spin(l),
+                                                                                         matrix[i, j, k, l]))

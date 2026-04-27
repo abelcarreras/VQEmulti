@@ -343,7 +343,7 @@ def entanglement_fan(entangled_gates):
     return cnot_qubits, qubit_rotation
 
 
-def trotter_step(qubit_operator, time, n_qubits, with_phase=False):
+def trotter_step_opt(qubit_operator, time, n_qubits, with_phase=False):
     """
     Creates the circuit for applying e^(-j*operator*time), simulating the time
     evolution of a state under the Hamiltonian 'operator'.
@@ -441,6 +441,7 @@ class QiskitSimulator(SimulatorBase):
                  use_ibm_runtime=False,
                  noise_model=None,
                  layout_model=None,
+                 trotter_type='opt',
                  ):
 
         """
@@ -453,7 +454,8 @@ class QiskitSimulator(SimulatorBase):
         :param backend: qiskit backend to run the calculations
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
         :param session: IBM runtime session to run jobs on IBM computers (estimator)
-        :param use_ibm_runtime: use ibm_runtime version of Estimator and Sampler
+        :param use_ibm_runtime: use ibm_runtime version of Estimator and Sampler:
+        :param trotter_type: defines the trotter_step method used to implement the staircase algorithm (std/inv/opt)
         """
         # backend.set_options(device='GPU')
         self._backend = backend
@@ -462,6 +464,7 @@ class QiskitSimulator(SimulatorBase):
         self._qiskit_optimizer = qiskit_optimizer
         self._use_ibm_runtime = use_ibm_runtime
         self._layout_model = layout_model
+        self._trotter_type = trotter_type
 
         if self._layout_model is None:
             self._layout_model = LayoutModelDefault()
@@ -732,11 +735,13 @@ class QiskitSimulator(SimulatorBase):
         # Divide time into steps and apply the evolution operator the necessary
         # number of times
 
+        trotter_step_function = {'std': trotter_step_standard,
+                                 'inv': trotter_step_inverse,
+                                 'opt': trotter_step_opt}
+
         trotter_gates = []
         for step in range(1, self._trotter_steps + 1):
-            # trotter_gates += trotter_step_standard(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
-            # trotter_gates += trotter_step_inverse(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
-            trotter_gates += trotter_step(1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
+            trotter_gates += trotter_step_function[self._trotter_type](1j * qubit_operator, 1 / self._trotter_steps, n_qubits)
 
         return trotter_gates
 

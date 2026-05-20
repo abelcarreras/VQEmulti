@@ -50,7 +50,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False):
+    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False, mixed_spin=True):
         """
         assumed HF as reference
 
@@ -61,6 +61,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         :param n_terms: number of UCC layers used
         :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         :param separate_spins: separate spin operators approach (under testing: incorrect phases)
+        :param mixed_spin: include mixed spin interactions
         """
         #super().__init__()
         self._operators = []
@@ -127,7 +128,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 if full_trotter:
 
                     # jastrow
-                    spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
+                    spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
                     self._jastrow_matrices.append(ansatz_j)
 
@@ -147,7 +148,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
                 else:
                     orb_t2 = change_of_basis_orbitals(None, j_mat, U_i.T)[1]  # a_i^ a_j a_k^ a_l
-                    spin_t2 = get_t2_spinorbitals_absolute_full(orb_t2)
+                    spin_t2 = get_t2_spinorbitals_absolute_full(orb_t2, mixed_spin=mixed_spin)
                     ansatz_c = get_ucc_generator(None, spin_t2, full_amplitudes=True, use_qubit=use_qubit)
 
                     coefficients += [1.0]

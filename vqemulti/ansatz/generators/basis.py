@@ -122,11 +122,13 @@ def get_t2_spinorbitals_absolute(ccsd_double_amps_abs, n_occ=1):
 
 
 
-def get_t2_spinorbitals_absolute_full(ccsd_double_amps_abs, dtype=complex):
+def get_t2_spinorbitals_absolute_full(ccsd_double_amps_abs, dtype=complex, mixed_spin=True):
     """
     get T2 in spinorbitals basis (interleaved) from orbitals basis (absolute)
 
     :param ccsd_double_amps: T2 in orbital basis [nmo x nmo x nmo x nmo] a_i^ a_j a_k^ a_l
+    :param dtype: data type of T2 output tensor
+    :param mixed_spin: include mixed spin interactions
     :return: T2 in spinorbitals basis (interleaved) [2nmo x 2nmo x 2nmo x 2nmo] a_i^ a_j a_k^ a_l
     """
 
@@ -151,13 +153,14 @@ def get_t2_spinorbitals_absolute_full(ccsd_double_amps_abs, dtype=complex):
                     T2_spin[2 * i,     2 * j,     2 * k,     2 * l] = t2aa[i, j, k, l] * 0.5
                     T2_spin[2 * i + 1, 2 * j + 1, 2 * k + 1, 2 * l + 1] = t2aa[i, j, k, l] * 0.5
 
-                    # Coulomb
-                    T2_spin[2 * i,     2 * j,     2 * k + 1, 2 * l + 1 ] = ccsd_double_amps_abs[i, j, k, l] * 0.5
-                    T2_spin[2 * i + 1, 2 * j + 1, 2 * k,     2 * l] = ccsd_double_amps_abs[i, j, k, l] * 0.5
+                    if mixed_spin:
+                        # Coulomb
+                        T2_spin[2 * i,     2 * j,     2 * k + 1, 2 * l + 1 ] = ccsd_double_amps_abs[i, j, k, l] * 0.5
+                        T2_spin[2 * i + 1, 2 * j + 1, 2 * k,     2 * l] = ccsd_double_amps_abs[i, j, k, l] * 0.5
 
-                    # Exchange
-                    T2_spin[2 * i,     2 * j + 1, 2 * k + 1, 2 * l] = -ccsd_double_amps_abs[k, j, i, l] * 0.5 #
-                    T2_spin[2 * i + 1, 2 * j,     2 * k,     2 * l + 1] = -ccsd_double_amps_abs[k, j, i, l] * 0.5 #
+                        # Exchange
+                        T2_spin[2 * i,     2 * j + 1, 2 * k + 1, 2 * l] = -ccsd_double_amps_abs[k, j, i, l] * 0.5 #
+                        T2_spin[2 * i + 1, 2 * j,     2 * k,     2 * l + 1] = -ccsd_double_amps_abs[k, j, i, l] * 0.5 #
 
     return T2_spin
 

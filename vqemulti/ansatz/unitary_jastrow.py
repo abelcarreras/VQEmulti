@@ -50,12 +50,13 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False, mixed_spin=True):
+    def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False, mixed_spin=True):
         """
         assumed HF as reference
 
         :param t1: single excitations amplitudes matrix (occupied x virtual)
         :param t2: double excitations amplitudes matrix (occupied x occupied x virtual x virtual)
+        :param hf_reference_fock: reference vector in fock space
         :param full_trotter: trotterize exponent (necessary for circuit implmentation)
         :param use_qubit: transform fermion to qubit operators early (deprecated)
         :param n_terms: number of UCC layers used
@@ -75,8 +76,10 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         t2 = np.array(t2)
         n_occupied, _, n_virtual, _ = t2.shape
         n_total = n_virtual + n_occupied
-        hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
 
+        if hf_reference_fock is None:
+            # assume close shell, even number of electrons, multiplicity zero
+            hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
 
         # assert len(parameters) == len(operator_list)
 

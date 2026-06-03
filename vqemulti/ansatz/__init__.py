@@ -1,5 +1,6 @@
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.utils import get_sparse_operator
+from vqemulti.sqd import simulate_energy_sqd
 from copy import deepcopy
 import numpy as np
 from abc import ABC, abstractmethod
@@ -113,8 +114,6 @@ class GenericAnsatz(ABC):
         self._parameters = parameters
         if sampling_simulator is None:
             raise Exception('sampled energy only works with simulator')
-
-        from vqemulti.sqd import simulate_energy_sqd
 
         n_alpha = sum(self._reference_fock[::2])
         n_beta = sum(self._reference_fock[1::2])
@@ -367,7 +366,6 @@ if __name__ == '__main__':
     get_projections(ucja.n_qubits, n_electrons, tolerance=tol_ampl)
 
     # SQD
-    from vqemulti.sqd import simulate_energy_sqd
     energy, samples = simulate_energy_sqd(ucja,
                                           hamiltonian,
                                           simulator_sqd,

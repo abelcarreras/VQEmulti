@@ -77,14 +77,14 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
     elif recovery_type == 2:
         rec_samples = configuration_recovery_all(samples, hamiltonian, n_electrons,
-                                                 multiplicity=0,
+                                                 multiplicity=multiplicity,
                                                  n_iter=4,
                                                  regularization_factor=0.7,
                                                  max_configurations=max_configurations,
                                                  orbital_order=orbital_order)
     else:
         rec_samples = simple_filtering(samples, n_electrons,
-                                       multiplicity=0)
+                                       multiplicity=multiplicity)
 
     if log_section(log_level=1):
         print('\nrecovered sample list')
@@ -118,26 +118,25 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
 def simple_filtering(samples, n_electrons, multiplicity=0):
 
-    if multiplicity > 0:
-        raise NotImplementedError('multiplicity must be 0!')
+    delta = multiplicity - 1
+    alpha_electrons = (n_electrons + delta)//2
+    beta_electrons = (n_electrons - delta)//2
 
-    n_electrons_alpha = n_electrons // 2
-    n_electrons_beta = n_electrons // 2
 
-    orbital_conf_good = defaultdict(int)
+    orbital_conf_good = {'alpha': defaultdict(int), 'beta': defaultdict(int)}
 
     for bistring, count in samples.items():
 
         alpha = bistring[1::2]
         beta = bistring[::2]
 
-        if alpha.count("1") == n_electrons_alpha:
-            orbital_conf_good[alpha] += count / 2
+        if alpha.count("1") == alpha_electrons:
+            orbital_conf_good['alpha'][alpha] += count / 2
 
-        if beta.count("1") == n_electrons_beta:
-            orbital_conf_good[beta] += count / 2
+        if beta.count("1") == beta_electrons:
+            orbital_conf_good['beta'][beta] += count / 2
 
-    return generate_full_samples(orbital_conf_good, orbital_conf_good)
+    return generate_full_samples(orbital_conf_good['alpha'], orbital_conf_good['beta'])
 
 def get_subspace_configurations(samples, max_configurations, add_hf_configuration=False):
 
@@ -358,31 +357,30 @@ def configuration_recovery_all(samples,
     :return: samples dict
     """
 
-    if multiplicity > 0:
-        raise NotImplementedError('multiplicity must be 0!')
+    delta = multiplicity - 1
+    alpha_electrons = (n_electrons + delta)//2
+    beta_electrons = (n_electrons - delta)//2
 
-    n_electrons_alpha = n_electrons // 2
-    n_electrons_beta = n_electrons // 2
+    orbital_conf_good = {'alpha': defaultdict(int), 'beta': defaultdict(int)}
+    orbital_conf_bad = {'alpha': defaultdict(int), 'beta': defaultdict(int)}
 
-    orbital_conf_good = defaultdict(int)
-    orbital_conf_bad = defaultdict(int)
 
     for bistring, count in samples.items():
 
         alpha = bistring[1::2]
         beta = bistring[::2]
 
-        if alpha.count("1") == n_electrons_alpha:
-            orbital_conf_good[alpha] += count / 2
+        if alpha.count("1") == alpha_electrons:
+            orbital_conf_good['alpha'][alpha] += count / 2
         else:
-            orbital_conf_bad[alpha] += count / 2
+            orbital_conf_bad['alpha'][alpha] += count / 2
 
-        if beta.count("1") == n_electrons_beta:
-            orbital_conf_good[beta] += count / 2
+        if beta.count("1") == beta_electrons:
+            orbital_conf_good['beta'][beta] += count / 2
         else:
-            orbital_conf_bad[beta] += count / 2
+            orbital_conf_bad['beta'][beta] += count / 2
 
-    full_samples_original = generate_full_samples(orbital_conf_good, orbital_conf_good)
+    full_samples_original = generate_full_samples(orbital_conf_good['alpha'], orbital_conf_good['beta'])
     log_message('# original total unique conf: {}'.format(len(full_samples_original)), log_level=1)
 
     def set_bit(bitstring, position, bit):
@@ -403,52 +401,59 @@ def configuration_recovery_all(samples,
 
         prob_vec_bistring = prob_vec[::-1] # set in bistring order
 
-        new_conf_dict = defaultdict(int)
+        def fix_configurations(orbital_conf, n_particles):
 
-        for conf, c in orbital_conf_bad.items():
-            diff = n_electrons_alpha - conf.count("1")
-            prob_diff = get_prob_diff(conf, prob_vec_bistring)
-            prob_diff = regularization(prob_diff, factor=regularization_factor)
+            new_conf_dict = defaultdict(int)
 
-            new_conf = str(conf)
-            if diff > 0:
-                indices_occupied = get_indices(new_conf, 0)
-                p_choice = prob_diff[indices_occupied]
-                if np.sum(p_choice) == 0:
-                    continue
+            for conf, c in orbital_conf.items():
+                diff = n_particles - conf.count("1")
+                prob_diff = get_prob_diff(conf, prob_vec_bistring)
+                prob_diff = regularization(prob_diff, factor=regularization_factor)
 
-                p_choice = p_choice/np.sum(p_choice)
+                new_conf = str(conf)
+                if diff > 0:
+                    indices_occupied = get_indices(new_conf, 0)
+                    p_choice = prob_diff[indices_occupied]
+                    if np.sum(p_choice) == 0:
+                        continue
 
-                try:
-                    indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
-                except ValueError:
-                    continue
+                    p_choice = p_choice/np.sum(p_choice)
 
-                for choice in indices_to_flip:
-                    new_conf = set_bit(new_conf, choice, "1")
+                    try:
+                        indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
+                    except ValueError:
+                        continue
 
-            else:
-                indices_occupied = get_indices(new_conf, 1)
-                p_choice = prob_diff[indices_occupied]
+                    for choice in indices_to_flip:
+                        new_conf = set_bit(new_conf, choice, "1")
 
-                if np.sum(p_choice) == 0:
-                    continue
+                else:
+                    indices_occupied = get_indices(new_conf, 1)
+                    p_choice = prob_diff[indices_occupied]
 
-                p_choice = p_choice/np.sum(p_choice)
-                try:
-                    indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
-                except ValueError:
-                    continue
+                    if np.sum(p_choice) == 0:
+                        continue
 
-                for choice in indices_to_flip:
-                    new_conf = set_bit(new_conf, choice, "0")
+                    p_choice = p_choice/np.sum(p_choice)
+                    try:
+                        indices_to_flip = np.random.choice(indices_occupied, size=abs(diff), replace=False, p=p_choice)
+                    except ValueError:
+                        continue
 
-            if new_conf.count("1") == n_electrons_alpha:
-                new_conf_dict[new_conf] += c
+                    for choice in indices_to_flip:
+                        new_conf = set_bit(new_conf, choice, "0")
+
+                if new_conf.count("1") == n_particles:
+                    new_conf_dict[new_conf] += c
+
+            return new_conf_dict
+
+        new_conf_dict = {'alpha': fix_configurations(orbital_conf_bad['alpha'], alpha_electrons),
+                         'beta': fix_configurations(orbital_conf_bad['beta'], beta_electrons)}
 
         # log_message('# iter {} recovery half conf: {}'.format(i_iter, len(new_conf_list)), log_level=1)
 
-        recovered_full_samples = generate_full_samples(new_conf_dict, new_conf_dict)
+        recovered_full_samples = generate_full_samples(new_conf_dict['alpha'], new_conf_dict['beta'])
 
         log_message('# iter {} recovery conf: {}'.format(i_iter, len(recovered_full_samples)), log_level=1)
 

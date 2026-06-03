@@ -787,13 +787,14 @@ class QiskitSimulator(SimulatorBase):
 
         return reference_gates
 
-    def _get_circuit_stat_data(self, circuit, separate_spins=True):
+    def _get_circuit_stat_data(self, circuit, separate_spins=False):
 
         log_message('generate circuit stats', log_level=2)
 
         gates_name = {'x': 'PauliX', 'y': 'PauliY', 'z': 'PauliZ',
                       'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',
                       'i': 'Identity', 'h': 'Hadamard', 'cx': 'CNOT',
+                      'cry': 'CRY',
                       'unitary': 'QubitUnitary'}
 
         # circuit optimization using qiskit
@@ -824,6 +825,17 @@ class QiskitSimulator(SimulatorBase):
             except KeyError:
                 gates_name.update({gate[0].name: gate[0].name})
                 self._circuit_gates[gates_name[gate[0].name]] += 1
+
+        # 2-qubit gates additional analysis
+        from collections import defaultdict
+        cx_dist = defaultdict(int)
+        for gate in circuit.data:
+            if gate.operation.name == 'cx':
+                q0 = circuit.find_bit(gate.qubits[0]).index
+                q1 = circuit.find_bit(gate.qubits[1]).index
+                cx_dist['-CNOT(dist={})'.format(abs(q0 - q1))] += 1
+
+        self._circuit_gates.update(cx_dist)
 
     def get_circuit_info(self, ansatz):
 

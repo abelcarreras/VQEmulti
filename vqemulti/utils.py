@@ -715,7 +715,7 @@ def get_sparse_operator(operator, n_qubits=None, trunc=None, hbar=1.):
     :param hbar: the value of hbar to use in the definition of the canonical commutation
                   relation [q_i, p_j] = \delta_{ij} i hbar. Applicable only to the QuadOperator.
 
-    :return:
+    :return: scipy sparse operator
     """
     if n_qubits is None:
         n_qubits = count_qubits(operator)

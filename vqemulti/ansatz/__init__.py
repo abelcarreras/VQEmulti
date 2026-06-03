@@ -44,6 +44,7 @@ class GenericAnsatz(ABC):
     def __init__(self):
         self._operators = []
         self._parameters = []
+        self._reference_fock = []
 
     def __len__(self):
         return len(self._parameters)
@@ -97,6 +98,46 @@ class GenericAnsatz(ABC):
     @abstractmethod
     def _simulate_energy(self, hamiltonian, energy_simulator, return_std):
         raise NotImplemented()
+
+    def get_sampled_energy(self, parameters, hamiltonian, sampling_simulator, sqd_params: dict, return_std=False):
+        """
+        implementation of SQD energy as a function of ansatz parameters (for Hi-VQE like methods)
+
+        :param parameters: ansatz paramters
+        :param hamiltonian: hamiltonian in FermiOperator/InteractionOperator
+        :param sampling_simulator: simulator for the sampling
+        :param sqd_params: SQD paramters
+        :param return_std:
+        :return: SQD energy
+        """
+        self._parameters = parameters
+        if sampling_simulator is None:
+            raise Exception('sampled energy only works with simulator')
+
+        from vqemulti.sqd import simulate_energy_sqd
+
+        n_alpha = sum(self._reference_fock[::2])
+        n_beta = sum(self._reference_fock[1::2])
+
+        n_electrons = n_alpha + n_beta
+        multiplicity = (n_alpha - n_beta) + 1
+
+        # force these params
+        sqd_params['compute_variance'] = return_std
+        sqd_params['return_extra'] = True
+        sqd_params['multiplicity'] = multiplicity
+
+        energy, extra = simulate_energy_sqd(self,
+                                            hamiltonian,
+                                            sampling_simulator,
+                                            n_electrons,
+                                            **sqd_params)
+
+        if return_std:
+            return energy, np.sqrt(extra['variance'])
+
+        return energy
+
 
     @abstractmethod
     def get_state_vector(self):

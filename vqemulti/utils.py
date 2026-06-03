@@ -224,22 +224,33 @@ def get_sparse_ket_from_fock(fock_vector):
     return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(electron_number, qubit_number, frozen_core=0):
+def get_hf_reference_in_fock_space(n_electrons, qubit_number, multiplicity=0, frozen_core=0):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]
 
-    :param electron_number: number of electrons
+    :param n_electrons: number of electrons
     :param qubit_number: the number of qubits necessary to represent the molecule
+    :param multiplicity: multiplicity of the electrons
     :param frozen_core: number of orbitals that are frozen and not explicitly defined in Fock space
     :param mapping: mapping of fermions to qubits (jw: Jordan-Wigner, bk: Bravyi-Kitaev)
     :return: the vector in the Fock space
     """
 
+    delta = multiplicity - 1
+    alpha_electrons = (n_electrons + delta)//2
+    beta_electrons = (n_electrons - delta)//2
+
     # This considers occupied the lower energy orbitals
     hf_reference = np.zeros(qubit_number, dtype=int)
-    for i in range(electron_number - frozen_core * 2):
-        hf_reference[i] = 1
+
+    # alpha
+    for i in range(alpha_electrons - frozen_core * 2):
+        hf_reference[2*i] = 1
+    # beta
+    for i in range(beta_electrons - frozen_core * 2):
+        hf_reference[2*i+1] = 1
+
 
     if Configuration().mapping == 'bk':
         hf_reference = fock_to_bk(hf_reference)

@@ -12,6 +12,7 @@ Quantum computing algorithms
 - qubit-adaptVQE
 - tetris-adaptVQE
 - prune-adaptVQE
+- Hi-VQE
 - SQD
 - SKQD
 

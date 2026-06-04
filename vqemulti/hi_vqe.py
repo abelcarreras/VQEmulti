@@ -94,9 +94,9 @@ if __name__ == '__main__':
                          frozen_core=4, n_orbitals=10, run_ccsd=True, run_casci=True)
 
     # get properties from classical SCF calculation
-    n_electrons = molecule.n_electrons + 1
+    n_electrons = molecule.n_electrons
     n_orbitals = molecule.n_orbitals
-    multiplicity = molecule.multiplicity + 1
+    multiplicity = molecule.multiplicity
 
 
     print('n_electrons: ', n_electrons)

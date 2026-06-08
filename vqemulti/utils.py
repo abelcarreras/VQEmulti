@@ -1261,6 +1261,7 @@ def create_input_file_dice(configuration_list,
                            n_samples=200,
                            calc_rdm=False,
                            calc_ci_vect=False,
+                           nPTiter=0,
                            filename='input.dat'):
     """
     create input for DICE software
@@ -1274,6 +1275,7 @@ def create_input_file_dice(configuration_list,
     :param n_samples: number of stochastic samples for SHCI
     :param calc_rdm: whether to calculate RDM
     :param calc_ci_vect: whether to calculate CI vector
+    :param nPTiter: number of iterations for perturbation
     :param filename: input filename
     :return:
     """
@@ -1320,7 +1322,7 @@ def create_input_file_dice(configuration_list,
         # perturbation
         f.write(f"maxiter {max_iterations}\n")
         f.write(f"epsilon2 {epsilon2}\n")
-        f.write(f"nPTiter 0\n")
+        f.write(f"nPTiter {nPTiter}\n")
         f.write(f"sampleN {n_samples}\n")
 
         if calc_rdm:
@@ -1387,7 +1389,7 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
 
 
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
-                                stream_output=False,
+                                stream_output=True,
                                 hci_schedule=None,
                                 compute_density_matrix=False,
                                 compute_variance=False,
@@ -1428,6 +1430,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                            calc_rdm=compute_density_matrix,
                            calc_ci_vect=compute_ci_state,
                            schedule=hci_schedule,
+                           nPTiter=0,
                            )
 
     # run Dice

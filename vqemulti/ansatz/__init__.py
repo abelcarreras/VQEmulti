@@ -66,7 +66,7 @@ class GenericAnsatz(ABC):
         return deepcopy(self)
 
     def get_energy(self, parameters, hamiltonian, energy_simulator, return_std=False):
-        self._parameters = parameters
+        self.parameters = parameters
         if energy_simulator is None:
             return self._exact_energy(hamiltonian, return_std)
         else:
@@ -111,7 +111,7 @@ class GenericAnsatz(ABC):
         :param return_std:
         :return: SQD energy
         """
-        self._parameters = parameters
+        self.parameters = parameters
         if sampling_simulator is None:
             raise Exception('sampled energy only works with simulator')
 

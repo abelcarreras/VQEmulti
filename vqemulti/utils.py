@@ -1389,7 +1389,7 @@ def get_variance_from_ci(ci_vector, hamiltonian: openfermion.InteractionOperator
 
 
 def get_selected_ci_energy_dice(configuration_list, hamiltonian,
-                                stream_output=True,
+                                stream_output=False,
                                 hci_schedule=None,
                                 compute_density_matrix=False,
                                 compute_variance=False,

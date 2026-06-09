@@ -400,16 +400,14 @@ class LayoutModelNapo:
         from qiskit import transpile
         trans_qc = transpile(circuit, backend)
         small_qc = mm.deflate_circuit(trans_qc)
-        print(small_qc)
 
         layouts = mm.matching_layouts(small_qc, backend)
 
-        layouts = layouts[:2]
-        print(layouts)
-        print('num qubits: ', small_qc.num_qubits)
+        #layouts = layouts[:2]
+        #print(layouts)
+        #print('num qubits: ', small_qc.num_qubits)
 
         scores = mm.evaluate_layouts(small_qc, layouts, backend)
-
         return scores[0][0]
 
     def plot_data(self, backend, n_qubits):

@@ -21,6 +21,7 @@ Ansatze
 - Unitary Coupled Cluster 
 - Product of Unitary Coupled Cluster 
 - Unitary Cluster Jastrow
+- Particle-conserving hardware efficient
 
 Simulation plugins
 ------------------

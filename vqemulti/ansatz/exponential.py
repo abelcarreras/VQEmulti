@@ -28,6 +28,10 @@ class ExponentialAnsatz(GenericAnsatz):
         if len(operator_list) > 0 and not is_hermitian(1j * sum(operator_list)):
             raise Exception('Non antihermitian operator')
 
+
+    def __getitem__(self, key):
+        return self.__class__(self._parameters[key], self._operators[key], self._reference_fock)
+
     @property
     def n_qubits(self):
         return len(self._reference_fock)

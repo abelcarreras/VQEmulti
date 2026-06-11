@@ -31,6 +31,9 @@ class ProductExponentialAnsatz(GenericAnsatz):
         #    if not is_hermitian(1j * op):
         #        raise Exception('Non antihermitian operator')
 
+    def __getitem__(self, key):
+        return self.__class__(self._parameters[key], self._operators[key], self._reference_fock)
+
     @property
     def n_qubits(self):
         return len(self._reference_fock)

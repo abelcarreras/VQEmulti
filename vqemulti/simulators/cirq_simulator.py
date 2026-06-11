@@ -112,16 +112,13 @@ class CirqSimulator(SimulatorBase):
 
         return results.final_state_vector
 
-    def _get_matrix_operator_gates(self, hf_reference_fock, matrix_list):
+    def _get_matrix_operator_gates(self, matrix_list, n_qubits):
 
         # Initialize qubits
-        n_qubits = len(hf_reference_fock)
         qubits = cirq.LineQubit.range(n_qubits)
 
-        # Initialize the state preparation gates with the Hartree Fock preparation
-        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
-
         # Append the ansatz directly as a matrix
+        state_preparation_gates = []
         for matrix in matrix_list:
             state_preparation_gates.append(cirq.MatrixGate(matrix.toarray()).on(*qubits))
 

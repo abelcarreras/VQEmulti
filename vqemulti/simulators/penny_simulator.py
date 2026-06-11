@@ -103,20 +103,15 @@ class PennylaneSimulator(SimulatorBase):
             return qml.state()
 
         # create and run circuit
-        circuit = qml.QNode(circuit_function, dev_unique_wires, analytic=None)
+        circuit = qml.QNode(circuit_function, dev_unique_wires)
         self._get_circuit_stat_data(circuit)
 
         return circuit()
 
-    def _get_matrix_operator_gates(self, hf_reference_fock, matrix_list):
-
-        # Initialize qubits
-        n_qubits = len(hf_reference_fock)
-
-        # Add gates for HF reference
-        state_preparation_gates = self._build_reference_gates(hf_reference_fock)
+    def _get_matrix_operator_gates(self, matrix_list, n_qubits):
 
         # Append the ansatz directly as a matrix
+        state_preparation_gates = []
         for matrix in matrix_list:
             state_preparation_gates.append(qml.QubitUnitary(matrix.toarray(), wires=list(range(n_qubits))))
 
@@ -136,7 +131,7 @@ class PennylaneSimulator(SimulatorBase):
         """
 
         # Initialize circuit.
-        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)], shots=self._shots)
+        dev_unique_wires = qml.device('default.qubit', wires=[i for i in range(n_qubits)])
 
         # Build circuit from preparation gates
         @qml.qnode(dev_unique_wires)
@@ -156,6 +151,9 @@ class PennylaneSimulator(SimulatorBase):
             # sample measurements in PauliZ
             # return [qml.sample(qml.PauliZ(wires=k)) for k in range(n_qubits)]
             return qml.counts()
+
+        # set number of shots
+        circuit = qml.set_shots(circuit, shots=self._shots)
 
         # draw circuit
         # print(qml.draw(circuit)())

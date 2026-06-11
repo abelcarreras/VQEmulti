@@ -504,7 +504,11 @@ class QiskitSimulator(SimulatorBase):
 
         # set the same qubit order as other simulators
         circuit = circuit.reverse_bits()
-        result = StatevectorSimulator().run(circuit).result()
+        circuit.save_statevector()
+        state_vector = AerSimulator(method="statevector")
+        result = state_vector.run(circuit).result()
+
+        # result = StatevectorSimulator().run(circuit).result()
 
         return np.array(result.get_statevector())
 
@@ -821,10 +825,10 @@ class QiskitSimulator(SimulatorBase):
         # gates
         for gate in circuit.data:
             try:
-                self._circuit_gates[gates_name[gate[0].name]] += 1
+                self._circuit_gates[gates_name[gate.operation.name]] += 1
             except KeyError:
-                gates_name.update({gate[0].name: gate[0].name})
-                self._circuit_gates[gates_name[gate[0].name]] += 1
+                gates_name.update({gate.operation.name: gate.operation.name})
+                self._circuit_gates[gates_name[gate.operation.name]] += 1
 
         # 2-qubit gates additional analysis
         from collections import defaultdict

@@ -122,8 +122,8 @@ class OperatorList:
 
         expanded_list = []
         for element in self._list:
-            for t in element.terms:
-                expanded_list.append(self._type(t))
+            for t, c in element.terms.items():
+                expanded_list.append(c*self._type(t))
 
         return OperatorList(expanded_list)
 

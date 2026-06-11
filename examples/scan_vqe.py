@@ -26,15 +26,14 @@ for d in np.linspace(0.3, 3, n_points):
     # run classical calculation
     try:
         # custom implementation openfermionpyscf
-        molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=True, guess_mix=True)
+        molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True, nat_orb=False, guess_mix=True, n_orbitals=3)
     except TypeError:
         molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 2  # molecule.n_orbitals
+    n_orbitals = molecule.n_orbitals
     hamiltonian = molecule.get_molecular_hamiltonian()
-    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals)
 
     # Get Hartree Fock reference in Fock space
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)

@@ -224,7 +224,7 @@ def get_sparse_ket_from_fock(fock_vector):
     return scipy.sparse.csc_matrix(state_vector, dtype=complex).transpose()
 
 
-def get_hf_reference_in_fock_space(n_electrons, qubit_number, multiplicity=0, frozen_core=0):
+def get_hf_reference_in_fock_space(n_electrons, qubit_number, multiplicity=1, frozen_core=0):
     """
     Get the Hartree Fock reference in Fock space vector
     The order is: [orbital_1-alpha, orbital_1-beta, orbital_2-alpha, orbital_2-beta, orbital_3-alpha.. ]

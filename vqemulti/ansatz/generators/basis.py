@@ -82,31 +82,6 @@ def get_t2_spinorbitals(ccsd_double_amps):
     return ccsd_double_amps # a_i^ a_j a_k^ a_l
 
 
-def get_t2_spinorbitals_absolute_old(ccsd_double_amps_abs, n_occ=1):
-    """
-    get T2 in spinorbitals basis (interleaved) from orbitals basis (absolute)
-
-    :param ccsd_double_amps: T2 in orbital basis [nmo x nmo x nmo x nmo] (a_j a_l a_i^ a_k^)
-    :return: T2 in spinorbitals basis (interleaved) [2nmo x 2nmo x 2nmo x 2nmo] (a_i^ a_j a_k^ a_l)
-    """
-
-    from pyscf.cc.addons import spatial2spin
-
-    norb = len(ccsd_double_amps_abs)
-
-    ccsd_double_amps = ccsd_double_amps_abs[:n_occ, :n_occ, n_occ:, n_occ:] # a_j a_l a_i^ a_k^
-    # print('n_occ: ', n_occ)
-
-    T2 = spatial2spin(ccsd_double_amps, orbspin=np.array([1, 0] * norb)) # a_j a_l a_i^ a_k^ -> a_k^ a_i^ a_l a_j
-
-    nspin_orb = norb * 2
-    nspin_occ = n_occ * 2
-
-    ccsd_double_amps = np.zeros((nspin_orb, nspin_orb, nspin_orb, nspin_orb), dtype=complex)
-    ccsd_double_amps[nspin_occ:, :nspin_occ, nspin_occ:, :nspin_occ] = .5 * T2.transpose(2, 0, 3, 1) # a_k^ a_i^ a_l a_j ->  a_i^ a_j a_k^ a_l
-
-    return ccsd_double_amps
-
 def get_t2_spinorbitals_absolute(ccsd_double_amps_abs, n_occ=1):
     """
     get T2 in spinorbitals basis (interleaved) from orbitals basis (absolute)
@@ -164,11 +139,11 @@ def get_t2_spinorbitals_absolute_full(ccsd_double_amps_abs, dtype=complex, mixed
 
     return T2_spin
 
-def get_t1_spinorbitals_absolute_full(ccsd_single_amps_abs, n_occ=None, dtype=complex):
+def get_t1_spinorbitals_absolute_full(ccsd_single_amps_abs, dtype=complex):
     """
     get T1 in spinorbitals basis (interleaved) from orbitals basis (absolute)
 
-    :param ccsd_single_amps: T1 in orbital basis [nmo x nmo ] a_i^ a_j
+    :param ccsd_single_amps: T1 in orbital basis [nmo x nmo ] a_j a_i^
     :return: T1 in spinorbitals basis (interleaved) [2nmo x 2nmo ] a_i^ a_j
     """
 
@@ -183,10 +158,7 @@ def get_t1_spinorbitals_absolute_full(ccsd_single_amps_abs, n_occ=None, dtype=co
             T1_spin[2 * i,     2 * j] = ccsd_single_amps_abs[i, j] #* 0.5
             T1_spin[2 * i + 1, 2 * j + 1] = ccsd_single_amps_abs[i, j] #* 0.5
 
-    if n_occ is not None:
-        T1_spin[:n_occ, n_occ:] = 0
-
-    return T1_spin
+    return T1_spin.T # a_j a_i^ -> a_i^ a_j
 
 
 
@@ -237,7 +209,7 @@ def get_t1_spinorbitals_absolute(ccsd_single_amps, n_occ=1):
     nspin_occ = n_occ * 2
 
     ccsd_single_amps = np.zeros((nspin_orb, nspin_orb), dtype=complex)
-    ccsd_single_amps[nspin_occ:, :nspin_occ] = T1.transpose(1, 0) # a_k^ a_i^ a_l a_j ->  a_i^ a_j a_k^ a_l
+    ccsd_single_amps[nspin_occ:, :nspin_occ] = T1.transpose(1, 0) # a_j  a_i^ ->  a_i^ a_j
 
     return ccsd_single_amps
 
@@ -257,7 +229,7 @@ def get_t1_absolute_orbitals(T1):
     T1_abs[:nocc, nocc:] = T1  #  a_j  a_i^
 
 
-    return T1_abs
+    return T1_abs  #  a_j a_i^
 
 
 ###################################

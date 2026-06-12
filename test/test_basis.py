@@ -161,7 +161,7 @@ class OperationsTest(unittest.TestCase):
             t2 = mol['ccsd_amp_double_orb'] # a_j a_l a_i^ a_k^
 
             print('T1_orb')
-            T1_orb = get_absolute_orbitals(t1)  # a_j a_i^ -> a_j  a_i^
+            T1_orb = get_absolute_orbitals(t1)  # a_j a_i^ -> a_j a_i^
             print_max_values_2d(T1_orb, order=[1, 0])  #  a_i^ a_j
 
             print('T1_spin')
@@ -258,7 +258,7 @@ class OperationsTest(unittest.TestCase):
             T1_spin_rev = change_of_basis_spin(T1_spin_rot_2, None, U_test.T.conj())[0]
 
             # T1 basis change 2
-            T1_spin = get_t1_spinorbitals(t1).T  # a_j a_i^ -> a_i^ a_j
+            T1_spin = get_t1_spinorbitals(t1)  # a_j a_i^ -> a_i^ a_j
             T1_spin_rot = change_of_basis_spin(T1_spin, None, U_test)[0]
 
             np.testing.assert_almost_equal(T1_spin_rot, T1_spin_rot_2)

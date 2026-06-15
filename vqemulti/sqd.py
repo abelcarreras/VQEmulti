@@ -116,7 +116,7 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
     return sqd_energy
 
 
-def simple_filtering(samples, n_electrons, multiplicity=0):
+def simple_filtering(samples, n_electrons, multiplicity=1):
 
     delta = multiplicity - 1
     alpha_electrons = (n_electrons + delta)//2
@@ -214,7 +214,7 @@ def get_indices(bitstring, index):
 def configuration_recovery(samples,
                            hamiltonian,
                            n_electrons,
-                           multiplicity=0,
+                           multiplicity=1,
                            n_max_diff=4,
                            n_iter=1,
                            max_configurations=None,
@@ -338,7 +338,7 @@ def configuration_recovery(samples,
 def configuration_recovery_all(samples,
                               hamiltonian,
                               n_electrons,
-                              multiplicity=0,
+                              multiplicity=1,
                               n_iter=1,
                               max_configurations=None,
                               regularization_factor=0.7,

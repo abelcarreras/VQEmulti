@@ -30,7 +30,7 @@ class SimulatorBase(ABC):
         self._trotter_steps = trotter_steps
         self._reorder_trotter = reorder_trotter
         self._test_only = test_only
-        self._shots = shots
+        self._shots = int(shots)
         self._circuit_count = []
         self._shot_count = []
         self._circuit_gates = defaultdict(int)

@@ -1,6 +1,6 @@
-from vqemulti.ansatz.generators.factor import double_factorized_t2, double_factorized_t2_general, \
-    double_factorized_t2_simple
-from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals, get_t1_spinorbitals_absolute_full
+from vqemulti.ansatz.generators.factor import double_factorized_t2_general, double_factorized_t2_simple
+from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals_absolute_full
+from vqemulti.ansatz.generators.basis import get_absolute_orbitals
 from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
@@ -104,34 +104,19 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
             if use_general:
                 t1_abs = t1 - t1.T.conjugate()
-                # spin_t1 = get_t1_spinorbitals_absolute_full(t1_abs) #.real
             else:
-                from vqemulti.ansatz.generators.basis import get_absolute_orbitals
-
                 t1_abs = get_absolute_orbitals(t1)
                 t1_abs = t1_abs - t1_abs.T.conjugate()
-
-
-               # t1_spin = get_t1_spinorbitals(t1).real
-               # spin_t1 = t1_spin - t1_spin.T.conjugate()
-
 
             if single_rotation is not None:
                 single_rotation = sp.sparse.linalg.expm(t1_abs) @ single_rotation
             else:
                 single_rotation = sp.sparse.linalg.expm(t1_abs)
 
-
-#            if op_single is None:
-#                op_single = get_ucc_generator(spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)[0]
-#            else:
-#                op_single += get_ucc_generator(spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)[0]
-
         if single_rotation is not None:
             generator = -sp.linalg.logm(single_rotation)
             self._spin_t1 = get_t1_spinorbitals_absolute_full(generator) #.real
             operators += get_ucc_generator(self._spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)
-            #operators  += [op_single]
             coefficients.append(1.0)
 
         if n_terms is None:

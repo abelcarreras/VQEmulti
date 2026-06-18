@@ -1,5 +1,6 @@
-from vqemulti.ansatz.generators.factor import double_factorized_t2
-from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
+from vqemulti.ansatz.generators.factor import double_factorized_t2, double_factorized_t2_general, \
+    double_factorized_t2_simple
+from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals, get_t1_spinorbitals_absolute_full
 from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.exp_product import ProductExponentialAnsatz
@@ -42,15 +43,17 @@ def matrix_power(matrix, exponent):
     if exponent == -1.0:
         return matrix.conj().T
 
-    from scipy.linalg import logm, expm
-    return expm(exponent * logm(matrix))
+    #from scipy.linalg import logm, expm
+    return sp.linalg.expm(exponent * sp.linalg.logm(matrix))
 
 
+from vqemulti.ansatz.exponential import ExponentialAnsatz
 class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None, separate_spins=False, mixed_spin=True):
+    def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None,
+                 separate_spins=False, mixed_spin=True, use_general=False, reference_basis=None):
         """
         assumed HF as reference
 
@@ -70,8 +73,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._rotation_matrices = []
         self._jastrow_matrices = []
         self._full_trotter = full_trotter
-        self._spin_t1 = None
         self._separate_spins = separate_spins
+        self._reference_basis = reference_basis
+        self._spin_t1 = None
 
         t2 = np.array(t2)
         n_occupied, _, n_virtual, _ = t2.shape
@@ -81,24 +85,53 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
             # assume close shell, even number of electrons, multiplicity zero
             hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
 
-        # assert len(parameters) == len(operator_list)
+        if use_general:
+            diag_coulomb_mats, orbital_rotations = double_factorized_t2_general(t2)
+        else:
+            diag_coulomb_mats, orbital_rotations = double_factorized_t2_simple(t2)  # a_j a_l a_i^ a_k^
 
-        #if len(operator_list) > 0 and not is_hermitian(1j * sum(operator_list)):
-        #    raise Exception('Non antihermitian operator')
 
-
-        diag_coulomb_mats, orbital_rotations = double_factorized_t2(t2)  # a_j a_l a_i^ a_k^
-
-        # print(orbital_rotations.shape)
         norb = orbital_rotations.shape[-1]
 
         coefficients = []
         operators = []
 
+        single_rotation = None
+        if reference_basis is not None:
+            single_rotation = reference_basis.T
+
         if t1 is not None:
-            t1_spin = get_t1_spinorbitals(t1).real
-            self._spin_t1 = t1_spin - t1_spin.T.conjugate()
+
+            if use_general:
+                t1_abs = t1 - t1.T.conjugate()
+                # spin_t1 = get_t1_spinorbitals_absolute_full(t1_abs) #.real
+            else:
+                from vqemulti.ansatz.generators.basis import get_absolute_orbitals
+
+                t1_abs = get_absolute_orbitals(t1)
+                t1_abs = t1_abs - t1_abs.T.conjugate()
+
+
+               # t1_spin = get_t1_spinorbitals(t1).real
+               # spin_t1 = t1_spin - t1_spin.T.conjugate()
+
+
+            if single_rotation is not None:
+                single_rotation = sp.sparse.linalg.expm(t1_abs) @ single_rotation
+            else:
+                single_rotation = sp.sparse.linalg.expm(t1_abs)
+
+
+#            if op_single is None:
+#                op_single = get_ucc_generator(spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)[0]
+#            else:
+#                op_single += get_ucc_generator(spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)[0]
+
+        if single_rotation is not None:
+            generator = -sp.linalg.logm(single_rotation)
+            self._spin_t1 = get_t1_spinorbitals_absolute_full(generator) #.real
             operators += get_ucc_generator(self._spin_t1, None, full_amplitudes=True, use_qubit=use_qubit)
+            #operators  += [op_single]
             coefficients.append(1.0)
 
         if n_terms is None:

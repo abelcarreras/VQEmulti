@@ -532,6 +532,8 @@ class QiskitSimulator(SimulatorBase):
         :return: the expectation value of the energy
         """
 
+        log_message('sampled_state_evaluation', log_level=2)
+
         if self._use_estimator is False:
             return super()._get_sampled_state_evaluation(qubit_hamiltonian, state_preparation_gates)
 
@@ -561,6 +563,8 @@ class QiskitSimulator(SimulatorBase):
         :param n_qubits: number of qubits
         :return: expectation value
         """
+
+        log_message('pauli string: {}'.format(main_string), log_level=2)
 
         # Initialize circuit and apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
@@ -611,8 +615,9 @@ class QiskitSimulator(SimulatorBase):
             total_variance += coefficient ** 2 - expectation_value**2
             total_expectation_value += expectation_value
 
-            log_message('variance: ', coefficient ** 2 - (expectation_value.real)**2, log_level=1)
-            log_message('expectation: ', expectation_value.real, log_level=1)
+            log_message('expectation  {}  variance: {}'.format(expectation_value.real,
+                                                               coefficient ** 2 - (expectation_value.real)**2),
+                        log_level=2)
 
         return total_expectation_value, total_variance
 
@@ -626,6 +631,7 @@ class QiskitSimulator(SimulatorBase):
         :param session: quiskit IBM runtime session
         :return: expectation value of the full hamiltonian
         """
+        log_message('measure_expectation_estimator', log_level=2)
 
         # apply hamiltonian gates according to main string
         circuit = qiskit.QuantumCircuit(n_qubits)
@@ -712,6 +718,7 @@ class QiskitSimulator(SimulatorBase):
         :param mapping: mapping transform
         :return: reference gates
         """
+        log_message('build_reference_gates', log_level=3)
 
         reference_gates = []
         for i, occ in enumerate(hf_reference_fock):
@@ -739,6 +746,8 @@ class QiskitSimulator(SimulatorBase):
         # Divide time into steps and apply the evolution operator the necessary
         # number of times
 
+        log_message('get trotterized operator', log_level=3)
+
         trotter_step_function = {'std': trotter_step_standard,
                                  'inv': trotter_step_inverse,
                                  'opt': trotter_step_opt}
@@ -750,6 +759,8 @@ class QiskitSimulator(SimulatorBase):
         return trotter_gates
 
     def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits, tolerance=1e-6):
+
+        log_message('build givens rotation gates', log_level=3)
 
         reference_gates = []
 
@@ -793,7 +804,7 @@ class QiskitSimulator(SimulatorBase):
 
     def _get_circuit_stat_data(self, circuit, separate_spins=False):
 
-        log_message('generate circuit stats', log_level=2)
+        log_message('generate circuit stats', log_level=5)
 
         gates_name = {'x': 'PauliX', 'y': 'PauliY', 'z': 'PauliZ',
                       'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',
@@ -816,7 +827,7 @@ class QiskitSimulator(SimulatorBase):
             wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
             self._circuit_draw.append(str(circuit.draw(fold=-1, wire_order=wire_order)))
 
-        log_message(self._circuit_draw[-1], log_level=2)
+        log_message(self._circuit_draw[-1], log_level=5)
 
         # depth
         self._circuit_count.append(circuit.depth())

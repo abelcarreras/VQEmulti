@@ -57,8 +57,8 @@ tetracene = MolecularData(
 
 # 120 electrons
 
-#active = 6
-active = 12
+active = 6
+#active = 12
 
 print('frozen: ', 120//2-active//2)
 

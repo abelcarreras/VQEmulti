@@ -1,7 +1,7 @@
 from Cython.Compiler.Lexicon import raw_prefixes
 
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, get_sparse_operator
-from vqemulti.utils import get_operators_order, break_qubit_operator, operator_to_matrix_list
+from vqemulti.utils import get_operators_order, break_qubit_operator, operator_to_matrix_list, log_message
 from openfermion import givens_decomposition_square, count_qubits, jordan_wigner
 from collections import defaultdict
 import numpy as np
@@ -68,6 +68,7 @@ class SimulatorBase(ABC):
         formatted_hamiltonian = convert_hamiltonian(qubit_hamiltonian)
 
         if self._hamiltonian_grouping:
+            log_message('generate group hamiltonian', log_level=2)
             # use hamiltonian grouping
             grouped_hamiltonian = group_hamiltonian(formatted_hamiltonian)
         else:
@@ -75,6 +76,8 @@ class SimulatorBase(ABC):
             grouped_hamiltonian = {}
             for pauli_string, coefficient in formatted_hamiltonian.items():
                 grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
+
+        log_message('hamiltonian terms {}'.format(len(grouped_hamiltonian)), log_level=2)
 
         # Obtain the expectation value for each Pauli string
         expectation_value = 0

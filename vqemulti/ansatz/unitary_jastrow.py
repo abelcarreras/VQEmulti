@@ -47,13 +47,39 @@ def matrix_power(matrix, exponent):
     return sp.linalg.expm(exponent * sp.linalg.logm(matrix))
 
 
+def make_local_simple(mat, n):
+    local_mat = np.array(mat).copy()
+    for i, row in enumerate(local_mat):
+        row[i + n:] = 0
+        row[:max(0, i - n + 1)] = 0
+    return local_mat
+
+
+def make_local(J, G, local=1):
+
+    if G is None:
+        return make_local_simple(J, local)
+
+    import networkx as nx
+
+    J_local = np.zeros_like(J)
+    distances = dict(nx.all_pairs_shortest_path_length(G))
+    n_orb = J.shape[0]
+
+    for i in range(n_orb):
+        for j in range(n_orb):
+            if distances[i][j] <= local-1:
+                J_local[i, j] = J[i, j]
+    return J_local
+
+
 from vqemulti.ansatz.exponential import ExponentialAnsatz
 class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     """
     ansatz type: e^k e^iJ e^-k
     """
     def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None,
-                 separate_spins=False, mixed_spin=True, use_general=False, reference_basis=None):
+                 separate_spins=False, mixed_spin=True, use_general=False, reference_basis=None, connectivity_graph=None):
         """
         assumed HF as reference
 
@@ -66,6 +92,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         :param separate_spins: separate spin operators approach (under testing: incorrect phases)
         :param mixed_spin: include mixed spin interactions
+        :param use_general: use general diagonalization
+        :param reference_basis: orbital basis change matrix for reference state
+        :param connectivity_graph: add connectivity graph to use in local
         """
         #super().__init__()
         self._operators = []
@@ -122,13 +151,6 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         if n_terms is None:
             n_terms = len(diag_coulomb_mats) * 2
 
-        def make_local(mat, n):
-            local_mat = np.array(mat).copy()
-            for i, row in enumerate(local_mat):
-                row[i + n:] = 0
-                row[:max(0, i - n + 1)] = 0
-            return local_mat
-
         i_term = 1
         for diag, U in zip(diag_coulomb_mats, orbital_rotations):
             for U_i, diag_i in zip(U, diag):
@@ -138,7 +160,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
                 if local is not None:
                     # make local version
-                    diag_i = make_local(diag_i, local)
+                    diag_i = make_local(diag_i, connectivity_graph, local=local)
 
                 # build Jastrow operator
                 j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)

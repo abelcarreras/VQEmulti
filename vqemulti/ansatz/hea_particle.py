@@ -49,9 +49,10 @@ def matrix_power(matrix, exponent):
 
 class HardwareEfficientAnsatz(GenericAnsatz):
     """
-    ansatz type: e^k e^iJ e^-k
+    ansatz type:
+
     """
-    def __init__(self, hf_reference_fock, init='zero', n_terms=None, mixed_spin=True):
+    def __init__(self, hf_reference_fock, init='zero', n_terms=None, mixed_spin=True, complex_rotation=False):
         """
         assumed HF as reference
 
@@ -62,6 +63,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         :param separate_spins: separate spin operators approach (under testing: incorrect phases)
         :param mixed_spin: include mixed spin interactions
+        :param complex_rotation: include complex valued rotations (uses more paramters)
         """
         super().__init__()
         self._operators = []
@@ -72,10 +74,15 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         self._reference_fock = hf_reference_fock
         self._mixed_spin = mixed_spin
         self._n_terms = n_terms
+        self._complex_rotation = complex_rotation
+
+        k_multiplicity = 2 if self._complex_rotation else 1
 
         n_orb = len(hf_reference_fock)//2
-        n_param_k = (n_orb**2 - n_orb)//2
+        n_param_k = (n_orb**2 - n_orb)//2 * k_multiplicity
         n_param_j = (n_orb**2 - n_orb)//2 + n_orb
+        # print('n_param_k:', n_param_k)
+        # print('n_param_j:', n_param_j)
 
         # initialize parameters
         n_param = n_param_k * ( 1 + (self._n_terms-1)) + n_param_j * (self._n_terms-1)
@@ -88,8 +95,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         else:
             raise ValueError('init must be either zeros, ones, or random')
 
-
         self._operators, self._matrices = self._get_matrices(self._parameters)
+        self._mask = [True] * n_param
 
 
     @property
@@ -102,23 +109,47 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
     @property
     def parameters(self):
-        return self._parameters
+        assert len(self._parameters) == len(self._mask)
+        return np.asarray(self._parameters)[self._mask]
 
     @parameters.setter
     def parameters(self, parameters):
-        self._parameters = list(parameters)
+        params = np.asarray(self._parameters)
+        params[self._mask] = parameters
+        self._parameters = params.tolist()
+
         self._operators, self._matrices = self._get_matrices(self._parameters)
+
+    def set_mask(self, mask):
+        self._mask = mask
+
+    def add_term(self, init):
+        """
+        add term to the ansatz
+
+        :param init: zeros, ones or random
+        """
+
+        param = self._parameters
+
+        self.__init__(self._reference_fock, init, n_terms=self._n_terms+1, mixed_spin=self._mixed_spin, complex_rotation=self._complex_rotation)
+        new_param = self.parameters
+        new_param[:len(param)] = param
+        self.parameters = new_param
+
 
     def _get_matrices(self, parameters):
 
         operators = []
 
+        k_multiplicity = 2 if self._complex_rotation else 1
+
         # bind parameters
         n_orb = self.n_qubits // 2
-        n_param_k = (n_orb**2 - n_orb)//2
+        n_param_k = (n_orb**2 - n_orb)//2 * k_multiplicity
         n_param_j = (n_orb**2 - n_orb)//2 + n_orb
 
-        def unitary_from_parameters(parameters, size):
+        def unitary_from_parameters_real(parameters, size):
 
             kappa = np.zeros((size, size))
             #i, j = np.triu_indices(size)
@@ -128,6 +159,33 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             kappa[j, i] = [-p for p in parameters]
 
             return expm(kappa)
+
+        def unitary_from_parameters_complex(parameters, size):
+
+            # Number of independent pairs
+            n_pairs = size * (size - 1) // 2
+            assert len(parameters) == 2 * n_pairs
+
+            real = np.asarray(parameters[:n_pairs], dtype=float)
+            imag = np.asarray(parameters[n_pairs:], dtype=float)
+
+            kappa = np.zeros((size, size), dtype=complex)
+            i, j = np.triu_indices(size, k=1)
+
+            # Upper triangle
+            kappa[i, j] = real + 1j * imag
+
+            # Lower triangle (anti-Hermitian)
+            kappa[j, i] = -real + 1j * imag
+
+            return expm(kappa)
+
+        def unitary_from_parameters(parameters, size):
+            if self._complex_rotation:
+                return unitary_from_parameters_complex(parameters, size)
+            else:
+                return unitary_from_parameters_real(parameters, size)
+
 
         def symmetric_from_parameters(parameters, size):
 

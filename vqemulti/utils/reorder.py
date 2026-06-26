@@ -3,104 +3,13 @@ from openfermion.transforms import reorder, get_interaction_operator, get_fermio
 import numpy as np
 
 
-
-def reorder_qubits_adapt(orbitals_order, hamiltonian, hf_reference_fock, pool=None):
-    """
-    reorder hamiltonian, reference and pool (optional)
-
-    :param orbitals_order: list of indices of the new orbitals order
-    :param hamiltonian: hamiltonian operator
-    :param hf_reference_fock: reference in Fock space
-    :param pool: pool of operators
-    :return: reordered Hamiltonian, reference and pool
-    """
-
-    n_qubits = len(hf_reference_fock)
-
-    # define reorder function
-    def order_function(mode_idx, num_modes):
-        spin = mode_idx % 2
-        spatial_idx = mode_idx // 2
-        new_spatial_idx = orbitals_order.index(spatial_idx)
-        return 2 * new_spatial_idx + spin
-
-    # reorder hamiltonian
-    if isinstance(hamiltonian, InteractionOperator):
-        hamiltonian = get_fermion_operator(hamiltonian)
-        reordered_hamiltonian = reorder(hamiltonian, order_function)
-        reordered_hamiltonian = get_interaction_operator(reordered_hamiltonian)
-    else:
-        reordered_hamiltonian = reorder(hamiltonian, order_function)
-
-    # reorder reference
-    reordered_reference = [0] * n_qubits
-    for old_idx in range(n_qubits):
-        new_idx = order_function(old_idx, n_qubits)
-        reordered_reference[new_idx] = hf_reference_fock[old_idx]
-
-    if pool is not None:
-        from vqemulti.pool.tools import OperatorList
-
-        # reorder operator pool
-        reordered_pool = []
-        for op in pool:
-            reordered_pool.append(reorder(op, order_function))
-
-        reordered_pool = OperatorList(reordered_pool, normalize=False, antisymmetrize=False, spin_symmetry=False)
-
-        return reordered_hamiltonian, reordered_reference, reordered_pool
-
-    return reordered_hamiltonian, reordered_reference
-
-
-def reorder_qubits_sqd(orbitals_order, hamiltonian, t2):
-    """
-    reorder hamiltonian, and T2
-
-    :param orbitals_order: list of indices of the new orbitals order
-    :param hamiltonian: hamiltonian operator
-    :param t2: t2 amplitudes
-    :return: reordered Hamiltonian and t2
-    """
-
-    # define reorder function
-    def order_function(mode_idx, num_modes):
-        spin = mode_idx % 2
-        spatial_idx = mode_idx // 2
-        new_spatial_idx = orbitals_order.index(spatial_idx)
-        return 2 * new_spatial_idx + spin
-
-    # reorder hamiltonian
-    if isinstance(hamiltonian, InteractionOperator):
-        hamiltonian = get_fermion_operator(hamiltonian)
-        reordered_hamiltonian = reorder(hamiltonian, order_function)
-    else:
-        reordered_hamiltonian = reorder(hamiltonian, order_function)
-
-    n_occ, n_virt = t2.shape[1:3]
-
-    occ_perm = [orbitals_order.index(i) for i in range(n_occ)]
-    virt_perm = [orbitals_order.index(i + n_occ) - n_occ for i in range(n_virt)]
-
-    t2_reordered = t2[np.ix_(occ_perm, occ_perm, virt_perm, virt_perm)]
-
-    return reordered_hamiltonian, t2_reordered
-
-
 def permute_interaction_operator(hamiltonian, permutation):
     """
     Reorder orbitals of an InteractionOperator.
 
-    Parameters
-    ----------
-    hamiltonian : InteractionOperator
-    permutation : list[int]
-        Mapping:
-            new_index i corresponds to old_index permutation[i]
-
-    Returns
-    -------
-    InteractionOperator
+    :param hamiltonian: InteractionOperator
+    :param permutation: list[int]
+    :return: InteractionOperator
     """
     n_orb = len(permutation)
 
@@ -138,7 +47,6 @@ def permute_interaction_operator(hamiltonian, permutation):
 
 def permute_hamiltonian(hamiltonian, permutation):
 
-    # define reorder function
     def order_function(mode_idx, num_modes):
         spin = mode_idx % 2
         spatial_idx = mode_idx // 2
@@ -147,33 +55,116 @@ def permute_hamiltonian(hamiltonian, permutation):
 
     # reorder hamiltonian
     if isinstance(hamiltonian, InteractionOperator):
-        # hamiltonian = get_fermion_operator(hamiltonian)
-        # return reorder(hamiltonian, order_function)
         return permute_interaction_operator(hamiltonian, permutation)
     else:
         return reorder(hamiltonian, order_function)
 
 def permute_amplitudes(T1, T2, permutation):
     """
-    Reorder CC amplitudes according to a permutation.
+    Reorder T1 and T2  amplitudes according to a permutation.
 
-    Parameters
-    ----------
-    T1 : ndarray (N,N)
-    T2 : ndarray (N,N,N,N)
-    permutation : array-like
-
-        permutation[new_index] = old_index
-
-    Returns
-    -------
-    T1_new, T2_new
+    :param T1: 1-e amplitudes absolute basis (N,N)
+    :param T2: 2-e amplitudes absolute basis (N,N,N,N)
+    :param permutation: array-like
+    :return: T1_ord, T2_ord
     """
 
     p = np.asarray(permutation)
 
     T1_new = T1[np.ix_(p, p)]
-
     T2_new = T2[np.ix_(p, p, p, p)]
 
     return T1_new, T2_new
+
+
+def permute_reference(hf_reference_fock, permutation):
+    return np.array(hf_reference_fock)[list(permutation)].tolist()
+
+
+def permute_pool(pool, permutation):
+    """
+    Reorder pool of operators according to a permutation.
+
+    :param pool: operator pool
+    :param permutation: permutation
+    :return: permuted pool
+    """
+    from vqemulti.pool.tools import OperatorList
+
+    def order_function(mode_idx, num_modes):
+        spin = mode_idx % 2
+        spatial_idx = mode_idx // 2
+        new_spatial_idx = permutation.index(spatial_idx)
+        return 2 * new_spatial_idx + spin
+
+    # reorder operator pool
+    reordered_pool = []
+    for op in pool:
+        reordered_pool.append(reorder(op, order_function))
+
+    reordered_pool = OperatorList(reordered_pool, normalize=False, antisymmetrize=False, spin_symmetry=False)
+
+    return reordered_pool
+
+
+def print_permutation(G_qpu, centers, permutation):
+    """
+    print info about the permutation
+
+    :param G_qpu: connectivity graph
+    :param centers: list of centers of orbitals
+    :param permutation: list of permutations
+    """
+
+    import networkx as nx
+    import matplotlib.pyplot as plt
+
+    n_orbitals = len(permutation)
+
+    print('mapping original -> final')
+
+    for i, p in enumerate(permutation):
+        print(i, '->', p)
+
+    pos = {permutation[i]: centers[i][:2] for i in range(n_orbitals)}
+
+    permutation_inv = np.argsort(permutation).tolist()
+
+    edge_labels = {}
+    for i, j in G_qpu.edges:
+        i2 = permutation_inv[i]
+        j2 = permutation_inv[j]
+
+        d = np.linalg.norm(centers[i2][:2] - centers[j2][:2])
+        edge_labels[(i, j)] = f"{d:.2f}"
+
+
+    labels = {i: permutation_inv[i] for i in G_qpu.nodes}
+
+    nx.draw(G_qpu, pos, with_labels=False)
+    nx.draw_networkx_edge_labels(G_qpu, pos, edge_labels=edge_labels)
+    nx.draw_networkx_labels(G_qpu, pos,labels=labels)
+    plt.show()
+
+
+def optimize_mapping(G_qpu, interaction_matrix):
+    """
+    optimize permutation according to connectivity graph and interaction_matrix (maximize interaction)
+    :param G_qpu: connectivity graph
+    :param interaction_matrix: interaction matrix
+    :return: permutation, score
+    """
+    from scipy.optimize import quadratic_assignment
+    import networkx as nx
+
+
+    res = quadratic_assignment(interaction_matrix,
+                               nx.to_numpy_array(G_qpu),
+                               method="2opt",
+                               options={"maximize": True})
+
+    permutation = res.col_ind
+    score = res.fun
+
+    return permutation, score
+

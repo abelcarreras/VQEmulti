@@ -6,6 +6,7 @@ from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators.basis import get_absolute_orbitals
 from vqemulti.preferences import Configuration
+from vqemulti.utils.reorder import print_permutation, optimize_mapping
 from openfermion import get_fermion_operator
 from copy import deepcopy
 import numpy as np
@@ -15,42 +16,6 @@ Configuration().mapping = 'jw'
 Configuration().verbose = False
 Configuration().temp_dir = '/Users/abel/TEST/DICE'
 
-
-def print_permutation(G_qpu, permutation):
-    print('mapping original -> final')
-
-    for i, p in enumerate(permutation):
-        print(i, '->', p)
-
-    pos = {permutation[i]: centers[i][:2] for i in range(n_orbitals)}
-
-    permutation_inv = np.argsort(permutation).tolist()
-
-    edge_labels = {}
-    for i, j in G_qpu.edges:
-        i2 = permutation_inv[i]
-        j2 = permutation_inv[j]
-
-        d = np.linalg.norm(centers[i2][:2] - centers[j2][:2])
-        edge_labels[(i, j)] = f"{d:.2f}"
-
-
-    labels = {i: permutation_inv[i] for i in G_qpu.nodes}
-
-    nx.draw(G_qpu, pos, with_labels=False)
-    nx.draw_networkx_edge_labels(G_qpu, pos, edge_labels=edge_labels)
-    nx.draw_networkx_labels(G_qpu, pos,labels=labels)
-    plt.show()
-
-def optimize_mapping(G_qpu, interaction_matrix):
-    from scipy.optimize import quadratic_assignment
-
-    res = quadratic_assignment(interaction_matrix,
-                               nx.to_numpy_array(G_qpu),
-                               method="2opt",
-                               options={"maximize": True})
-
-    return res.col_ind, res.fun
 
 butatriene = MolecularData(
     geometry=[
@@ -133,7 +98,7 @@ permutation, score = optimize_mapping(G_qpu, np.abs(one_body_alpha_simple))
 
 print('permutation:', permutation)
 
-print_permutation(G_qpu, permutation)
+print_permutation(G_qpu, centers, permutation)
 permutation_inv = np.argsort(permutation).tolist()
 
 hamiltonian_loc_ord = permute_hamiltonian(hamiltonian_loc, permutation_inv)

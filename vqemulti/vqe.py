@@ -74,27 +74,26 @@ if __name__ == '__main__':
                                 description='H2')
 
     # run classical calculation
-    molecule = run_pyscf(h2_molecule, run_fci=True, run_ccsd=True)
+    molecule = run_pyscf(h2_molecule, run_ccsd=True, frozen_core=1, reference='DFT', run_casci=True)
 
     # get properties from classical SCF calculation
     n_electrons = molecule.n_electrons
-    n_orbitals = 4  # molecule.n_orbitals
+    n_orbitals = molecule.n_orbitals
 
     print('n_electrons: ', n_electrons)
     print('n_orbitals: ', n_orbitals)
 
     hamiltonian = molecule.get_molecular_hamiltonian()
-    hamiltonian = generate_reduced_hamiltonian(hamiltonian, n_orbitals, frozen_core=2)
     # print(hamiltonian)
 
     print('n_qubits:', hamiltonian.n_qubits)
 
     # Get UCCSD params
-    uccsd_pool = get_pool_singlet_sd(n_electrons, n_orbitals, frozen_core=2)
+    uccsd_pool = get_pool_singlet_sd(n_electrons, n_orbitals)
     # uccsd_ansatz = []
 
     # Get reference Hartree Fock state
-    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits, frozen_core=2)
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, hamiltonian.n_qubits)
     print('hf reference', hf_reference_fock)
 
     # get ansatz
@@ -123,7 +122,7 @@ if __name__ == '__main__':
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))
     print('Energy VQE: {:.8f}'.format(result['energy']))
     print('Energy CCSD: {:.8f}'.format(molecule.ccsd_energy))
-    print('Energy FullCI: {:.8f}'.format(molecule.fci_energy))
+    print('Energy FullCI: {:.8f}'.format(molecule.casci_energy))
 
     print('Num operators: ', len(result['ansatz']))
     print('Ansatz:\n', result['ansatz']._operators)

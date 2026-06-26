@@ -175,7 +175,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
                     self._jastrow_matrices.append(ansatz_j)
 
-                    if log_section(log_level=2):
+                    if log_section(log_level=3):
                         print_tensor_4d(spin_jastrow.imag, spin_notation=True, title='Jastrow interactions')
 
                     # basis change

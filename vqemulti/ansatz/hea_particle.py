@@ -52,7 +52,14 @@ class HardwareEfficientAnsatz(GenericAnsatz):
     ansatz type:
 
     """
-    def __init__(self, hf_reference_fock, init='zero', n_terms=None, mixed_spin=True, complex_rotation=False):
+    def __init__(self, hf_reference_fock,
+                 init='zero',
+                 n_terms=None,
+                 mixed_spin=True,
+                 complex_rotation=False,
+                 local=None,
+                 connectivity_graph=None
+                 ):
         """
         assumed HF as reference
 
@@ -98,6 +105,40 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         self._operators, self._matrices = self._get_matrices(self._parameters)
         self._mask = [True] * n_param
 
+        def get_mask(n_orb, G, local):
+
+            """
+            Return a boolean mask for the parameter vector corresponding to
+            np.triu_indices(size).
+            """
+            import networkx as nx
+
+            mask_total = np.ones(n_param, dtype=bool)
+
+            for i_term in range(n_terms-1):
+
+                mask = np.zeros(n_orb * (n_orb + 1) // 2, dtype=bool)
+                i, j = np.triu_indices(n_orb)
+                if G is None:
+                    # Distance along the diagonal
+                    mask = (j - i) < local
+                else:
+                    distances = dict(nx.all_pairs_shortest_path_length(G))
+                    for k, (ii, jj) in enumerate(zip(i, j)):
+                        if distances[ii][jj] <= local - 1:
+                            mask[k] = True
+
+                print(n_param_k, n_param_j, i_term)
+                n = n_param_k * (i_term + 1) + n_param_j * i_term
+                mask_total[n: n+n_param_j] = mask
+            return mask_total
+
+        # set mask for local
+        if local is not None:
+            self._mask = get_mask(n_orb, connectivity_graph, local)
+            for i, t in enumerate(self._mask):
+                if not t: self._parameters[i] = 0.0
+
 
     @property
     def n_qubits(self):
@@ -114,6 +155,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
     @parameters.setter
     def parameters(self, parameters):
+        assert len(parameters) == sum(self._mask)
+        assert len(self._parameters) == len(self._mask)
         params = np.asarray(self._parameters)
         params[self._mask] = parameters
         self._parameters = params.tolist()
@@ -216,6 +259,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         for i in range(self._n_terms-1):
             # jastrow
             diag_i = symmetric_from_parameters(parameters[pos:n_param_j+pos], n_orb)
+
+            # print J
+            # print(np.round(diag_i, decimals=3))
 
             j_mat = np.zeros((n_orb, n_orb, n_orb, n_orb), dtype=complex)
             for i in range(n_orb):

@@ -143,7 +143,7 @@ class GenericAnsatz(ABC):
         pass
 
     def get_gradients(self, parameters, hamiltonian, simulator):
-        self._parameters = parameters
+        self.parameters = parameters
         if simulator is None:
             return self._exact_gradient(hamiltonian)
         else:
@@ -173,9 +173,9 @@ class GenericAnsatz(ABC):
             return energy
 
         # We use a copy to avoid modifying the original parameters during the loop
-        n_params = len(self._parameters)
+        n_params = len(self.parameters)
         gradient = np.zeros(n_params)
-        params_copy = np.array(self._parameters, dtype=float)
+        params_copy = np.array(self.parameters, dtype=float)
 
         for i in range(n_params):
             # Save original value

@@ -7,44 +7,10 @@ from vqemulti.utils import get_hf_reference_in_fock_space
 from vqemulti.preferences import Configuration
 from vqemulti.utils import log_section, print_tensor_4d
 from numpy.testing import assert_almost_equal
+from vqemulti.ansatz.unitary_jastrow import get_basis_change_exp
 from scipy.linalg import expm
 import numpy as np
 import scipy as sp
-
-
-def get_basis_change_exp(U_test, tolerance=1e-6, use_qubit=False):
-    """
-    get the generator of the unitary transformation of the basis change U_test
-
-    :param U_test: rotation matrix [a_i^ a_j]
-    :param tolerance: tolerance
-    :return: sparse matrix representation of the generator
-    """
-
-    kappa = -1. * sp.linalg.logm(U_test)  # convention
-
-    assert_almost_equal(U_test, sp.sparse.linalg.expm(-kappa), err_msg='in generator K ')
-    assert np.allclose(kappa + kappa.conj().T, 0), "kappa not anti-hermitian!"
-
-    return get_ucc_generator(kappa, None, full_amplitudes=True, tolerance=tolerance, use_qubit=use_qubit)
-
-
-def matrix_power(matrix, exponent):
-    """
-    only for orthogonal matrices
-
-    :param matrix: orthogonal matrix
-    :param exponent: exponent parameter
-    :return: matrix power
-    """
-    # for efficiency and stability of standard UCJ
-    if exponent == 1.0:
-        return matrix
-    if exponent == -1.0:
-        return matrix.conj().T
-
-    from scipy.linalg import logm, expm
-    return expm(exponent * logm(matrix))
 
 
 class HardwareEfficientAnsatz(GenericAnsatz):
@@ -128,7 +94,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
                         if distances[ii][jj] <= local - 1:
                             mask[k] = True
 
-                print(n_param_k, n_param_j, i_term)
                 n = n_param_k * (i_term + 1) + n_param_j * i_term
                 mask_total[n: n+n_param_j] = mask
             return mask_total
@@ -192,18 +157,17 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         n_param_k = (n_orb**2 - n_orb)//2 * k_multiplicity
         n_param_j = (n_orb**2 - n_orb)//2 + n_orb
 
-        def unitary_from_parameters_real(parameters, size):
 
+        def generator_from_parameters_real(parameters, size):
             kappa = np.zeros((size, size))
-            #i, j = np.triu_indices(size)
             i, j = np.triu_indices(size, k=1)
 
             kappa[i, j] = parameters
             kappa[j, i] = [-p for p in parameters]
 
-            return expm(kappa)
+            return kappa
 
-        def unitary_from_parameters_complex(parameters, size):
+        def generator_from_parameters_complex(parameters, size):
 
             # Number of independent pairs
             n_pairs = size * (size - 1) // 2
@@ -221,13 +185,17 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             # Lower triangle (anti-Hermitian)
             kappa[j, i] = -real + 1j * imag
 
-            return expm(kappa)
+            return kappa
+
+        def generator_from_parameters(parameters, size):
+            if self._complex_rotation:
+                return generator_from_parameters_complex(parameters, size)
+            else:
+                return generator_from_parameters_real(parameters, size)
 
         def unitary_from_parameters(parameters, size):
-            if self._complex_rotation:
-                return unitary_from_parameters_complex(parameters, size)
-            else:
-                return unitary_from_parameters_real(parameters, size)
+            kappa = generator_from_parameters(parameters, size)
+            return expm(kappa)
 
 
         def symmetric_from_parameters(parameters, size):
@@ -245,14 +213,19 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         # basis change
         pos = 0
         matrices = []
-        U_i = unitary_from_parameters(parameters[pos:n_param_k+pos], n_orb)
-        # print(U_i @ U_i.T)
-        # exit()
 
-        U_spin = get_spin_matrix(U_i)
-        ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
+        # old version
+        # U_i = unitary_from_parameters(parameters[pos:n_param_k+pos], n_orb)
+        # U_spin = get_spin_matrix(U_i)
+        # ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
+
+        kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos], n_orb)
+        kappa_spin = get_spin_matrix(kappa_i)
+        ansatz_u = get_ucc_generator(-kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
+        U_spin = expm(kappa_spin)
 
         matrices.append(('K', U_spin))
+
         operators.append(ansatz_u)
         pos += n_param_k
 
@@ -260,16 +233,13 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             # jastrow
             diag_i = symmetric_from_parameters(parameters[pos:n_param_j+pos], n_orb)
 
-            # print J
-            # print(np.round(diag_i, decimals=3))
-
             j_mat = np.zeros((n_orb, n_orb, n_orb, n_orb), dtype=complex)
             for i in range(n_orb):
                 for j in range(n_orb):
                     j_mat[i, i, j, j] = -1j * diag_i[i, j]  # a_i^ a_j a_k^ a_l
 
             spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=self._mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
-            ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=False)
+            ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True)
 
             matrices.append(('J', ansatz_j))
             operators.append(ansatz_j)
@@ -284,7 +254,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             matrices.append(('K', U_spin))
             operators.append(ansatz_u)
             pos += n_param_k
-
 
         return operators, matrices
 
@@ -302,7 +271,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             for matrix, operator in zip(self._matrices, self._operators):
 
                 if matrix[0] == 'K':
-                    rotation_p = matrix[1]
+                    # implement rotation term
+                    rotation_p = matrix[1].T.conj()
                     state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=False)
 
                 elif matrix[0] == 'J':
@@ -311,7 +281,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
                     state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
                 else:
                     raise NotImplementedError
-
 
             return state_preparation_gates
 

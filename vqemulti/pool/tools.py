@@ -204,6 +204,9 @@ class OperatorList:
 
         raise Exception('Not compatible operation')
 
+    def tolist(self):
+        return self._list
+
 
 if __name__ == '__main__':
 

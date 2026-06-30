@@ -103,7 +103,6 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._jastrow_matrices = []
         self._full_trotter = full_trotter
         self._separate_spins = separate_spins
-        self._reference_basis = reference_basis
         self._spin_t1 = None
 
         t2 = np.array(t2)
@@ -127,7 +126,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
         single_rotation = None
         if reference_basis is not None:
-            single_rotation = reference_basis.T
+            single_rotation = np.asarray(reference_basis).T
 
         if t1 is not None:
 

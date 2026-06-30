@@ -24,7 +24,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
                  mixed_spin=True,
                  complex_rotation=False,
                  local=None,
-                 connectivity_graph=None
+                 connectivity_graph=None,
+                 separate_spins=False,
                  ):
         """
         assumed HF as reference
@@ -48,6 +49,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         self._mixed_spin = mixed_spin
         self._n_terms = n_terms
         self._complex_rotation = complex_rotation
+        self._separate_spins = separate_spins
 
         k_multiplicity = 2 if self._complex_rotation else 1
 
@@ -273,7 +275,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
                 if matrix[0] == 'K':
                     # implement rotation term
                     rotation_p = matrix[1].T.conj()
-                    state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits, separate_spins=False)
+                    state_preparation_gates += simulator.get_rotation_gates(rotation_p,
+                                                                            self.n_qubits,
+                                                                            separate_spins=self._separate_spins)
 
                 elif matrix[0] == 'J':
                     # implement jastrow term

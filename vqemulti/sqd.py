@@ -117,16 +117,14 @@ def simulate_energy_sqd(ansatz, hamiltonian, simulator, n_electrons,
 
 
 def simple_filtering(samples, n_electrons, multiplicity=1):
-
     delta = multiplicity - 1
-    alpha_electrons = (n_electrons + delta)//2
-    beta_electrons = (n_electrons - delta)//2
+    alpha_electrons = (n_electrons + delta) // 2
+    beta_electrons = (n_electrons - delta) // 2
 
 
     orbital_conf_good = {'alpha': defaultdict(int), 'beta': defaultdict(int)}
 
     for bistring, count in samples.items():
-
         alpha = bistring[1::2]
         beta = bistring[::2]
 
@@ -134,7 +132,13 @@ def simple_filtering(samples, n_electrons, multiplicity=1):
             orbital_conf_good['alpha'][alpha] += count / 2
 
         if beta.count("1") == beta_electrons:
-            orbital_conf_good['beta'][beta] += count / 2
+            orbital_conf_good["beta"][beta] += count / 2
+
+    total = sum(samples.values())
+    good_conf = sum(orbital_conf_good["alpha"].values()) + sum(orbital_conf_good["beta"].values())
+    discarded_conf = total - good_conf
+
+    log_message('configurations: Good {:.2f}% Discarded {:.2f}%'.format(good_conf/total * 100, discarded_conf/total * 100), log_level=1)
 
     return generate_full_samples(orbital_conf_good['alpha'], orbital_conf_good['beta'])
 
@@ -251,7 +255,7 @@ def configuration_recovery(samples,
         if alpha.count("1") == alpha_electrons:
             orbital_conf_good['alpha'][alpha] += count / 2
         else:
-            orbital_conf_bad['beta'][alpha] += count / 2
+            orbital_conf_bad['alpha'][alpha] += count / 2
 
         if beta.count("1") == beta_electrons:
             orbital_conf_good['beta'][beta] += count / 2
@@ -331,6 +335,17 @@ def configuration_recovery(samples,
             full_samples[key] += value
 
         log_message('# iter {} total unique conf: {}'.format(i_iter, len(full_samples)), log_level=1)
+
+    # counts analysis
+    total = sum(samples.values())
+    good_conf = sum(orbital_conf_good["alpha"].values()) + sum(orbital_conf_good["beta"].values())
+    # bad_conf = sum(orbital_conf_bad["alpha"].values()) + sum(orbital_conf_bad["beta"].values())
+    fixed_conf = sum(new_conf_dict["alpha"].values()) + sum(new_conf_dict["beta"].values())
+    discarded_conf = total - good_conf - fixed_conf
+
+    log_message('configurations: Good {:.2f}% Fixed {:.2f}% Discarded {:.2f}%'.format(
+        good_conf / total * 100, fixed_conf / total * 100, discarded_conf / total * 100),
+        log_level=1)
 
     return full_samples
 
@@ -415,7 +430,8 @@ def configuration_recovery_all(samples,
                     indices_occupied = get_indices(new_conf, 0)
                     p_choice = prob_diff[indices_occupied]
                     if np.sum(p_choice) == 0:
-                        continue
+                        # set uniform distribution
+                        p_choice = np.ones(len(p_choice))
 
                     p_choice = p_choice/np.sum(p_choice)
 
@@ -432,7 +448,8 @@ def configuration_recovery_all(samples,
                     p_choice = prob_diff[indices_occupied]
 
                     if np.sum(p_choice) == 0:
-                        continue
+                        # set uniform distribution
+                        p_choice = np.ones(len(p_choice))
 
                     p_choice = p_choice/np.sum(p_choice)
                     try:
@@ -445,6 +462,8 @@ def configuration_recovery_all(samples,
 
                 if new_conf.count("1") == n_particles:
                     new_conf_dict[new_conf] += c
+                else:
+                    print('cannot fix configuration {}'.format(new_conf))
 
             return new_conf_dict
 
@@ -463,8 +482,18 @@ def configuration_recovery_all(samples,
         for key, value in recovered_full_samples.items():
             full_samples[key] += value
 
-
         log_message('# iter {} total unique conf: {}'.format(i_iter, len(full_samples)), log_level=1)
+
+    # counts analysis
+    total = sum(samples.values())
+    good_conf = sum(orbital_conf_good["alpha"].values()) + sum(orbital_conf_good["beta"].values())
+    # bad_conf = sum(orbital_conf_bad["alpha"].values()) + sum(orbital_conf_bad["beta"].values())
+    fixed_conf = sum(new_conf_dict["alpha"].values()) + sum(new_conf_dict["beta"].values())
+    discarded_conf = total - good_conf - fixed_conf
+
+    log_message('configurations: Good {:.2f}% Fixed {:.2f}% Discarded {:.2f}%'.format(
+        good_conf / total * 100, fixed_conf / total * 100, discarded_conf / total * 100),
+        log_level=1)
 
     return full_samples
 

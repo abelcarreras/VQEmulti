@@ -1,12 +1,9 @@
-from vqemulti.ansatz.generators.factor import double_factorized_t2
 from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
-from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz import GenericAnsatz
 from vqemulti.utils import get_hf_reference_in_fock_space
 from vqemulti.preferences import Configuration
 from vqemulti.utils import log_section, print_tensor_4d
-from numpy.testing import assert_almost_equal
 from vqemulti.ansatz.unitary_jastrow import get_basis_change_exp
 from scipy.linalg import expm
 import numpy as np
@@ -51,11 +48,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         self._complex_rotation = complex_rotation
         self._separate_spins = separate_spins
 
-        k_multiplicity = 2 if self._complex_rotation else 1
-
         n_orb = len(hf_reference_fock)//2
-        n_param_k = (n_orb**2 - n_orb)//2 * k_multiplicity
-        n_param_j = (n_orb**2 - n_orb)//2 + n_orb
+
+        n_param_k, n_param_j = self.get_param_size()
         # print('n_param_k:', n_param_k)
         # print('n_param_j:', n_param_j)
 
@@ -106,6 +101,16 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             for i, t in enumerate(self._mask):
                 if not t: self._parameters[i] = 0.0
 
+    def get_param_size(self):
+        n_orb = len(self._reference_fock)//2
+
+        if self._complex_rotation:
+            n_param_k = n_orb**2
+        else:
+            n_param_k = (n_orb**2 - n_orb)//2
+        n_param_j = (n_orb**2 - n_orb)//2 + n_orb
+
+        return n_param_k, n_param_j
 
     @property
     def n_qubits(self):
@@ -155,10 +160,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         k_multiplicity = 2 if self._complex_rotation else 1
 
         # bind parameters
+        n_param_k, n_param_j = self.get_param_size()
         n_orb = self.n_qubits // 2
-        n_param_k = (n_orb**2 - n_orb)//2 * k_multiplicity
-        n_param_j = (n_orb**2 - n_orb)//2 + n_orb
-
 
         def generator_from_parameters_real(parameters, size):
             kappa = np.zeros((size, size))
@@ -170,13 +173,13 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             return kappa
 
         def generator_from_parameters_complex(parameters, size):
-
             # Number of independent pairs
             n_pairs = size * (size - 1) // 2
-            assert len(parameters) == 2 * n_pairs
+            assert len(parameters) == 2 * n_pairs + size
 
             real = np.asarray(parameters[:n_pairs], dtype=float)
-            imag = np.asarray(parameters[n_pairs:], dtype=float)
+            imag = np.asarray(parameters[n_pairs:n_pairs * 2], dtype=float)
+            imag_diag = np.asarray(parameters[n_pairs * 2:], dtype=float)
 
             kappa = np.zeros((size, size), dtype=complex)
             i, j = np.triu_indices(size, k=1)
@@ -186,6 +189,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
             # Lower triangle (anti-Hermitian)
             kappa[j, i] = -real + 1j * imag
+
+            i, j = np.diag_indices(size)
+            kappa[i, j] = 1j * imag_diag
 
             return kappa
 

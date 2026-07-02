@@ -12,6 +12,7 @@ import openfermion
 import numpy as np
 import scipy
 from vqemulti.utils.reorder import *
+_fcidump_cache = set()
 
 
 def string_to_matrix(pauli_string):
@@ -1020,10 +1021,17 @@ def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True)
     :param filename: custom file name for FCIDUMP file
     :param overwrite: overwrite existing file
     """
-
     import os
+    global _fcidump_cache
+
+    key = (id(hamiltonian), filename)
+    if key in _fcidump_cache:
+        return
+
     if os.path.exists(filename) and not overwrite:
         return
+
+    _fcidump_cache.add(key)
 
     if isinstance(hamiltonian, FermionOperator):
         create_fcidump_file_fermion(hamiltonian, n_elec, filename=filename)

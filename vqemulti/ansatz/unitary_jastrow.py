@@ -104,6 +104,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._full_trotter = full_trotter
         self._separate_spins = separate_spins
         self._spin_t1 = None
+        self._raw_data = []
 
         t2 = np.array(t2)
         n_occupied, _, n_virtual, _ = t2.shape
@@ -160,6 +161,9 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                 if local is not None:
                     # make local version
                     diag_i = make_local(diag_i, connectivity_graph, local=local)
+
+                # store raw data
+                self._raw_data.append({'J' :diag_i, 'U': U_i})
 
                 # build Jastrow operator
                 j_mat = np.zeros((norb, norb, norb, norb), dtype=complex)

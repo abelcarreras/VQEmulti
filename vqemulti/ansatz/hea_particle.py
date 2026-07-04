@@ -12,7 +12,7 @@ import scipy as sp
 
 class HardwareEfficientAnsatz(GenericAnsatz):
     """
-    ansatz type:
+    ansatz type: (e^k e^iJ) * n_terms
 
     """
     def __init__(self, hf_reference_fock,
@@ -55,7 +55,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         # print('n_param_j:', n_param_j)
 
         # initialize parameters
-        n_param = n_param_k * ( 1 + (self._n_terms-1)) + n_param_j * (self._n_terms-1)
+        # n_param = n_param_k * ( 1 + (self._n_terms-1)) + n_param_j * (self._n_terms-1)
+        n_param = (n_param_k + n_param_j) * self._n_terms
+
         if init=='zeros':
             self._parameters = [0.0] * n_param
         elif init=='ones':
@@ -78,7 +80,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
             mask_total = np.ones(n_param, dtype=bool)
 
-            for i_term in range(n_terms-1):
+            for i_term in range(n_terms):
 
                 mask = np.zeros(n_orb * (n_orb + 1) // 2, dtype=bool)
                 i, j = np.triu_indices(n_orb)
@@ -91,7 +93,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
                         if distances[ii][jj] <= local - 1:
                             mask[k] = True
 
-                n = n_param_k * (i_term + 1) + n_param_j * i_term
+                n = (n_param_k + n_param_j) * i_term + n_param_k
                 mask_total[n: n+n_param_j] = mask
             return mask_total
 
@@ -157,8 +159,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
         operators = []
 
-        k_multiplicity = 2 if self._complex_rotation else 1
-
         # bind parameters
         n_param_k, n_param_j = self.get_param_size()
         n_orb = self.n_qubits // 2
@@ -222,22 +222,23 @@ class HardwareEfficientAnsatz(GenericAnsatz):
         pos = 0
         matrices = []
 
-        # old version
-        # U_i = unitary_from_parameters(parameters[pos:n_param_k+pos], n_orb)
-        # U_spin = get_spin_matrix(U_i)
-        # ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
+        for i in range(self._n_terms):
 
-        kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos], n_orb)
-        kappa_spin = get_spin_matrix(kappa_i)
-        ansatz_u = get_ucc_generator(-kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
-        U_spin = expm(kappa_spin)
+            # basis change
+            # old version
+            # U_i = unitary_from_parameters(parameters[pos:n_param_k+pos], n_orb)
+            # U_spin = get_spin_matrix(U_i)
+            # ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
 
-        matrices.append(('K', U_spin))
+            kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos], n_orb)
+            kappa_spin = get_spin_matrix(kappa_i)
+            ansatz_u = get_ucc_generator(-kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
+            U_spin = expm(kappa_spin)
 
-        operators.append(ansatz_u)
-        pos += n_param_k
+            matrices.append(('K', U_spin))
+            operators.append(ansatz_u)
+            pos += n_param_k
 
-        for i in range(self._n_terms-1):
             # jastrow
             diag_i = symmetric_from_parameters(parameters[pos:n_param_j+pos], n_orb)
 
@@ -252,16 +253,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             matrices.append(('J', ansatz_j))
             operators.append(ansatz_j)
             pos += n_param_j
-
-            # basis change
-            # print('param: ', len(parameters[pos:n_param_k+pos]))
-            U_i = unitary_from_parameters(parameters[pos:n_param_k+pos], n_orb)
-            U_spin = get_spin_matrix(U_i)
-            ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
-
-            matrices.append(('K', U_spin))
-            operators.append(ansatz_u)
-            pos += n_param_k
 
         return operators, matrices
 

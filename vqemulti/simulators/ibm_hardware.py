@@ -48,6 +48,7 @@ class RHESampler:
         mode = self._backend if self._session is None else self._session
         sampler = SamplerV2(mode=mode)
         job = sampler.run([isa_circuit], shots=shots)
+        log_message('job ID: ',  job.job_id(), log_level=1)
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
 
@@ -137,6 +138,7 @@ class RHEstimator:
             #print('precision: ', precision)
 
             job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
+            log_message('job ID: ', job.job_id(), log_level=1)
             #print('metadata: ', job.result()[0].metadata)
 
             # shots = 4000  # current hypotesis shots are ignored and always uses this

@@ -2,6 +2,7 @@ import numpy as np
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from vqemulti.utils import log_message, log_section
 from vqemulti.simulators.layout import accumulated_errors
+from vqemulti.simulators.cache import JobCache
 
 
 def get_isa_layout(isa_circuit):
@@ -42,13 +43,19 @@ class RHESampler:
 
     def run(self, circuit, shots=1000, memory=True):
 
-        isa_circuit = self._pm.run(circuit)
+        cache = JobCache()
+        job = cache.get_job(circuit)
 
-        from qiskit_ibm_runtime import SamplerV2
-        mode = self._backend if self._session is None else self._session
-        sampler = SamplerV2(mode=mode)
-        job = sampler.run([isa_circuit], shots=shots)
-        log_message('job ID: ',  job.job_id(), log_level=1)
+        if job is None:
+            isa_circuit = self._pm.run(circuit)
+
+            from qiskit_ibm_runtime import SamplerV2
+            mode = self._backend if self._session is None else self._session
+            sampler = SamplerV2(mode=mode)
+            job = sampler.run([isa_circuit], shots=shots)
+
+            cache.store_job(job, circuit)
+
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
 

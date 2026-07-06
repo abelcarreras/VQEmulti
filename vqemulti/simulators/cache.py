@@ -74,7 +74,6 @@ class JobCache:
 
         try:
             job_id = job.job_id()
-            print('status: ', job.status())
         except AttributeError:
             return
 

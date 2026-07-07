@@ -1,9 +1,18 @@
-import pickle
-import sqlite3
-import numpy as np
 from datetime import datetime
 from vqemulti.utils import log_message
+from typing import TypedDict
+import numpy as np
 import zlib
+import hashlib
+import pickle
+import sqlite3
+
+
+class SamplerConfig(TypedDict):
+    n_shots: int
+
+class EstimatorConfig(TypedDict):
+    observables: tuple
 
 
 class JobCache:
@@ -46,14 +55,12 @@ class JobCache:
             return False
         return True
 
-    def get_job(self, circuit, mapped_observables=None):
-
+    def get_job(self, circuit, data_dict, calc_type: str):
 
         from qiskit_ibm_runtime import QiskitRuntimeService
         service = QiskitRuntimeService()
 
-        calc_type = 'sampler' if mapped_observables is not None else 'estimator'
-        circuit_hash = self.get_hash(circuit, mapped_observables)
+        circuit_hash = self.get_hash(circuit, data_dict, calc_type)
 
         job_id = self.retrieve_calculation_data(circuit_hash, calc_type)
 
@@ -70,7 +77,7 @@ class JobCache:
         return service.job(job_id)
 
 
-    def store_job(self, job, circuit, mapped_observables=None):
+    def store_job(self, job, circuit, data_dict, calc_type: str):
 
         try:
             job_id = job.job_id()
@@ -83,8 +90,7 @@ class JobCache:
 
         conn = sqlite3.connect(self._calculation_data_filename)
 
-        calc_type = 'sampler' if mapped_observables is not None else 'estimator'
-        circuit_hash = self.get_hash(circuit, mapped_observables)
+        circuit_hash = self.get_hash(circuit, data_dict, calc_type)
 
         conn.execute("INSERT into DATA_TABLE (circuit_hash, calc_type, job_id, date)  VALUES (?, ?, ?, ?)",
                            (circuit_hash,  calc_type, job_id, date_time))
@@ -93,20 +99,35 @@ class JobCache:
         conn.close()
 
 
-    @staticmethod
-    def get_hash(circuit, mapped_observables=None):
-        import hashlib
+    def get_hash(self, circuit, data_dict, calc_type):
 
-        if mapped_observables is None:
-            pub_hash = hashlib.blake2b((str(circuit.draw(fold=-1))).encode(),
-                                       digest_size=8,  # 64 bits
-                                       ).hexdigest()
+        if calc_type == 'sampler':
+            return self.get_hash_sampler(circuit, data_dict)
+        elif calc_type == 'estimator':
+            return self.get_hash_estimator(circuit, data_dict)
         else:
-            pub_hash = hashlib.blake2b((repr(circuit.draw(fold=-1)) + repr(mapped_observables)).encode(),
-                                       digest_size=8,  # 64 bits
-                                       ).hexdigest()
+            raise NotImplementedError
+
         return pub_hash
 
+    @staticmethod
+    def get_hash_estimator(circuit, data_dict: EstimatorConfig):
+        import hashlib
+
+        mapped_observables = data_dict['observables']
+        pub_hash = hashlib.blake2b((repr(circuit.draw(fold=-1)) + repr(mapped_observables)).encode(),
+                                   digest_size=8,  # 64 bits
+                                   ).hexdigest()
+        return pub_hash
+
+
+    @staticmethod
+    def get_hash_sampler(circuit, data_dict: SamplerConfig):
+
+        pub_hash = hashlib.blake2b((str(circuit.draw(fold=-1)) + "|" + str(data_dict["n_shots"])).encode(),
+                                   digest_size=8,  # 64 bits
+                                   ).hexdigest()
+        return pub_hash
 
     def retrieve_calculation_data(self, circuit_hash, calc_type):
         """

@@ -44,10 +44,10 @@ class RHESampler:
     def run(self, circuit, shots=1000, memory=True):
 
         cache = JobCache()
-        job = cache.get_job(circuit)
+        isa_circuit = self._pm.run(circuit)
 
+        job = cache.get_job(circuit)
         if job is None:
-            isa_circuit = self._pm.run(circuit)
 
             from qiskit_ibm_runtime import SamplerV2
             mode = self._backend if self._session is None else self._session

@@ -58,23 +58,27 @@ class JobCache:
     def get_job(self, circuit, data_dict, calc_type: str):
 
         from qiskit_ibm_runtime import QiskitRuntimeService
-        service = QiskitRuntimeService()
+        from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound
 
         circuit_hash = self.get_hash(circuit, data_dict, calc_type)
-
         job_id = self.retrieve_calculation_data(circuit_hash, calc_type)
 
         if job_id is None:
             return None
 
-        job = service.job(job_id)
+        service = QiskitRuntimeService()
+
+        try:
+            job = service.job(job_id)
+        except RuntimeJobNotFound:
+            return None
 
         if job.status() == 'CANCELLED':
             return None
 
         log_message('retrieved job ID: ', job_id, log_level=1)
 
-        return service.job(job_id)
+        return job
 
 
     def store_job(self, job, circuit, data_dict, calc_type: str):

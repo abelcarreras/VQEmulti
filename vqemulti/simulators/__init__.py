@@ -192,7 +192,7 @@ class SimulatorBase(ABC):
             matrix_gates = self._get_matrix_operator_gates(matrix_list, n_qubits)
             return matrix_gates
 
-    def get_rotation_gates(self, rotation_matrix, n_qubits, separate_spins=False):
+    def get_rotation_gates(self, rotation_matrix, n_qubits, separate_spins=False, add_parity=True):
 
         if separate_spins:
 
@@ -229,7 +229,7 @@ class SimulatorBase(ABC):
         else:
             givens_layers, diagonal = givens_decomposition_square(rotation_matrix)
 
-        return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits)
+        return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits, add_parity=add_parity)
 
     def print_statistics(self):
         if len(self._circuit_count) <= 0:
@@ -310,7 +310,7 @@ class SimulatorBase(ABC):
     def _trotterize_operator(self, *args):
         pass
 
-    def _get_givens_rotation_gates(self, *args):
+    def _get_givens_rotation_gates(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abstractmethod

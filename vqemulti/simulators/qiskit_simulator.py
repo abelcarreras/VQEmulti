@@ -8,7 +8,7 @@ from vqemulti.simulators.layout import LayoutModelDefault
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate, PhaseGate
 from qiskit.circuit.library import SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
@@ -758,7 +758,25 @@ class QiskitSimulator(SimulatorBase):
 
         return trotter_gates
 
-    def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits, tolerance=1e-6):
+    def _get_parity_gates(self, i_full, j_full, n_qubits, tolerance=1e-6):
+        from qiskit.circuit.library import CZGate
+
+        def parity_string_qubits(p, q):
+            """All qubit indices strictly between p and q (interleaved ordering)."""
+            lo, hi = min(p, q), max(p, q)
+            return list(range(lo + 1, hi))
+
+        parity_qubits = parity_string_qubits(i_full, j_full)
+        q_qisk = n_qubits - j_full - 1
+
+        parity_gates = []
+        for r in parity_qubits:
+            r_qisk = n_qubits - r - 1
+            parity_gates.append(CircuitInstruction(CZGate(), [r_qisk, q_qisk]))
+
+        return parity_gates
+
+    def _get_givens_rotation_gates(self, givens_layers, diagonal, n_qubits, tolerance=1e-6, add_parity=True):
 
         log_message('build givens rotation gates', log_level=3)
 
@@ -770,6 +788,9 @@ class QiskitSimulator(SimulatorBase):
                 # define qubit indices in qiskit order
                 i_qisk = n_qubits - i - 1
                 j_qisk = n_qubits - j - 1
+
+                if add_parity:
+                    reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
 
                 # qc.rz(phi, i_qisk)
                 if abs(phi) >= tolerance:
@@ -790,6 +811,9 @@ class QiskitSimulator(SimulatorBase):
                     reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
                     reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
 
+                if add_parity:
+                    reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
+
         # qc.barrier()
 
         # Apply diagonal matrix as Z rotations
@@ -799,6 +823,7 @@ class QiskitSimulator(SimulatorBase):
             # qc.rz(-angle, i_qisk)
             if abs(angle) >= tolerance:
                 reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
+                # reference_gates.append(CircuitInstruction(PhaseGate(-angle), [i_qisk]))
 
         return reference_gates
 

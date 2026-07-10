@@ -51,6 +51,10 @@ class GenericAnsatz(ABC):
         return len(self._parameters)
 
     @property
+    def reference_fock(self):
+        return self._reference_fock
+
+    @property
     def n_qubits(self):
         return 0
 

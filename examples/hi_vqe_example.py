@@ -55,7 +55,13 @@ ccsd = molecule._pyscf_data.get('ccsd', None)
 ucja_ansatz = UnitaryCoupledJastrowAnsatz(ccsd.t1, ccsd.t2, hf_reference_fock, n_terms=2, full_trotter=True, local=5)
 
 # Build HEA anasatz
-hea_ansatz = HardwareEfficientAnsatz(hf_reference_fock, init='zeros', n_terms=1, mixed_spin=True)
+hea_ansatz = HardwareEfficientAnsatz(hf_reference_fock,
+                                     init='zeros',
+                                     n_terms=1,
+                                     local=2,
+                                     mixed_spin=True,
+                                     separate_spins=True,
+                                     ignore_parity=True)
 
 
 ansatz = hea_ansatz
@@ -63,14 +69,10 @@ ansatz = hea_ansatz
 simulator = Simulator(trotter=False,
                       trotter_steps=1,
                       test_only=True,
-                      shots=1000000)
-
-
-# SQD parameters for Hi-VQE
-sqd_conf = {'recovery_type': 1}
+                      shots=10000)
 
 # define optimizer
-opt_cobyla = OptimizerParams(method='COBYLA', options={'rhobeg': 0.1})
+opt_cobyla = OptimizerParams(method='COBYLA', options={'rhobeg': 0.01})
 
 # Run Hi-VQE
 print('Initialize Hi-VQE')
@@ -78,7 +80,8 @@ result = hi_vqe(hamiltonian,
                 ansatz,
                 energy_simulator=simulator,
                 optimizer_params=opt_cobyla,
-                sqd_params=sqd_conf,
+                n_partitions=10,
+                # max_configurations=100,
                 )
 
 # print results

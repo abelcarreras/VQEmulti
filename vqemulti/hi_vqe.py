@@ -1,6 +1,8 @@
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.ansatz import GenericAnsatz
 from vqemulti.utils import log_message
+from vqemulti.sqd import simulate_energy_sqd, configuration_recovery, get_subspace_configurations, simple_filtering
+from vqemulti.utils import get_selected_ci_energy_dice
 import numpy as np
 import scipy
 
@@ -10,7 +12,9 @@ def hi_vqe(hamiltonian,
            energy_simulator=None,
            energy_threshold=1e-4,
            optimizer_params=None,
-           sqd_params=None,
+           max_configurations=10000,
+           n_partitions=1,
+           weight_type=None,
            ):
     """
     Perform a Hi-VQE calculation
@@ -20,7 +24,9 @@ def hi_vqe(hamiltonian,
     :param energy_simulator: Simulator object used to obtain the energy, if None do not use simulator (exact)
     :param energy_threshold: energy convergence threshold for classical optimization (in Hartree)
     :param optimizer_params: Optimizer params object
-    :param sqd_params: Sqd params dictionary
+    :param max_configurations: maximum number of configurations
+    :param n_partitions: Number subspace partitions to evaluate
+    :param weight_type: weight type (linear, geometric, exponential)
     :return: results dictionary
     """
 
@@ -38,19 +44,108 @@ def hi_vqe(hamiltonian,
         energy = ansatz.get_energy(coefficients, hamiltonian, energy_simulator)
         return {'energy': energy, 'coefficients': [], 'ansatz': ansatz, 'f_evaluations': 0}
 
-    if sqd_params is None:
-        sqd_params = {}
-
     # store data at each evaluation
     parameters_iter = []
     def callback(xk):
         # print('called')
         parameters_iter.append(xk.copy().tolist())
 
+    if energy_simulator is None:
+        raise Exception('sampled energy only works with simulator')
+
+    n_alpha = sum(ansatz.reference_fock[::2])
+    n_beta = sum(ansatz.reference_fock[1::2])
+
+    n_electrons = n_alpha + n_beta
+    multiplicity = (n_alpha - n_beta) + 1
+
+
+    def get_sampled_energy(parameters, hamiltonian, sampling_simulator, return_std=False):
+        """
+        implementation of SQD energy as a function of ansatz parameters (for Hi-VQE like methods)
+
+        :param parameters: ansatz paramters
+        :param hamiltonian: hamiltonian in FermiOperator/InteractionOperator
+        :param sampling_simulator: simulator for the sampling
+        :param return_std:
+        :return: SQD energy
+        """
+
+        # set paramters
+        ansatz.parameters = parameters
+
+        # get sampling
+        samples = ansatz.get_sampling(sampling_simulator)
+
+        # recovery
+        # rec_samples = simple_filtering(samples, n_electrons, multiplicity=multiplicity)
+
+        rec_samples = configuration_recovery(samples, hamiltonian, n_electrons,
+                                             multiplicity=multiplicity,
+                                             n_iter=4,
+                                             n_max_diff=4,
+                                             regularization_factor=0.7,
+                                             max_configurations=max_configurations
+                                             )
+
+        # set subspace ranges
+        n_conf_max = min(max_configurations, len(rec_samples))
+        if n_partitions > 1:
+            range_subspaces = np.linspace(1, n_conf_max, n_partitions, endpoint=True)
+        else:
+            range_subspaces = np.array([max_configurations], dtype=float)
+
+        # define weighting function
+        log_message('weight_type: {}'.format(weight_type), log_level=2)
+        if weight_type is None:
+            weights = np.ones_like(range_subspaces) # default
+
+        elif weight_type == 'linear':
+            weights = np.linspace(1.0, 0.0, n_partitions, endpoint=True)
+
+        elif weight_type == 'geometric':
+            param = 1e-3
+            weights = np.geomspace(1.0, param, n_partitions)
+
+        elif weight_type == 'exponential':
+            param = 0.5
+            x = np.linspace(0, 1, n_partitions)
+            weights = np.exp(-param * x)
+        else:
+            raise Exception('Unknown weight type')
+
+        # normalize weights
+        weights /= weights.sum()
+
+        # start SQD evaluations
+        energies = []
+        variances = []
+        for n_conf in range_subspaces:
+            log_message('n SQD configurations: ', int(n_conf), log_level=2)
+
+            configurations = get_subspace_configurations(rec_samples, max_configurations=int(n_conf))
+
+            if return_std:
+                sqd_energy, extra_dice = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=True)
+                variances.append(extra_dice['variance'])
+            else:
+                sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian, compute_variance=False)
+
+            energies.append(sqd_energy)
+
+        energy = np.dot(energies, weights)
+
+        if return_std:
+            variance = np.dot(variances, weights)
+            return energy, np.sqrt(variance)
+
+        return energy
+
+
     # Optimize the results from analytical calculation
-    results = scipy.optimize.minimize(ansatz.get_sampled_energy,
+    results = scipy.optimize.minimize(get_sampled_energy,
                                       coefficients,
-                                      (hamiltonian, energy_simulator, sqd_params),
+                                      (hamiltonian, energy_simulator),
                                       method=optimizer_params.method,
                                       options=optimizer_params.options,
                                       tol=energy_threshold,
@@ -59,8 +154,16 @@ def hi_vqe(hamiltonian,
 
     ansatz.parameters = results.x
 
-    # print('history: ', paramters_iter)
-    return {'energy': results.fun,
+    # final converged energy
+    energy = simulate_energy_sqd(ansatz, hamiltonian, energy_simulator, n_electrons,
+                                 multiplicity=multiplicity,
+                                 max_configurations=max_configurations,
+                                 add_hf_configuration=True,
+                                 recovery_type=1,
+                                 return_extra=False)
+
+    # print('history: ', parameters_iter)
+    return {'energy': energy,
             'coefficients': results.x.tolist(),
             'ansatz': ansatz,
             'f_evaluations': results.nfev,
@@ -156,7 +259,6 @@ if __name__ == '__main__':
                     ucja,
                     energy_simulator=simulator,
                     optimizer_params=opt_cobyla,
-                    sqd_params=sqd_conf,
                     )
 
     print('Energy HF: {:.8f}'.format(molecule.hf_energy))

@@ -101,15 +101,15 @@ def hi_vqe(hamiltonian,
             weights = np.ones_like(range_subspaces) # default
 
         elif weight_type == 'linear':
-            weights = np.linspace(1.0, 0.0, n_partitions, endpoint=True)
+            weights = np.linspace(0.0, 1.0, n_partitions, endpoint=True)
 
         elif weight_type == 'geometric':
             param = 1e-3
-            weights = np.geomspace(1.0, param, n_partitions)
+            weights = np.geomspace(param, 1.0, n_partitions)
 
         elif weight_type == 'exponential':
             param = 0.5
-            x = np.linspace(0, 1, n_partitions)
+            x = np.linspace(1, 0, n_partitions)
             weights = np.exp(-param * x)
         else:
             raise Exception('Unknown weight type')

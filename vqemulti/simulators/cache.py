@@ -37,6 +37,7 @@ class JobCache:
                                       circuit_hash LONGTEXT,
                                       calc_type    TEXT,
                                       job_id       LONGTEXT,
+                                      backend      LONGTEXT,
                                       date         LONGTEXT
                                   );''')
 
@@ -55,16 +56,21 @@ class JobCache:
             return False
         return True
 
-    def get_job(self, circuit, data_dict, calc_type: str):
-
-        from qiskit_ibm_runtime import QiskitRuntimeService
-        from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound
+    def get_job(self, circuit, data_dict, calc_type: str, backend: str):
 
         circuit_hash = self.get_hash(circuit, data_dict, calc_type)
-        job_id = self.retrieve_calculation_data(circuit_hash, calc_type)
+        job_id = self.retrieve_calculation_data(circuit_hash, calc_type, backend)
 
         if job_id is None:
             return None
+
+        if calc_type == 'sampler_qctrl':
+            from qiskit_ibm_catalog import QiskitFunctionsCatalog as QiskitRuntimeService
+            from qiskit_serverless.exception import QiskitServerlessException as RuntimeJobNotFound
+
+        else:
+            from qiskit_ibm_runtime import QiskitRuntimeService
+            from qiskit_ibm_runtime.exceptions import RuntimeJobNotFound
 
         service = QiskitRuntimeService()
 
@@ -81,10 +87,13 @@ class JobCache:
         return job
 
 
-    def store_job(self, job, circuit, data_dict, calc_type: str):
+    def store_job(self, job, circuit, data_dict, calc_type: str, backend: str):
 
         try:
-            job_id = job.job_id()
+            if callable(job.job_id):
+                job_id = job.job_id()
+            else:
+                job_id = job.job_id
         except AttributeError:
             return
 
@@ -96,8 +105,8 @@ class JobCache:
 
         circuit_hash = self.get_hash(circuit, data_dict, calc_type)
 
-        conn.execute("INSERT into DATA_TABLE (circuit_hash, calc_type, job_id, date)  VALUES (?, ?, ?, ?)",
-                           (circuit_hash,  calc_type, job_id, date_time))
+        conn.execute("INSERT into DATA_TABLE (circuit_hash, calc_type, backend, job_id, date)  VALUES (?, ?, ?, ?, ?)",
+                           (circuit_hash,  calc_type, backend, job_id, date_time))
 
         conn.commit()
         conn.close()
@@ -109,6 +118,8 @@ class JobCache:
             return self.get_hash_sampler(circuit, data_dict)
         elif calc_type == 'estimator':
             return self.get_hash_estimator(circuit, data_dict)
+        if calc_type == 'sampler_qctrl':
+            return self.get_hash_sampler(circuit, data_dict)
         else:
             raise NotImplementedError
 
@@ -133,58 +144,25 @@ class JobCache:
                                    ).hexdigest()
         return pub_hash
 
-    def retrieve_calculation_data(self, circuit_hash, calc_type):
+    def retrieve_calculation_data(self, circuit_hash, calc_type: str, backend: str):
         """
         retrieve calculation data from cache file
 
-        :param input_qchem: QchemInput instance
-        :param keyword: string that was used as a key to store the data
-        :return:
+        :param circuit_hash: circuit hash
+        :param calc_type: type of calculation (estimator, sampler, sampler_qctrl)
+        :param backend: QPU backend name
+        :return: job ID
         """
         conn = sqlite3.connect(self._calculation_data_filename)
 
-        cursor = conn.execute("SELECT job_id FROM DATA_TABLE WHERE circuit_hash=? AND calc_type=?",
-                                    (circuit_hash, calc_type))
+        cursor = conn.execute("SELECT job_id FROM DATA_TABLE WHERE circuit_hash=? AND calc_type=? AND backend=?",
+                                    (circuit_hash, calc_type, backend))
         rows = cursor.fetchall()
 
         conn.close()
 
         return rows[0][0] if len(rows) > 0 else None
 
-    def retrieve_calculation_data_from_id(self, id, keyword=None):
-        """
-        return data using database entry ID
-        [Only for SQL database cache]
-
-        :param id: databse entry ID
-        :param keyword: string that was used as a key to store the data
-        :return:
-        """
-
-        self._conn = sqlite3.connect(self._calculation_data_filename)
-
-        if keyword is None:
-            cursor = self._conn.execute("SELECT qcdata FROM DATA_TABLE WHERE input_hash=?", (id,))
-            rows = cursor.fetchall()
-        else:
-            cursor = self._conn.execute("SELECT qcdata FROM DATA_TABLE WHERE input_hash=? AND parser=?",
-                                        (id, keyword))
-            rows = cursor.fetchall()
-
-        self._conn.close()
-
-        if len(rows) <= 0:
-            return None
-        elif len(rows) == 1:
-            if self._compress:
-                return pickle.loads(zlib.decompress(rows[0][0])) if len(rows) > 0 else None
-            else:
-                return pickle.loads(rows[0][0]) if len(rows) > 0 else None
-        else:
-            if self._compress:
-                return [pickle.loads(zlib.decompress(r[0])) for r in rows]
-            else:
-                return [pickle.loads(r[0]) for r in rows]
 
     def list_database(self):
         """
@@ -195,16 +173,16 @@ class JobCache:
         """
         conn = sqlite3.connect(self._calculation_data_filename)
 
-        cursor = conn.execute("SELECT circuit_hash, calc_type, date from DATA_TABLE")
+        cursor = conn.execute("SELECT circuit_hash, calc_type, backend, date from DATA_TABLE")
 
 
-        print('{:^25} {:^25} {:^25}'.format('ID', 'CALC_TYPE', 'DATE'))
+        print('{:^25} {:^25} {:^25} {:^25}'.format('ID', 'CALC_TYPE', 'BACKEND', 'DATE'))
         print('--'*40)
         for row in cursor:
             try:
-                print('{:<25} {:<25} {}'.format(*row))
+                print('{:<25} {:<25} {:<25} {}'.format(*row))
             except IndexError:
-                print('{:<25} {:<25}'.format(*row))
+                print('{:<25} {:<25} {:<25}'.format(*row))
 
         conn.close()
 

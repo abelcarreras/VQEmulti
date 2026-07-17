@@ -46,7 +46,7 @@ class RHESampler:
         cache = JobCache()
         isa_circuit = self._pm.run(circuit)
 
-        job = cache.get_job(circuit, {'n_shots': shots}, 'sampler')
+        job = cache.get_job(circuit, {'n_shots': shots}, 'sampler', self._backend.name)
         if job is None:
 
             from qiskit_ibm_runtime import SamplerV2
@@ -54,7 +54,7 @@ class RHESampler:
             sampler = SamplerV2(mode=mode)
             job = sampler.run([isa_circuit], shots=shots)
 
-            cache.store_job(job, circuit, {'n_shots': shots}, 'sampler')
+            cache.store_job(job, circuit, {'n_shots': shots}, 'sampler', self._backend.name)
 
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()

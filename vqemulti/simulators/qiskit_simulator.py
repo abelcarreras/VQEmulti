@@ -4,6 +4,7 @@ from vqemulti.simulators import SimulatorBase
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, log_message
 from vqemulti.simulators.tools import get_cnot_inversion_mat
 from vqemulti.simulators.ibm_hardware import RHESampler, RHEstimator
+from vqemulti.simulators.qiskit_functions import QCTRLSampler
 from vqemulti.simulators.layout import LayoutModelDefault
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
@@ -439,6 +440,7 @@ class QiskitSimulator(SimulatorBase):
                  use_estimator=False,
                  session=None,
                  use_ibm_runtime=False,
+                 use_qctrl=False,
                  noise_model=None,
                  layout_model=None,
                  trotter_type='opt',
@@ -455,6 +457,7 @@ class QiskitSimulator(SimulatorBase):
         :param use_estimator: use qiskit estimator instead of VQEmulti implementation
         :param session: IBM runtime session to run jobs on IBM computers (estimator)
         :param use_ibm_runtime: use ibm_runtime version of Estimator and Sampler:
+        :param use_qctrl: use Q-CTRL qiskit function
         :param trotter_type: defines the trotter_step method used to implement the staircase algorithm (std/inv/opt)
         """
         # backend.set_options(device='GPU')
@@ -463,6 +466,7 @@ class QiskitSimulator(SimulatorBase):
         self._use_estimator = use_estimator
         self._qiskit_optimizer = qiskit_optimizer
         self._use_ibm_runtime = use_ibm_runtime
+        self._use_qctrl = use_qctrl
         self._layout_model = layout_model
         self._trotter_type = trotter_type
 
@@ -583,14 +587,17 @@ class QiskitSimulator(SimulatorBase):
 
         circuit.measure_all()
 
-        if not self._use_ibm_runtime:
+        if self._use_ibm_runtime:
+            if self._use_qctrl:
+                sampler = QCTRLSampler(self._backend)
+            else:
+                layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
+                log_message('layout: {}'.format(layout), log_level=2)
+                sampler = RHESampler(self._backend, self._session, layout)
+            result = sampler.run(circuit, shots=self._shots, memory=True).result()
+        else:
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
-        else:
-            layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
-            log_message('layout: {}'.format(layout), log_level=2)
-            sampler = RHESampler(self._backend, self._session, layout)
-            result = sampler.run(circuit, shots=self._shots, memory=True).result()
 
         counts_total = result.get_counts()
 
@@ -693,14 +700,18 @@ class QiskitSimulator(SimulatorBase):
 
         circuit.measure_all()
 
-        if not self._use_ibm_runtime:
+        if self._use_ibm_runtime:
+            if self._use_qctrl:
+                sampler = QCTRLSampler(self._backend)
+            else:
+                layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
+                log_message('layout: {}'.format(layout), log_level=2)
+                sampler = RHESampler(self._backend, self._session, layout)
+
+            result = sampler.run(circuit, shots=self._shots, memory=True).result()
+        else:
             result = self._backend.run(circuit, shots=self._shots, memory=True).result()
             # memory = result.get_memory()
-        else:
-            layout = self._layout_model.get_layout(circuit, self._backend, n_qubits)
-            log_message('layout: {}'.format(layout), log_level=2)
-            sampler = RHESampler(self._backend, self._session, layout)
-            result = sampler.run(circuit, shots=self._shots, memory=True).result()
 
         counts_total = result.get_counts()
 

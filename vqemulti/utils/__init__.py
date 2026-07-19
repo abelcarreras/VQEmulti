@@ -12,7 +12,7 @@ import openfermion
 import numpy as np
 import scipy
 from vqemulti.utils.reorder import *
-_fcidump_cache = set()
+_fcidump_cache = {}
 
 
 def string_to_matrix(pauli_string):
@@ -1024,14 +1024,14 @@ def create_fcidump_file(hamiltonian, n_elec, filename='FCIDUMP', overwrite=True)
     import os
     global _fcidump_cache
 
-    key = (id(hamiltonian), filename)
-    if key in _fcidump_cache:
+    key = pathlib.Path(filename).absolute()
+    if key in _fcidump_cache and _fcidump_cache[key] == id(hamiltonian):
         return
 
     if os.path.exists(filename) and not overwrite:
         return
 
-    _fcidump_cache.add(key)
+    _fcidump_cache[key] = id(hamiltonian)
 
     if isinstance(hamiltonian, FermionOperator):
         create_fcidump_file_fermion(hamiltonian, n_elec, filename=filename)

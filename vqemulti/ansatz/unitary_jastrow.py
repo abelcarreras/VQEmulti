@@ -60,6 +60,9 @@ def make_local(J, G, local=1):
     if G is None:
         return make_local_simple(J, local)
 
+    if G.is_directed():
+        G = G.to_undirected()
+
     import networkx as nx
 
     J_local = np.zeros_like(J)

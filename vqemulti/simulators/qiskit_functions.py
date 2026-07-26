@@ -1,5 +1,4 @@
 # Run the circuit using Sampler
-from qiskit_ibm_catalog import QiskitFunctionsCatalog
 from vqemulti.utils import log_message
 from vqemulti.simulators.cache import JobCache
 
@@ -21,6 +20,8 @@ class QCTRLJob:
 
 class QCTRLSampler:
     def __init__(self, backend):
+        from qiskit_ibm_catalog import QiskitFunctionsCatalog
+
         self._backend = backend
 
         log_message('using Q-CRTL qiskit function', log_level=1)

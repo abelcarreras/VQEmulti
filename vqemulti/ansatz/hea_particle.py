@@ -233,8 +233,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             # ansatz_u = get_basis_change_exp(U_spin, use_qubit=False)  # a_i^ a_j
 
             kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos], n_orb)
-            kappa_spin = get_spin_matrix(kappa_i)
-            ansatz_u = get_ucc_generator(-kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
+            kappa_spin = -get_spin_matrix(kappa_i)
+            ansatz_u = get_ucc_generator(kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
             U_spin = expm(kappa_spin)
 
             matrices.append(('K', U_spin))
@@ -273,7 +273,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
                 if matrix[0] == 'K':
                     # implement rotation term
-                    rotation_p = matrix[1].T.conj()
+                    rotation_p = matrix[1]
                     state_preparation_gates += simulator.get_rotation_gates(rotation_p,
                                                                             self.n_qubits,
                                                                             separate_spins=self._separate_spins,

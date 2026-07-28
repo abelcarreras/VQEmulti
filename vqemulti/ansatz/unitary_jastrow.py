@@ -104,7 +104,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._operators = []
         self._parameters = []
         self._rotation_matrices = []
-        self._jastrow_matrices = []
+        self._jastrow_operators = []
         self._full_trotter = full_trotter
         self._separate_spins = separate_spins
         self._ignore_parity = ignore_parity
@@ -181,7 +181,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                     # jastrow
                     spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
-                    self._jastrow_matrices.append(ansatz_j)
+                    self._jastrow_operators.append(ansatz_j)
 
                     if log_section(log_level=3):
                         print_tensor_4d(spin_jastrow.imag, spin_notation=True, title='Jastrow interactions')
@@ -222,19 +222,23 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
             state_preparation_gates = simulator.get_reference_gates(self._reference_fock)
 
-            if self._spin_t1 is not None:
-                rotation_param = self.parameters[0]
-                rotation = sp.linalg.expm(self._spin_t1)
-                rotation_p = matrix_power(rotation, rotation_param)
-                state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits,
-                                                                        separate_spins=self._separate_spins,
-                                                                        add_parity=not self._ignore_parity)
+            i_param = 0 # if self._spin_t1 is None else 1
+            for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_operators):
 
-            i_param = 0 if self._spin_t1 is None else 1
-            for rotation, jastrow in zip(self._rotation_matrices, self._jastrow_matrices):
+                # add spin_t1 if available
+                if i_param == 0 and self._spin_t1 is not None:
+                    rotation_param = self.parameters[i_param]
+                    rotation_p1 = sp.linalg.expm(self._spin_t1)
+                    rotation_p1 = matrix_power(rotation_p1, rotation_param)
+                    i_param +=1
 
-                rotation_param = -self.parameters[i_param]
-                rotation_p = matrix_power(rotation, rotation_param)
+                    rotation_param = -self.parameters[i_param]
+                    rotation_p = matrix_power(rotation @ rotation_p1, rotation_param)
+
+                else:
+                    rotation_param = -self.parameters[i_param]
+                    rotation_p = matrix_power(rotation, rotation_param)
+
                 state_preparation_gates += simulator.get_rotation_gates(rotation_p, self.n_qubits,
                                                                         separate_spins=self._separate_spins,
                                                                         add_parity=not self._ignore_parity)

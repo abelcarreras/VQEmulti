@@ -8,17 +8,18 @@ from qiskit_aer import AerSimulator
 from vqemulti.ansatz.exponential import ExponentialAnsatz
 from vqemulti.preferences import Configuration
 from collections import Counter
-from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice, get_selected_ci_energy_qiskit
+from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice
 from vqemulti.utils import get_dmrg_energy, fermion_to_qubit
-from vqemulti.sqd import configuration_recovery
+from vqemulti.sqd import get_subspace_configurations, configuration_recovery
 import numpy as np
 
 # config = Configuration()
 # config.verbose = 2
 
-backend = FakeTorino()
+#backend = FakeTorino()
 # service = QiskitRuntimeService()
 # backend = service.backend('ibm_basquecountry')
+backend = AerSimulator()
 
 simulator = Simulator(trotter=True,
                       trotter_steps=1,
@@ -30,16 +31,18 @@ simulator = Simulator(trotter=True,
                       use_ibm_runtime=True
                       )
 
+d = 2.0
 hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
-                                   ('H', [2.0, 0.0, 0.0]),
-                                   ('H', [4.0, 0.0, 0.0]),
-                                   ('H', [6.0, 0.0, 0.0])],
+                                   ('H', [1*d, 0.0, 0.0]),
+                                   ('H', [2*d, 0.0, 0.0]),
+                                   ('H', [3*d, 0.0, 0.0])],
                          basis='sto-3g',
                          multiplicity=1,
                          charge=0,
                          description='molecule')
 
-# run classical calculation
+# run classical CASCI calculation
+from pyscf.fci import cistring
 n_frozen_orb = 0  # nothing
 n_total_orb = 4  # total orbitals
 molecule = run_pyscf(hydrogen,
@@ -51,10 +54,6 @@ molecule = run_pyscf(hydrogen,
                      run_ccsd=True)
 
 fci_energy = molecule.fci_energy
-
-tol_ampl = 0.01
-
-from pyscf.fci import cistring
 
 mc = molecule._pyscf_data['casci']
 
@@ -79,6 +78,7 @@ def interleave_bits(a, b, ncas):
 
 
 print('\namplitudes CASCI')
+tol_ampl = 0.01
 for i, a in enumerate(alpha_det):
     for j, b in enumerate(beta_det):
         amp = mc.ci[i, j]
@@ -93,20 +93,24 @@ print('H terms:', len(hamiltonian_te.terms))
 hamiltonian_te.compress(2e-2)
 print('H terms compress:', len(hamiltonian_te.terms))
 
-multiplicity = 0
+multiplicity = 1
 n_electrons = molecule.n_electrons
 n_orbitals = molecule.n_orbitals
 n_qubits = molecule.n_qubits
 print('n_qubits:', n_qubits)
+print('n_electrons:', n_electrons)
 
+# reference
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
-dt = 1e-5 #0.00001
+# time step
+dt = 2e-2
 
 energy_error_list = []
 configuration_number = []
-samples = {}
-for time in np.arange(0.0, 5e-5, dt):
+accumulated_samples = Counter({})
+
+for time in np.arange(0.0, dt*30, dt):
 
     print('time:', time)
     generator = [1j * hamiltonian_te]
@@ -117,28 +121,30 @@ for time in np.arange(0.0, 5e-5, dt):
     print('energy guess: ', energy_intial)
     # print('energy SIM: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
 
-    # simulator.print_circuits()
+    samples = ansatz.get_sampling(simulator)
+    accumulated_samples.update(samples)
+    print('samples:', accumulated_samples)
+    print('n_samples: ', len(accumulated_samples))
 
-    samples_i = ansatz.get_sampling(simulator)
-    samples = Counter(samples) + Counter(samples_i)
+    rec_samples = configuration_recovery(accumulated_samples, hamiltonian, n_electrons,
+                                         multiplicity=multiplicity,
+                                         n_iter=4,
+                                         n_max_diff=4,
+                                         regularization_factor=0.7,
+                                         max_configurations=1000)
 
-    alpha_electrons = (multiplicity + n_electrons)//2
-    beta_electrons = (n_electrons - multiplicity)//2
+    sampled_configurations = get_subspace_configurations(rec_samples,
+                                                         max_configurations=1000,
+                                                         add_hf_configuration=True)
 
-    configurations = []
-    for bitstring in samples.keys():
-        fock_vector = get_fock_space_vector([1 if b == '1' else 0 for b in bitstring[::-1]])
-        configurations.append(fock_vector)
+    print('sampled configurations:', len(sampled_configurations))
 
-    configurations = configuration_recovery(configurations, hamiltonian, n_electrons,
-                                            multiplicity=0, n_max_diff=4, n_iter=0)
+    sci_energy = get_selected_ci_energy_dice(sampled_configurations, hamiltonian)
+    print('SCI energy', sci_energy)
+    print('Energy error', sci_energy - fci_energy)
 
-    sqd_energy = get_selected_ci_energy_dice(configurations, hamiltonian)
-
-    print('sampling: ', len(samples))
-    print('SQD energy', sqd_energy, sqd_energy - fci_energy)
-    energy_error_list.append(sqd_energy - fci_energy)
-    configuration_number.append(len(configurations))
+    energy_error_list.append(sci_energy - fci_energy)
+    configuration_number.append(len(sampled_configurations))
 
 energy_dmrg = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=50)
 print('energy DMRG: ', energy_dmrg)

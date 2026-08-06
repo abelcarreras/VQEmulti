@@ -15,6 +15,7 @@ Quantum computing algorithms
 - Hi-VQE
 - SQD
 - SKQD
+- Quantum Lanczos
 
 Ansatze
 -------

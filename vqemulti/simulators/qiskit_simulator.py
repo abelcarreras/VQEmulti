@@ -628,6 +628,93 @@ class QiskitSimulator(SimulatorBase):
 
         return total_expectation_value, total_variance
 
+
+
+
+    def _measure_hadamard_test(self, main_string,
+                               coefficient,
+                               state_preparation_gates_1,
+                               state_preparation_gates_2,
+                               n_qubits,
+                               imaginary_part=False):
+
+
+        log_message('pauli string: {}'.format(main_string), log_level=2)
+
+        U_circ = qiskit.QuantumCircuit(n_qubits)
+
+        # Initialize circuit 1
+        circuit_1 = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates_1:
+            circuit_1.append(gate)
+
+        definition = [index for index in range(n_qubits)]
+        U_circ.append(circuit_1.to_gate(label="U_1"), definition)
+
+        for i, op in enumerate(main_string):
+            #i_qiskit = n_qubits - i -1
+            if op == "X":
+                U_circ.x([i])
+            if op == "Y":
+                U_circ.y([i])
+            if op == "Z":
+                U_circ.z([i])
+
+        # Initialize circuit 2
+        circuit_2 = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates_2:
+            circuit_2.append(gate)
+
+        U_circ.append(circuit_2.to_gate(label="U_2^dagger").inverse(), definition)
+
+        U_controlled_gate = (U_circ.to_gate(label="U")).control(1)
+
+        # Build Hadamard test circuit
+        from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+
+        anc = QuantumRegister(1, 'ancilla')
+        q = QuantumRegister(n_qubits, 'qubit')
+        c_reg = ClassicalRegister(1, "c_bit")
+
+        # build Hadamard test circuit
+        circ_Hadamard = QuantumCircuit(anc, q, c_reg)
+
+        circ_Hadamard.h(anc[0])
+        if imaginary_part:
+            circ_Hadamard.sdg(anc[0])
+
+        definition = [anc[0]] + [q[index] for index in range(n_qubits)]
+        circ_Hadamard.append(U_controlled_gate, definition)
+        circ_Hadamard.h(anc[0])
+        circ_Hadamard.measure(0, 0)
+
+        # print(circ_Hadamard)
+        circ_Hadamard = circ_Hadamard.decompose(reps=3)
+
+        if self._use_ibm_runtime:
+            if self._use_qctrl:
+                sampler = QCTRLSampler(self._backend)
+            else:
+                layout = self._layout_model.get_layout(circ_Hadamard, self._backend, n_qubits)
+                log_message('layout: {}'.format(layout), log_level=2)
+                sampler = RHESampler(self._backend, self._session, layout)
+            result = sampler.run(circ_Hadamard, shots=self._shots, memory=True).result()
+        else:
+            result = self._backend.run(circ_Hadamard, shots=self._shots, memory=True).result()
+            # memory = result.get_memory()
+
+        counts = result.get_counts()
+        if '1' not in counts:
+            counts['1'] = 0
+        if '0' not in counts:
+            counts['0'] = 0
+
+        total_energy = (counts['0'] - counts['1']) / self._shots * coefficient
+        total_variance = coefficient ** 2 - ((counts['0'] - counts['1']) / self._shots * coefficient) ** 2
+
+        return total_energy, total_variance
+
+
     def _measure_expectation_estimator(self, formatted_hamiltonian, state_preparation_gates, n_qubits, session):
         """
         get the expectation value of the full Hamiltonian

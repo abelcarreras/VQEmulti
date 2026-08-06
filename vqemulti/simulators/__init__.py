@@ -58,7 +58,6 @@ class SimulatorBase(ABC):
 
         :param qubit_hamiltonian: hamiltonian in qubits
         :param state_preparation_gates: list of gates in simulation library format that represents the state
-        :param shots: number of samples
         :return: the expectation value of the energy
         """
 
@@ -95,6 +94,66 @@ class SimulatorBase(ABC):
 
         assert expectation_value.imag < 1e-5
         return expectation_value.real, std_error
+
+    def get_operator_matrix_element(self, qubit_operator, state_preparation_gates_1, state_preparation_gates_2, compute_imag=False, n_qubits=None):
+        """
+        Obtain the matrix element of an operator using hadamard test < psi_1 | H | psi_2>
+
+        :param qubit_operator: operator as qubit operator
+        :param state_preparation_gates_1: list of gates in simulation library format that represents the state1
+        :param state_preparation_gates_2: list of gates in simulation library format that represents the state2
+        :param compute_imag: if True, the imaginary part of the matrix element is computed
+        :return: the expectation value of the energy
+        """
+
+        if n_qubits is None:
+            n_qubits = count_qubits(qubit_operator)
+
+        # Format and the Hamiltonian in pauli strings and coefficients
+        formatted_hamiltonian = convert_hamiltonian(qubit_operator)
+
+        # skip hamiltonian grouping
+        # Hadamard test does not benefit from grouping
+
+        grouped_hamiltonian = {}
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+            grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
+
+        log_message('hamiltonian terms {}'.format(len(grouped_hamiltonian)), log_level=2)
+
+        # Obtain the expectation value for each Pauli string
+        expectation_value = 0j
+        expectation_variance = 0j
+
+        for pauli_string, coefficient in formatted_hamiltonian.items():
+
+            matrix_element, variance = self._measure_hadamard_test(pauli_string,
+                                                                   coefficient,
+                                                                   state_preparation_gates_1,
+                                                                   state_preparation_gates_2,
+                                                                   n_qubits,
+                                                                   imaginary_part=False)
+            expectation_value += matrix_element
+            expectation_variance += variance
+            #print('out: ', expectation_value, expectation_variance)
+
+        assert abs(expectation_value.imag) < 1e-5
+
+        if compute_imag:
+
+            for pauli_string, coefficient in formatted_hamiltonian.items():
+                matrix_element, variance = self._measure_hadamard_test(pauli_string,
+                                                                       coefficient,
+                                                                       state_preparation_gates_1,
+                                                                       state_preparation_gates_2,
+                                                                       n_qubits,
+                                                                       imaginary_part=True)
+                expectation_value += 1j * matrix_element
+                expectation_variance += variance
+
+        std_error = np.sqrt(expectation_variance.real / self._shots)
+
+        return expectation_value, std_error
 
     def get_state_evaluation_variance(self, qubit_hamiltonian, state_preparation_gates):
 
@@ -315,4 +374,7 @@ class SimulatorBase(ABC):
 
     @abstractmethod
     def simulator_info(self, *args):
+        raise NotImplementedError()
+
+    def _measure_hadamard_test(self, *args, **kwargs):
         raise NotImplementedError()

@@ -13,6 +13,7 @@ class SamplerConfig(TypedDict):
 
 class EstimatorConfig(TypedDict):
     observables: tuple
+    n_shots: int
 
 
 class JobCache:
@@ -129,8 +130,11 @@ class JobCache:
     def get_hash_estimator(circuit, data_dict: EstimatorConfig):
         import hashlib
 
+        n_shots = data_dict['n_shots']
         mapped_observables = data_dict['observables']
-        pub_hash = hashlib.blake2b((repr(circuit.draw(fold=-1)) + repr(mapped_observables)).encode(),
+        pub_hash = hashlib.blake2b((repr(circuit.draw(fold=-1)) + '|' +
+                                    repr(mapped_observables) + '|' +
+                                    repr(n_shots)).encode(),
                                    digest_size=8,  # 64 bits
                                    ).hexdigest()
         return pub_hash
@@ -139,7 +143,9 @@ class JobCache:
     @staticmethod
     def get_hash_sampler(circuit, data_dict: SamplerConfig):
 
-        pub_hash = hashlib.blake2b((str(circuit.draw(fold=-1)) + "|" + str(data_dict["n_shots"])).encode(),
+        n_shots = data_dict['n_shots']
+        pub_hash = hashlib.blake2b((repr(circuit.draw(fold=-1)) + "|" +
+                                    repr(n_shots)).encode(),
                                    digest_size=8,  # 64 bits
                                    ).hexdigest()
         return pub_hash

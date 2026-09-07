@@ -647,6 +647,9 @@ class LayoutModelGraph:
         # for i in backend.coupling_map:
         #    print(i)
 
+        if backend.coupling_map is None:
+            raise Exception('Unable to generate backend layout with {}'.format(backend))
+
         G_backend = nx.Graph()
         G_backend.add_edges_from(backend.coupling_map)
 

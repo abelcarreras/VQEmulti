@@ -626,10 +626,11 @@ def normalize_operator(operator, phase_sign=False):
 
 def fermion_to_qubit(operator):
     """
-    transform fermions to qubits
+    transform fermions to qubits.
+    QubitOperators are ignored and returned as is
 
-    :param operator: fermion operator
-    :return: qubit operator
+    :param operator: FermionOperator or InteractionOperator
+    :return: QubitOperator
     """
     if isinstance(operator, QubitOperator):
         # warnings.warn('Already Qubit operator. Returning as is')

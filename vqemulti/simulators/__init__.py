@@ -95,13 +95,14 @@ class SimulatorBase(ABC):
         assert expectation_value.imag < 1e-5
         return expectation_value.real, std_error
 
-    def get_operator_matrix_element(self, qubit_operator, state_preparation_gates_1, state_preparation_gates_2, compute_imag=False, n_qubits=None):
+    def get_operator_matrix_element(self, qubit_operator, state_preparation_gates_bra, state_preparation_gates_ket,
+                                    compute_imag=False, n_qubits=None):
         """
         Obtain the matrix element of an operator using hadamard test < psi_1 | H | psi_2>
 
         :param qubit_operator: operator as qubit operator
-        :param state_preparation_gates_1: list of gates in simulation library format that represents the state1
-        :param state_preparation_gates_2: list of gates in simulation library format that represents the state2
+        :param state_preparation_gates_bra: list of gates in simulation library format that represents the bra state
+        :param state_preparation_gates_ket: list of gates in simulation library format that represents the ket state
         :param compute_imag: if True, the imaginary part of the matrix element is computed
         :return: the expectation value of the energy
         """
@@ -132,8 +133,8 @@ class SimulatorBase(ABC):
 
             matrix_element, variance = self._measure_hadamard_test(pauli_string,
                                                                    coefficient,
-                                                                   state_preparation_gates_1,
-                                                                   state_preparation_gates_2,
+                                                                   state_preparation_gates_bra,
+                                                                   state_preparation_gates_ket,
                                                                    n_qubits,
                                                                    imaginary_part=False)
             expectation_value += matrix_element
@@ -147,8 +148,8 @@ class SimulatorBase(ABC):
             for pauli_string, coefficient in formatted_hamiltonian.items():
                 matrix_element, variance = self._measure_hadamard_test(pauli_string,
                                                                        coefficient,
-                                                                       state_preparation_gates_1,
-                                                                       state_preparation_gates_2,
+                                                                       state_preparation_gates_bra,
+                                                                       state_preparation_gates_ket,
                                                                        n_qubits,
                                                                        imaginary_part=True)
                 expectation_value += 1j * matrix_element

@@ -106,6 +106,9 @@ class SimulatorBase(ABC):
         :return: the expectation value of the energy
         """
 
+        if self._test_only:
+            warnings.warn('test_only is not implemented for matrix_element')
+
         if n_qubits is None:
             n_qubits = count_qubits(qubit_operator)
 

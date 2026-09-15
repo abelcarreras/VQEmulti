@@ -688,10 +688,14 @@ class QiskitSimulator(SimulatorBase):
             circ_Hadamard.sdg(anc[0])
 
         circ_Hadamard.h(anc[0])
-        circ_Hadamard.measure(0, 0)
 
         # print(circ_Hadamard)
         circ_Hadamard = circ_Hadamard.decompose(reps=3)
+
+        self._get_circuit_stat_data(circ_Hadamard)
+
+        # set measure
+        circ_Hadamard.measure(0, 0)
 
         if self._use_ibm_runtime:
             if self._use_qctrl:

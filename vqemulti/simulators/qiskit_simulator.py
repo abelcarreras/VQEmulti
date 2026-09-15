@@ -633,8 +633,8 @@ class QiskitSimulator(SimulatorBase):
 
     def _measure_hadamard_test(self, main_string,
                                coefficient,
-                               state_preparation_gates_1,
-                               state_preparation_gates_2,
+                               state_preparation_gates_bra, # bra
+                               state_preparation_gates_ket, # ket
                                n_qubits,
                                imaginary_part=False):
 
@@ -645,11 +645,11 @@ class QiskitSimulator(SimulatorBase):
 
         # Initialize circuit 1
         circuit_1 = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates_1:
+        for gate in state_preparation_gates_ket:
             circuit_1.append(gate)
 
         definition = [index for index in range(n_qubits)]
-        U_circ.append(circuit_1.to_gate(label="U_1"), definition)
+        U_circ.append(circuit_1.to_gate(label="U_ket"), definition)
 
         for i, op in enumerate(main_string):
             #i_qiskit = n_qubits - i -1
@@ -662,10 +662,10 @@ class QiskitSimulator(SimulatorBase):
 
         # Initialize circuit 2
         circuit_2 = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates_2:
+        for gate in state_preparation_gates_bra:
             circuit_2.append(gate)
 
-        U_circ.append(circuit_2.to_gate(label="U_2^dagger").inverse(), definition)
+        U_circ.append(circuit_2.to_gate(label="U_bra").inverse(), definition)
 
         U_controlled_gate = (U_circ.to_gate(label="U")).control(1)
 
@@ -680,11 +680,13 @@ class QiskitSimulator(SimulatorBase):
         circ_Hadamard = QuantumCircuit(anc, q, c_reg)
 
         circ_Hadamard.h(anc[0])
-        if imaginary_part:
-            circ_Hadamard.sdg(anc[0])
 
         definition = [anc[0]] + [q[index] for index in range(n_qubits)]
         circ_Hadamard.append(U_controlled_gate, definition)
+
+        if imaginary_part:
+            circ_Hadamard.sdg(anc[0])
+
         circ_Hadamard.h(anc[0])
         circ_Hadamard.measure(0, 0)
 

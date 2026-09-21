@@ -141,28 +141,27 @@ print('e_fci: ', e_fci)
 
 # reference
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
+ref = ExponentialAnsatz([], [], hf_reference_fock)
 
-def get_overlap_element_exact(index_1, index_2):
+def get_overlap_exact(i):
 
     generator = [-1j * hamiltonian_te]
-    phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
-    psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
+    psi = ExponentialAnsatz([dt * i], generator, hf_reference_fock)
 
-    bra = phi.get_state_vector().transpose().conj()
+    bra = ref.get_state_vector().transpose().conj()
     ket = psi.get_state_vector()
 
     return np.sum(bra @ ket)
 
-def get_overlap_element_simulator(index_1, index_2):
+def get_overlap_simulator(i):
 
     generator = [-1j * hamiltonian_te]
-    phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
-    psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
+    psi = ExponentialAnsatz([dt * i], generator, hf_reference_fock)
 
     identity = QubitOperator(())
 
     expectation_value, std_error = simulator.get_operator_matrix_element(identity,
-                                                                         phi.get_preparation_gates(simulator),
+                                                                         ref.get_preparation_gates(simulator),
                                                                          psi.get_preparation_gates(simulator),
                                                                          compute_imag=True,
                                                                          n_qubits=n_qubits,
@@ -175,9 +174,9 @@ n_time_steps = 50
 overlap_exact = []
 overlap_sim = []
 
-for j in range(n_time_steps):
-    overlap_exact.append(get_overlap_element_exact(0, j))
-    overlap_sim.append(get_overlap_element_simulator(0, j))
+for i in range(n_time_steps):
+    overlap_exact.append(get_overlap_exact(i))
+    overlap_sim.append(get_overlap_simulator(i))
 
 plt.figure()
 plt.title('Overlap')

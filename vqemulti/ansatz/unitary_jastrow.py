@@ -84,7 +84,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
     def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None,
                  separate_spins=False, mixed_spin=True, use_general=False, reference_basis=None, connectivity_graph=None, ignore_parity=False):
         """
-        assumed HF as reference
+        Prepare UCJA ansatz
 
         :param t1: single excitations amplitudes matrix (occupied x virtual)
         :param t2: double excitations amplitudes matrix (occupied x occupied x virtual x virtual)
@@ -95,7 +95,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
         :param separate_spins: separate spin operators approach (under testing: incorrect phases)
         :param mixed_spin: include mixed spin interactions
-        :param use_general: use general diagonalization
+        :param use_general: use general definition of amplitude matrix T1 [Norb x Norb] T2 [Norb x Norb x Norb x Norb]
         :param reference_basis: orbital basis change matrix for reference state
         :param connectivity_graph: add connectivity graph to use in local
         :param ignore_parity: ignore parity terms in Givens rotations (has appreciable effect with separate_spins=True)
@@ -112,11 +112,16 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
         self._raw_data = []
 
         t2 = np.array(t2)
-        n_occupied, _, n_virtual, _ = t2.shape
-        n_total = n_virtual + n_occupied
 
         if hf_reference_fock is None:
             # assume close shell, even number of electrons, multiplicity zero
+            # assume non-general amplitude matrix (occ x occ x virt x virt)
+
+            assert use_general == False
+
+            n_occupied, _, n_virtual, _ = t2.shape
+            n_total = n_virtual + n_occupied
+
             hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
 
         if use_general:

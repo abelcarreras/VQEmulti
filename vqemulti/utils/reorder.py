@@ -107,7 +107,7 @@ def permute_pool(pool, permutation):
     return reordered_pool
 
 
-def print_permutation(G_qpu, centers, permutation):
+def print_permutation(G_qpu, permutation, centers=None, orbital_labels=True):
     """
     print info about the permutation
 
@@ -126,20 +126,29 @@ def print_permutation(G_qpu, centers, permutation):
     for i, p in enumerate(permutation):
         print(i, '->', p)
 
-    pos = {permutation[i]: centers[i][:2] for i in range(n_orbitals)}
+    if centers is None:
+        pos = nx.spring_layout(G_qpu)
+    else:
+        pos = {permutation[i]: centers[i][:2] for i in range(n_orbitals)}
 
     permutation_inv = np.argsort(permutation).tolist()
 
     edge_labels = {}
-    for i, j in G_qpu.edges:
-        i2 = permutation_inv[i]
-        j2 = permutation_inv[j]
+    if pos is None:
+        for i, j in G_qpu.edges:
+            i2 = permutation_inv[i]
+            j2 = permutation_inv[j]
 
-        d = np.linalg.norm(centers[i2][:2] - centers[j2][:2])
-        edge_labels[(i, j)] = f"{d:.2f}"
+            d = np.linalg.norm(centers[i2][:2] - centers[j2][:2])
+            edge_labels[(i, j)] = f"{d:.2f}"
 
 
-    labels = {i: permutation_inv[i] for i in G_qpu.nodes}
+    if orbital_labels:
+        labels = {i: permutation_inv[i] for i in G_qpu.nodes}
+    else:
+        labels = {i: i for i in G_qpu.nodes}
+
+    #labels = {i: '{}->{}'.format(permutation_inv[i], i) for i in G_qpu.nodes}
 
     nx.draw(G_qpu, pos, with_labels=False)
     nx.draw_networkx_edge_labels(G_qpu, pos, edge_labels=edge_labels)

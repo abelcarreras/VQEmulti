@@ -143,40 +143,20 @@ print('e_fci: ', e_fci)
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 ref = ExponentialAnsatz([], [], hf_reference_fock)
 
-def get_overlap_exact(i):
+def get_overlap(i, simulator=None):
 
     generator = [-1j * hamiltonian_te]
     psi = ExponentialAnsatz([dt * i], generator, hf_reference_fock)
 
-    bra = ref.get_state_vector().transpose().conj()
-    ket = psi.get_state_vector()
-
-    return np.sum(bra @ ket)
-
-def get_overlap_simulator(i):
-
-    generator = [-1j * hamiltonian_te]
-    psi = ExponentialAnsatz([dt * i], generator, hf_reference_fock)
-
-    identity = QubitOperator(())
-
-    expectation_value, std_error = simulator.get_operator_matrix_element(identity,
-                                                                         ref.get_preparation_gates(simulator),
-                                                                         psi.get_preparation_gates(simulator),
-                                                                         compute_imag=True,
-                                                                         n_qubits=n_qubits,
-                                                                         )
-
-    return expectation_value
-
+    return ref.get_overlap(psi, simulator)
 
 n_time_steps = 50
 overlap_exact = []
 overlap_sim = []
 
 for i in range(n_time_steps):
-    overlap_exact.append(get_overlap_exact(i))
-    overlap_sim.append(get_overlap_simulator(i))
+    overlap_exact.append(get_overlap(i))
+    overlap_sim.append(get_overlap(i, simulator))
 
 plt.figure()
 plt.title('Overlap')

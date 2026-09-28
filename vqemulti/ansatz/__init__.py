@@ -1,5 +1,5 @@
 from vqemulti.ansatz.generators import get_ucc_generator
-from vqemulti.utils import get_sparse_operator
+from vqemulti.utils import get_sparse_operator, fermion_to_qubit
 from vqemulti.sqd import simulate_energy_sqd
 from copy import deepcopy
 import numpy as np
@@ -200,6 +200,62 @@ class GenericAnsatz(ABC):
             params_copy[i] = original_val
 
         return gradient
+
+    def get_overlap(self, ansatz, simulator=None):
+        if simulator is None:
+            return self._get_overlap_exact(ansatz)
+        else:
+            return self._get_overlap_hadamard_test(ansatz, simulator)
+
+
+    def _get_overlap_exact(self, ansatz):
+
+        bra = self.get_state_vector().transpose().conj()
+        ket = ansatz.get_state_vector()
+
+        return np.sum(bra @ ket)
+
+    def _get_overlap_hadamard_test(self, ansatz, simulator):
+
+        from openfermion import QubitOperator
+
+        identity = QubitOperator(())
+        expectation_value, std_error = simulator.get_operator_matrix_element(identity,
+                                                                             self.get_preparation_gates(simulator),
+                                                                             ansatz.get_preparation_gates(simulator),
+                                                                             compute_imag=True,
+                                                                             n_qubits=self.n_qubits,
+                                                                             )
+
+        return expectation_value
+
+    def get_matrix_element(self, operator, ansatz, simulator=None):
+        if simulator is None:
+            return self._get_matrix_element_exact(operator, ansatz)
+        else:
+            return self._get_matrix_element_hadamard_test(operator, ansatz, simulator)
+
+    def _get_matrix_element_exact(self, operator, ansatz):
+
+        op_sparse = get_sparse_operator(operator)
+        bra = self.get_state_vector().transpose().conj()
+        ket = ansatz.get_state_vector()
+
+        return (bra @ op_sparse @ ket)[0, 0]
+
+    def _get_matrix_element_hadamard_test(self, operator, ansatz, simulator):
+
+        expectation_value, std_error = simulator.get_operator_matrix_element(fermion_to_qubit(operator),
+                                                                             self.get_preparation_gates(simulator),
+                                                                             ansatz.get_preparation_gates(simulator),
+                                                                             compute_imag=True,
+                                                                             n_qubits=self.n_qubits,
+                                                                             )
+
+        return expectation_value
+
+    def get_preparation_gates(self, *args, **kwargs):
+        raise NotImplementedError()
 
 
 if __name__ == '__main__':

@@ -237,7 +237,7 @@ class GenericAnsatz(ABC):
 
     def _get_matrix_element_exact(self, operator, ansatz):
 
-        op_sparse = get_sparse_operator(operator)
+        op_sparse = get_sparse_operator(operator, self.n_qubits)
         bra = self.get_state_vector().transpose().conj()
         ket = ansatz.get_state_vector()
 

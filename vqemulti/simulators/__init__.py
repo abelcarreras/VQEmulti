@@ -107,11 +107,16 @@ class SimulatorBase(ABC):
         :return: the expectation value of the energy
         """
 
-        if self._test_only:
-            warnings.warn('test_only is not implemented for matrix_element')
-
         if n_qubits is None:
             n_qubits = count_qubits(qubit_operator)
+
+        if self._test_only:
+            # warnings.warn('test_only for matrix_element only tests state preparation gates')
+            sparse_op = get_sparse_operator(qubit_operator, n_qubits=n_qubits).toarray()
+            state_vector_bra = self._get_state_vector(state_preparation_gates_bra, n_qubits)
+            state_vector_ket = self._get_state_vector(state_preparation_gates_ket, n_qubits)
+
+            return np.vdot(state_vector_bra, sparse_op @ state_vector_ket), 0.0
 
         # Format and the Hamiltonian in pauli strings and coefficients
         formatted_hamiltonian = convert_hamiltonian(qubit_operator)

@@ -949,12 +949,12 @@ class QiskitSimulator(SimulatorBase):
         self._circuit_list.append(circuit)
 
         # circuit drawing
-        self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
-
         if separate_spins:
             n_qubits = circuit.num_qubits
             wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
             self._circuit_draw.append(str(circuit.draw(fold=-1, wire_order=wire_order)))
+        else:
+            self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
 
         log_message(self._circuit_draw[-1], log_level=5)
 
@@ -1000,4 +1000,18 @@ class QiskitSimulator(SimulatorBase):
     def store_circuits(self, filename='circuits.qpy'):
         with open(filename, 'wb') as f:
             qpy.dump(self._circuit_list, f)
+
+    def get_circuit_string(self, state_preparation_gates, n_qubits, separate_spins=False, decompose_level=0, fold=-1):
+        # Initialize circuit.
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        if separate_spins:
+            n_qubits = circuit.num_qubits
+            wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
+            str(circuit.decompose(reps=decompose_level).draw(fold=fold, wire_order=wire_order))
+
+        # circuit drawing
+        return str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True))
 

@@ -387,3 +387,6 @@ class SimulatorBase(ABC):
 
     def _measure_hadamard_test(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def get_circuit_string(self, state_preparation_gates, n_qubits, **kwargs):
+        raise NotImplementedError()

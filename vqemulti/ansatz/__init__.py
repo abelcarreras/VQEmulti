@@ -254,6 +254,11 @@ class GenericAnsatz(ABC):
 
         return expectation_value
 
+    def print_circuit(self, simulator, **kwargs):
+        preparation_gates = self.get_preparation_gates(simulator)
+        circuit_string = simulator.get_circuit_string(preparation_gates, self.n_qubits, **kwargs)
+        print(circuit_string)
+
     def get_preparation_gates(self, *args, **kwargs):
         raise NotImplementedError()
 

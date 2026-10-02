@@ -259,6 +259,13 @@ class GenericAnsatz(ABC):
         circuit_string = simulator.get_circuit_string(preparation_gates, self.n_qubits, **kwargs)
         print(circuit_string)
 
+    def get_sampling(self, simulator):
+
+        state_preparation_gates = self.get_preparation_gates(simulator)
+        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
+
+        return sampling
+
     def get_preparation_gates(self, *args, **kwargs):
         raise NotImplementedError()
 

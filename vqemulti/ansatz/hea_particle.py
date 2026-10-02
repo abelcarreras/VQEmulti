@@ -336,14 +336,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             state = sp.sparse.linalg.expm_multiply(sparse_operator, state)
         return state
 
-    def get_sampling(self, simulator):
-
-        state_preparation_gates = self.get_preparation_gates(simulator)
-        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
-
-        return sampling
-
-
 
 if __name__ == '__main__':
 

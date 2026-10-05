@@ -1185,7 +1185,7 @@ def create_input_file_dice(configuration_list,
                            davidson_tol=1e-8,
                            variational_tol=1e-10,
                            schedule=None,
-                           epsilon2=1e-2,
+                           epsilon2=1e-8,
                            max_iterations=1,
                            n_samples=200,
                            calc_rdm=False,
@@ -1323,6 +1323,8 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                                 compute_density_matrix=False,
                                 compute_variance=False,
                                 compute_ci_state=False,
+                                include_PT=False,
+                                n_iter_PT=10000
                                 ):
     """
     get selected CI energy using Dice software.
@@ -1335,6 +1337,9 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     :param parse_2rdm: parse and return 1-RDM and 2-RDM
     :param hci_schedule: perform HCI with given schedule, if None only use provided subspace (for SQD)
     :param compute_variance: compute variance (very expensive!)
+    :param compute_ci_state: compute CI state
+    :param include_PT: include perturbation theory (PT) calculation
+    :param n_iter_PT: number of iterations for PT
     :return: SCI energy
     """
 
@@ -1359,7 +1364,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
                            calc_rdm=compute_density_matrix,
                            calc_ci_vect=compute_ci_state,
                            schedule=hci_schedule,
-                           nPTiter=0,
+                           nPTiter=n_iter_PT if include_PT else 0,
                            )
 
     # run Dice
@@ -1390,7 +1395,28 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
     enum = output.find('Variational calculation result')
     sci_energy = float(output[enum: enum+500].split()[7])
 
-    log_message('SCI energy: ', sci_energy, log_level=1)
+    log_message('SCI variational energy: ', sci_energy, log_level=1)
+
+    # PT
+    enum = output.find('Stochastic calculation')
+    if enum > 0:
+
+        # warning about convergence
+        if output[enum:].find('Semistochastic PT calculation converged') < 0:
+            warnings.warn('PT not converged in {} iterations'.format(nPTiter))
+
+        pt_section = output[enum:].split('\n')[2:]
+        pt_energy = sci_energy
+        for line in pt_section:
+            try:
+                pt_energy = float(line.split()[1])
+            except (ValueError, IndexError):
+                break
+
+        log_message('PT energy: ', sci_energy - pt_energy, log_level=1)
+
+        if pt_energy < sci_energy:
+            sci_energy = pt_energy
 
     extra_data = {}
     # careful! this may take a very long time

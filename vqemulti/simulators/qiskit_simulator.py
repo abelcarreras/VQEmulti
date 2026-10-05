@@ -631,7 +631,7 @@ class QiskitSimulator(SimulatorBase):
 
 
 
-    def _measure_hadamard_test(self, main_string,
+    def _measure_hadamard_test(self, pauli_string,
                                coefficient,
                                state_preparation_gates_bra, # bra
                                state_preparation_gates_ket, # ket
@@ -639,7 +639,7 @@ class QiskitSimulator(SimulatorBase):
                                imaginary_part=False):
 
 
-        log_message('pauli string: {}'.format(main_string), log_level=2)
+        log_message('pauli string: {}'.format(pauli_string), log_level=2)
 
         U_circ = qiskit.QuantumCircuit(n_qubits)
 
@@ -651,7 +651,7 @@ class QiskitSimulator(SimulatorBase):
         definition = [index for index in range(n_qubits)]
         U_circ.append(circuit_1.to_gate(label="U_ket"), definition)
 
-        for i, op in enumerate(main_string):
+        for i, op in enumerate(pauli_string):
             #i_qiskit = n_qubits - i -1
             if op == "X":
                 U_circ.x([i])

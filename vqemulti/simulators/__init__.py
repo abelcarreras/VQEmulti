@@ -124,12 +124,6 @@ class SimulatorBase(ABC):
         # skip hamiltonian grouping
         # Hadamard test does not benefit from grouping
 
-        grouped_hamiltonian = {}
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
-
-        log_message('hamiltonian terms {}'.format(len(grouped_hamiltonian)), log_level=2)
-
         # Obtain the expectation value for each Pauli string
         expectation_value = 0j
         expectation_variance = 0j

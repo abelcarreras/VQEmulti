@@ -1013,5 +1013,6 @@ class QiskitSimulator(SimulatorBase):
             str(circuit.decompose(reps=decompose_level).draw(fold=fold, wire_order=wire_order))
 
         # circuit drawing
-        return str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True))
+        return (str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True)) +
+                '\ndeph: ' + str(circuit.depth()) + '\ncounts: ' + str(dict(circuit.count_ops())))
 

@@ -13,6 +13,7 @@ import scipy as sp
 class HardwareEfficientAnsatz(GenericAnsatz):
     """
     ansatz type: (e^k e^iJ) * n_terms
+    spin symmetry alpha = beta
 
     """
     def __init__(self, hf_reference_fock,

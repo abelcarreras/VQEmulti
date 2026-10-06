@@ -25,23 +25,6 @@ def set_givens(G, i, j, theta, phi):
     G[j, j] = p * c  # e^{iφ} cos θ  (phase here, not above!)
 
 
-def do_direct(U):
-
-    n = len(U)
-
-    givens_rotations, diagonal = givens_decomposition_square(U)
-
-    U_work = np.eye(n, dtype=complex)
-    for layer in givens_rotations:
-        for (i, j, theta, phi) in layer:
-            G = np.eye(n, dtype=complex)
-            set_givens(G, i, j, theta, phi)
-            U_work = G @ U_work
-
-    D = np.diag(diagonal)
-    return D @ U_work
-
-
 def from_givens_to_U(givens_rotations, diagonal, n):
 
     U_work = np.eye(n, dtype=complex)
@@ -57,7 +40,7 @@ def from_givens_to_U(givens_rotations, diagonal, n):
     return D @ U_work
 
 
-def rewrite_givens_pack(params, givens_rotations, n_orb):
+def get_givens_pack(params, givens_rotations, n_orb, real_rotations=False):
 
     givens_rotations = givens_rotations.copy()
 
@@ -66,16 +49,22 @@ def rewrite_givens_pack(params, givens_rotations, n_orb):
 
         rotation = []
         for gr in layer:
-            rotation.append((gr[0], gr[1], params[k], params[k+1]))
-            k += 2
+            if real_rotations:
+                rotation.append((gr[0], gr[1], params[k], 0.0))
+                k += 1
+            else:
+                rotation.append((gr[0], gr[1], params[k], params[k+1]))
+                k += 2
 
         givens_rotations[i] = tuple(rotation)
 
     diagonal = []
     for i in range(n_orb):
-        diagonal.append(np.exp(1j * params[k]))
-        #diagonal.append(1)
-        k = k + 1
+        if real_rotations:
+            diagonal.append(1)
+        else:
+            diagonal.append(np.exp(1j * params[k]))
+            k = k + 1
 
     return givens_rotations, diagonal
 
@@ -106,7 +95,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
     spin symmetry alpha = beta
 
     """
-    def __init__(self, hf_reference_fock, givens_rotations, n_terms, init='zeros', local=None, ignore_parity=True):
+    def __init__(self, hf_reference_fock, givens_rotations, n_terms, init='zeros', local=None, ignore_parity=True, real_rotations=False):
         """
 
         :param hf_reference_fock: HF reference in fock space
@@ -115,6 +104,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         :param init: initialization ('zeros', 'ones', 'random')
         :param local: use laocal approximation for J interaction term
         :param ignore_parity: ignore parity between non-adjacent givens rotations
+        :param real_rotations: use real rotations
         """
 
         super().__init__()
@@ -132,6 +122,11 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         self._n_qubits = n_orb * 2
         self._local = n_orb if local is None else local
         self._ignore_parity = ignore_parity
+        self._real_rotations = real_rotations
+
+        # safety for local
+        if self._local > n_orb:
+            self._local = n_orb
 
         n_param_k, n_param_j = self.get_param_size()
 
@@ -166,16 +161,18 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         n_orb = len(self._reference_fock) // 2
 
         n_param_k = 0
-        for layer in self._givens_rotations:
-            n_param_k += len(layer)*2
+        if self._real_rotations:
+            for layer in self._givens_rotations:
+                n_param_k += len(layer)
+        else:
+            for layer in self._givens_rotations:
+                n_param_k += len(layer)*2
 
-        n_param_k += len(self._diagonal)
+            n_param_k += len(self._diagonal)
 
-        #n_param_k_test = len(get_givens_pack_params(givens_rotations, diagonal))
-        #assert n_param_k == n_param_k_test
-
-        # n_param_j = (n_orb ** 2 - n_orb) // 2 + n_orb
-        n_param_j = (self._local + 1) * n_orb - self._local * (self._local + 1) // 2
+        #self._local = 0
+        n_param_j = (n_orb * n_orb + n_orb) // 2 - (n_orb - self._local) * ((n_orb - self._local) + 1) // 2
+        n_param_j = ((n_orb * (n_orb + 1)) - (n_orb - self._local) * ((n_orb - self._local) + 1)) // 2
 
         return n_param_k, n_param_j
 
@@ -190,7 +187,8 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         def generator_from_parameters(parameters):
             from scipy.linalg import logm
 
-            givens_rotations, diagonal = rewrite_givens_pack(parameters, self._givens_rotations, n_orb)
+            givens_rotations, diagonal = get_givens_pack(parameters, self._givens_rotations, n_orb, real_rotations=self._real_rotations)
+
             U = from_givens_to_U(givens_rotations, diagonal, n_orb)
             return logm(U)
 
@@ -270,6 +268,9 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
             #self._operators, self._matrices = self._get_matrices(self._parameters)
 
             for matrix, operator in zip(self._matrices, self._operators):
+
+                if operator.is_zero():
+                    continue
 
                 if matrix[0] == 'K':
                     # implement rotation term

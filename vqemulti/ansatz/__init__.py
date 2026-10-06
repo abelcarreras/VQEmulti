@@ -229,21 +229,25 @@ class GenericAnsatz(ABC):
 
         return expectation_value
 
-    def get_matrix_element(self, operator, ansatz, simulator=None):
+    def get_matrix_element(self, operator, ansatz, simulator=None, return_std=False):
         if simulator is None:
-            return self._get_matrix_element_exact(operator, ansatz)
+            return self._get_matrix_element_exact(operator, ansatz, return_std)
         else:
-            return self._get_matrix_element_hadamard_test(operator, ansatz, simulator)
+            return self._get_matrix_element_hadamard_test(operator, ansatz, simulator, return_std)
 
-    def _get_matrix_element_exact(self, operator, ansatz):
+    def _get_matrix_element_exact(self, operator, ansatz, return_std=False):
 
         op_sparse = get_sparse_operator(operator, self.n_qubits)
         bra = self.get_state_vector().transpose().conj()
         ket = ansatz.get_state_vector()
+        energy = (bra @ op_sparse @ ket)[0, 0]
 
-        return (bra @ op_sparse @ ket)[0, 0]
+        if return_std:
+            return energy, 0.0
 
-    def _get_matrix_element_hadamard_test(self, operator, ansatz, simulator):
+        return energy
+
+    def _get_matrix_element_hadamard_test(self, operator, ansatz, simulator, return_std=False):
 
         expectation_value, std_error = simulator.get_operator_matrix_element(fermion_to_qubit(operator),
                                                                              self.get_preparation_gates(simulator),
@@ -251,6 +255,9 @@ class GenericAnsatz(ABC):
                                                                              compute_imag=True,
                                                                              n_qubits=self.n_qubits,
                                                                              )
+
+        if return_std:
+            return expectation_value, std_error
 
         return expectation_value
 

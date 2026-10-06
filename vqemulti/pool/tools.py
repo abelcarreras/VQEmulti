@@ -185,6 +185,9 @@ class OperatorList:
         else:
             return False
 
+    def is_zero(self):
+        return all([len(op.terms) == 0 for op in self._list])
+
     def __mul__(self, other):
 
         if isinstance(other, (int, float, complex)):

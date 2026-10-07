@@ -392,11 +392,14 @@ if __name__ == '__main__':
                   [0, 0, 0, 1],
                   [0, 0, 1, 0]])
 
+    # compatible with openfermion givens_decomposition_square return. Angles are ignored
     givens_rotations, diagonal = givens_decomposition_square(U)
 
-    givens_rotations = [( (0, 1, -0.570 , 0.0), (2, 3, -1.570 , 0.0) )]
+    # 1 layers of givens rotations with 2 rotations:
+    # 1) between 0 & 1 orbitals
+    # 2) between 2 & 3 orbitals
 
-    #givens_rotations = [( (0, 1, -0.570 , 0.0), )]
+    givens_rotations = [( (0, 1), (2, 3) )]
 
     ansatz = HardwareEfficientGivensAnsatz(hf_reference_fock, givens_rotations, n_terms=1, init='random', ignore_parity=False)
     ansatz.print_circuit(simulator)

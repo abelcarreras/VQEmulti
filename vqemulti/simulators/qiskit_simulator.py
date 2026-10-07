@@ -940,14 +940,16 @@ class QiskitSimulator(SimulatorBase):
         # Single-qubit Z rotations
         for p in range(n_qubits):
             angle = J[p, :].sum() / 2
-            reference_gates.append(CircuitInstruction(RZGate(angle), [p]))
+            if abs(angle) >= tolerance:
+                reference_gates.append(CircuitInstruction(RZGate(angle), [p]))
 
         # Two-qubit ZZ rotations
         for p in range(n_qubits):
             for q in range(p + 1, n_qubits):
                 if not np.isclose(J[p, q], 0.0):
                     angle = -J[p, q]
-                    reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
+                    if abs(angle) >= tolerance:
+                        reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
 
         return reference_gates
 

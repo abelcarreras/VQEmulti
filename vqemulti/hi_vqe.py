@@ -1,8 +1,7 @@
 from vqemulti.optimizers import OptimizerParams
 from vqemulti.ansatz import GenericAnsatz
 from vqemulti.utils import log_message
-from vqemulti.sqd import simulate_energy_sqd, configuration_recovery, get_subspace_configurations
-from vqemulti.sqd import simple_filtering, add_noise
+from vqemulti.sqd import simulate_energy_sqd, configuration_recovery, get_subspace_configurations, simple_filtering
 from vqemulti.utils import get_selected_ci_energy_dice
 import numpy as np
 import scipy
@@ -77,9 +76,6 @@ def hi_vqe(hamiltonian,
 
         # get sampling
         samples = ansatz.get_sampling(sampling_simulator)
-
-        # synthetic noise
-        # samples = add_noise(samples, probability=0.2)
 
         # recovery
         # rec_samples = simple_filtering(samples, n_electrons, multiplicity=multiplicity)

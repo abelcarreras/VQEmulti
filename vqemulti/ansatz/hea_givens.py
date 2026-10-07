@@ -163,8 +163,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
 
             n_param_k += len(self._diagonal)
 
-        #self._local = 0
-        n_param_j = (n_orb * n_orb + n_orb) // 2 - (n_orb - self._local) * ((n_orb - self._local) + 1) // 2
+        # n_param_j = (n_orb * n_orb + n_orb) // 2 - (n_orb - self._local) * ((n_orb - self._local) + 1) // 2
         n_param_j = ((n_orb * (n_orb + 1)) - (n_orb - self._local) * ((n_orb - self._local) + 1)) // 2
 
         return n_param_k, n_param_j

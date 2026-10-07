@@ -68,6 +68,7 @@ def get_givens_pack(params, givens_rotations, n_orb, real_rotations=False):
 
     return givens_rotations, diagonal
 
+
 def get_givens_pack_params(givens_rotations, diagonal):
     params = []
     for layer in givens_rotations:
@@ -79,14 +80,6 @@ def get_givens_pack_params(givens_rotations, diagonal):
         params.append(-1j* np.log(d))
 
     return params
-
-
-def make_local_simple(mat, local):
-    local_mat = np.array(mat).copy()
-    for i, row in enumerate(local_mat):
-        row[i + local:] = 0
-        row[:max(0, i - local + 1)] = 0
-    return local_mat
 
 
 class HardwareEfficientGivensAnsatz(GenericAnsatz):
@@ -225,7 +218,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         pos = 0
         matrices = []
 
-        for i in range(self._n_terms):
+        for _ in range(self._n_terms):
 
             kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos])
 
@@ -239,9 +232,6 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
 
             diag_i = symmetric_from_parameters(parameters[pos:n_param_j+pos], n_orb, self._local)
 
-            #if self._local is not None:
-            #    diag_i = make_local_simple(diag_i, self._local)
-
             j_mat = np.zeros((n_orb, n_orb, n_orb, n_orb), dtype=complex)
             for i in range(n_orb):
                 for j in range(n_orb):
@@ -250,7 +240,13 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
             spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=True)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
             ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True)
 
-            matrices.append(('J', ansatz_j))
+            # get n_i n_j matrix in spinorbitals
+            spin_diagonal = np.zeros((2*n_orb, 2*n_orb))
+            for i in range(2*n_orb):
+                for j in range(2*n_orb):
+                    spin_diagonal[i, j] = spin_jastrow[i, i, j, j].imag
+
+            matrices.append(('J', spin_diagonal))
             operators.append(ansatz_j)
             pos += n_param_j
 
@@ -282,8 +278,10 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
 
                 elif matrix[0] == 'J':
                     # implement jastrow term
-                    jastrow_qubit = operator.get_quibits_list(reorganize=False)
-                    state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
+                    jastrow_mat = matrix[1]
+                    state_preparation_gates += simulator.get_density_density_gates(jastrow_mat, self.n_qubits)
+                    # jastrow_qubit = operator.get_quibits_list(reorganize=False)
+                    # state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
                 else:
                     raise NotImplementedError
 

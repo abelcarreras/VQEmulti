@@ -9,7 +9,7 @@ from vqemulti.simulators.layout import LayoutModelDefault
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate, PhaseGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate, PhaseGate, RZZGate
 from qiskit.circuit.library import SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
@@ -931,6 +931,26 @@ class QiskitSimulator(SimulatorBase):
 
         return reference_gates
 
+    def _get_density_density_gates(self, J, n_qubits, tolerance=1e-6):
+
+        log_message('build density density gates', log_level=3)
+
+        reference_gates = []
+
+        # Single-qubit Z rotations
+        for p in range(n_qubits):
+            angle = J[p, :].sum() / 2
+            reference_gates.append(CircuitInstruction(RZGate(angle), [p]))
+
+        # Two-qubit ZZ rotations
+        for p in range(n_qubits):
+            for q in range(p + 1, n_qubits):
+                if not np.isclose(J[p, q], 0.0):
+                    angle = -J[p, q]
+                    reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
+
+        return reference_gates
+
     def _get_circuit_stat_data(self, circuit, separate_spins=False, cnot_additional=False):
 
         log_message('generate circuit stats', log_level=5)
@@ -1007,12 +1027,12 @@ class QiskitSimulator(SimulatorBase):
         for gate in state_preparation_gates:
             circuit.append(gate)
 
+        extra = '\ndeph: ' + str(circuit.depth()) + '\ncounts: ' + str(dict(circuit.count_ops()))
         if separate_spins:
             n_qubits = circuit.num_qubits
             wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
-            str(circuit.decompose(reps=decompose_level).draw(fold=fold, wire_order=wire_order))
+            return str(circuit.decompose(reps=decompose_level).draw(fold=fold, wire_order=wire_order)) + extra
 
         # circuit drawing
-        return (str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True)) +
-                '\ndeph: ' + str(circuit.depth()) + '\ncounts: ' + str(dict(circuit.count_ops())))
+        return str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True)) + extra
 

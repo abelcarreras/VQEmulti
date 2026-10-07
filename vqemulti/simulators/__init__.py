@@ -293,6 +293,18 @@ class SimulatorBase(ABC):
 
         return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits, add_parity=add_parity)
 
+    def get_density_density_gates(self, dd_matrix_spin, n_qubits):
+
+        J = np.asarray(dd_matrix_spin, dtype=float)
+
+        if J.ndim != 2 or J.shape[0] != J.shape[1]:
+            raise ValueError("J must be a square matrix.")
+
+        if not np.allclose(J, J.T):
+            raise ValueError("J must be symmetric.")
+
+        return self._get_density_density_gates(J, n_qubits)
+
     def print_statistics(self):
         if len(self._circuit_count) <= 0:
             warnings.warn('No simulation statistics to show')

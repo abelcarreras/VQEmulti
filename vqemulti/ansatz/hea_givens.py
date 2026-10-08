@@ -33,6 +33,10 @@ def from_givens_to_U(givens_rotations, diagonal, n):
             G = np.eye(n, dtype=complex)
             ii = n-i-1
             jj = n-j-1
+
+            if ii < 0 or jj < 0 or ii >= n or jj >= n:
+                raise Exception('Invalid Givens rotation ({}, {})'.format(i, j))
+
             set_givens(G, ii, jj, theta, phi)
             U_work = G @ U_work
 
@@ -135,7 +139,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         elif init == 'ones':
             self._parameters = [1.0] * n_param
         elif init == 'random':
-            self._parameters = np.random.rand(n_param)
+            self._parameters = (np.random.rand(n_param)-0.5)*np.pi
         else:
             raise ValueError('init must be either zeros, ones, or random')
 
@@ -225,7 +229,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
             ansatz_u = get_ucc_generator(kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
             U_spin = expm(kappa_spin)
 
-            matrices.append(('K', U_spin))
+            matrices.append(('K', U_spin[::-1, ::-1]))
             operators.append(ansatz_u)
             pos += n_param_k
 
@@ -365,17 +369,17 @@ if __name__ == '__main__':
 
     hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
                                        ('H', [2.0, 0.0, 0.0]),
-                                       #('H', [4.0, 0.0, 0.0]),
-                                       #('H', [6.0, 0.0, 0.0])
+                                       ('H', [4.0, 0.0, 0.0]),
+                                       ('H', [6.0, 0.0, 0.0])
                                        ],
-                             basis='sto-3g',
+                             basis='3-21g',
                              multiplicity=1,
                              charge=0,
                              description='molecule')
 
     # run classical calculation
     molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
-                         frozen_core=0, n_orbitals=4, run_ccsd=True)
+                         frozen_core=1, n_orbitals=4, run_ccsd=True)
 
     n_electrons = molecule.n_electrons
     n_orbitals = molecule.n_orbitals
@@ -397,9 +401,9 @@ if __name__ == '__main__':
 
     # 1 layers of givens rotations with 2 rotations:
     # 1) between 0 & 1 orbitals
-    # 2) between 2 & 3 orbitals
+    # 2) between 1 & 2 orbitals
 
-    givens_rotations = [( (0, 1), (2, 3) )]
+    givens_rotations = [( (0, 1), ),( (1, 2), )]
 
     ansatz = HardwareEfficientGivensAnsatz(hf_reference_fock, givens_rotations, n_terms=1, init='random', ignore_parity=False)
     ansatz.print_circuit(simulator)
@@ -407,8 +411,8 @@ if __name__ == '__main__':
     print('Energy E: ', ansatz.get_energy(ansatz.parameters, hamiltonian, None))
     print('Energy S: ', ansatz.get_energy(ansatz.parameters, hamiltonian, simulator))
 
-    parameters = [0.345, -0.2345, 0.88, 0.4567, -0.43432, 0.0, 0.0, 0.0, 0.0,
-                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    #parameters = [0.345, -0.2345, 0.88, 0.4567, -0.43432, 0.0, 0.0, 0.0, 0.0,
+    #              0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     #print(ansatz.parameters)
     #print('Energy: ', ansatz.get_energy(parameters, hamiltonian, None))

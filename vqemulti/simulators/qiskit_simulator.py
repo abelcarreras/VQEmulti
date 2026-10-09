@@ -871,12 +871,10 @@ class QiskitSimulator(SimulatorBase):
             return list(range(lo + 1, hi))
 
         parity_qubits = parity_string_qubits(i_full, j_full)
-        q_qisk = n_qubits - j_full - 1
 
         parity_gates = []
         for r in parity_qubits:
-            r_qisk = n_qubits - r - 1
-            parity_gates.append(CircuitInstruction(CZGate(), [r_qisk, q_qisk]))
+            parity_gates.append(CircuitInstruction(CZGate(), [r, j_full]))
 
         return parity_gates
 
@@ -889,45 +887,39 @@ class QiskitSimulator(SimulatorBase):
         # Implement Givens rotation layers
         for layer in givens_layers:
             for i, j, theta, phi in layer:
-                # define qubit indices in qiskit order
-                i_qisk = n_qubits - i - 1
-                j_qisk = n_qubits - j - 1
 
                 if add_parity:
                     reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
 
-                # qc.rz(phi, i_qisk)
+                # qc.rz(phi, i)
                 if abs(phi) >= tolerance:
-                    reference_gates.append(CircuitInstruction(RZGate(phi), [i_qisk]))
+                    reference_gates.append(CircuitInstruction(RZGate(phi), [i]))
 
-                # qc.cx(i_qisk, j_qisk)
-                # qc.cry(-theta * 2, j_qisk, i_qisk)
-                # qc.cx(i_qisk, j_qisk)
-                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
-                reference_gates.append(CircuitInstruction(CRYGate(-2*theta), [j_qisk, i_qisk]))
-                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
+                # qc.cx(i, j)
+                # qc.cry(-theta * 2, j, i)
+                # qc.cx(i, j)
+                reference_gates.append(CircuitInstruction(CXGate(), [i, j]))
+                reference_gates.append(CircuitInstruction(CRYGate(-2*theta), [j, i]))
+                reference_gates.append(CircuitInstruction(CXGate(), [i, j]))
 
                 # encode complex
-                # qc.rz(-phi, j_qisk)
-                # qc.rz(-phi, i_qisk)
+                # qc.rz(-phi, j)
+                # qc.rz(-phi, i)
 
                 if abs(phi) >= tolerance:
-                    reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
-                    reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [j]))
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [i]))
 
                 if add_parity:
                     reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
-
-        # qc.barrier()
 
         # Apply diagonal matrix as Z rotations
         for i, angle in enumerate(np.angle(diagonal)):
             # define qubit indices in qiskit order
-            i_qisk = n_qubits - i - 1
-            # qc.rz(-angle, i_qisk)
+            # qc.rz(-angle, i)
             if abs(angle) >= tolerance:
-                reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
-                # reference_gates.append(CircuitInstruction(PhaseGate(-angle), [i_qisk]))
+                reference_gates.append(CircuitInstruction(RZGate(-angle), [i]))
+                # reference_gates.append(CircuitInstruction(PhaseGate(-angle), [i]))
 
         return reference_gates
 

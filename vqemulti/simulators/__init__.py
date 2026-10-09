@@ -256,10 +256,6 @@ class SimulatorBase(ABC):
 
     def get_rotation_gates(self, rotation_matrix, n_qubits, separate_spins=False, add_parity=True):
 
-        # this matches the rotation implementation in qiskit.
-        # TODO: change the definitions such that reversing Rmat is not necessary
-        rotation_matrix = rotation_matrix[::-1, ::-1]
-
         if separate_spins:
 
             # Indices for alpha and beta (0-based indexing)

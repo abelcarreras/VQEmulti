@@ -142,7 +142,7 @@ class UnitaryCoupledJastrowAnsatzBase(ProductExponentialAnsatz, ABC):
 
                     # basis change
                     U_spin = get_spin_matrix(U_i.T)
-                    self._rotation_matrices.append(U_spin[::-1, ::-1])
+                    self._rotation_matrices.append(U_spin)
                     ansatz_u = get_basis_change_exp(U_spin, use_qubit=use_qubit)  # a_i^ a_j
 
                     # add to ansatz
@@ -442,7 +442,6 @@ if __name__ == '__main__':
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 
     print('Jastrow energy simul: ', energy)
-    exit()
 
     simulator.print_statistics()
     print(simulator.get_circuits()[-1])

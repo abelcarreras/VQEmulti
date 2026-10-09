@@ -238,7 +238,7 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             ansatz_u = get_ucc_generator(kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
             U_spin = expm(kappa_spin)
 
-            matrices.append(('K', U_spin[::-1, ::-1]))
+            matrices.append(('K', U_spin))
             operators.append(ansatz_u)
             pos += n_param_k
 

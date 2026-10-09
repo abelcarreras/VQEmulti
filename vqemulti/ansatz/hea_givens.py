@@ -247,7 +247,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
             spin_diagonal = np.zeros((2*n_orb, 2*n_orb))
             for i in range(2*n_orb):
                 for j in range(2*n_orb):
-                    spin_diagonal[i, j] = spin_jastrow[i, i, j, j].imag
+                    spin_diagonal[i, j] = -spin_jastrow[i, i, j, j].imag
 
             matrices.append(('J', spin_diagonal))
             operators.append(ansatz_j)

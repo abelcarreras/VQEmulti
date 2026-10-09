@@ -129,14 +129,20 @@ class UnitaryCoupledJastrowAnsatzBase(ProductExponentialAnsatz, ABC):
                     # jastrow
                     spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
-                    self._jastrow_operators.append(ansatz_j)
+
+                    spin_diagonal = np.zeros((2 * norb, 2 * norb))
+                    for i in range(2 * norb):
+                        for j in range(2 * norb):
+                            spin_diagonal[i, j] = -spin_jastrow[i, i, j, j].imag
+
+                    self._jastrow_operators.append(spin_diagonal)
 
                     if log_section(log_level=3):
                         print_tensor_4d(spin_jastrow.imag, spin_notation=True, title='Jastrow interactions')
 
                     # basis change
                     U_spin = get_spin_matrix(U_i.T)
-                    self._rotation_matrices.append(U_spin)
+                    self._rotation_matrices.append(U_spin[::-1, ::-1])
                     ansatz_u = get_basis_change_exp(U_spin, use_qubit=use_qubit)  # a_i^ a_j
 
                     # add to ansatz
@@ -186,8 +192,7 @@ class UnitaryCoupledJastrowAnsatzBase(ProductExponentialAnsatz, ABC):
 
                 # implement jastrow term
                 jastrow_param = self.parameters[i_param+1]
-                jastrow_qubit = jastrow.transform_to_scaled_qubit([jastrow_param])
-                state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
+                state_preparation_gates += simulator.get_density_density_gates(jastrow_param * jastrow, self.n_qubits)
 
                 # implement rotation
                 rotation_param = -self.parameters[i_param+2]
@@ -404,9 +409,9 @@ if __name__ == '__main__':
     simulator_sqd._backend = AerSimulator()
     simulator_sqd._use_ibm_runtime = True
 
-    hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
-                                       ('H', [2.0, 0.0, 0.0]),
-                                       ('H', [4.0, 0.0, 0.0]),
+    hydrogen = MolecularData(geometry=[('H', [1.1, 0.0, 0.0]),
+                                       ('H', [2.0, 0.0, 0.2]),
+                                       ('H', [4.5, 0.0, 0.0]),
                                        ('H', [6.0, 0.0, 0.0])],
                              basis='sto-3g',
                              multiplicity=1,
@@ -414,12 +419,10 @@ if __name__ == '__main__':
                              description='molecule')
 
     # run classical calculation
-    n_frozen_orb = 0 # nothing
-    n_total_orb = 4 # total orbitals
     molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
-                         frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
+                         frozen_core=0, n_orbitals=4, run_ccsd=True, run_casci=True)
 
-    n_electrons = molecule.n_electrons - n_frozen_orb * 2
+    n_electrons = molecule.n_electrons
 
     hamiltonian = molecule.get_molecular_hamiltonian()
 
@@ -428,17 +431,21 @@ if __name__ == '__main__':
     print('\nJASTROW ansatz\n==============')
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
-    t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
+    #t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(t1, t2, n_terms=2, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(None, ccsd.t2, n_terms=1, full_trotter=True, separate_spins=False, ignore_parity=False)
+
+    energy_exact = ucja.get_energy(ucja.parameters, hamiltonian, None)
+    print('Jastrow energy exact: ', energy_exact)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 
+    print('Jastrow energy simul: ', energy)
+    exit()
+
     simulator.print_statistics()
     print(simulator.get_circuits()[-1])
-
-    print('Jastrow energy: ', energy)
 
     from vqemulti.vqe import vqe
     print(vqe(hamiltonian, ucja, energy_simulator=None))

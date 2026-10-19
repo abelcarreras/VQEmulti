@@ -1,11 +1,12 @@
+from vqemulti.ansatz.generators.basis import get_absolute_orbitals
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from openfermionpyscf import run_pyscf
 from openfermion import MolecularData
-from vqemulti.ansatz.unitary_jastrow import crop_local_amplitudes, UnitaryCoupledJastrowAnsatz
+from vqemulti.ansatz.unitary_jastrow import crop_local_amplitudes, UnitaryCoupledJastrowAnsatz, UnitaryCoupledJastrowAnsatzAbsolute
 from vqemulti.preferences import Configuration
 from vqemulti.sqd import simulate_energy_sqd
 from vqemulti.simulators.layout import LayoutModelSQD, LayoutModelLinear, LayoutModelDefault
-from vqemulti.utils import get_selected_ci_energy_dice, get_dmrg_energy
+from vqemulti.utils import get_selected_ci_energy_dice, get_dmrg_energy, get_hf_reference_in_fock_space
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.fake_provider import FakeTorino
 from qiskit_aer import AerSimulator
@@ -57,10 +58,16 @@ energy_dmrg = get_dmrg_energy(hamiltonian, n_electrons, max_bond_dimension=100)
 print('dmrg_energy:', energy_dmrg)
 
 ccsd = molecule._pyscf_data.get('ccsd', None)
-t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
-t1 = ccsd.t1
 
-ucja = UnitaryCoupledJastrowAnsatz(None, t2, n_terms=1, full_trotter=True)
+use_absolute = True
+if use_absolute:
+    T1_orb = get_absolute_orbitals(ccsd.t1)
+    T2_orb = get_absolute_orbitals(ccsd.t2)
+
+    hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_orbitals*2)
+    ucja = UnitaryCoupledJastrowAnsatzAbsolute(None, T2_orb, hf_reference_fock, n_terms=1, full_trotter=True)
+else:
+    ucja = UnitaryCoupledJastrowAnsatz(None, ccsd.t2, n_terms=1, full_trotter=True)
 
 layout_model = LayoutModelSQD()
 # layout_model = LayoutModelLinear()

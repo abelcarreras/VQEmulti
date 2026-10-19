@@ -94,6 +94,8 @@ class RHEstimator:
 
     def run(self, circuit, measure_op, shots=10000):
 
+        cache = JobCache()
+
         isa_circuit = self.pm.run(circuit)
 
         n_chunks = max([1, isa_circuit.depth() * len(measure_op) // self._limit_hw])
@@ -122,6 +124,7 @@ class RHEstimator:
             mode = self._backend if self._session is None else self._session
             estimator = EstimatorV2(mode=mode)
 
+        # mitigation options
         estimator.options.default_shots = shots
         estimator.options.resilience_level = 2
         # estimator.options.optimization_level = 0
@@ -130,6 +133,9 @@ class RHEstimator:
         # estimator.options.twirling.enable_measure = False
         # estimator.options.twirling.enable_gates = False
         # estimator.options.update(default_shots=shots, optimization_level=0)
+
+        precision = np.sqrt(1 / shots)
+        log_message('Requested precision: {}'.format(precision), log_level=1)
 
         variance = 0
         expectation_value = 0
@@ -143,12 +149,10 @@ class RHEstimator:
 
             mapped_observables = measure_op_i.apply_layout(isa_circuit.layout)
 
-            precision = np.sqrt(0.04/shots)
-            #print('precision: ', precision)
-
-            job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
-            log_message('job ID: ', job.job_id(), log_level=1)
-            #print('metadata: ', job.result()[0].metadata)
+            job = cache.get_job(circuit, {'n_shots': shots, 'observables': mapped_observables}, 'estimator', self._backend.name)
+            if job is None:
+                job = estimator.run([(isa_circuit, mapped_observables)], precision=None)
+                cache.store_job(job, circuit, {'n_shots': shots, 'observables': mapped_observables}, 'estimator', self._backend.name)
 
             # shots = 4000  # current hypotesis shots are ignored and always uses this
             std = job.result()[0].data.stds # * np.sqrt(shots)

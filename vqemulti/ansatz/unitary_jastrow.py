@@ -1,3 +1,4 @@
+from abc import ABC
 from vqemulti.ansatz.generators.factor import double_factorized_t2_general, double_factorized_t2_simple
 from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals_absolute_full
 from vqemulti.ansatz.generators.basis import get_absolute_orbitals
@@ -77,75 +78,22 @@ def make_local(J, G, local=1):
 
 
 from vqemulti.ansatz.exponential import ExponentialAnsatz
-class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
+class UnitaryCoupledJastrowAnsatzBase(ProductExponentialAnsatz, ABC):
     """
+    Generic abstract class for Unitary Cluster Jastrow
+
     ansatz type: e^k e^iJ e^-k
     """
-    def __init__(self, t1, t2, hf_reference_fock=None, full_trotter=True, use_qubit=False, n_terms=None, local=None,
-                 separate_spins=False, mixed_spin=True, use_general=False, reference_basis=None, connectivity_graph=None, ignore_parity=False):
-        """
-        assumed HF as reference
+    def __init__(self, coefficients, operators, hf_reference_fock, diag_coulomb_mats, orbital_rotations,
+                 single_rotation, connectivity_graph, n_terms, use_qubit, local, full_trotter, mixed_spin):
 
-        :param t1: single excitations amplitudes matrix (occupied x virtual)
-        :param t2: double excitations amplitudes matrix (occupied x occupied x virtual x virtual)
-        :param hf_reference_fock: reference vector in fock space
-        :param full_trotter: trotterize exponent (necessary for circuit implmentation)
-        :param use_qubit: transform fermion to qubit operators early (deprecated)
-        :param n_terms: number of UCC layers used
-        :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
-        :param separate_spins: separate spin operators approach (under testing: incorrect phases)
-        :param mixed_spin: include mixed spin interactions
-        :param use_general: use general diagonalization
-        :param reference_basis: orbital basis change matrix for reference state
-        :param connectivity_graph: add connectivity graph to use in local
-        :param ignore_parity: ignore parity terms in Givens rotations (has appreciable effect with separate_spins=True)
-        """
-        #super().__init__()
         self._operators = []
         self._parameters = []
         self._rotation_matrices = []
         self._jastrow_operators = []
-        self._full_trotter = full_trotter
-        self._separate_spins = separate_spins
-        self._ignore_parity = ignore_parity
-        self._spin_t1 = None
         self._raw_data = []
 
-        t2 = np.array(t2)
-        n_occupied, _, n_virtual, _ = t2.shape
-        n_total = n_virtual + n_occupied
-
-        if hf_reference_fock is None:
-            # assume close shell, even number of electrons, multiplicity zero
-            hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
-
-        if use_general:
-            diag_coulomb_mats, orbital_rotations = double_factorized_t2_general(t2)
-        else:
-            diag_coulomb_mats, orbital_rotations = double_factorized_t2_simple(t2)  # a_j a_l a_i^ a_k^
-
-
         norb = orbital_rotations.shape[-1]
-
-        coefficients = []
-        operators = []
-
-        single_rotation = None
-        if reference_basis is not None:
-            single_rotation = np.asarray(reference_basis).T
-
-        if t1 is not None:
-
-            if use_general:
-                t1_abs = t1 - t1.T.conjugate()
-            else:
-                t1_abs = get_absolute_orbitals(t1)
-                t1_abs = t1_abs - t1_abs.T.conjugate()
-
-            if single_rotation is not None:
-                single_rotation = sp.sparse.linalg.expm(t1_abs) @ single_rotation
-            else:
-                single_rotation = sp.sparse.linalg.expm(t1_abs)
 
         if single_rotation is not None:
             generator = -sp.linalg.logm(single_rotation)
@@ -181,7 +129,13 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
                     # jastrow
                     spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
                     ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True, use_qubit=use_qubit)
-                    self._jastrow_operators.append(ansatz_j)
+
+                    spin_diagonal = np.zeros((2 * norb, 2 * norb))
+                    for i in range(2 * norb):
+                        for j in range(2 * norb):
+                            spin_diagonal[i, j] = -spin_jastrow[i, i, j, j].imag
+
+                    self._jastrow_operators.append(spin_diagonal)
 
                     if log_section(log_level=3):
                         print_tensor_4d(spin_jastrow.imag, spin_notation=True, title='Jastrow interactions')
@@ -207,13 +161,6 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
         super().__init__(coefficients, operators, hf_reference_fock)
 
-    @property
-    def n_qubits(self):
-        return len(self._reference_fock)
-
-    @property
-    def operators(self):
-        return self._operators
 
     def get_preparation_gates(self, simulator):
 
@@ -245,8 +192,7 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
                 # implement jastrow term
                 jastrow_param = self.parameters[i_param+1]
-                jastrow_qubit = jastrow.transform_to_scaled_qubit([jastrow_param])
-                state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
+                state_preparation_gates += simulator.get_density_density_gates(jastrow_param * jastrow, self.n_qubits)
 
                 # implement rotation
                 rotation_param = -self.parameters[i_param+2]
@@ -260,6 +206,123 @@ class UnitaryCoupledJastrowAnsatz(ProductExponentialAnsatz):
 
         else:
             return super().get_preparation_gates(simulator)
+
+
+class UnitaryCoupledJastrowAnsatz(UnitaryCoupledJastrowAnsatzBase):
+    """
+    Class for Unitary Cluster Jastrow using usual (occ x virtual) matrices for amplitudes
+
+    ansatz type: e^k e^iJ e^-k
+    """
+    def __init__(self, t1, t2, full_trotter=True, use_qubit=False, n_terms=None, local=None,
+                 separate_spins=False, mixed_spin=True, reference_basis=None, connectivity_graph=None, ignore_parity=False):
+        """
+        Prepare UCJA ansatz
+
+        :param t1: single excitations amplitudes matrix (occupied x virtual)
+        :param t2: double excitations amplitudes matrix (occupied x occupied x virtual x virtual)
+        :param hf_reference_fock: reference vector in fock space
+        :param full_trotter: trotterize exponent (necessary for circuit implmentation)
+        :param use_qubit: transform fermion to qubit operators early (deprecated)
+        :param n_terms: number of UCC layers used
+        :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
+        :param separate_spins: separate spin operators approach (under testing: incorrect phases)
+        :param mixed_spin: include mixed spin interactions
+        :param reference_basis: orbital basis change matrix for reference state
+        :param connectivity_graph: add connectivity graph to use in local
+        :param ignore_parity: ignore parity terms in Givens rotations (has appreciable effect with separate_spins=True)
+        """
+
+        self._full_trotter = full_trotter
+        self._separate_spins = separate_spins
+        self._ignore_parity = ignore_parity
+        self._spin_t1 = None
+
+        t2 = np.array(t2)
+
+        n_occupied, _, n_virtual, _ = t2.shape
+        n_total = n_virtual + n_occupied
+
+        hf_reference_fock = get_hf_reference_in_fock_space(n_occupied*2, n_total*2)
+
+        diag_coulomb_mats, orbital_rotations = double_factorized_t2_simple(t2)  # a_j a_l a_i^ a_k^
+
+        norb = orbital_rotations.shape[-1]
+
+        coefficients = []
+        operators = []
+
+        single_rotation = None
+        if reference_basis is not None:
+            single_rotation = np.asarray(reference_basis).T
+
+        if t1 is not None:
+
+            t1_abs = get_absolute_orbitals(t1)
+            t1_abs = t1_abs - t1_abs.T.conjugate()
+
+            if single_rotation is not None:
+                single_rotation = sp.sparse.linalg.expm(t1_abs) @ single_rotation
+            else:
+                single_rotation = sp.sparse.linalg.expm(t1_abs)
+
+
+        super().__init__(coefficients, operators, hf_reference_fock, diag_coulomb_mats, orbital_rotations,
+                         single_rotation, connectivity_graph, n_terms, use_qubit, local, full_trotter, mixed_spin)
+
+
+class UnitaryCoupledJastrowAnsatzAbsolute(UnitaryCoupledJastrowAnsatzBase):
+    """
+    Class for Unitary Cluster Jastrow using full (Norb x Norb) matrices for amplitudes
+
+    ansatz type: e^k e^iJ e^-k
+    """
+    def __init__(self, t1, t2, hf_reference_fock, full_trotter=True, use_qubit=False, n_terms=None, local=None,
+                 separate_spins=False, mixed_spin=True, reference_basis=None, connectivity_graph=None, ignore_parity=False):
+        """
+        Prepare UCJA ansatz
+
+        :param t1: single excitations amplitudes full matrix (Norb x Norb)
+        :param t2: double excitations amplitudes full matrix (Norb x Norb x Norb x Norb)
+        :param hf_reference_fock: reference vector in fock space
+        :param full_trotter: trotterize exponent (necessary for circuit implmentation)
+        :param use_qubit: transform fermion to qubit operators early (deprecated)
+        :param n_terms: number of UCC layers used
+        :param local: do a local version of the J operators (0:all zeros, 1: diagonal, 2: tridigonal, etc...)
+        :param separate_spins: separate spin operators approach (under testing: incorrect phases)
+        :param mixed_spin: include mixed spin interactions
+        :param reference_basis: orbital basis change matrix for reference state
+        :param connectivity_graph: add connectivity graph to use in local
+        :param ignore_parity: ignore parity terms in Givens rotations (has appreciable effect with separate_spins=True)
+        """
+
+        self._full_trotter = full_trotter
+        self._separate_spins = separate_spins
+        self._ignore_parity = ignore_parity
+        self._spin_t1 = None
+
+        t2 = np.array(t2)
+
+        diag_coulomb_mats, orbital_rotations = double_factorized_t2_general(t2)
+
+        coefficients = []
+        operators = []
+
+        single_rotation = None
+        if reference_basis is not None:
+            single_rotation = np.asarray(reference_basis).T
+
+        if t1 is not None:
+
+            t1_abs = t1 - t1.T.conjugate()
+
+            if single_rotation is not None:
+                single_rotation = sp.sparse.linalg.expm(t1_abs) @ single_rotation
+            else:
+                single_rotation = sp.sparse.linalg.expm(t1_abs)
+
+        super().__init__(coefficients, operators, hf_reference_fock, diag_coulomb_mats, orbital_rotations,
+                         single_rotation, connectivity_graph, n_terms, use_qubit, local, full_trotter, mixed_spin)
 
 
 def crop_local_amplitudes(amplitudes, n_neighbors=1):
@@ -346,9 +409,9 @@ if __name__ == '__main__':
     simulator_sqd._backend = AerSimulator()
     simulator_sqd._use_ibm_runtime = True
 
-    hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
-                                       ('H', [2.0, 0.0, 0.0]),
-                                       ('H', [4.0, 0.0, 0.0]),
+    hydrogen = MolecularData(geometry=[('H', [1.1, 0.0, 0.0]),
+                                       ('H', [2.0, 0.0, 0.2]),
+                                       ('H', [4.5, 0.0, 0.0]),
                                        ('H', [6.0, 0.0, 0.0])],
                              basis='sto-3g',
                              multiplicity=1,
@@ -356,12 +419,10 @@ if __name__ == '__main__':
                              description='molecule')
 
     # run classical calculation
-    n_frozen_orb = 0 # nothing
-    n_total_orb = 4 # total orbitals
     molecule = run_pyscf(hydrogen, run_fci=False, nat_orb=False, guess_mix=False, verbose=True,
-                         frozen_core=n_frozen_orb, n_orbitals=n_total_orb, run_ccsd=True)
+                         frozen_core=0, n_orbitals=4, run_ccsd=True, run_casci=True)
 
-    n_electrons = molecule.n_electrons - n_frozen_orb * 2
+    n_electrons = molecule.n_electrons
 
     hamiltonian = molecule.get_molecular_hamiltonian()
 
@@ -370,17 +431,20 @@ if __name__ == '__main__':
     print('\nJASTROW ansatz\n==============')
 
     ccsd = molecule._pyscf_data.get('ccsd', None)
-    t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
+    #t2 = crop_local_amplitudes(ccsd.t2, n_neighbors=3)
     t1 = ccsd.t1
 
-    ucja = UnitaryCoupledJastrowAnsatz(t1, t2, n_terms=2, full_trotter=True)
+    ucja = UnitaryCoupledJastrowAnsatz(None, ccsd.t2, n_terms=1, full_trotter=True, separate_spins=False, ignore_parity=False)
+
+    energy_exact = ucja.get_energy(ucja.parameters, hamiltonian, None)
+    print('Jastrow energy exact: ', energy_exact)
 
     energy = ucja.get_energy(ucja.parameters, hamiltonian, simulator)
 
+    print('Jastrow energy simul: ', energy)
+
     simulator.print_statistics()
     print(simulator.get_circuits()[-1])
-
-    print('Jastrow energy: ', energy)
 
     from vqemulti.vqe import vqe
     print(vqe(hamiltonian, ucja, energy_simulator=None))

@@ -13,6 +13,7 @@ import scipy as sp
 class HardwareEfficientAnsatz(GenericAnsatz):
     """
     ansatz type: (e^k e^iJ) * n_terms
+    spin symmetry alpha = beta
 
     """
     def __init__(self, hf_reference_fock,
@@ -252,7 +253,13 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             spin_jastrow = get_t2_spinorbitals_absolute_full(j_mat, mixed_spin=self._mixed_spin)  # a_i^ a_j a_k^ a_l -> a_i^ a_j a_k^ a_l
             ansatz_j = get_ucc_generator(None, spin_jastrow, full_amplitudes=True)
 
-            matrices.append(('J', ansatz_j))
+            # get n_i n_j matrix in spinorbitals
+            spin_diagonal = np.zeros((2*n_orb, 2*n_orb))
+            for i in range(2*n_orb):
+                for j in range(2*n_orb):
+                    spin_diagonal[i, j] = -spin_jastrow[i, i, j, j].imag
+
+            matrices.append(('J', spin_diagonal))
             operators.append(ansatz_j)
             pos += n_param_j
 
@@ -271,6 +278,9 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
             for matrix, operator in zip(self._matrices, self._operators):
 
+                if operator.is_zero():
+                    continue
+
                 if matrix[0] == 'K':
                     # implement rotation term
                     rotation_p = matrix[1]
@@ -281,8 +291,8 @@ class HardwareEfficientAnsatz(GenericAnsatz):
 
                 elif matrix[0] == 'J':
                     # implement jastrow term
-                    jastrow_qubit = operator.get_quibits_list(reorganize=False)
-                    state_preparation_gates += simulator.get_exponential_gates(jastrow_qubit, self.n_qubits)
+                    jastrow_mat = matrix[1]
+                    state_preparation_gates += simulator.get_density_density_gates(jastrow_mat, self.n_qubits)
                 else:
                     raise NotImplementedError
 
@@ -336,14 +346,6 @@ class HardwareEfficientAnsatz(GenericAnsatz):
             state = sp.sparse.linalg.expm_multiply(sparse_operator, state)
         return state
 
-    def get_sampling(self, simulator):
-
-        state_preparation_gates = self.get_preparation_gates(simulator)
-        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
-
-        return sampling
-
-
 
 if __name__ == '__main__':
 
@@ -390,19 +392,20 @@ if __name__ == '__main__':
 
 
     hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, molecule.n_qubits)
-    hea = HardwareEfficientAnsatz(hf_reference_fock, init='zero', n_terms=1, mixed_spin=True)
+    hea = HardwareEfficientAnsatz(hf_reference_fock, init='random', n_terms=1, separate_spins=True, ignore_parity=False, local=2)
 
-    print(hea.parameters)
+    #print(hea.parameters)
+    #hea.parameters = [0., 0., 0., 0., 1., 0.]
     #param = [2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
     #hea.parameters = param
 
     # simulator = None
-    energy = hea.get_energy(hea.parameters, hamiltonian, simulator)
+    hea.print_circuit(simulator)
+    print('Energy E: ', hea.get_energy(hea.parameters, hamiltonian, None))
+    print('Energy S: ', hea.get_energy(hea.parameters, hamiltonian, simulator))
 
-
-    print('HEA energy: ', energy)
-    #exit()
+    exit()
 
     simulator.print_statistics()
     print(simulator.get_circuits()[-1])

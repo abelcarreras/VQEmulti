@@ -276,12 +276,6 @@ class ProductExponentialAnsatz(GenericAnsatz):
 
         return gradient_vector
 
-    def get_sampling(self, simulator):
-
-        state_preparation_gates = self.get_preparation_gates(simulator)
-        sampling = simulator.get_state_sampling(state_preparation_gates, self.n_qubits)
-
-        return sampling
 
 
 

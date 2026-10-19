@@ -9,7 +9,7 @@ from vqemulti.simulators.layout import LayoutModelDefault
 from openfermion.utils import count_qubits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate, PhaseGate
+from qiskit.circuit.library import HGate, RXGate, RZGate, XGate, MCXGate, CRYGate, CXGate, IGate, PhaseGate, RZZGate
 from qiskit.circuit.library import SwapGate, U1Gate, UnitaryGate
 from qiskit import transpile
 from qiskit_aer import AerSimulator, StatevectorSimulator
@@ -631,27 +631,27 @@ class QiskitSimulator(SimulatorBase):
 
 
 
-    def _measure_hadamard_test(self, main_string,
+    def _measure_hadamard_test(self, pauli_string,
                                coefficient,
-                               state_preparation_gates_1,
-                               state_preparation_gates_2,
+                               state_preparation_gates_bra, # bra
+                               state_preparation_gates_ket, # ket
                                n_qubits,
                                imaginary_part=False):
 
 
-        log_message('pauli string: {}'.format(main_string), log_level=2)
+        log_message('pauli string: {}'.format(pauli_string), log_level=2)
 
         U_circ = qiskit.QuantumCircuit(n_qubits)
 
         # Initialize circuit 1
         circuit_1 = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates_1:
+        for gate in state_preparation_gates_ket:
             circuit_1.append(gate)
 
         definition = [index for index in range(n_qubits)]
-        U_circ.append(circuit_1.to_gate(label="U_1"), definition)
+        U_circ.append(circuit_1.to_gate(label="U_ket"), definition)
 
-        for i, op in enumerate(main_string):
+        for i, op in enumerate(pauli_string):
             #i_qiskit = n_qubits - i -1
             if op == "X":
                 U_circ.x([i])
@@ -662,10 +662,10 @@ class QiskitSimulator(SimulatorBase):
 
         # Initialize circuit 2
         circuit_2 = qiskit.QuantumCircuit(n_qubits)
-        for gate in state_preparation_gates_2:
+        for gate in state_preparation_gates_bra:
             circuit_2.append(gate)
 
-        U_circ.append(circuit_2.to_gate(label="U_2^dagger").inverse(), definition)
+        U_circ.append(circuit_2.to_gate(label="U_bra").inverse(), definition)
 
         U_controlled_gate = (U_circ.to_gate(label="U")).control(1)
 
@@ -680,16 +680,22 @@ class QiskitSimulator(SimulatorBase):
         circ_Hadamard = QuantumCircuit(anc, q, c_reg)
 
         circ_Hadamard.h(anc[0])
-        if imaginary_part:
-            circ_Hadamard.sdg(anc[0])
 
         definition = [anc[0]] + [q[index] for index in range(n_qubits)]
         circ_Hadamard.append(U_controlled_gate, definition)
+
+        if imaginary_part:
+            circ_Hadamard.sdg(anc[0])
+
         circ_Hadamard.h(anc[0])
-        circ_Hadamard.measure(0, 0)
 
         # print(circ_Hadamard)
         circ_Hadamard = circ_Hadamard.decompose(reps=3)
+
+        self._get_circuit_stat_data(circ_Hadamard)
+
+        # set measure
+        circ_Hadamard.measure(0, 0)
 
         if self._use_ibm_runtime:
             if self._use_qctrl:
@@ -865,12 +871,10 @@ class QiskitSimulator(SimulatorBase):
             return list(range(lo + 1, hi))
 
         parity_qubits = parity_string_qubits(i_full, j_full)
-        q_qisk = n_qubits - j_full - 1
 
         parity_gates = []
         for r in parity_qubits:
-            r_qisk = n_qubits - r - 1
-            parity_gates.append(CircuitInstruction(CZGate(), [r_qisk, q_qisk]))
+            parity_gates.append(CircuitInstruction(CZGate(), [r, j_full]))
 
         return parity_gates
 
@@ -883,45 +887,61 @@ class QiskitSimulator(SimulatorBase):
         # Implement Givens rotation layers
         for layer in givens_layers:
             for i, j, theta, phi in layer:
-                # define qubit indices in qiskit order
-                i_qisk = n_qubits - i - 1
-                j_qisk = n_qubits - j - 1
 
                 if add_parity:
                     reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
 
-                # qc.rz(phi, i_qisk)
+                # qc.rz(phi, i)
                 if abs(phi) >= tolerance:
-                    reference_gates.append(CircuitInstruction(RZGate(phi), [i_qisk]))
+                    reference_gates.append(CircuitInstruction(RZGate(phi), [i]))
 
-                # qc.cx(i_qisk, j_qisk)
-                # qc.cry(-theta * 2, j_qisk, i_qisk)
-                # qc.cx(i_qisk, j_qisk)
-                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
-                reference_gates.append(CircuitInstruction(CRYGate(-2*theta), [j_qisk, i_qisk]))
-                reference_gates.append(CircuitInstruction(CXGate(), [i_qisk, j_qisk]))
+                # qc.cx(i, j)
+                # qc.cry(-theta * 2, j, i)
+                # qc.cx(i, j)
+                reference_gates.append(CircuitInstruction(CXGate(), [i, j]))
+                reference_gates.append(CircuitInstruction(CRYGate(-2*theta), [j, i]))
+                reference_gates.append(CircuitInstruction(CXGate(), [i, j]))
 
                 # encode complex
-                # qc.rz(-phi, j_qisk)
-                # qc.rz(-phi, i_qisk)
+                # qc.rz(-phi, j)
+                # qc.rz(-phi, i)
 
                 if abs(phi) >= tolerance:
-                    reference_gates.append(CircuitInstruction(RZGate(-phi), [j_qisk]))
-                    reference_gates.append(CircuitInstruction(RZGate(-phi), [i_qisk]))
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [j]))
+                    reference_gates.append(CircuitInstruction(RZGate(-phi), [i]))
 
                 if add_parity:
                     reference_gates.extend(self._get_parity_gates(i, j, n_qubits, tolerance))
-
-        # qc.barrier()
 
         # Apply diagonal matrix as Z rotations
         for i, angle in enumerate(np.angle(diagonal)):
             # define qubit indices in qiskit order
-            i_qisk = n_qubits - i - 1
-            # qc.rz(-angle, i_qisk)
+            # qc.rz(-angle, i)
             if abs(angle) >= tolerance:
-                reference_gates.append(CircuitInstruction(RZGate(-angle), [i_qisk]))
-                # reference_gates.append(CircuitInstruction(PhaseGate(-angle), [i_qisk]))
+                reference_gates.append(CircuitInstruction(RZGate(-angle), [i]))
+                # reference_gates.append(CircuitInstruction(PhaseGate(-angle), [i]))
+
+        return reference_gates
+
+    def _get_density_density_gates(self, J, n_qubits, tolerance=1e-6):
+
+        log_message('build density density gates', log_level=3)
+
+        reference_gates = []
+
+        # Single-qubit Z rotations
+        for p in range(n_qubits):
+            angle = J[p, :].sum() / 2
+            if abs(angle) >= tolerance:
+                reference_gates.append(CircuitInstruction(RZGate(angle), [p]))
+
+        # Two-qubit ZZ rotations
+        for p in range(n_qubits):
+            for q in range(p + 1, n_qubits):
+                if not np.isclose(J[p, q], 0.0):
+                    angle = -J[p, q]
+                    if abs(angle) >= tolerance:
+                        reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
 
         return reference_gates
 
@@ -943,12 +963,12 @@ class QiskitSimulator(SimulatorBase):
         self._circuit_list.append(circuit)
 
         # circuit drawing
-        self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
-
         if separate_spins:
             n_qubits = circuit.num_qubits
             wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
             self._circuit_draw.append(str(circuit.draw(fold=-1, wire_order=wire_order)))
+        else:
+            self._circuit_draw.append(str(circuit.draw(fold=-1, reverse_bits=True)))
 
         log_message(self._circuit_draw[-1], log_level=5)
 
@@ -994,4 +1014,19 @@ class QiskitSimulator(SimulatorBase):
     def store_circuits(self, filename='circuits.qpy'):
         with open(filename, 'wb') as f:
             qpy.dump(self._circuit_list, f)
+
+    def get_circuit_string(self, state_preparation_gates, n_qubits, separate_spins=False, decompose_level=0, fold=-1):
+        # Initialize circuit.
+        circuit = qiskit.QuantumCircuit(n_qubits)
+        for gate in state_preparation_gates:
+            circuit.append(gate)
+
+        extra = '\ndeph: ' + str(circuit.depth()) + '\ncounts: ' + str(dict(circuit.count_ops()))
+        if separate_spins:
+            n_qubits = circuit.num_qubits
+            wire_order = list(range(0, n_qubits, 2)) + list(range(1, n_qubits, 2))[::-1]
+            return str(circuit.decompose(reps=decompose_level).draw(fold=fold, wire_order=wire_order)) + extra
+
+        # circuit drawing
+        return str(circuit.decompose(reps=decompose_level).draw(fold=fold, reverse_bits=True)) + extra
 

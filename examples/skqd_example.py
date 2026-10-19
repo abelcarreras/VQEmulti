@@ -11,6 +11,7 @@ from collections import Counter
 from vqemulti.utils import get_fock_space_vector, get_selected_ci_energy_dice
 from vqemulti.utils import get_dmrg_energy, fermion_to_qubit
 from vqemulti.sqd import get_subspace_configurations, configuration_recovery
+from vqemulti.hamiltonian.tools import get_qdrift_hamiltonian, get_compressed_qubit_hamiltonian
 import numpy as np
 
 # config = Configuration()
@@ -90,8 +91,6 @@ for i, a in enumerate(alpha_det):
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian_te = fermion_to_qubit(hamiltonian)
 print('H terms:', len(hamiltonian_te.terms))
-hamiltonian_te.compress(2e-2)
-print('H terms compress:', len(hamiltonian_te.terms))
 
 multiplicity = 1
 n_electrons = molecule.n_electrons
@@ -106,6 +105,11 @@ hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 # time step
 dt = 2e-2
 
+# get time-evolution approximated Hamiltonian
+# hamiltonian_te = get_compressed_qubit_hamiltonian(hamiltonian, 2e-2)
+hamiltonian_te = get_qdrift_hamiltonian(hamiltonian, 100)
+print('H terms approx:', len(hamiltonian_te.terms))
+
 energy_error_list = []
 configuration_number = []
 accumulated_samples = Counter({})
@@ -113,7 +117,7 @@ accumulated_samples = Counter({})
 for time in np.arange(0.0, dt*30, dt):
 
     print('time:', time)
-    generator = [1j * hamiltonian_te]
+    generator = [-1j * hamiltonian_te]
     coefficients = [time]
     ansatz = ExponentialAnsatz(coefficients, generator, hf_reference_fock)
 

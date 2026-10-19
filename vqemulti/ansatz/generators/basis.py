@@ -23,6 +23,25 @@ def get_spin_matrix(U_test, dtype=complex):
 
     return U_test_sp
 
+def get_spin_matrix_general(U_alpha, U_beta, dtype=complex):
+    """
+    get 2D matrix in interleaved spin version
+
+    :param U: rotation matrix in orbitals
+    :return: rotation matrix in spin orbitals
+    """
+    n_orb = len(U_alpha)
+    n_qubit = 2* n_orb
+
+    U_test_sp = np.zeros((n_qubit, n_qubit), dtype=dtype)
+
+    for i in range(n_orb):
+        for j in range(n_orb):
+            U_test_sp[2*i, 2*j] = U_alpha[i, j]  # alpha
+            U_test_sp[2*i+1, 2*j+1] = U_beta[i, j]  # beta
+
+    return U_test_sp
+
 
 ###################################
 #  T2 double electrons terms

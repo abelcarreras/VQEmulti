@@ -1,7 +1,7 @@
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, store_orbitals_in_molden
 from vqemulti.utils import get_hf_reference_in_fock_space, permute_hamiltonian
-from vqemulti.ansatz.unitary_jastrow import UnitaryCoupledJastrowAnsatz
+from vqemulti.ansatz.unitary_jastrow import UnitaryCoupledJastrowAnsatz, UnitaryCoupledJastrowAnsatzAbsolute
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators.basis import get_absolute_orbitals
@@ -55,6 +55,7 @@ molecule_loc = run_pyscf(deepcopy(butatriene),
                          run_casci=True,
                          loc_boys=False,
                          loc_pipek=True,
+                         #permute_orbitals=[(21, 26), (24, 27)],
                          permute_orbitals=[(24, 25)],
                          reference='HF')
 
@@ -72,7 +73,7 @@ print('multiplicity', multiplicity)
 
 # save orbitals
 store_orbitals_in_molden(molecule_loc, filename='orbitals.molden')
-
+#exit()
 
 # Build local hamiltonian
 trans_mat = molecule_loc.canonical_local_trans_mat
@@ -98,7 +99,8 @@ permutation, score = optimize_mapping(G_qpu, np.abs(one_body_alpha_simple))
 
 print('permutation:', permutation)
 
-print_permutation(G_qpu, centers, permutation)
+print_permutation(G_qpu, permutation, centers=centers)
+
 permutation_inv = np.argsort(permutation).tolist()
 
 hamiltonian_loc_ord = permute_hamiltonian(hamiltonian_loc, permutation_inv)
@@ -153,7 +155,7 @@ if do_compression_test:
     plt.show()
 
 
-do_dmrg_test = True
+do_dmrg_test = False
 if do_dmrg_test:
     from vqemulti.utils import get_dmrg_energy
 
@@ -272,8 +274,8 @@ simulator = Simulator(trotter=True,
                       # hamiltonian_grouping=True,
                       # backend=backend,
                       use_ibm_runtime=True,
-                      # use_estimator=True,
-                      shots=100000)
+                      use_estimator=True,
+                      shots=10000)
 
 
 # SQD parameters for Hi-VQE
@@ -286,20 +288,18 @@ hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_orbitals*2, mu
 print('hf reference', hf_reference_fock)
 
 if True:
-    simulator_can = simulator.copy()
+    #simulator_can = simulator.copy()
     # Build LUCJ ansatz using canonical basis
     ucja_ansatz = UnitaryCoupledJastrowAnsatz(ccsd.t1,
                                               ccsd.t2,
-                                              hf_reference_fock,
                                               n_terms=n_terms,
                                               full_trotter=True,
                                               local=local)
 
 
-    energy = ucja_ansatz.get_energy(ucja_ansatz.parameters, hamiltonian, None)
-    #energy = ucja_ansatz.get_sampled_energy(ucja_ansatz.parameters, hamiltonian, simulator_can, sqd_params)
+    #energy = ucja_ansatz.get_energy(ucja_ansatz.parameters, hamiltonian, simulator)
+    energy = ucja_ansatz.get_sampled_energy(ucja_ansatz.parameters, hamiltonian, simulator, sqd_params)
     print('LUCJ energy canonical: ', energy)
-    simulator_can.print_statistics()
 
 # Build LUCJ ansatz local
 #ccsd = molecule._pyscf_data.get('ccsd', None)
@@ -312,21 +312,20 @@ T1_orb_loc, T2_orb_loc = change_of_basis_orbitals(T1_orb, T2_orb, trans_mat)
 
 
 # Build LUCJ ansatz using local basis with absolute amplitudes
-ucja_ansatz_loc = UnitaryCoupledJastrowAnsatz(T1_orb_loc,
-                                              T2_orb_loc,
-                                              hf_reference_fock,
-                                              n_terms=n_terms,
-                                              full_trotter=True,
-                                              local=local,
-                                              use_general=True,
-                                              separate_spins=True,
-                                              reference_basis=trans_mat,
-                                              connectivity_graph=G_qpu
-                                              )
+ucja_ansatz_loc = UnitaryCoupledJastrowAnsatzAbsolute(T1_orb_loc,
+                                                      T2_orb_loc,
+                                                      hf_reference_fock,
+                                                      n_terms=n_terms,
+                                                      full_trotter=True,
+                                                      local=local,
+                                                      #separate_spins=True,
+                                                      reference_basis=trans_mat,
+                                                      connectivity_graph=G_qpu
+                                                      )
 
 
-energy_loc = ucja_ansatz_loc.get_energy(ucja_ansatz_loc.parameters, hamiltonian_loc, None)
-#energy_loc = ucja_ansatz_loc.get_sampled_energy(ucja_ansatz_loc.parameters, hamiltonian_loc_ord, simulator, sqd_params)
+#energy_loc = ucja_ansatz_loc.get_energy(ucja_ansatz_loc.parameters, hamiltonian_loc, simulator)
+energy_loc = ucja_ansatz_loc.get_sampled_energy(ucja_ansatz_loc.parameters, hamiltonian_loc_ord, simulator, sqd_params)
 
 print('LUCJ energy localized abs:', energy_loc)
 
@@ -339,20 +338,37 @@ trans_mat_ord = trans_mat[:, permutation_inv]
 
 
 # Build LUCJ ansatz using local basis with absolute amplitudes
-ucja_ansatz_loc_ord = UnitaryCoupledJastrowAnsatz(T1_orb_loc_ord,
-                                                  T2_orb_loc_ord,
-                                                  hf_reference_fock,
-                                                  n_terms=n_terms,
-                                                  full_trotter=True,
-                                                  local=local,
-                                                  use_general=True,
-                                                  separate_spins=True,
-                                                  reference_basis=trans_mat_ord,
-                                                  connectivity_graph=G_qpu
-                                                  )
+ucja_ansatz_loc_ord = UnitaryCoupledJastrowAnsatzAbsolute(T1_orb_loc_ord,
+                                                          T2_orb_loc_ord,
+                                                          hf_reference_fock,
+                                                          n_terms=n_terms,
+                                                          full_trotter=True,
+                                                          local=local,
+                                                          # separate_spins=True,
+                                                          reference_basis=trans_mat_ord,
+                                                          connectivity_graph=G_qpu
+                                                          )
 
-
-energy_loc_ord = ucja_ansatz_loc_ord.get_energy(ucja_ansatz_loc_ord.parameters, hamiltonian_loc_ord, None)
-#energy_loc_ord = ucja_ansatz_loc_ord.get_sampled_energy(ucja_ansatz_loc_ord.parameters, hamiltonian_loc_ord, simulator, sqd_params)
+#energy_loc_ord = ucja_ansatz_loc_ord.get_energy(ucja_ansatz_loc_ord.parameters, hamiltonian_loc_ord, simulator)
+energy_loc_ord = ucja_ansatz_loc_ord.get_sampled_energy(ucja_ansatz_loc_ord.parameters, hamiltonian_loc_ord, simulator, sqd_params)
 
 print('LUCJ energy localized abs ord:', energy_loc_ord)
+
+
+# fidelity
+from vqemulti.density import get_density_matrix, density_fidelity
+
+casci = molecule._pyscf_data.get('casci', None)
+dm1_cas = casci.fcisolver.make_rdm1(casci.ci, casci.ncas, casci.nelecas)
+
+dm1_ansatz = get_density_matrix(ucja_ansatz)
+
+dm1_ansatz_loc = get_density_matrix(ucja_ansatz_loc)
+dm1_ansatz_loc = trans_mat @ dm1_ansatz_loc @ trans_mat.T.conj()
+
+dm1_ansatz_loc_ord = get_density_matrix(ucja_ansatz_loc_ord)
+dm1_ansatz_loc_ord = trans_mat_ord @ dm1_ansatz_loc_ord @ trans_mat_ord.T.conj()
+
+print('fidelity        :', density_fidelity(dm1_cas, dm1_ansatz))
+print('fidelity loc    :', density_fidelity(dm1_cas, dm1_ansatz_loc))
+print('fidelity loc ord:', density_fidelity(dm1_cas, dm1_ansatz_loc_ord))

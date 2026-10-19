@@ -95,13 +95,14 @@ class SimulatorBase(ABC):
         assert expectation_value.imag < 1e-5
         return expectation_value.real, std_error
 
-    def get_operator_matrix_element(self, qubit_operator, state_preparation_gates_1, state_preparation_gates_2, compute_imag=False, n_qubits=None):
+    def get_operator_matrix_element(self, qubit_operator, state_preparation_gates_bra, state_preparation_gates_ket,
+                                    compute_imag=False, n_qubits=None):
         """
         Obtain the matrix element of an operator using hadamard test < psi_1 | H | psi_2>
 
         :param qubit_operator: operator as qubit operator
-        :param state_preparation_gates_1: list of gates in simulation library format that represents the state1
-        :param state_preparation_gates_2: list of gates in simulation library format that represents the state2
+        :param state_preparation_gates_bra: list of gates in simulation library format that represents the bra state
+        :param state_preparation_gates_ket: list of gates in simulation library format that represents the ket state
         :param compute_imag: if True, the imaginary part of the matrix element is computed
         :return: the expectation value of the energy
         """
@@ -109,17 +110,19 @@ class SimulatorBase(ABC):
         if n_qubits is None:
             n_qubits = count_qubits(qubit_operator)
 
+        if self._test_only:
+            # warnings.warn('test_only for matrix_element only tests state preparation gates')
+            sparse_op = get_sparse_operator(qubit_operator, n_qubits=n_qubits).toarray()
+            state_vector_bra = self._get_state_vector(state_preparation_gates_bra, n_qubits)
+            state_vector_ket = self._get_state_vector(state_preparation_gates_ket, n_qubits)
+
+            return np.vdot(state_vector_bra, sparse_op @ state_vector_ket), 0.0
+
         # Format and the Hamiltonian in pauli strings and coefficients
         formatted_hamiltonian = convert_hamiltonian(qubit_operator)
 
         # skip hamiltonian grouping
         # Hadamard test does not benefit from grouping
-
-        grouped_hamiltonian = {}
-        for pauli_string, coefficient in formatted_hamiltonian.items():
-            grouped_hamiltonian[pauli_string] = {'1' * len(pauli_string): coefficient}
-
-        log_message('hamiltonian terms {}'.format(len(grouped_hamiltonian)), log_level=2)
 
         # Obtain the expectation value for each Pauli string
         expectation_value = 0j
@@ -129,8 +132,8 @@ class SimulatorBase(ABC):
 
             matrix_element, variance = self._measure_hadamard_test(pauli_string,
                                                                    coefficient,
-                                                                   state_preparation_gates_1,
-                                                                   state_preparation_gates_2,
+                                                                   state_preparation_gates_bra,
+                                                                   state_preparation_gates_ket,
                                                                    n_qubits,
                                                                    imaginary_part=False)
             expectation_value += matrix_element
@@ -144,8 +147,8 @@ class SimulatorBase(ABC):
             for pauli_string, coefficient in formatted_hamiltonian.items():
                 matrix_element, variance = self._measure_hadamard_test(pauli_string,
                                                                        coefficient,
-                                                                       state_preparation_gates_1,
-                                                                       state_preparation_gates_2,
+                                                                       state_preparation_gates_bra,
+                                                                       state_preparation_gates_ket,
                                                                        n_qubits,
                                                                        imaginary_part=True)
                 expectation_value += 1j * matrix_element
@@ -290,6 +293,18 @@ class SimulatorBase(ABC):
 
         return self._get_givens_rotation_gates(givens_layers, diagonal, n_qubits, add_parity=add_parity)
 
+    def get_density_density_gates(self, dd_matrix_spin, n_qubits):
+
+        J = np.asarray(dd_matrix_spin, dtype=float)
+
+        if J.ndim != 2 or J.shape[0] != J.shape[1]:
+            raise ValueError("J must be a square matrix.")
+
+        if not np.allclose(J, J.T):
+            raise ValueError("J must be symmetric.")
+
+        return self._get_density_density_gates(J, n_qubits)
+
     def print_statistics(self):
         if len(self._circuit_count) <= 0:
             warnings.warn('No simulation statistics to show')
@@ -377,4 +392,7 @@ class SimulatorBase(ABC):
         raise NotImplementedError()
 
     def _measure_hadamard_test(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def get_circuit_string(self, state_preparation_gates, n_qubits, **kwargs):
         raise NotImplementedError()

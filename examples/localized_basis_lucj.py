@@ -1,7 +1,7 @@
 from openfermion import MolecularData
 from openfermionpyscf import run_pyscf, store_orbitals_in_molden
 from vqemulti.utils import get_hf_reference_in_fock_space
-from vqemulti.ansatz.unitary_jastrow import UnitaryCoupledJastrowAnsatz
+from vqemulti.ansatz.unitary_jastrow import UnitaryCoupledJastrowAnsatz, UnitaryCoupledJastrowAnsatzAbsolute
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from vqemulti.ansatz.generators.rotation import change_of_basis_orbitals
 from vqemulti.ansatz.generators.basis import get_absolute_orbitals
@@ -123,7 +123,6 @@ print('hf reference', hf_reference_fock)
 # Build LUCJ ansatz using canonical basis
 ucja_ansatz = UnitaryCoupledJastrowAnsatz(ccsd.t1,
                                           ccsd.t2,
-                                          hf_reference_fock,
                                           n_terms=1,
                                           full_trotter=False,
                                           local=None)
@@ -140,13 +139,12 @@ T2_orb = get_absolute_orbitals(ccsd.t2)  # a_j a_l a_i^ a_k^ ->  a_j a_l a_i^ a_
 
 
 # Build LUCJ ansatz using canonical basis with absolute amplitudes
-ucja_ansatz = UnitaryCoupledJastrowAnsatz(T1_orb,
-                                          T2_orb,
-                                          hf_reference_fock,
-                                          n_terms=1,
-                                          full_trotter=False,
-                                          local=None,
-                                          use_general=True)
+ucja_ansatz = UnitaryCoupledJastrowAnsatzAbsolute(T1_orb,
+                                                  T2_orb,
+                                                  hf_reference_fock,
+                                                  n_terms=1,
+                                                  full_trotter=False,
+                                                  local=None)
 
 energy = ucja_ansatz.get_energy(ucja_ansatz.parameters, hamiltonian, None)
 print('LUCJ energy canonical abs: ', energy)
@@ -158,14 +156,13 @@ print('LUCJ energy canonical abs: ', energy)
 T1_orb_loc, T2_orb_loc = change_of_basis_orbitals(T1_orb, T2_orb, trans_mat)
 
 # Build LUCJ ansatz using local basis with absolute amplitudes
-ucja_ansatz_loc = UnitaryCoupledJastrowAnsatz(T1_orb_loc,
-                                              T2_orb_loc,
-                                              hf_reference_fock,
-                                              n_terms=1,
-                                              full_trotter=False,
-                                              local=None,
-                                              use_general=True,
-                                              reference_basis=trans_mat)
+ucja_ansatz_loc = UnitaryCoupledJastrowAnsatzAbsolute(T1_orb_loc,
+                                                      T2_orb_loc,
+                                                      hf_reference_fock,
+                                                      n_terms=1,
+                                                      full_trotter=False,
+                                                      local=None,
+                                                      reference_basis=trans_mat)
 
 energy_loc = ucja_ansatz_loc.get_energy(ucja_ansatz_loc.parameters, hamiltonian_loc, None)
 print('LUCJ energy localized abs:', energy_loc)

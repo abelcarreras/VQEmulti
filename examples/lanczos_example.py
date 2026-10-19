@@ -70,66 +70,25 @@ print('e_fci: ', e_fci)
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
 
 
-def get_hamiltonian_element_exact(index_1, index_2):
+def get_hamiltonian_element(index_1, index_2, simulator=None):
 
     generator = [1j * hamiltonian_te]
     phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
     psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
 
-    bra = phi.get_state_vector().transpose().conj()
-    ket = psi.get_state_vector()
-
-    sparse_hamiltonian = get_sparse_operator(hamiltonian, n_qubits)
-
-    return np.sum(bra @ sparse_hamiltonian @ ket)
+    return phi.get_matrix_element(hamiltonian, psi, simulator)
 
 
-def get_overlap_element_exact(index_1, index_2):
+def get_overlap_element(index_1, index_2, simulator=None):
+
+    if index_1 == index_2:
+        return 1.0
 
     generator = [1j * hamiltonian_te]
     phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
     psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
 
-    bra = phi.get_state_vector().transpose().conj()
-    ket = psi.get_state_vector()
-
-    return np.sum(bra @ ket)
-
-
-def get_hamiltonian_element_simulator(index_1, index_2):
-
-    generator = [1j * hamiltonian_te]
-    phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
-    psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
-    hamiltonian_qubit = fermion_to_qubit(hamiltonian)
-
-    expectation_value, std_error = simulator.get_operator_matrix_element(hamiltonian_qubit,
-                                                                         phi.get_preparation_gates(simulator),
-                                                                         psi.get_preparation_gates(simulator),
-                                                                         compute_imag=True,
-                                                                         n_qubits=n_qubits,
-                                                                         )
-
-    return expectation_value
-
-
-def get_overlap_element_simulator(index_1, index_2):
-
-    generator = [1j * hamiltonian_te]
-    phi = ExponentialAnsatz([dt * index_1], generator, hf_reference_fock)
-    psi = ExponentialAnsatz([dt * index_2], generator, hf_reference_fock)
-
-    identity = QubitOperator(())
-
-    expectation_value, std_error = simulator.get_operator_matrix_element(identity,
-                                                                         phi.get_preparation_gates(simulator),
-                                                                         psi.get_preparation_gates(simulator),
-                                                                         compute_imag=True,
-                                                                         n_qubits=n_qubits,
-                                                                         )
-
-    return expectation_value
-
+    return phi.get_overlap(psi, simulator)
 
 def get_hs_matrices(n_dim, type='exact'):
     h_matrix = np.identity(n_dim, dtype=complex)
@@ -147,12 +106,12 @@ def get_hs_matrices(n_dim, type='exact'):
                     continue
 
             if type == 'exact':
-                h_matrix[i, j] = get_hamiltonian_element_exact(i, j)
-                s_matrix[i, j] = get_overlap_element_exact(i, j) if i != j else 1.0
+                h_matrix[i, j] = get_hamiltonian_element(i, j)
+                s_matrix[i, j] = get_overlap_element(i, j)
 
             if type == 'simulator':
-                h_matrix[i, j] = get_hamiltonian_element_simulator(i, j)
-                s_matrix[i, j] = get_overlap_element_simulator(i, j) if i != j else 1.0
+                h_matrix[i, j] = get_hamiltonian_element(i, j, simulator)
+                s_matrix[i, j] = get_overlap_element(i, j, simulator)
 
             h_matrix[j, i] = h_matrix[i, j].conjugate()
             s_matrix[j, i] = s_matrix[i, j].conjugate()

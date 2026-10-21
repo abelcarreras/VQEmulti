@@ -1,5 +1,3 @@
-from Cython.Compiler.Lexicon import raw_prefixes
-
 from vqemulti.utils import convert_hamiltonian, group_hamiltonian, string_to_matrix, get_sparse_operator
 from vqemulti.utils import get_operators_order, break_qubit_operator, operator_to_matrix_list, log_message
 from openfermion import givens_decomposition_square, count_qubits, jordan_wigner

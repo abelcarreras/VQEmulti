@@ -444,6 +444,7 @@ class QiskitSimulator(SimulatorBase):
                  noise_model=None,
                  layout_model=None,
                  trotter_type='opt',
+                 store_full_circuits=False,
                  ):
 
         """
@@ -459,6 +460,7 @@ class QiskitSimulator(SimulatorBase):
         :param use_ibm_runtime: use ibm_runtime version of Estimator and Sampler:
         :param use_qctrl: use Q-CTRL qiskit function
         :param trotter_type: defines the trotter_step method used to implement the staircase algorithm (std/inv/opt)
+        :param store_full_circuits: Store circuit objects in a list (can be very RAM intensive)
         """
         # backend.set_options(device='GPU')
         self._backend = backend
@@ -469,6 +471,7 @@ class QiskitSimulator(SimulatorBase):
         self._use_qctrl = use_qctrl
         self._layout_model = layout_model
         self._trotter_type = trotter_type
+        self._store_full_circuits = store_full_circuits
 
         if self._layout_model is None:
             self._layout_model = LayoutModelDefault()
@@ -960,7 +963,8 @@ class QiskitSimulator(SimulatorBase):
             circuit = transpile(circuit, optimization_level=3, basis_gates=['x', 'cx', 'rx', 'ry', 'rz', 'h'])
 
         # circuit storing
-        self._circuit_list.append(circuit)
+        if self._store_full_circuits:
+            self._circuit_list.append(circuit)
 
         # circuit drawing
         if separate_spins:

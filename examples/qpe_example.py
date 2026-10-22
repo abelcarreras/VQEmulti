@@ -136,7 +136,7 @@ print('H terms compress:', len(hamiltonian_te.terms))
 print('Constant:', constant)
 
 # FCI energy
-e_fci = molecule.casci_energy
+e_fci = molecule.fci_energy
 print('e_fci: ', e_fci)
 
 # reference

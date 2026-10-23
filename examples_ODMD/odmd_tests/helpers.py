@@ -48,7 +48,7 @@ def plot_fit(t, sig, model, title):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
     ax1.plot(t, np.real(sig), "k-", lw=1, label="Re data")
     rec = model.reconstructed_data[0]
-    ax1.plot(model.dmd_timesteps, rec.real, "r--", lw=1, label="Re ODMD")
+    ax1.plot(t, rec.real, "r--", lw=1, label="Re ODMD")
     ax1.set_xlabel("t")
     ax1.legend()
     ax1.set_title(title)

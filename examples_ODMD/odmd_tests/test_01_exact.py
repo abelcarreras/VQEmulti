@@ -22,7 +22,7 @@ def test_sin_cos(plot=False):
     """Real signal: 2 frequencies -> 4 eigenvalues (+/- pairs) on the unit circle."""
     t, sig, truth = signals.sin_cos()
     dt = truth["dt"]
-    model = ODMD(d=25, tol=1e-8, svd_rank=0, sorted_eigs="abs", reduced=True).fit(sig)
+    model = ODMD(d=200, tol=1e-8, svd_rank=0, sorted_eigs="abs", reduced=True).fit(sig)
     report("sin+cos", model, dt, sig)
 
     assert model.operator.rank == truth["rank"], f"rank {model.operator.rank} != 4"
@@ -31,13 +31,23 @@ def test_sin_cos(plot=False):
     assert recon_error(model, sig) < 1e-8
     if plot:
         plot_fit(t, sig, model, "sin + cos")
+    #    import matplotlib.pyplot as plt
+    #    fig = plt.figure(figsize=(5, 3), dpi=200)
+    #    plt.plot(t, np.real(sig), 'k-', label='Re Original', linewidth=1.0)
+    #    plt.plot(t, np.imag(sig), 'r-', label='Im Original', linewidth=1.0)
+    #    plt.xlabel("t")
+    #    plt.ylabel("C(t)")
+    #    plt.title("The original  sin+cos signal")
+    #    plt.tight_layout()
+    #    plt.legend()
+    #    plt.show()
 
 
 def test_complex_exponentials(plot=False):
     """Complex overlap: one eigenvalue per energy; signs are recovered."""
     t, sig, truth = signals.complex_exponentials()
     dt = truth["dt"]
-    model = ODMD(d=25, tol=1e-8, svd_rank=-1, reduced=True).fit(sig)
+    model = ODMD(d=200, tol=1e-8, svd_rank=-1, reduced=True).fit(sig)
     report("complex exp", model, dt, sig)
 
     energies = -omegas(model, dt)
@@ -68,15 +78,15 @@ def test_gavish_donoho_on_exact_data():
     eigenvalues are still present either way.
     """
     _, sig, truth = signals.complex_exponentials()
-    raw = ODMD(d=25, svd_rank=0, tol=None).fit(sig)
+    raw = ODMD(d=100, svd_rank=0, tol=None).fit(sig)
     print(f"    exact data, svd_rank=0 only     -> rank {raw.operator.rank} (true {truth['rank']})")
     assert match_error(-omegas(raw, truth["dt"]), truth["energies"]) < 1e-8
 
-    combined = ODMD(d=25, svd_rank=0, tol=1e-8).fit(sig)
+    combined = ODMD(d=100, svd_rank=0, tol=1e-8).fit(sig)
     print(f"    exact data, svd_rank=0 + tol    -> rank {combined.operator.rank}")
     assert combined.operator.rank == truth["rank"]
 
-    noisy = ODMD(d=25, svd_rank=0, tol=None).fit(signals.add_noise(sig, 120))
+    noisy = ODMD(d=100, svd_rank=0, tol=None).fit(signals.add_noise(sig, 120))
     print(f"    120 dB noise, svd_rank=0 only   -> rank {noisy.operator.rank}")
     assert noisy.operator.rank == truth["rank"]
 
@@ -84,9 +94,9 @@ def test_gavish_donoho_on_exact_data():
 def test_input_shapes():
     """(n,), (1, n) and (n, 1) inputs must give identical results."""
     _, sig, _ = signals.sin_cos()
-    ref = np.sort_complex(ODMD(d=25, tol=1e-8).fit(sig).eigs)
+    ref = np.sort_complex(ODMD(d=200, tol=1e-8).fit(sig).eigs)
     for X in (sig.reshape(1, -1), sig.reshape(-1, 1)):
-        e = np.sort_complex(ODMD(d=25, tol=1e-8).fit(X).eigs)
+        e = np.sort_complex(ODMD(d=200, tol=1e-8).fit(X).eigs)
         assert np.allclose(e, ref)
 
 if __name__ == "__main__":

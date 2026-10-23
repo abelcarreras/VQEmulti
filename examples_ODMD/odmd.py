@@ -1,19 +1,126 @@
 import warnings
-from pydmd.dmdbase import DMDBase
-from pydmd.dmdoperator import DMDOperator
-from pydmd.snapshots import Snapshots
+import numpy as np
+warnings.filterwarnings("ignore")
+#--------------------------------------
+# Utilities
+#--------------------------------------
 
-warnings.filterwarnings(
-    "ignore",
-    message=r"Legend does not support handles for list instances\.",
-    category=UserWarning,
-)
-
-class ODMDOperator(DMDOperator):
+def _as_signal(X):
     """
-    Operator for the overlap-based ODMD.
+    Accept shape (n,), (1, n) or (n, 1) and return a 1D complex array
+    """
+    X = np.asarray(X)
+    if X.ndim == 2 and 1 not in X.shape:
+        raise ValueError(
+            f"ODMD expects a single sequence, got 2D data of shape {X.shape}"
+        )
+    if X.ndim > 2:
+        raise ValueError(f"ODMD expects 1D or single-row data, got ndim={X.ndim}")
+    sig = X.astype(complex).ravel()
+    if sig.size == 0:
+        raise ValueError("Input data cannot be empty")
+    if not np.all(np.isfinite(sig)):
+        raise ValueError("Input data contains NaN or infinity")
+    return sig
 
-    This builds the companion-like A operator from a 1D overlap data sequence.
+def hankel_pair(signal, d):
+    """
+    Delay-embed a 1D signal into shifted Hankel blocks
+
+    Returns
+    -------
+    X : (d, n - d) array, columns signal[j : j + d] (earlier block, "rhs")
+    Y : (d, n - d) array, columns signal[j + 1 : j + 1 + d] (shifted block, "lhs")
+    """
+    signal = np.asarray(signal).ravel()
+    n = signal.size
+    if n <= d:
+        raise ValueError(f"Need len(signal) > d. Got len(signal)={n}, d={d}")
+    num_cols = n - d
+    idx = np.arange(d)[:, None] + np.arange(num_cols)[None, :]
+    return signal[idx], signal[idx + 1]
+
+
+def compute_rank(s, shape, svd_rank=-1):
+    """
+    Rank selection with the same conventions as pydmd.utils.compute_rank.
+
+    svd_rank = -1      : no truncation
+    svd_rank = 0       : optimal hard threshold (Gavish & Donoho 2014)
+    0 < svd_rank < 1   : smallest rank reaching that fraction of energy
+    int svd_rank >= 1  : fixed rank (capped at the number of singular values)
+    """
+    if svd_rank == 0:
+        beta = min(shape) / max(shape)
+        omega = 0.56 * beta**3 - 0.95 * beta**2 + 1.82 * beta + 1.43
+        rank = int(np.sum(s > np.median(s) * omega))
+        if rank == 0:
+            warnings.warn("Optimal rank is 0; using rank 1 instead.")
+            rank = 1
+    elif 0 < svd_rank < 1:
+        energy = np.cumsum(s**2) / np.sum(s**2)
+        rank = int(np.searchsorted(energy, svd_rank) + 1)
+    elif svd_rank >= 1 and float(svd_rank).is_integer():
+        rank = int(svd_rank)
+    elif svd_rank == -1:
+        rank = s.size
+    else:
+        raise ValueError(f"Invalid svd_rank: {svd_rank}")
+    return min(rank, s.size)
+
+def truncated_svd(X, svd_rank=-1, tol=None):
+    """
+    SVD of X truncated by svd_rank and, optionally, by a relative cutoff
+    s_i > tol * s_0. When both are given the smaller rank wins
+    """
+    U, s, Vh = np.linalg.svd(X, full_matrices=False)
+    if s.size == 0 or s[0] == 0:
+        raise ValueError("SVD failed: matrix has no non-zero singular values.")
+
+    rank = compute_rank(s, X.shape, svd_rank)
+    if tol is not None:
+        keep = np.flatnonzero(s > tol * s[0])
+        if keep.size == 0:
+            raise ValueError("All singular values were truncated; reduce tol.")
+        rank = min(rank, keep[-1] + 1)
+
+    return U[:, :rank], s[:rank], Vh[:rank, :], s
+
+def _sort_eigs(eigs, vecs, how):
+    if not how:
+        return eigs, vecs
+    if how == "abs":
+        order = np.argsort(np.abs(eigs))[::-1]
+    elif how == "real":
+        order = np.lexsort((eigs.imag, eigs.real))[::-1]
+    elif how == "phase":
+        order = np.argsort(np.angle(eigs))[::-1]
+    else:
+        raise ValueError(f"Invalid how variable at sorted_eigs: {how}")
+    return eigs[order], vecs[:, order]
+
+#--------------------------------------
+# OPERATOR CLASS
+#--------------------------------------
+class ODMDOperator:
+    """
+    Builds the ODMD operator A ~ Y X^+ from a 1D overlap sequence.
+
+    Parameters
+    ----------
+    d : int
+        Delay (embedding) dimension.
+    tol : float or None
+        Relative singular-value cutoff s_i > tol * s_0.
+    svd_rank : int or float
+        Optional extra truncation, pydmd conventions (-1 = none).
+    sorted_eigs : {False, 'abs', 'real', 'phase'}
+    reduced : bool
+        False (default): eigendecompose the full d x d operator, exactly
+        (d - r eigenvalues are ~0 by construction).
+        True: eigendecompose the r x r projected operator U_r^H A U_r instead.
+        Its eigenvalues are the r non-zero eigenvalues of the full operator,
+        and the modes are the exact DMD modes Y V S^-1 W.
     """
 
     def __init__(
@@ -21,254 +128,267 @@ class ODMDOperator(DMDOperator):
             d,
             tol=0.1,
             svd_rank=-1,
-            exact=True,
-            forward_backward=False,
-            rescale_mode=None,
             sorted_eigs=False,
-            tikhonov_regularization=None,
+            reduced=False
     ):
-        super().__init__(
-            svd_rank,
-            exact,
-            forward_backward,
-            rescale_mode,
-            sorted_eigs,
-            tikhonov_regularization,
-        )
         self.d = int(d)
-        self.tol = float(tol)
+        self.tol = None if tol is None else float(tol)
+        self.svd_rank = svd_rank
+        self.sorted_eigs = sorted_eigs
+        self.reduced = bool(reduced)
 
-    def compute_odmd_operator(self, overlaps):
+        self._Atilde = None
+        self._eigenvalues = None
+        self._eigenvectors = None
+        self._modes = None
+        self._svd_vals = None
+        self._rank = None
+
+
+    def compute_operator(self, overlaps):
         """
         Build the ODMD operator from a 1D overlap sequence.
-
         Parameters
         ----------
         overlaps : array-like, shape (n_samples,)
             Sequence of overlap values.
-
         Returns
         -------
         modes : np.ndarray
         eigs : np.ndarray
-        svals : np.ndarray
-            Singular values of the RHS block.
+        s_all : np.ndarray Singular values of the RHS block.
         """
-        overlaps = np.asarray(overlaps, dtype=complex).ravel()
+        overlaps = _as_signal(overlaps)
+        X, Y = hankel_pair(overlaps, self.d)  # X = rhs, Y = lhs
 
-        if overlaps.size == 0:
-            raise ValueError("overlaps cannot be empty")
+        U_r, s_r, Vh_r, s_all = truncated_svd(X, self.svd_rank, self.tol)
+        YVSinv = Y @ Vh_r.conj().T @ np.diag(1.0 / s_r)
 
-        if overlaps.size <= self.d:
-            raise ValueError(
-                f"Need len(overlaps) > d. Got len(overlaps)={overlaps.size}, d={self.d}"
-            )
+        if self.reduced:
+            Atilde = U_r.conj().T @ YVSinv  # (r, r)
+            eigs, W = np.linalg.eig(Atilde)
+            eigs, W = _sort_eigs(eigs, W, self.sorted_eigs)
+            modes = YVSinv @ W
+            eigenvectors = W
+        else:
+            Atilde = YVSinv @ U_r.conj().T  # (d, d)
+            eigs, W = np.linalg.eig(Atilde)
+            eigs, W = _sort_eigs(eigs, W, self.sorted_eigs)
+            modes = W
+            eigenvectors = W
 
-        num_cols = overlaps.size - self.d
-        lhs = np.zeros((self.d, num_cols), dtype=complex)
-        rhs = np.zeros((self.d, num_cols), dtype=complex)
-
-        for col in range(num_cols):
-            lhs[:, col] = overlaps[col + 1: col + 1 + self.d]
-            rhs[:, col] = overlaps[col: col + self.d]
-
-        # SVD truncation by relative cutoff
-        U, s, Vh = np.linalg.svd(rhs, full_matrices=False)
-
-        if s.size == 0:
-            raise ValueError("SVD failed: RHS has no singular values.")
-
-        keep = np.where(s > self.tol * s[0])[0]
-        if keep.size == 0:
-            raise ValueError("All singular values were truncated; reduce tol.")
-
-        r = keep[-1] + 1
-        U_r = U[:, :r]
-        s_r = s[:r]
-        Vh_r = Vh[:r, :]
-
-        # ODMD Atilde
-        Atilde = lhs @ Vh_r.conj().T @ np.diag(1.0 / s_r) @ U_r.conj().T
-
-        eigs, modes = np.linalg.eig(Atilde)
-
-        # Store everything in the operator object so PyDMD properties can see it
         self._Atilde = Atilde
         self._eigenvalues = eigs
-        self._eigenvectors = modes
+        self._eigenvectors = eigenvectors
         self._modes = modes
-        self._Lambda = eigs
+        self._svd_vals = s_all
+        self._rank = s_r.size
+        return modes, eigs, s_all
 
-        return modes, eigs, s
+    # accessors
+    @property
+    def as_numpy_array(self):
+        return self._Atilde
 
-    def compute_operator(self, X, Y=None):
-        """
-        Compatibility wrapper with the standard DMDOperator signature.
-        The second argument is ignored for ODMD.
-        """
-        return self.compute_odmd_operator(X)
+    @property
+    def shape(self):
+        return None if self._Atilde is None else self._Atilde.shape
 
-class ODMD(DMDBase):
+    @property
+    def eigenvalues(self):
+        return self._eigenvalues
+
+    @property
+    def eigenvectors(self):
+        return self._eigenvectors
+
+    @property
+    def modes(self):
+        return self._modes
+
+    @property
+    def svd_vals(self):
+        return self._svd_vals
+
+    @property
+    def rank(self):
+        return self._rank
+
+#--------------------------------------
+# ODMD CLASS (Outer API)
+#--------------------------------------
+class ODMD:
     """
-    ODMD outer API built on DMDBase.
+    ODMD outer API
     Class that implements ODMD method, the implementation and usage are
     slightly different from those implemented in standard DMD methods inside pyDMD
 
+    Usage
+    -----
+       odmd = ODMD(d=25, tol=0.01)  (recommended for some data with 50 total snapshots)
+       odmd.fit(sig)     # sig shape (n,) or (1,n)
+       odmd.eigs, odmd.modes, odmd.reconstructed_data[0]
 
-    New parameters:
-    :param d: data delay dimension (used to build Hankel matrices), ODMD constructs
-              Hankel matrices based on the Givens theorem.
-    :type int
-    :param tol: corresponds to the tolerance parameter introduced instead of rank truncation.
-    :type float, default 0.1, use with svd_rank = -1 to avoid conflicts with pyDMD
-
-    Standard pyDMD parameters:
-    :param svd_rank: the rank for the truncation; If 0, the method computes the
-    optimal rank and uses it for truncation; if positive interger, the
-    method uses the argument for the truncation; if float between 0 and 1,
-    the rank is the number of the biggest singular values that are needed
-    to reach the 'energy' specified by `svd_rank`; if -1, the method does
-    not compute truncation.
-    :type svd_rank: int or float
-    :param int tlsq_rank: rank truncation computing Total Least Square. Default
-        is 0, that means TLSQ is not applied.
-    :param bool exact: flag to compute either exact DMD or projected DMD.
-        Default is False.
-    :param opt: argument to control the computation of DMD modes amplitudes.
-        See :class:`DMDBase`. Default is False.
-    :type opt: bool or int
-    :param rescale_mode: Scale Atilde as shown in
-            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-            eigendecomposition. None means no rescaling, 'auto' means automatic
-            rescaling using singular values, otherwise the scaling factors.
-    :type rescale_mode: {'auto'} or None or numpy.ndarray
-    :param bool forward_backward: If True, the low-rank operator is computed
-        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
-        False.
-    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
-        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
-        part to break ties) if `sorted_eigs='real'`. Default: False.
-    :type sorted_eigs: {'real', 'abs'} or False
-    :param tikhonov_regularization: Tikhonov parameter for the regularization.
-        If `None`, no regularization is applied, if `float`, it is used as the
-        lambda tikhonov parameter.
-    :type tikhonov_regularization: int or float
-
-    usage: odmd = ODMD(d=10, tol=0.1, exact=True, svd_rank=-1)
-           odmd.fit(sig.reshape(1, -1))
-
-    This allows the user to make use of pyDMD machinery.
+    Parameters
+    -----
+    d : int
+    tol : float
+    svd_rank : int of float (see compute_rank function)
+    sorted_eigs : bool
+    reduced : bool (see ODMDOperator)
     """
 
-    def __init__(
-        self,
-        d=10,
-        tol=0.1,
-        svd_rank=0,
-        tlsq_rank=0,
-        exact=False,
-        opt=False,
-        rescale_mode=None,
-        forward_backward=False,
-        sorted_eigs=False,
-        tikhonov_regularization=None,
-    ):
-        super().__init__(
-            svd_rank=svd_rank,
-            tlsq_rank=tlsq_rank,
-            exact=exact,
-            opt=opt,
-            rescale_mode=rescale_mode,
-            forward_backward=forward_backward,
-            sorted_eigs=sorted_eigs,
-        )
-        self._sorted_eigs = sorted_eigs
-        self._forward_backward = forward_backward
-        self._rescale_mode = rescale_mode
-        self._svd_rank = svd_rank
+    def __init__(self,
+                 d=10,
+                 tol=0.1,
+                 svd_rank=-1,
+                 sorted_eigs=False,
+                 reduced=False):
+
         self.d = int(d)
-        self.tol = float(tol)
-        self._tikhonov_regularization = tikhonov_regularization
-        self._odmd_operator = None
+        self.tol = tol
+        self.svd_rank = svd_rank
+        self.sorted_eigs = sorted_eigs
+        self.reduced = reduced
+        self._reset()
 
-    @property
-    def operator(self):
-        """
-        Make DMDBase.eigs and other base-class machinery use the fitted ODMD operator.
-        """
-        return self._odmd_operator
+    def _reset(self):
+        self._operator = None
+        self._overlaps = None
+        self._b = None
+        self._original_time = None
+        self._dmd_time = None
 
-    def fit(self, X):
+    #- - - - Fitting - - -
+    def fit(self,X, t0=0, dt=1):
         """
-        Fit ODMD to a 1D overlap sequence or a single-row snapshot array.
+        Fit ODMD to a 1D overlap sequence.
 
-        Parameters
-        ----------
-        X : array-like
-            Shape (n_samples,) or (1, n_samples).
+        X  : shape (n,) or (1, n)
+        t0, dt : time origin and step used for dynamics/reconstruction.
+                 Default assume t0 = 0, dt = 1, i.e. step index.
         """
         self._reset()
-        self._snapshots_holder = Snapshots(X)
+        overlaps = _as_signal(X)
+        self._overlaps = overlaps
 
-        # Snapshots gives a 2D array; ODMD is built on a single sequence.
-        overlaps = np.asarray(self.snapshots, dtype=complex).ravel()
-
-        if overlaps.size == 0:
-            raise ValueError("Input data cannot be empty")
-
-        # Build and fit the custom operator
-        self._odmd_operator = ODMDOperator(
-            d=self.d,
-            tol=self.tol,
-            svd_rank=self._svd_rank,
-            exact=self._exact,
-            forward_backward=self._forward_backward,
-            rescale_mode=self._rescale_mode,
-            sorted_eigs=self._sorted_eigs,
-            tikhonov_regularization=self._tikhonov_regularization,
+        self._operator = ODMDOperator(
+            d = self.d,
+            tol = self.tol,
+            svd_rank = self.svd_rank,
+            sorted_eigs = self.sorted_eigs,
+            reduced = self.reduced,
         )
+        modes, _, _ = self._operator.compute_operator(overlaps)
 
-        print("overlaps before compute_operator:",
-              np.asarray(overlaps).shape)
+        tend = t0 + (overlaps.size -1) * dt
+        self._original_time = {"t0" : t0, "tend": tend, "dt": dt}
+        self._dmd_time = dict(self._original_time)
 
-        print("overlaps dimensions:",
-              np.asarray(overlaps).ndim)
+        # Amplitudes from the firs Hankel column
+        x0 = overlaps[: self.d]
+        self._b = np.linalg.lstsq(modes, x0, rcond=None)[0]
+        return  self
 
-        modes, eigs, _ = self._odmd_operator.compute_operator(overlaps, None)
+    def _check_fitted(self):
+        if self._operator is None:
+            raise RuntimeError("Call fit() before using ODMD results.")
 
-        # Mirror fitted state into the DMDBase object
-        self._Atilde = self._odmd_operator
-        self._modes = modes
-        self._eigs = eigs
+    # properties
+    @property
+    def operator(self):
+        return self._operator
 
-        # Standard PyDMD time bookkeeping
-        self._set_initial_time_dictionary(
-            {"t0": 0, "tend": overlaps.size - 1, "dt": 1}
-        )
+    @property
+    def snapshots(self):
+        """The fitted sequence as a (1,n) array"""
+        return None if self._overlaps is None else self._overlaps[None, :]
 
-        # Initial amplitude fit in the reduced ODMD space
-        x0 = overlaps[: self._modes.shape[0]].reshape(-1)
-        self._b = np.linalg.lstsq(self._modes, x0, rcond=None)[0]
+    @property
+    def eigs(self):
+        self._check_fitted()
+        return self._operator.eigenvalues
 
-        return self
+    @property
+    def modes(self):
+        self._check_fitted()
+        return self._operator.modes
 
+    @property
+    def amplitudes(self):
+        self._check_fitted()
+        return self._b
+
+    @property
+    def singular_values(self):
+        self._check_fitted()
+        return self._operator._svd_vals
+
+    @property
+    def original_time(self):
+        return self._original_time
+
+    @property
+    def dmd_time(self):
+        return self._dmd_time
+
+    @dmd_time.setter
+    def dmd_time(self, value):
+        """Set e.g {'t0':0, 'tend' : 500, 'dt' : 1} to forecast/intrapolate"""
+        self._check_fitted()
+        new = dict(self._dmd_time)
+        new.update(value)
+        self._dmd_time = new
+
+    @property
+    def original_timesteps(self):
+        t = self._original_time
+        return t["t0"] + t["dt"] * np.arange(self._overlaps.size)
+
+    @property
+    def dmd_timesteps(self):
+        t = self._dmd_time
+        n = int(np.floor((t["tend"] - t["t0"]) / t["dt"] + 1e-9)) + 1
+        return t["t0"] + t["dt"] * np.arange(n)
+
+    @property
+    def dynamics(self):
+        """b_k * lambda_k^((t - t0_orig) / dt_orig), shape (n_modes, n_times)."""
+        self._check_fitted()
+        steps = (self.dmd_timesteps - self._original_time["t0"]) / self._original_time["dt"]
+        return self.amplitudes[:, None] * np.power(self.eigs[:, None], steps[None, :])
+
+    @property
+    def reconstructed_data(self):
+        """modes @ dynamics, shape (d, n_times); row 0 is the signal itself."""
+        return self.modes @ self.dynamics
+
+    @property
+    def frequency(self):
+        """Cycles per unit time, same definition as pydmd."""
+        return np.log(self.eigs).imag / (2 * np.pi * self._original_time["dt"])
+
+    @property
+    def growth_rate(self):
+        return np.log(self.eigs).real / self._original_time["dt"]
+
+    # ---- ODMD-specific -------------
     def ground_phase(self):
-        """
-        Return the negative phase of the eigenvalue with the largest phase.
-        """
+        """Negative phase of the eigenvalue with the largest phase."""
         eigs = np.asarray(self.eigs)
         idx = np.argmax(np.angle(eigs))
         return -np.angle(eigs[idx])
 
 
+#------------------------------------
 # TEST
+#------------------------------------
 if __name__ == "__main__":
     import cmath
     import numpy as np
     import matplotlib.pyplot as plt
-
     import tools
-    from pydmd import DMD
+    from pydmd import HankelDMD
     from pydmd.preprocessing import hankel_preprocessing
     from pydmd.plotter import plot_eigs
 
@@ -298,20 +418,24 @@ if __name__ == "__main__":
     plt.show()
 
 
-    results = {"standard_dmd": [], "odmd": []}
+    results = {"hankel_dmd": [], "odmd": []}
 
     for idx, sig in enumerate(signals):
         print(f"\nSignal {idx}")
 
         # ----------------------------
-        # 1) Baseline: standard DMD + Hankel preprocessing
+        # 1) Baseline: Hankel DMD  with rank 0+ Hankel preprocessing
+        #   form pydmd for comparsion
         # ----------------------------
-        dmd = DMD(svd_rank=8, exact=True)
+        dmd = HankelDMD(svd_rank=0, exact=True)
         delay_dmd = hankel_preprocessing(dmd, d=delay)
-        delay_dmd.fit(sig.reshape(1, -1))
+        # Sanity check:
+        X = np.asarray(sig).reshape(1,-1)
+        N = X.shape[1]  # number of time points in original series
+        delay_dmd.fit(X)
 
         ref_modes = []
-        print("========== DMD RESULT =========")
+        print("========== Hankel DMD RESULT =========")
         for i, lam in enumerate(delay_dmd.eigs):
             mu = cmath.log(lam) / dt
             ref_modes.append(
@@ -319,7 +443,7 @@ if __name__ == "__main__":
             )
             print(f"[DMD] {i}: lambda={lam}, decay={mu.real}, omega={mu.imag}")
 
-        results["standard_dmd"].append(ref_modes)
+        results["hankel_dmd"].append(ref_modes)
 
         plt.figure(figsize=(8, 4))
         plt.plot(time, sig, "-", label="Data")
@@ -335,14 +459,13 @@ if __name__ == "__main__":
         # ----------------------------
         # 2) ODMD
         # ----------------------------
-        odmd = ODMD(d=delay, tol=0.01, exact=True, svd_rank=-1)
-        odmd.fit(sig.reshape(1, -1))
-        #print("eigs:", odmd.eigs)
-        #print("modes shape:", odmd.modes.shape)
+        odmd = ODMD(d=delay, tol=None, svd_rank=0, sorted_eigs="abs", reduced=True)
+        odmd.fit(sig)
 
         odmd_modes = []
         print("========== ODMD RESULT =========")
-        for i, lam in enumerate(odmd.eigs[:6]):
+        #print("Ground Phase :", odmd.ground_phase())
+        for i, lam in enumerate(odmd.eigs):
             mu = cmath.log(lam) / dt
             odmd_modes.append(
                 {"mode": i, "lambda": lam, "decay": mu.real, "omega": mu.imag}
@@ -361,7 +484,7 @@ if __name__ == "__main__":
             plt.show()
 
         # ODMD eigenvalues to plot
-        selected_eigs = odmd.eigs[:6]
+        selected_eigs = odmd.eigs[:10]
         tools.plot_selected_eigs(selected_eigs, show_axes=True, show_unit_circle=True, figsize=(8, 8))
         plt.show()
 

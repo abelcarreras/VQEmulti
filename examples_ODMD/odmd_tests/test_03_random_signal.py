@@ -29,7 +29,7 @@ def test_white_noise_rank_collapses(plot=False):
         t, sig, _ = signals.random_signal(kind="gaussian", seed=seed)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            m = ODMD(d=100, svd_rank=0, tol=None).fit(sig)
+            m = ODMD(d=200, svd_rank=0, tol=None).fit(sig)
         warned = any("Optimal rank is 0" in str(x.message) for x in w)
         print(f"    seed {seed}: rank={m.operator.rank}, warned={warned}, "
               f"|lambda|={np.abs(m.eigs).round(3)}")
@@ -45,7 +45,7 @@ def test_spectrum_flatness_diagnostic():
     _, coh, _ = signals.complex_exponentials()
     coh = signals.add_noise(coh, 20, seed=0)
     r_white = spectrum_ratio(ODMD(d=200, svd_rank=-1, tol=None).fit(white))
-    r_coh = spectrum_ratio(ODMD(d=100, svd_rank=-1, tol=None).fit(coh))
+    r_coh = spectrum_ratio(ODMD(d=200, svd_rank=-1, tol=None).fit(coh))
     print(f"    s1/median(s): white noise {r_white:.2f}, coherent @20dB {r_coh:.1f}")
     assert r_white < 3
     assert r_coh > 20

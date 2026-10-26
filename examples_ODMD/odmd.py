@@ -449,6 +449,7 @@ if __name__ == "__main__":
         plt.plot(time, sig, "-", label="Data")
         plt.plot(time, delay_dmd.reconstructed_data[0].real, "--", label="DMD reconstruction")
         plt.legend()
+        plt.title(f"Hankel DMD Result - Signal {idx}")
         plt.grid(True)
         plt.tight_layout()
         plt.show()

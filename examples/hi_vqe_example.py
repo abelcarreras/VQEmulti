@@ -52,7 +52,7 @@ uccsd_ansatz = ExponentialAnsatz(coefficients, uccsd_generator, hf_reference_foc
 
 # Build LUCJ ansatz
 ccsd = molecule._pyscf_data.get('ccsd', None)
-ucja_ansatz = UnitaryCoupledJastrowAnsatz(ccsd.t1, ccsd.t2, hf_reference_fock, n_terms=2, full_trotter=True, local=5)
+ucja_ansatz = UnitaryCoupledJastrowAnsatz(ccsd.t1, ccsd.t2, n_terms=2, full_trotter=True, local=5)
 
 # Build HEA anasatz
 hea_ansatz = HardwareEfficientAnsatz(hf_reference_fock,

@@ -1403,7 +1403,7 @@ def get_selected_ci_energy_dice(configuration_list, hamiltonian,
 
         # warning about convergence
         if output[enum:].find('Semistochastic PT calculation converged') < 0:
-            warnings.warn('PT not converged in {} iterations'.format(nPTiter))
+            warnings.warn('PT not converged in {} iterations'.format(n_iter_PT))
 
         pt_section = output[enum:].split('\n')[2:]
         pt_energy = sci_energy

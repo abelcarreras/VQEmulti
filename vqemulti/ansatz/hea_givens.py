@@ -1,4 +1,4 @@
-from vqemulti.ansatz.generators.basis import get_spin_matrix, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
+from vqemulti.ansatz.generators.basis import get_spin_matrix_general, get_t2_spinorbitals_absolute_full, get_t1_spinorbitals
 from vqemulti.ansatz.generators import get_ucc_generator
 from vqemulti.ansatz.hea_particle import HardwareEfficientAnsatz
 from vqemulti.ansatz import GenericAnsatz
@@ -92,7 +92,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
     spin symmetry alpha = beta
 
     """
-    def __init__(self, hf_reference_fock, givens_rotations, n_terms, init='zeros', local=None, ignore_parity=True, real_rotations=False):
+    def __init__(self, hf_reference_fock, givens_rotations, n_terms, init='zeros', local=None, ignore_parity=True, real_rotations=False, spin_symmetry=True):
         """
 
         :param hf_reference_fock: HF reference in fock space
@@ -114,6 +114,7 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         self._givens_rotations = givens_rotations
 
         self._n_terms = n_terms
+        self._spin_symmetry = spin_symmetry
         n_orb = len(hf_reference_fock) // 2
         self._diagonal = [0]*n_orb
         self._n_qubits = n_orb * 2
@@ -133,6 +134,9 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
         # initialize parameters
         # n_param = n_param_k * ( 1 + (self._n_terms-1)) + n_param_j * (self._n_terms-1)
         n_param = (n_param_k + n_param_j) * self._n_terms
+
+        if not self._spin_symmetry:
+            n_param *= 2
 
         if init == 'zeros':
             self._parameters = [0.0] * n_param
@@ -225,7 +229,13 @@ class HardwareEfficientGivensAnsatz(GenericAnsatz):
 
             kappa_i = generator_from_parameters(parameters[pos:n_param_k+pos])
 
-            kappa_spin = -get_spin_matrix(kappa_i)
+            if self._spin_symmetry:
+                kappa_spin = -get_spin_matrix_general(kappa_i, kappa_i)
+            else:
+                pos += n_param_k
+                kappa_ib = generator_from_parameters(parameters[pos:n_param_k + pos])
+                kappa_spin = -get_spin_matrix_general(kappa_i, kappa_ib)
+
             ansatz_u = get_ucc_generator(kappa_spin, None, full_amplitudes=True, tolerance=1e-6)
             U_spin = expm(kappa_spin)
 

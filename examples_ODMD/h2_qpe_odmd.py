@@ -172,6 +172,7 @@ plt.ylim(-1.01, 1.01)
 plt.xlabel('time')
 plt.show()
 
+print('\nESPRIT RESULTS:')
 print('\n------- Exact -------')
 frequencies, amplitudes = esprit(overlap_exact, 2, dt)
 for i, (f, a) in enumerate(zip(frequencies[::-1], amplitudes[::-1])):
@@ -187,3 +188,53 @@ for i, (f, a) in enumerate(zip(frequencies[::-1], amplitudes[::-1])):
     print(' Frequency: ', f)
     print(' Amplitude: ', a.real)
     print(' Energy: ', -f + constant)
+
+#####################
+#- - - - ODMD - - - -
+import tools
+import odmd
+import cmath
+# Signal
+delay = n_time_steps/2
+time = [dt * i for i in range(n_time_steps)]
+
+# ODMD postprocessing
+print("========== ODMD RESULT =========")
+print(f" Signal: exact overlap")
+C = overlap_exact
+postproc = odmd.ODMD(d=delay, tol=0.05, svd_rank=-1, sorted_eigs="abs", reduced=True)
+postproc.fit(overlap_exact)
+print("================================")
+for i, lam in enumerate(postproc.eigs):
+    mu = cmath.log(lam) / dt
+    print(f"[ODMD] {i}: decay={mu.real}, omega={mu.imag}")
+
+selected_eigs = np.asarray(postproc.eigs[:-1])
+fig, (ax_signal, ax_eigs) = plt.subplots(1, 2, figsize=(14, 5))
+
+if hasattr(postproc, "reconstructed_data"):
+    ax_signal.plot(time, C, "x-", linewidth=1, label="Input Data")
+    ax_signal.plot(
+        time, postproc.reconstructed_data[0].real, "x-", linewidth=1,
+        label="ODMD reconstruction",
+    )
+    ax_signal.legend()
+
+ax_signal.set_title(f"ODMD Result - Signal exact overlap")
+ax_signal.set_xlabel("Time")
+ax_signal.set_ylabel("Signal")
+ax_signal.grid(True)
+
+ax_eigs.scatter(selected_eigs.real, selected_eigs.imag)
+ax_eigs.add_patch(
+    plt.Circle((0, 0), 1, fill=False, color="black", linestyle="--")
+)
+ax_eigs.axhline(0, color="black", linewidth=0.7)
+ax_eigs.axvline(0, color="black", linewidth=0.7)
+ax_eigs.set_aspect("equal", adjustable="datalim")
+ax_eigs.set_title("ODMD Eigenvalues")
+ax_eigs.set_xlabel("Real")
+ax_eigs.set_ylabel("Imaginary")
+ax_eigs.grid(True)
+fig.tight_layout()
+plt.show()

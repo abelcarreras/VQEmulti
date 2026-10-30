@@ -202,15 +202,16 @@ if __name__ == "__main__":
     from openfermionpyscf import run_pyscf
 
     #mol = MolecularData([("H", (0, 0, 0)), ("H", (0, 0, 0.74))], "sto-3g", 1, 0)
-    mol = MolecularData([("Li", (0, 0, 0))], "sto-3g", 1, 1)
+    #mol = MolecularData([("Li", (0, 0, 0))], "sto-3g", 1, 1)
+    mol = MolecularData([("Ne", (0, 0, 0))], "sto-3g", 1, 8)
     mol = run_pyscf(mol)
     Hq = jordan_wigner(mol.get_molecular_hamiltonian())
-    prof = build_profile(0.5*Hq, mol.n_qubits, mol.n_electrons, exact_sector=True)
+    prof = build_profile(Hq, mol.n_qubits, mol.n_electrons, exact_sector=True)
     report(prof)
 
-    print("Hamiltonian:")
-    for term, coeff in Hq.terms.items():
-        print(f"{term}: {coeff:.6f}")
+#    print("Hamiltonian:")
+#    for term, coeff in Hq.terms.items():
+#        print(f"{term}: {coeff:.6f}")
 
     C0, L1, L2, nt = pauli_norms(Hq)
     print("Pauli Norms:")

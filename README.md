@@ -42,7 +42,12 @@ git clone https://github.com/abelcarreras/VQEmulti.git vqemulti
 cd vqemulti
 pip -e install .
 ```
-
+Installation details for VQEmulti
+-----------------------------
+This package works with this specific version of OpenFermioPySCF
+```bash
+pip install git+https://github.com/NoniaVS/OpenFermion-PySCF.git@Stability_check
+```
 
 Basic example for VQE
 -----------------------------

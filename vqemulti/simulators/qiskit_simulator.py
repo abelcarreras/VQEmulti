@@ -677,7 +677,7 @@ class QiskitSimulator(SimulatorBase):
 
         anc = QuantumRegister(1, 'ancilla')
         q = QuantumRegister(n_qubits, 'qubit')
-        c_reg = ClassicalRegister(1, "c_bit")
+        c_reg = ClassicalRegister(1, "meas")
 
         # build Hadamard test circuit
         circ_Hadamard = QuantumCircuit(anc, q, c_reg)

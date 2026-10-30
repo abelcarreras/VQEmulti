@@ -3,9 +3,11 @@ from openfermionpyscf import run_pyscf
 from openfermion import MolecularData
 from vqemulti.utils import get_hf_reference_in_fock_space, fermion_to_qubit
 from vqemulti.ansatz.exponential import ExponentialAnsatz
+from vqemulti.ansatz.hea_givens import HardwareEfficientGivensAnsatz
 from vqemulti.ansatz.hea_particle import HardwareEfficientAnsatz
 from vqemulti.simulators.qiskit_simulator import QiskitSimulator as Simulator
 from vqemulti.optimizers import OptimizerParams
+from vqemulti.utils import log_message
 from qiskit_aer import AerSimulator
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,8 +33,7 @@ class SubspaceConverged(Exception):
 
 
 # define optimizer
-#optimizer = OptimizerParams(method='COBYLA', options={'rhobeg': 0.5})
-optimizer = OptimizerParams(method='COBYLA', options={})
+optimizer = OptimizerParams(method='COBYQA', options={})
 
 # simulator
 # config = Configuration()
@@ -55,11 +56,11 @@ simulator = None
 
 print('simulator: ', simulator)
 
-distance = 1.0 # 0.74
+distance = 2.0 # 0.74
 hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
                                    ('H', [0.0, 0.0, distance],),
-                                   #('H', [0.0, 0.0, distance*2],),
-                                   #('H', [0.0, 0.0, distance*3],),
+                                   ('H', [0.0, 0.0, distance*2],),
+                                   ('H', [0.0, 0.0, distance*3],),
                                    ],
                          basis='3-21g',
                          #basis='sto-3g',
@@ -68,7 +69,7 @@ hydrogen = MolecularData(geometry=[('H', [0.0, 0.0, 0.0]),
                          description='molecule')
 
 # run reference calculation
-molecule = run_pyscf(hydrogen, run_fci=False, verbose=True, frozen_core=0, n_orbitals=4, run_casci=True, run_ccsd=True)
+molecule = run_pyscf(hydrogen, run_fci=False, verbose=True, frozen_core=0, n_orbitals=4, run_casci=True, loc_pipek=True, reference='HF')
 
 n_electrons = molecule.n_electrons
 n_orbitals = molecule.n_orbitals
@@ -80,6 +81,7 @@ print('N_orb: ', n_orbitals)
 # get hamiltonian
 hamiltonian = molecule.get_molecular_hamiltonian()
 hamiltonian = fermion_to_qubit(hamiltonian)
+print('H n_terms:', len(hamiltonian.terms))
 
 # FCI energy
 e_fci = molecule.casci_energy
@@ -87,15 +89,18 @@ print('e_fci: ', e_fci)
 print('e_ccsd: ', molecule.ccsd_energy)
 
 # params
-n_dim = 5
-
+n_dim = 10
 
 # reference state
 hf_reference_fock = get_hf_reference_in_fock_space(n_electrons, n_qubits)
-ref = HardwareEfficientAnsatz(hf_reference_fock, init='zeros', n_terms=1, mixed_spin=True)
+ref = ExponentialAnsatz([], [], hf_reference_fock)  # Physical inspired ansatz
 
 ener_ref = ref.get_energy(ref.parameters, hamiltonian, energy_simulator=simulator)
 print("E0 =", ener_ref)
+
+# parameters for ansatz
+givens_rotations = [((1, 3),), ((0, 2), (0, 3))]
+print('givens: ', givens_rotations)
 
 # initialize
 basis = [ref]
@@ -104,8 +109,9 @@ S_mat = np.array([[1.0]], dtype=complex)
 
 def get_optimized_new_state(hamiltonian, basis, H_mat, S_mat, tol_conv=1e-8):
 
-    # define trial ansatz
-    trial_state = HardwareEfficientAnsatz(hf_reference_fock, init='random', n_terms=1, mixed_spin=True)
+    # trial_state = HardwareEfficientAnsatz(hf_reference_fock, init='random', n_terms=1, mixed_spin=True)
+    trial_state = HardwareEfficientGivensAnsatz(hf_reference_fock, givens_rotations, n_terms=1, init='random',
+                                                local=1, ignore_parity=False, real_rotations=True, spin_symmetry=True)
 
     n_step = len(H_mat)
     assert n_step == len(basis)
@@ -133,10 +139,12 @@ def get_optimized_new_state(hamiltonian, basis, H_mat, S_mat, tol_conv=1e-8):
 
         # orthogonalize
         H_orth = orthogonalize_basis(H_mat, S_mat)
-        # print('H_orth: ', H_orth)
 
         # define cost
-        return -np.abs(H_orth[n_step-1, n_step])
+        cost = -np.abs(H_orth[n_step-1, n_step])
+        log_message('cost: {}'.format(cost), log_level=1)
+
+        return cost
 
     results = scipy.optimize.minimize(cost_function,
                                       trial_state.parameters,
@@ -145,6 +153,7 @@ def get_optimized_new_state(hamiltonian, basis, H_mat, S_mat, tol_conv=1e-8):
                                       tol=1e-2)
 
     trial_state.parameters = results.x
+    log_message('n_evaluations: {}'.format(results.nfev), log_level=1)
 
     # return new basis state
     return trial_state
@@ -179,6 +188,7 @@ for k in range(1, n_dim):
 
     H_mat[k, k] = basis[k].get_energy(basis[k].parameters, hamiltonian, energy_simulator=simulator)
 
+    # print intermediate results
     print(np.round(H_mat, decimals=3))
     print(np.round(S_mat, decimals=3))
 
@@ -208,4 +218,3 @@ plt.plot(energy_list)
 plt.ylabel('Energy [Ha]')
 plt.xlabel('Number of steps')
 plt.show()
-

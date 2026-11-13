@@ -33,38 +33,38 @@ if __name__ == "__main__":
     e_hf_lst = []
     e_fci_lst = []
 
-    e_hf = atoms["Ne8+"].run_rhf()
-    e_fci = atoms["Ne8+"].run_fci()
-    e_dft = atoms["Ne8+"].run_dft("b3lyp")
+    e_hf = atoms["Li1+"].run_rhf()
+    e_fci = atoms["Li1+"].run_fci()
+    e_dft = atoms["Li1+"].run_dft("b3lyp")
 
     print("RHF energy:", e_hf)
     print("FCI energy:", e_fci)
     print("DFT energy:", e_dft)
 
-    # Get Hamiltonian and constant term for Ne8+
-    Hamiltonian, constant_term = atoms["Ne8+"].get_hamiltonian()
+    # Get Hamiltonian and constant term for Li1+
+    Hamiltonian, constant_term = atoms["Li1+"].get_hamiltonian()
     print("Hamiltonian:")
     for term, coeff in Hamiltonian.terms.items():
         print(f"{term}: {coeff}")
 
     print("Constant term:", constant_term)
-    print("Number of qubits:", atoms["Ne8+"].n_qubits)
+    print("Number of qubits:", atoms["Li1+"].n_qubits)
     print("Number of Terms:", len(Hamiltonian.terms))
 
     # Compress?
     #Hamiltonian.compress(4e-2)
 
     # Reference
-    hf_reference_fock = get_hf_reference_in_fock_space(atoms["Ne8+"].n_electrons,
-                                                       atoms["Ne8+"].n_qubits)
+    hf_reference_fock = get_hf_reference_in_fock_space(atoms["Li1+"].n_electrons,
+                                                       atoms["Li1+"].n_qubits)
 
     print(hf_reference_fock)
     ref = ExponentialAnsatz([], [], hf_reference_fock)
     print("ExponentialAnsatz:", ref)
 
     # Define the time values
-    dt = 0.01  # time evolution steps
-    n_time_steps = 50
+    dt = 0.106  # time evolution steps
+    n_time_steps = 30
     overlap_exact = []
     overlap_sim = []
 
@@ -74,10 +74,14 @@ if __name__ == "__main__":
     # backend = FakeTorino()
     # service = QiskitRuntimeService()
     # backend = service.backend('ibm_basquecountry')
-    backend = AerSimulator()
+    backend = AerSimulator(
+        method="statevector",
+        precision="double",
+        fusion_enable=True
+    )
 
     simulator = Simulator(trotter=True,
-                          trotter_steps=4,
+                          trotter_steps=10,
                           test_only=False,
                           shots=10000,
                           backend=backend,

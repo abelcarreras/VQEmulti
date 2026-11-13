@@ -1,7 +1,21 @@
-"""Shared helpers for the ODMD validation scripts."""
+"""
+Shared helpers for the unittest-based ODMD validation suite.
+
+Environment switches (unittest has no custom command-line flags):
+    ODMD_PLOT=1      show plots
+    ODMD_VERBOSE=0   hide the diagnostic numbers printed by the tests
+"""
+import os
+import unittest
 import numpy as np
 
+PLOT = os.environ.get("ODMD_PLOT", "0") == "1"
+VERBOSE = os.environ.get("ODMD_VERBOSE", "1") == "1"
 
+
+# ---------------------------------------------------------------------------
+# Metrics (unchanged from the script version)
+# ---------------------------------------------------------------------------
 def omegas(model, dt):
     """Angular frequencies: omega_k = arg(lambda_k) / dt."""
     return np.angle(model.eigs) / dt
@@ -30,19 +44,30 @@ def recon_error(model, sig):
     return float(np.linalg.norm(rec - sig) / np.linalg.norm(sig))
 
 
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+def log(msg):
+    """Diagnostic print; silenced with ODMD_VERBOSE=0."""
+    if VERBOSE:
+        print(f"    {msg}")
+
+
 def report(name, model, dt, sig=None):
-    """Print a one-line summary plus the eigenvalue table."""
+    """One-line summary plus the eigenvalue table (silenced with ODMD_VERBOSE=0)."""
+    if not VERBOSE:
+        return
     line = f"{name}: rank={model.operator.rank}, n_eigs={model.eigs.size}"
     if sig is not None:
         line += f", recon_err={recon_error(model, sig):.2e}"
-    print(line)
+    print(f"\n    {line}")
     for k, lam in enumerate(model.eigs):
-        print(f"    {k}: |lambda|={abs(lam):.6f}  omega={np.angle(lam) / dt:+.6f}"
+        print(f"      {k}: |lambda|={abs(lam):.6f}  omega={np.angle(lam) / dt:+.6f}"
               f"  decay={np.log(abs(lam)) / dt:+.2e}")
 
 
 def plot_fit(t, sig, model, title):
-    """Optional plot: data vs reconstruction, and eigenvalues on the unit circle."""
+    """Data vs reconstruction, and eigenvalues on the unit circle."""
     import matplotlib.pyplot as plt
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
@@ -64,33 +89,34 @@ def plot_fit(t, sig, model, title):
     plt.show()
 
 
-def run_tests(namespace, plot=False):
-    """
-    Minimal runner: calls every function named test_* in `namespace`.
-    Works without pytest; the same files also run under pytest.
-    """
-    tests = {k: v for k, v in namespace.items() if k.startswith("test_") and callable(v)}
-    passed = 0
-    for name, fn in tests.items():
-        try:
-            if plot and "plot" in fn.__code__.co_varnames[: fn.__code__.co_argcount]:
-                fn(plot=True)
-            else:
-                fn()
-            print(f"PASS  {name}\n")
-            passed += 1
-        except SkipTest as e:
-            print(f"SKIP  {name}: {e}\n")
-            passed += 1
-        except AssertionError as e:
-            print(f"FAIL  {name}: {e}\n")
-    print(f"{passed}/{len(tests)} passed")
-    return passed == len(tests)
+# ---------------------------------------------------------------------------
+# Base TestCase with ODMD-specific assertions
+# ---------------------------------------------------------------------------
+class ODMDTestCase(unittest.TestCase):
+    """Subclass this instead of unittest.TestCase to get the assertions below."""
 
+    def assertMatches(self, found, expected, tol, what="values"):
+        """Every expected value has a found value within tol (order-independent)."""
+        err = match_error(found, expected)
+        self.assertLess(
+            err, tol,
+            f"{what}: max mismatch {err:.2e} >= {tol:.0e}\n"
+            f"  found    = {np.round(np.sort_complex(np.asarray(found, complex)), 8)}\n"
+            f"  expected = {np.round(np.sort_complex(np.asarray(expected, complex)), 8)}",
+        )
+        return err
 
-try:  # under pytest, report skips as real skips
-    import pytest
-    SkipTest = pytest.skip.Exception
-except ImportError:
-    class SkipTest(Exception):
-        pass
+    def assertSameSpectrum(self, a, b, tol):
+        """Same set of eigenvalues, regardless of order (robust to near-ties)."""
+        a, b = np.asarray(a), np.asarray(b)
+        self.assertEqual(a.size, b.size, f"{a.size} vs {b.size} eigenvalues")
+        self.assertMatches(a, b, tol, "spectrum a -> b")
+        self.assertMatches(b, a, tol, "spectrum b -> a")
+
+    def assertOnUnitCircle(self, eigs, atol):
+        dev = float(np.max(np.abs(np.abs(eigs) - 1.0)))
+        self.assertLess(dev, atol, f"max ||lambda| - 1| = {dev:.2e} >= {atol:.0e}")
+
+    def assertRank(self, model, expected):
+        self.assertEqual(model.operator.rank, expected,
+                         f"selected rank {model.operator.rank}, expected {expected}")

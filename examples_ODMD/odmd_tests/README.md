@@ -1,37 +1,69 @@
-# ODMD validation scripts
+# ODMD validation suite (unittest)
 
 ```
-odmd_tests/
-├── odmd.py                      # the standalone ODMD (copy or import it, see below)
-├── signals.py                   # synthetic signals with known ground truth
-├── helpers.py                   # error metrics, reports, plots, mini test runner
-├── test_01_exact.py             # sin+cos, complex exponentials, rank criteria
-├── test_02_gaussian_noise.py    # SNR sweep, choice of d, rank selection under noise
-├── test_03_random_signal.py     # white noise / random walk (negative controls)
-├── test_04_damped_and_quantum.py# decay rates, H eigenvalues, populations, Re-only signal
-├── test_05_limits.py            # d too small, close energies, aliasing, bad input
-├── test_06_forecast.py          # physical time units, forecasting unseen data
-├── test_07_compare_pydmd.py     # cross-check vs pydmd (skipped if not installed)
-└── run_all.py                   # runs everything, prints which odmd.py is used
+VQEmulti/
+├── examples_ODMD/
+│   └── odmd.py                        # the standalone ODMD
+└── tests_odmd/                        # this folder (any name works)
+    ├── __init__.py                    # makes the folder a package
+    ├── _imports.py                    # puts examples_ODMD/ and this folder on sys.path
+    ├── signals.py                     # synthetic signals with known ground truth
+    ├── helpers.py                     # metrics, log/report, plots, ODMDTestCase
+    ├── test_01_exact.py               # sin+cos, complex exponentials, rank criteria
+    ├── test_02_gaussian_noise.py      # SNR sweep, choice of d, rank selection under noise
+    ├── test_03_random_signal.py       # white noise / random walk (negative controls)
+    ├── test_04_damped_and_quantum.py  # decay rates, H eigenvalues, populations, Re-only
+    ├── test_05_limits.py              # d too small, close energies, aliasing, bad input
+    ├── test_06_forecast.py            # physical time units, forecasting unseen data
+    ├── test_07_compare_pydmd.py       # cross-check vs pydmd (skipped if not installed)
+    └── run_all.py                     # discovers and runs everything
 ```
+
+If `odmd.py` moves, edit `EXAMPLES_DIR` in `_imports.py`; nothing else changes.
 
 ## Running
 
+From inside `tests_odmd/`:
+
 ```bash
-python run_all.py                 # everything
-python run_all.py --plot          # with figures
-python test_02_gaussian_noise.py  # one script
-pytest -q                         # also works if pytest is installed
+python run_all.py                                   # everything; prints which odmd.py is used
+python -m unittest discover -v                      # same, without the odmd.py check
+python -m unittest test_05_limits -v                # one file
+python test_05_limits.py                            # one file, as a script
+python -m unittest test_04_damped_and_quantum.TestQuantumOverlap -v              # one class
+python -m unittest test_04_damped_and_quantum.TestQuantumOverlap.test_energies   # one test
+python -m unittest discover -k noise -v             # tests whose name contains "noise"
+python -m unittest discover -f                      # stop at first failure
 ```
 
-## Using ODMD
+From the project root (`VQEmulti/`):
+
+```bash
+python -m unittest discover -s tests_odmd -v
+python -m unittest tests_odmd.test_04_damped_and_quantum -v
+```
+
+Options (environment variables, since unittest has no custom flags):
+
+```bash
+ODMD_PLOT=1 python run_all.py        # enable the plot tests
+ODMD_VERBOSE=0 python run_all.py     # hide diagnostic numbers, keep pass/fail
+```
+
+## Reading the results
+
+| Result | Meaning |
+|---|---|
+| `ok` | all assertions passed |
+| `FAIL` | an assertion was false: the code ran but a number is out of tolerance |
+| `ERROR` | an unexpected exception: the test itself crashed |
+| `skipped '...'` | not run on purpose (plots off, pydmd missing) |
+
+## Using ODMD from your own scripts
 
 ```python
 import numpy as np
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from odmd import ODMD
+from odmd import ODMD          # odmd.py must be on sys.path (see _imports.py)
 
 dt = 0.1
 t = dt * np.arange(400)
@@ -47,19 +79,4 @@ model.dmd_time = {"tend": 80.0}           # forecast to t = 80
 forecast = model.reconstructed_data[0]
 ```
 
-`from odmd import ODMD` only works if Python can find `odmd.py`. Options, from
-quickest to cleanest:
-
-1. **Same folder**: keep `odmd.py` at the same place as the tests
-2. **Path at runtime**:
-   ```python
-   import sys
-   sys.path.insert(0, "path/to/folder/with/odmd")
-   from odmd import ODMD
-   ```
-
-Whichever you use, check which file is actually imported:
-
-```python
-import odmd; print(odmd.__file__)
-```
+Check which file is actually imported with `import odmd; print(odmd.__file__)`.

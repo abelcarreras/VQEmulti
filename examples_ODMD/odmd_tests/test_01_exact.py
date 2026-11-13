@@ -6,99 +6,124 @@ On exact data use a relative cutoff (tol) for rank selection: svd_rank=0
 assumes there IS noise. With pure round-off it can keep spurious directions
 (see test_gavish_donoho_on_exact_data).
 
-    python test_01_exact.py          # run
-    python test_01_exact.py --plot   # run and show plots
+    python -m unittest test_01_exact -v
+    ODMD_PLOT=1 python -m unittest test_01_exact -v
 """
+import unittest
 import numpy as np
-import sys
+
+try:                         # imported as part of the package
+    from . import _imports   # noqa: F401
+except ImportError:          # run as a script / top-level module
+    import _imports          # noqa: F401
 
 from odmd import ODMD
-
 import signals
-from helpers import omegas, match_error, recon_error, report, plot_fit, run_tests
+from helpers import ODMDTestCase, omegas, recon_error, report, log, plot_fit, PLOT
 
 
-def test_sin_cos(plot=False):
+class TestSinCos(ODMDTestCase):
     """Real signal: 2 frequencies -> 4 eigenvalues (+/- pairs) on the unit circle."""
-    t, sig, truth = signals.sin_cos()
-    dt = truth["dt"]
-    model = ODMD(d=200, tol=1e-8, svd_rank=0, sorted_eigs="abs", reduced=True).fit(sig)
-    report("sin+cos", model, dt, sig)
 
-    assert model.operator.rank == truth["rank"], f"rank {model.operator.rank} != 4"
-    assert match_error(omegas(model, dt), truth["omegas"]) < 1e-8
-    assert np.allclose(np.abs(model.eigs), 1.0, atol=1e-10), "eigenvalues off unit circle"
-    assert recon_error(model, sig) < 1e-8
-    if plot:
-        plot_fit(t, sig, model, "sin + cos")
-    #    import matplotlib.pyplot as plt
-    #    fig = plt.figure(figsize=(5, 3), dpi=200)
-    #    plt.plot(t, np.real(sig), 'k-', label='Re Original', linewidth=1.0)
-    #    plt.plot(t, np.imag(sig), 'r-', label='Im Original', linewidth=1.0)
-    #    plt.xlabel("t")
-    #    plt.ylabel("C(t)")
-    #    plt.title("The original  sin+cos signal")
-    #    plt.tight_layout()
-    #    plt.legend()
-    #    plt.show()
+    @classmethod
+    def setUpClass(cls):
+        cls.t, cls.sig, cls.truth = signals.sin_cos()
+        cls.dt = cls.truth["dt"]
+        cls.model = ODMD(d=200, tol=1e-8, svd_rank=0, sorted_eigs="abs",
+                         reduced=True).fit(cls.sig)
+        report("sin+cos", cls.model, cls.dt, cls.sig)
+
+    def test_rank(self):
+        self.assertRank(self.model, self.truth["rank"])
+
+    def test_frequencies(self):
+        self.assertMatches(omegas(self.model, self.dt), self.truth["omegas"], 1e-8, "omega")
+
+    def test_unit_circle(self):
+        self.assertOnUnitCircle(self.model.eigs, 1e-10)
+
+    def test_reconstruction(self):
+        self.assertLess(recon_error(self.model, self.sig), 1e-8)
+
+    @unittest.skipUnless(PLOT, "set ODMD_PLOT=1 to show plots")
+    def test_plot(self):
+        plot_fit(self.t, self.sig, self.model, "sin + cos")
 
 
-def test_complex_exponentials(plot=False):
+class TestComplexExponentials(ODMDTestCase):
     """Complex overlap: one eigenvalue per energy; signs are recovered."""
-    t, sig, truth = signals.complex_exponentials()
-    dt = truth["dt"]
-    model = ODMD(d=200, tol=1e-8, svd_rank=-1, reduced=True).fit(sig)
-    report("complex exp", model, dt, sig)
 
-    energies = -omegas(model, dt)
-    assert model.operator.rank == truth["rank"]
-    assert match_error(energies, truth["energies"]) < 1e-8
-    # ground_phase() = E_min * dt (lowest energy has the largest phase)
-    assert abs(model.ground_phase() / dt - truth["energies"].min()) < 1e-8
-    if plot:
-        plot_fit(t, sig, model, "complex exponentials")
+    @classmethod
+    def setUpClass(cls):
+        cls.t, cls.sig, cls.truth = signals.complex_exponentials()
+        cls.dt = cls.truth["dt"]
+        cls.model = ODMD(d=200, tol=1e-8, svd_rank=-1, reduced=True).fit(cls.sig)
+        report("complex exp", cls.model, cls.dt, cls.sig)
 
+    def test_rank(self):
+        self.assertRank(self.model, self.truth["rank"])
 
-def test_rank_criteria_agree():
-    """On clean data, every rank-selection strategy should give the same answer."""
-    _, sig, truth = signals.sin_cos()
-    configs = [dict(svd_rank=4, tol=None),
-               dict(svd_rank=-1, tol=1e-6), dict(svd_rank=0.999999, tol=None)]
-    for cfg in configs:
-        m = ODMD(d=25, **cfg).fit(sig)
-        print(f"    {cfg} -> rank {m.operator.rank}")
-        assert m.operator.rank == truth["rank"], f"{cfg} gave rank {m.operator.rank}"
+    def test_energies(self):
+        self.assertMatches(-omegas(self.model, self.dt), self.truth["energies"], 1e-8, "E")
 
+    def test_ground_phase(self):
+        """ground_phase() = E_min * dt (lowest energy has the largest phase)."""
+        self.assertAlmostEqual(self.model.ground_phase() / self.dt,
+                               self.truth["energies"].min(), delta=1e-8)
 
-def test_gavish_donoho_on_exact_data():
-    """
-    svd_rank=0 on noise-free data can over-estimate the rank, because the
-    'noise' it measures is round-off. Adding tol, or any realistic noise,
-    fixes it. Spurious modes have negligible amplitude, so the true
-    eigenvalues are still present either way.
-    """
-    _, sig, truth = signals.complex_exponentials()
-    raw = ODMD(d=100, svd_rank=0, tol=None).fit(sig)
-    print(f"    exact data, svd_rank=0 only     -> rank {raw.operator.rank} (true {truth['rank']})")
-    assert match_error(-omegas(raw, truth["dt"]), truth["energies"]) < 1e-8
-
-    combined = ODMD(d=100, svd_rank=0, tol=1e-8).fit(sig)
-    print(f"    exact data, svd_rank=0 + tol    -> rank {combined.operator.rank}")
-    assert combined.operator.rank == truth["rank"]
-
-    noisy = ODMD(d=100, svd_rank=0, tol=None).fit(signals.add_noise(sig, 120))
-    print(f"    120 dB noise, svd_rank=0 only   -> rank {noisy.operator.rank}")
-    assert noisy.operator.rank == truth["rank"]
+    @unittest.skipUnless(PLOT, "set ODMD_PLOT=1 to show plots")
+    def test_plot(self):
+        plot_fit(self.t, self.sig, self.model, "complex exponentials")
 
 
-def test_input_shapes():
-    """(n,), (1, n) and (n, 1) inputs must give identical results."""
-    _, sig, _ = signals.sin_cos()
-    ref = np.sort_complex(ODMD(d=200, tol=1e-8).fit(sig).eigs)
-    for X in (sig.reshape(1, -1), sig.reshape(-1, 1)):
-        e = np.sort_complex(ODMD(d=200, tol=1e-8).fit(X).eigs)
-        assert np.allclose(e, ref)
+class TestRankSelection(ODMDTestCase):
+
+    def test_rank_criteria_agree(self):
+        """On clean data, every rank-selection strategy should give the same answer."""
+        _, sig, truth = signals.sin_cos()
+        configs = [dict(svd_rank=4, tol=None),
+                   dict(svd_rank=-1, tol=1e-6),
+                   dict(svd_rank=0.999999, tol=None)]
+        for cfg in configs:
+            with self.subTest(**cfg):
+                m = ODMD(d=25, **cfg).fit(sig)
+                log(f"{cfg} -> rank {m.operator.rank}")
+                self.assertRank(m, truth["rank"])
+
+    def test_gavish_donoho_on_exact_data(self):
+        """
+        svd_rank=0 on noise-free data can over-estimate the rank (round-off is
+        taken as noise). Adding tol, or any realistic noise, fixes it. The true
+        eigenvalues are present either way.
+        """
+        _, sig, truth = signals.complex_exponentials()
+
+        raw = ODMD(d=100, svd_rank=0, tol=None).fit(sig)
+        log(f"exact data, svd_rank=0 only   -> rank {raw.operator.rank} (true {truth['rank']})")
+        self.assertMatches(-omegas(raw, truth["dt"]), truth["energies"], 1e-8, "E")
+
+        with self.subTest("svd_rank=0 + tol"):
+            combined = ODMD(d=100, svd_rank=0, tol=1e-8).fit(sig)
+            log(f"exact data, svd_rank=0 + tol  -> rank {combined.operator.rank}")
+            self.assertRank(combined, truth["rank"])
+
+        with self.subTest("svd_rank=0 + 120 dB noise"):
+            noisy = ODMD(d=100, svd_rank=0, tol=None).fit(signals.add_noise(sig, 120))
+            log(f"120 dB noise, svd_rank=0 only -> rank {noisy.operator.rank}")
+            self.assertRank(noisy, truth["rank"])
+
+
+class TestInterface(ODMDTestCase):
+
+    def test_input_shapes(self):
+        """(n,), (1, n) and (n, 1) inputs must give identical results."""
+        _, sig, _ = signals.sin_cos()
+        ref = ODMD(d=200, tol=1e-8).fit(sig).eigs
+        for shape in ((1, -1), (-1, 1)):
+            with self.subTest(shape=shape):
+                e = ODMD(d=200, tol=1e-8).fit(sig.reshape(shape)).eigs
+                self.assertSameSpectrum(e, ref, 1e-10)
+
 
 if __name__ == "__main__":
-    ok = run_tests(globals(), plot="--plot" in sys.argv)
-    sys.exit(0 if ok else 1)
+    unittest.main(verbosity=2)

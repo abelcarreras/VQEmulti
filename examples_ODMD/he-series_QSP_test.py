@@ -81,7 +81,7 @@ if __name__ == "__main__":
     )
 
     simulator = Simulator(trotter=True,
-                          trotter_steps=10,
+                          trotter_steps=4,
                           test_only=False,
                           shots=10000,
                           backend=backend,

@@ -1,29 +1,26 @@
 """
-Run every validation script in this folder.
+Discover and run every test_*.py in this folder with unittest.
 
-    python run_all.py           # all tests
-    python run_all.py --plot    # also show plots
+    python run_all.py                    # all tests
+    ODMD_PLOT=1 python run_all.py        # also show plots
+    ODMD_VERBOSE=0 python run_all.py     # only the pass/fail lines
 """
-import importlib
 import pathlib
 import sys
+import unittest
+
+try:                         # imported as part of the package
+    from . import _imports   # noqa: F401
+except ImportError:          # run as a script / top-level module
+    import _imports          # noqa: F401
+
 import odmd
-from helpers import run_tests
 
 # Guard against importing a stale copy of odmd.py from somewhere else.
 print(f"Using ODMD from: {pathlib.Path(odmd.__file__).resolve()}\n")
 
-here = pathlib.Path(__file__).parent
-modules = sorted(p.stem for p in here.glob("test_*.py"))
-plot = "--plot" in sys.argv
-
-failed = []
-for name in modules:
-    print("=" * 70 + f"\n{name}\n" + "=" * 70)
-    mod = importlib.import_module(name)
-    if not run_tests(vars(mod), plot=plot):
-        failed.append(name)
-    print()
-
-print("ALL PASSED" if not failed else f"FAILED: {failed}")
-sys.exit(1 if failed else 0)
+here = pathlib.Path(__file__).resolve().parent
+suite = unittest.defaultTestLoader.discover(str(here), pattern="test_*.py",
+                                            top_level_dir=str(here))
+result = unittest.TextTestRunner(verbosity=2).run(suite)
+sys.exit(0 if result.wasSuccessful() else 1)

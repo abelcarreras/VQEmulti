@@ -620,8 +620,10 @@ class LayoutModelGraph:
             G_spin.add_node(alpha)
             G_spin.add_node(beta)
 
-        # Connect neighbouring orbitals
-        for i, j in G_orbital.edges:
+        # Connect neighboring orbitals
+        ancilla_index = -1
+        for i, j, data in G_orbital.edges(data=True):
+
             alpha_i = 2 * i
             beta_i = alpha_i + 1
             alpha_j = 2 * j
@@ -629,13 +631,19 @@ class LayoutModelGraph:
 
             # print(alpha_i, beta_i, alpha_j)
 
-            G_spin.add_edge(alpha_i, beta_i)
-            G_spin.add_edge(beta_i, alpha_j)
-            G_spin.add_edge(alpha_j, beta_j)
+            if not data.get("spin_trajectory", True):
+                G_spin.add_node(ancilla_index)
+                G_spin.add_edge(alpha_i, ancilla_index)
+                G_spin.add_edge(ancilla_index, alpha_j)
+                ancilla_index -= 1
+            else:
+                G_spin.add_edge(alpha_i, beta_i)
+                G_spin.add_edge(beta_i, alpha_j)
+                G_spin.add_edge(alpha_j, beta_j)
 
         self._G_circuit = G_spin
 
-        # draw_graph(G_spin)
+        draw_graph(G_spin)
 
 
     def get_layout(self, circuit, backend, n_qubits):
@@ -659,7 +667,15 @@ class LayoutModelGraph:
 
         unique_subgraphs = set()
         for mapping in GM.subgraph_isomorphisms_iter():
-            nodes = frozenset(mapping.keys())  # set of nodes of G
+            #nodes = frozenset(mapping.keys())  # set of nodes of G
+
+            # remove ancilla (assuming they are in negative indices)
+            nodes = frozenset(
+                backend_node
+                for backend_node, circuit_node in mapping.items()
+                if circuit_node >= 0
+            )
+
             unique_subgraphs.add(nodes)
 
         scores = {}

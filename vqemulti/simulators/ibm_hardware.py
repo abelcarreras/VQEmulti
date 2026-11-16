@@ -46,6 +46,12 @@ class RHESampler:
         cache = JobCache()
         isa_circuit = self._pm.run(circuit)
 
+        log_message('depth: ', circuit.depth(), log_level=1)
+        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
+        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
+        log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
+
         job = cache.get_job(circuit, {'n_shots': shots}, 'sampler', self._backend.name)
         if job is None:
 
@@ -58,12 +64,6 @@ class RHESampler:
 
         pub_result = job.result()[0]
         # counts_total = pub_result.data.meas.get_counts()
-
-        log_message('depth: ', circuit.depth(), log_level=1)
-        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
-        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
-        log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
 
         if log_section(log_level=1):
             accumulated_errors(self._backend, isa_circuit, print_data=True)

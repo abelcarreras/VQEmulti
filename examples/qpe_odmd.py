@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-import numpy as np
 from openfermionpyscf import run_pyscf
 from openfermion import MolecularData
 from vqemulti.utils import get_hf_reference_in_fock_space
@@ -11,6 +9,9 @@ from qiskit_ibm_runtime.fake_provider import FakeTorino
 from openfermion import QubitOperator
 from vqemulti.preferences import Configuration
 from vqemulti.utils import odmd
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 def separate_identity_term(qubit_operator):
 
@@ -107,22 +108,20 @@ plt.ylim(-1.01, 1.01)
 plt.xlabel('time')
 plt.show()
 
-#####################
-#- - - - ODMD - - - -
-import cmath
+# ODMD analysis
+print("========== ODMD RESULT =========")
+
 # Signal
-delay = n_time_steps/2
+delay = n_time_steps//2
 time = [dt * i for i in range(n_time_steps)]
 
-# ODMD postprocessing
-print("========== ODMD RESULT =========")
 print(f" Signal: exact overlap")
 C = overlap_exact
 postproc = odmd.ODMD(d=delay, tol=0.05, svd_rank=-1, sorted_eigs="abs", reduced=True)
 postproc.fit(overlap_exact)
-print("================================")
+
 for i, lam in enumerate(postproc.eigs):
-    mu = cmath.log(lam) / dt
+    mu = np.log(lam) / dt
     print(f"[ODMD] {i}: decay={mu.real}, omega={mu.imag}")
 
 selected_eigs = np.asarray(postproc.eigs)

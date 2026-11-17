@@ -1,9 +1,6 @@
 import warnings
 import numpy as np
 warnings.filterwarnings("ignore")
-#--------------------------------------
-# Utilities
-#--------------------------------------
 
 def _as_signal(X):
     """
@@ -99,9 +96,7 @@ def _sort_eigs(eigs, vecs, how):
         raise ValueError(f"Invalid how variable at sorted_eigs: {how}")
     return eigs[order], vecs[:, order]
 
-#--------------------------------------
-# OPERATOR CLASS
-#--------------------------------------
+
 class ODMDOperator:
     """
     Builds the ODMD operator A ~ Y X^+ from a 1D overlap sequence.
@@ -214,9 +209,7 @@ class ODMDOperator:
     def rank(self):
         return self._rank
 
-#--------------------------------------
-# ODMD CLASS (Outer API)
-#--------------------------------------
+
 class ODMD:
     """
     ODMD outer API
@@ -380,36 +373,47 @@ class ODMD:
         return -np.angle(eigs[idx])
 
 
-#------------------------------------
-# TEST
-#------------------------------------
 if __name__ == "__main__":
-    import cmath
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import tools
     from pydmd import HankelDMD
     from pydmd.preprocessing import hankel_preprocessing
     from pydmd.plotter import plot_eigs
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import cmath
 
-    # Read data:
-    time, C, ReC, ImC = tools.read_signal_file(
-        "H2_exact_evol.txt"
-    )
+    # --------------------------------
+    # 1) Generate data internally
+    # --------------------------------
 
-    C1 = np.asarray(ReC)  # , dtype=complex).ravel()
-    C2 = np.asarray(ImC)  # , dtype=complex).ravel()
-    print("DATA C1 SHAPE ", C1.shape)
-    print("DATA C2 SHAPE ", C1.shape)
+    dt = 0.05
+    n_points = 1000
+
+    time = np.arange(n_points) * dt
+
+    # Synthetic complex signal
+    C = (0.7 * np.exp((-0.01 + 1j * 0.8) * time)
+         + 0.3 * np.exp((-0.005 + 1j * 1.5) * time)
+         + 0.15 * np.exp((-0.02 + 1j * 2.2) * time)
+         )
+
+    ReC = C.real
+    ImC = C.imag
+
+    C1 = np.asarray(ReC)
+    C2 = np.asarray(ImC)
+
+    print("DATA C1 SHAPE:", C1.shape)
+    print("DATA C2 SHAPE:", C2.shape)
 
     signals = [C1]
     delay = 25
-    dt = time[1] - time[0]
 
     # Plot signal to compare:
     fig = plt.figure(figsize=(5, 3), dpi=200)
+
     plt.plot(time, ReC, 'k-', label='Re Original', linewidth=1.0)
     plt.plot(time, ImC, 'r-', label='Im Original', linewidth=1.0)
+
     plt.xlabel("t")
     plt.ylabel("C(t)")
     plt.title("The original signal")
@@ -430,7 +434,7 @@ if __name__ == "__main__":
         dmd = HankelDMD(svd_rank=0, exact=True)
         delay_dmd = hankel_preprocessing(dmd, d=delay)
         # Sanity check:
-        X = np.asarray(sig).reshape(1,-1)
+        X = np.asarray(sig).reshape(1, -1)
         N = X.shape[1]  # number of time points in original series
         delay_dmd.fit(X)
 
@@ -486,6 +490,7 @@ if __name__ == "__main__":
 
         # ODMD eigenvalues to plot
         selected_eigs = odmd.eigs[:10]
-        tools.plot_selected_eigs(selected_eigs, show_axes=True, show_unit_circle=True, figsize=(8, 8))
-        plt.show()
 
+        # Eigenvalues
+        plot_eigs(odmd, show_axes=True, show_unit_circle=True, figsize=(8, 8))
+        plt.show()

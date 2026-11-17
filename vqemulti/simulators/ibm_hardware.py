@@ -28,6 +28,29 @@ def get_isa_layout(isa_circuit):
     return list_qubits[:n_qubits].tolist()
 
 
+def circuit_2q_gates_metrics(circuit):
+    from collections import Counter
+
+    counts = Counter(
+        instruction.operation.name
+        for instruction in circuit.data
+    )
+
+    two_qubit_gates = sum(
+        count for name, count in counts.items()
+        if circuit.find_bit(circuit.data[0].qubits[0]).index >= 0
+        and circuit.num_qubits > 1
+        and name in ("cx", "cz", "ecr")
+    )
+
+    two_qubit_depth = circuit.depth(
+        filter_function=lambda instruction:
+        len(instruction.qubits) > 1
+        and instruction.operation.name in ("cx", "cz", "ecr"))
+
+    return two_qubit_gates, two_qubit_depth
+
+
 class RHESampler:
 
     def __init__(self, backend, session, layout=None):
@@ -46,11 +69,17 @@ class RHESampler:
         cache = JobCache()
         isa_circuit = self._pm.run(circuit)
 
-        log_message('depth: ', circuit.depth(), log_level=1)
-        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
-        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
+        two_qubit_gates, two_qubit_depth = circuit_2q_gates_metrics(isa_circuit)
+
+        log_message('circuit depth: ', circuit.depth(), log_level=1)
+        log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
+
+        log_message('isa_circuit depth: ', isa_circuit.depth(), log_level=1)
         log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
+        log_message('isa_circuit 2Q gate count: ', two_qubit_gates, log_level=1)
+        log_message('isa_circuit 2Q depth: ', two_qubit_depth, log_level=1)
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
+        log_message('isa_circuit layout', get_isa_layout(isa_circuit), log_level=1)
 
         job = cache.get_job(circuit, {'n_shots': shots}, 'sampler', self._backend.name)
         if job is None:
@@ -102,12 +131,18 @@ class RHEstimator:
         n_chunks = min([n_chunks, len(measure_op)])
         chunck_size = int(np.ceil(len(measure_op)/n_chunks))
 
-        log_message('depth: ', circuit.depth(), log_level=1)
-        log_message('isa_depth: ', isa_circuit.depth(), log_level=1)
-        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
-        log_message('isa_layout', get_isa_layout(isa_circuit), log_level=1)
+        two_qubit_gates, two_qubit_depth = circuit_2q_gates_metrics(isa_circuit)
+
+        log_message('circuit depth: ', circuit.depth(), log_level=1)
         log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
+
+        log_message('isa_circuit depth: ', isa_circuit.depth(), log_level=1)
         log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)
+        log_message('isa_circuit 2Q gate count: ', two_qubit_gates, log_level=1)
+        log_message('isa_circuit 2Q depth: ', two_qubit_depth, log_level=1)
+
+        log_message(str(isa_circuit.draw(fold=-1, reverse_bits=True, idle_wires=False)), log_level=2)
+        log_message('isa_circuit layout', get_isa_layout(isa_circuit), log_level=1)
         # log_message('observable: ', measure_op, log_level=1)
         log_message('n_observable: ', len(measure_op), log_level=1)
         log_message('n_chunks: ', n_chunks, log_level=1)

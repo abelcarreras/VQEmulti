@@ -643,7 +643,7 @@ class LayoutModelGraph:
 
         self._G_circuit = G_spin
 
-        draw_graph(G_spin)
+        # draw_graph(G_spin)
 
 
     def get_layout(self, circuit, backend, n_qubits):

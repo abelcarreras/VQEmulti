@@ -669,11 +669,17 @@ class LayoutModelGraph:
         for mapping in GM.subgraph_isomorphisms_iter():
             #nodes = frozenset(mapping.keys())  # set of nodes of G
 
-            # remove ancilla (assuming they are in negative indices)
-            nodes = frozenset(
-                backend_node
+            # Invert the mapping: circuit node -> backend node
+            inverse_mapping = {
+                circuit_node: backend_node
                 for backend_node, circuit_node in mapping.items()
-                if circuit_node >= 0
+            }
+
+            # Preserve the original circuit-node ordering
+            nodes = tuple(
+                inverse_mapping[circuit_node]
+                for circuit_node in self._G_circuit.nodes
+                if circuit_node >= 0 and circuit_node in inverse_mapping
             )
 
             unique_subgraphs.add(nodes)

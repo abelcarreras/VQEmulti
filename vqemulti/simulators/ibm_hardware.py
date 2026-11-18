@@ -40,13 +40,13 @@ def circuit_2q_gates_metrics(circuit):
         count for name, count in counts.items()
         if circuit.find_bit(circuit.data[0].qubits[0]).index >= 0
         and circuit.num_qubits > 1
-        and name in ("cx", "cz", "ecr")
+        and name in ('cx', 'cz', 'ecr', 'rzz')
     )
 
     two_qubit_depth = circuit.depth(
         filter_function=lambda instruction:
         len(instruction.qubits) > 1
-        and instruction.operation.name in ("cx", "cz", "ecr"))
+        and instruction.operation.name in ('cx', 'cz', 'ecr', 'rzz'))
 
     return two_qubit_gates, two_qubit_depth
 
@@ -69,10 +69,14 @@ class RHESampler:
         cache = JobCache()
         isa_circuit = self._pm.run(circuit)
 
-        two_qubit_gates, two_qubit_depth = circuit_2q_gates_metrics(isa_circuit)
+        two_qubit_gates, two_qubit_depth = circuit_2q_gates_metrics(circuit)
 
         log_message('circuit depth: ', circuit.depth(), log_level=1)
         log_message('circuit gate count: ', dict(circuit.count_ops()), log_level=1)
+        log_message('circuit 2Q gate count: ', two_qubit_gates, log_level=1)
+        log_message('circuit 2Q depth: ', two_qubit_depth, log_level=1)
+
+        two_qubit_gates, two_qubit_depth = circuit_2q_gates_metrics(isa_circuit)
 
         log_message('isa_circuit depth: ', isa_circuit.depth(), log_level=1)
         log_message('isa_circuit gate count: ', dict(isa_circuit.count_ops()), log_level=1)

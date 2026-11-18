@@ -162,8 +162,12 @@ def print_permutation(G_qpu, permutation, centers=None, orbital_labels=True):
 
     if orbital_labels:
         labels = {i: permutation_inv[i] for i in G_qpu.nodes}
+        edge_color = 'black'
+        plt.title('MO orbital mapping')
     else:
         labels = {i: i for i in G_qpu.nodes}
+        edge_color = 'orange'
+        plt.title('Final graph order')
 
     #labels = {i: '{}->{}'.format(permutation_inv[i], i) for i in G_qpu.nodes}
 
@@ -195,7 +199,7 @@ def print_permutation(G_qpu, permutation, centers=None, orbital_labels=True):
         style='dashed',
     )
 
-    nx.draw_networkx_labels(G_qpu, pos, labels=labels)
+    nx.draw_networkx_labels(G_qpu, pos, labels=labels, font_color=edge_color)
     nx.draw_networkx_edge_labels(G_qpu, pos, edge_labels=edge_labels)
 
     plt.axis('off')

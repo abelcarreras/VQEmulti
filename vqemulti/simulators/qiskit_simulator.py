@@ -926,7 +926,7 @@ class QiskitSimulator(SimulatorBase):
 
         return reference_gates
 
-    def _get_density_density_gates(self, J, n_qubits, tolerance=1e-6):
+    def _get_density_density_gates_naive(self, J, n_qubits, tolerance=1e-6):
 
         log_message('build density density gates', log_level=3)
 
@@ -945,6 +945,52 @@ class QiskitSimulator(SimulatorBase):
                     angle = -J[p, q]
                     if abs(angle) >= tolerance:
                         reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
+
+        return reference_gates
+
+    def _get_density_density_gates(self, J, n_qubits, tolerance=1e-6):
+        import networkx as nx
+
+        log_message('build density density gates', log_level=3)
+        reference_gates = []
+
+        # Single-qubit Z rotations
+        for p in range(n_qubits):
+            angle = J[p, :].sum() / 2
+            if abs(angle) >= tolerance:
+                reference_gates.append(CircuitInstruction(RZGate(angle), [p]))
+
+        # Build interaction graph
+        G = nx.Graph()
+        G.add_nodes_from(range(n_qubits))
+        for p in range(n_qubits):
+            for q in range(p + 1, n_qubits):
+                angle = -J[p, q]
+                if abs(angle) >= tolerance:
+                    G.add_edge(p, q, angle=angle)
+
+        if G.number_of_edges() == 0:
+            return reference_gates
+
+        # Optimal edge coloring via Vizing (uses nx.vizing_colors if available,
+        # otherwise falls back to line-graph DSATUR)
+        try:
+            # networkx >= 3.3: nx.algorithms.coloring.vizing_colors(G)
+            coloring = nx.vizing_colors(G)  # edge -> color dict
+        except AttributeError:
+            L = nx.line_graph(G)
+            node_coloring = nx.coloring.greedy_color(L, strategy='largest_first')
+            coloring = {edge: node_coloring[edge] for edge in G.edges()}
+
+        # Group and emit by layer
+        color_groups = {}
+        for (p, q), color in coloring.items():
+            color_groups.setdefault(color, []).append((p, q))
+
+        for color in sorted(color_groups):
+            for p, q in sorted(color_groups[color]):
+                angle = G[p][q]['angle']
+                reference_gates.append(CircuitInstruction(RZZGate(angle), [p, q]))
 
         return reference_gates
 

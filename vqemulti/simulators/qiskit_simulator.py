@@ -482,9 +482,9 @@ class QiskitSimulator(SimulatorBase):
         if session is not None:
             self._use_ibm_runtime = True
 
-            from qiskit_ibm_runtime import QiskitRuntimeService
             from qiskit.providers.exceptions import QiskitBackendNotFoundError
             try:
+                # from qiskit_ibm_runtime import QiskitRuntimeService
                 # service = QiskitRuntimeService()
                 #self._backend = service.backend(session.backend())
                 self._backend = session._backend
